@@ -1,0 +1,29 @@
+﻿@model ProyectoLogin.Models.ViewModel.RecoveryViewModel
+@{
+    ViewData["Title"] = "StartRecovery";
+}
+
+<div class="row">
+    <div class="col-md-6 offset-3">
+        <div class="form-style">
+            <form action="@Url.Content("~/Access/StartRecovery")" method="post">
+
+                <label>Escribe tu Correo Electrónico</label>
+                @Html.TextBoxFor(d => d.Email, null, new { @class = "form-control"})
+                @Html.ValidationMessageFor(d=> d.Email,null,new {style="color:red;"})
+
+                <br/> @*salto de linea*@
+                <div class ="text-right">
+                    <button class="btn btn-primary">Recuperar</button>
+                    <a href="@Url.Action("IniciarSesion", "Inicio")" class="btn btn-secondary">
+                        Volver al Inicio
+                    </a>
+                </div>
+
+                
+
+            </form>
+        </div>
+    </div>
+</div>
+
