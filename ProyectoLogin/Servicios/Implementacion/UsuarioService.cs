@@ -28,7 +28,7 @@ namespace ProyectoLogin.Servicios.Implementacion
 
 
         // Método asíncrono que guarda un nuevo usuario en la base de datos.
-        public async Task<Usuario> SaveUsuario(Usuario modelo)
+        public async Task<Usuario> SaveUsuario(Usuario modelo) //hola
         {
             // Marca el nuevo usuario para ser agregado a la tabla "Usuarios".
             _dbContext.Usuarios.Add(modelo);
