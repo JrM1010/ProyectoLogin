@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Recursos;
 using System;
@@ -42,14 +43,20 @@ namespace ProyectoLogin.Controllers
 
             if (usuario != null)
             {
-                
-                string resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString()); // Generación de token único de recuperación
 
-                usuario.Token_Recovery = resetToken;
-                usuario.Date_Created = DateTime.Now.AddHours(2); //le da tiempo al token de dos horas 
+                var resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString()); // Generación de token único de recuperación
 
-                // Actualiza el usuario en la BD
-                _context.Update(usuario);
+                // Crear registro en la tabla RecuperacionPassword
+                var recuperacion = new RecuperacionPassword
+                {
+                    IdUsuario = usuario.IdUsuario,
+                    Token = resetToken,
+                    FechaCreacion = DateTime.Now,
+                    FechaExpiracion = DateTime.Now.AddHours(2),
+                    Usado = false
+                };
+
+                _context.Recuperaciones.Add(recuperacion);
                 _context.SaveChanges();
 
                 // Genera el enlace para restablecer contraseña
@@ -84,11 +91,11 @@ namespace ProyectoLogin.Controllers
         public ActionResult Recovery(string resetToken, string email)
         {
             // Busca al usuario con correo y token válidos
-            var usuario = _context.Usuarios
-                                 .FirstOrDefault(u => u.Correo == email && u.Token_Recovery == resetToken);
+            var recuperacion = _context.Recuperaciones
+                .Include(r => r.Usuario) //Incluye el usuario relacionado
+                .FirstOrDefault(r => r.Token == resetToken && r.Usuario.Correo == email);
 
-            // Valida que el token no haya expirado
-            if (usuario == null || usuario.Date_Created < DateTime.Now)
+            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
             {
                 return BadRequest("El token es inválido o ha expirado.");
             }
@@ -110,24 +117,24 @@ namespace ProyectoLogin.Controllers
                 return View(model);
 
             // Busca al usuario con correo y token
-            var usuario = _context.Usuarios
-                .FirstOrDefault(u => u.Correo == model.Email && u.Token_Recovery == model.resetToken);
+            var recuperacion = _context.Recuperaciones
+                    .Include(r => r.Usuario)
+                    .FirstOrDefault(r => r.Token == model.resetToken && r.Usuario.Correo == model.Email);
 
-            // Si no existe o expiró, error
-            if (usuario == null || usuario.Date_Created < DateTime.Now)
+            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
             {
                 ModelState.AddModelError("", "El token es inválido o ha expirado.");
                 return View(model);
             }
 
             // Encripta y guarda la nueva contraseña
-            usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
+            recuperacion.Usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
+
 
             // Limpia el token para que no pueda usarse otra vez
-            usuario.Token_Recovery = null;
+            recuperacion.Usado = true;
 
             // Actualiza cambios en la BD
-            _context.Update(usuario);
             _context.SaveChanges();
 
             return RedirectToAction("Index", "Home");

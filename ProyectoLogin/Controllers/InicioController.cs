@@ -66,11 +66,13 @@ namespace ProyectoLogin.Controllers
                 return View(); // vuelve a la vista de login.
             }
 
-            // Si el usuario existe, se crea una lista de Claims (información sobre el usuario autenticado).
-            // En este caso, solo se guarda el nombre de usuario, pero se podrían agregar roles, correo, etc.
+            // Claims con rol incluido
             List<Claim> claims = new List<Claim>() {
-                 new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario)
+        new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario),
+        new Claim(ClaimTypes.Role, usuario_encontrado.Rol.NombreRol) // ✅ Ahora viene de la tabla Rol
             };
+
+            
 
             
             // Crear la identidad del usuario usando los Claims y el esquema de autenticación por cookies.

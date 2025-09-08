@@ -13,8 +13,10 @@ public partial class DbpruebaContext : DbContext
     {
     }
 
-    // Representa la tabla "Usuario" en la base de datos.
+    // Representa las tablas en la base de datos.
     public virtual DbSet<Usuario> Usuarios { get; set; }
+    public virtual DbSet<Rol> Roles { get; set; }
+    public virtual DbSet<RecuperacionPassword> Recuperaciones { get; set; }
 
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
@@ -22,39 +24,42 @@ public partial class DbpruebaContext : DbContext
     {
         modelBuilder.Entity<Usuario>(entity =>
         {
-            // Define la clave primaria de la tabla
-            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__5B65BF976FF740F1");
-
-            // Define el nombre de la tabla en la BD
+            entity.HasKey(e => e.IdUsuario);
             entity.ToTable("Usuario");
 
-            // Configuración de la columna "clave"
-            entity.Property(e => e.Clave)
-                .HasMaxLength(100)   
-                .IsUnicode(false)    
-                .HasColumnName("clave"); 
+            entity.Property(e => e.NombreUsuario).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.Correo).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Clave).HasMaxLength(500).IsUnicode(false);
 
-            // Configuración de la columna "Correo"
-            entity.Property(e => e.Correo)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-
-            // Configuración de la columna "NombreUsuario"
-            entity.Property(e => e.NombreUsuario)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-
-            // Campos para recuperación de contraseña
-            entity.Property(e => e.Token_Recovery) // token de seguridad único para resetear clave
-                .HasMaxLength(200)
-                .IsUnicode(false);
-
-            entity.Property(e => e.Date_Created); // fecha de creación del token
+            // Relación Usuario → Rol
+            entity.HasOne(u => u.Rol)
+                  .WithMany(r => r.Usuarios)
+                  .HasForeignKey(u => u.IdRol);
         });
 
-        // Permite extender la configuración en otro archivo parcial si lo necesitas.
-        OnModelCreatingPartial(modelBuilder);
+        modelBuilder.Entity<Rol>(entity =>
+        {
+            entity.HasKey(e => e.IdRol);
+            entity.ToTable("Rol");
+            entity.Property(e => e.NombreRol).HasMaxLength(50).IsUnicode(false);
+        });
+
+        modelBuilder.Entity<RecuperacionPassword>(entity =>
+        {
+            entity.HasKey(e => e.IdRecuperacion);
+            entity.ToTable("RecuperacionPassword");
+
+            entity.Property(e => e.Token).HasMaxLength(200).IsUnicode(false);
+
+            // Relación con Usuario
+            entity.HasOne(r => r.Usuario)
+                  .WithMany()
+                  .HasForeignKey(r => r.IdUsuario);
+        });
     }
+
+    
+    
 
     // Método parcial para agregar configuración adicional.
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
