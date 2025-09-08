@@ -31,6 +31,16 @@
                             <input class="form-control mb-3" type="text" placeholder="Nombre Completo" asp-for="NombreUsuario" required />
                             <input class="form-control mb-3" type="text" placeholder="Correo" required asp-for="Correo" />
                             <input class="form-control mb-3" type="password" placeholder="Contraseña" required asp-for="Clave" />
+
+                            <div class="form-group">
+                                <label asp-for="IdRol"></label>
+                                <select class="form-control" asp-for="IdRol">
+                                    <option value="1">Administrador</option>
+                                    <option value="2">Gerente</option>
+                                    <option value="3">Vendedor</option>
+                                </select>
+
+
                             <div class="d-grid gap-2 mb-3">
                                 <button class="btn btn-primary" type="submit">Registrate</button>
                             </div>

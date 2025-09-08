@@ -18,17 +18,12 @@ namespace ProyectoLogin.Servicios.Implementacion
         {
             _dbContext = dbContext;
         }
-
-       
-
         // Método asíncrono que busca un usuario en la BD por correo y clave.
         public async Task<Usuario> GetUsuario(string correo, string clave)
         {
-            Usuario usuario_encontrado = await _dbContext.Usuarios
-                .Where(u => u.Correo == correo && u.Clave == clave)  // Filtra por correo y clave
-                .FirstOrDefaultAsync();  // Toma el primero encontrado o null si no hay
-
-            return usuario_encontrado; 
+            return await _dbContext.Usuarios
+                .Include(u => u.Rol) //Esto carga la relación con la tabla Rol
+                .FirstOrDefaultAsync(u => u.Correo == correo && u.Clave == clave);
         }
 
 
