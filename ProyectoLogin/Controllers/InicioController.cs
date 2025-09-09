@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProyectoLogin.Models;
 using ProyectoLogin.Recursos;
 using ProyectoLogin.Servicios.Contrato;
-
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
 
 namespace ProyectoLogin.Controllers
 {
@@ -20,17 +19,21 @@ namespace ProyectoLogin.Controllers
             _usuarioServicio = usuarioServicio;
         }
 
-        
+        [Authorize(Roles = "Administrador")]
         public IActionResult Registrarse() // Muestra el formulario de registro.
         {
             return View();
         }
 
         // Acción POST: se ejecuta cuando el usuario envía el formulario de registro. Recibe a Usuario con datos enviados de la vista.
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Registrarse(Usuario modelo)
         {
             
+
+
             modelo.Clave = Utilidades.EncriptarClave(modelo.Clave); // Antes de guardar al usuario, se encripta la contra-
            
             Usuario usuario_creado = await _usuarioServicio.SaveUsuario(modelo); // Se llama al servicio de usuarios para guardar el nuevo usuario en la base de datos.
@@ -39,7 +42,7 @@ namespace ProyectoLogin.Controllers
 
                 return RedirectToAction("IniciarSesion", "Inicio"); // Redirige a la acción "IniciarSesion" del controlador "Inicio".
 
-            ViewData["Mensaje"] = "No se pudo crear el usu+ario"; // Si no se pudo crear el usuario, se muestra un mensaje de error en la vista.
+            ViewData["Mensaje"] = "No se pudo crear el usuario"; // Si no se pudo crear el usuario, se muestra un mensaje de error en la vista.
             return View();
         }
 

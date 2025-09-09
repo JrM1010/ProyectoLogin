@@ -9,7 +9,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>Registrarse</title>
+    <title>Registrar Usuario</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 </head>
 <body>
@@ -22,27 +22,31 @@
 
                 <div class="card">
                     <div class="card-header">
-                        Registrate
+                        Registrar Usuario
                     </div>
                     <div class="card-body">
 
                         <form asp-controller="Inicio" asp-action="Registrarse" method="post">
+                            @Html.AntiForgeryToken()
 
                             <input class="form-control mb-3" type="text" placeholder="Nombre Completo" asp-for="NombreUsuario" required />
                             <input class="form-control mb-3" type="text" placeholder="Correo" required asp-for="Correo" />
                             <input class="form-control mb-3" type="password" placeholder="Contraseña" required asp-for="Clave" />
 
                             <div class="form-group">
-                                <label asp-for="IdRol"></label>
+                                <label asp-for="Rol"></label>
                                 <select class="form-control" asp-for="IdRol">
                                     <option value="1">Administrador</option>
                                     <option value="2">Gerente</option>
                                     <option value="3">Vendedor</option>
+                                    
                                 </select>
+                               </div>
 
+                                <br />
 
                             <div class="d-grid gap-2 mb-3">
-                                <button class="btn btn-primary" type="submit">Registrate</button>
+                                <button class="btn btn-primary" type="submit">Guardar</button>
                             </div>
                             @if (ViewData["Mensaje"] != null)
                             {
@@ -53,7 +57,7 @@
                                     </div>
                                 </div>
                             }
-                            ¿Ya tienes una cuenta? <a href="@Url.Action("IniciarSesion", "Inicio")"> Iniciar Sesion</a>
+                            
 
                         </form>
 
