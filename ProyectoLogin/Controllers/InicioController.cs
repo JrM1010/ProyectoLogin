@@ -65,14 +65,14 @@ namespace ProyectoLogin.Controllers
             // Si no existe el usuario (no se encontró coincidencia en correo/clave), se muestra un mensaje de error.
             if (usuario_encontrado == null)
             {
-                ViewData["Mensaje"] = "No se encontraron coincidencias ";
+                ViewData["Mensaje"] = "El Correo y/o Contraseña estan incorrectos";
                 return View(); // vuelve a la vista de login.
             }
 
             // Claims con rol incluido
             List<Claim> claims = new List<Claim>() {
         new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario),
-        new Claim(ClaimTypes.Role, usuario_encontrado.Rol.NombreRol) // ✅ Ahora viene de la tabla Rol
+        new Claim(ClaimTypes.Role, usuario_encontrado.Rol.NombreRol) //Ahora viene de la tabla Rol
             };
 
             

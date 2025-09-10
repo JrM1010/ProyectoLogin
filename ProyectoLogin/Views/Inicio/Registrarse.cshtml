@@ -29,28 +29,39 @@
                         <form asp-controller="Inicio" asp-action="Registrarse" method="post">
                             @Html.AntiForgeryToken()
 
-                            <input class="form-control mb-3" type="text" placeholder="Nombre Completo" asp-for="NombreUsuario" required />
-                            <input class="form-control mb-3" type="text" placeholder="Correo" required asp-for="Correo" />
-                            <input class="form-control mb-3" type="password" placeholder="Contraseña" required asp-for="Clave" />
+                            <div class="mb-3">
+                                <label asp-for="NombreUsuario" class="form-label">Nombre Completo</label>
+                                <input class="form-control" type="text" asp-for="NombreUsuario"
+                                       placeholder="Ejemplo: Juan Pérez" required />
+                            </div>
 
-                            <div class="form-group">
-                                <label asp-for="Rol"></label>
+                            <div class="mb-3">
+                                <label asp-for="Correo" class="form-label">Correo electrónico</label>
+                                <input class="form-control" type="email" asp-for="Correo"
+                                       placeholder="usuario@correo.com" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Clave" class="form-label">Contraseña</label>
+                                <input class="form-control" type="password" asp-for="Clave"
+                                       placeholder="Mínimo 6 caracteres" required />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="IdRol" class="form-label">Rol</label>
                                 <select class="form-control" asp-for="IdRol">
                                     <option value="1">Administrador</option>
                                     <option value="2">Gerente</option>
                                     <option value="3">Vendedor</option>
-                                    
                                 </select>
-                               </div>
-
-                                <br />
+                            </div>
 
                             <div class="d-grid gap-2 mb-3">
                                 <button class="btn btn-primary" type="submit">Guardar</button>
                             </div>
+
                             @if (ViewData["Mensaje"] != null)
                             {
-
                                 <div class="form-group">
                                     <div class="alert alert-danger" role="alert">
                                         @ViewData["Mensaje"]

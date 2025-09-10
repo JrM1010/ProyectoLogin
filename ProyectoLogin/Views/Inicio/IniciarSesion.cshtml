@@ -16,17 +16,31 @@
         <div class="row justify-content-center">
             <div class="col-12 col-xl-4 col-md-6">
                 <div class="card">
+
                     <div class="card-header">
-                        Iniciar Sesion
+                        Iniciar Sesión
                     </div>
+                    
                     <div class="card-body">
                         <form asp-controller="Inicio" asp-action="IniciarSesion" method="post">
-                            <input class="form-control mb-3" type="text" placeholder="Correo" required name="correo" />
-                            <input class="form-control mb-3" type="password" placeholder="Contraseña" required name="clave" />
-                            
-                            <div class="d-grid gap-2 mb-3">
-                                <button class="btn btn-primary" type="submit">Iniciar Sesion</button>
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo electrónico</label>
+                                <input id="correo" class="form-control" type="text"
+                                       placeholder="Ejemplo: usuario@correo.com"
+                                       required name="correo" />
                             </div>
+
+                            <div class="mb-3">
+                                <label for="clave" class="form-label">Contraseña</label>
+                                <input id="clave" class="form-control" type="password"
+                                       placeholder="Ingrese su contraseña"
+                                       required name="clave" />
+                            </div>
+
+                            <div class="d-grid gap-2 mb-3">
+                                <button class="btn btn-primary" type="submit">Iniciar Sesión</button>
+                            </div>
+
                             @if (ViewData["Mensaje"] != null)
                             {
                                 <div class="form-group">
@@ -36,13 +50,12 @@
                                 </div>
                             }
 
-
-                            @*creacion de div para el enlace de restauracion de contraseñas*@
                             <div class="d-flex justify-content-center mb-3">
                                 <a href="@Url.Action("StartRecovery", "Access")" class="text-danger fw-bold text-decoration-none">
                                     ¿Olvidaste tu contraseña?
                                 </a>
                             </div>
+
                         </form>
                     </div>
                 </div>
