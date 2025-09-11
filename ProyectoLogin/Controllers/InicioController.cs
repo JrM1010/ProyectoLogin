@@ -59,45 +59,44 @@ namespace ProyectoLogin.Controllers
         [HttpPost]
         public async Task<IActionResult> IniciarSesion(string correo, string clave)
         {
-            try
+            // Buscar al usuario en la base de datos comparando correo y clave encriptada.
+            Usuario usuario_encontrado = await _usuarioServicio.GetUsuario(correo, Utilidades.EncriptarClave(clave));
+
+            // Si no existe el usuario (no se encontró coincidencia en correo/clave), se muestra un mensaje de error.
+            if (usuario_encontrado == null)
             {
-                Usuario usuario_encontrado = await _usuarioServicio.GetUsuario(correo, Utilidades.EncriptarClave(clave));
-
-                if (usuario_encontrado == null)
-                {
-                    ViewData["Mensaje"] = "No se encontraron coincidencias";
-                    return View();
-                }
-
-                // Verificar que el rol no sea nulo
-                string nombreRol = usuario_encontrado.Rol?.NombreRol ?? "Usuario";
-
-                List<Claim> claims = new List<Claim>() {
-            new Claim(ClaimTypes.NameIdentifier, usuario_encontrado.IdUsuario.ToString()),
-            new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario ?? "Usuario"),
-            new Claim(ClaimTypes.Role, nombreRol)
-        };
-
-                ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                AuthenticationProperties properties = new AuthenticationProperties()
-                {
-                    AllowRefresh = true,
-                    IsPersistent = true
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    properties
-                );
-
-                return RedirectToAction("Index", "Home");
+                ViewData["Mensaje"] = "El Correo y/o Contraseña estan incorrectos";
+                return View(); // vuelve a la vista de login.
             }
-            catch (Exception ex)
+
+            // Claims con rol incluido
+            List<Claim> claims = new List<Claim>() {
+        new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario),
+        new Claim(ClaimTypes.Role, usuario_encontrado.Rol.NombreRol) //Ahora viene de la tabla Rol
+            };
+
+            
+
+            
+            // Crear la identidad del usuario usando los Claims y el esquema de autenticación por cookies.
+            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+
+            // Propiedades de la cookie de autenticación permitiendo renovar la cookie automaticamente por AllowRefresh = true.
+            AuthenticationProperties properties = new AuthenticationProperties()
             {
-                ViewData["Mensaje"] = "Error durante el inicio de sesión";
-                return View();
-            }
+                AllowRefresh = true
+            };
+
+            // Registrar al usuario en el sistema con autenticación basada en cookies. 
+            await HttpContext.SignInAsync(
+
+                CookieAuthenticationDefaults.AuthenticationScheme,   // Tipo de autenticación
+                new ClaimsPrincipal(claimsIdentity),                 // Usuario con su identidad (Claims)
+                properties                                           // Opciones adicionales
+            );
+  
+            return RedirectToAction("Index", "Home");
         }
     }
 }
