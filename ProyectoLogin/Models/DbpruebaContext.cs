@@ -67,9 +67,6 @@ public partial class DbpruebaContext : DbContext
 
         modelBuilder.Entity<Producto>(entity =>
         {
-
-
-
             entity.HasKey(e => e.IdProducto);
             entity.ToTable("Producto");
 
@@ -98,25 +95,25 @@ public partial class DbpruebaContext : DbContext
         {
             entity.HasKey(e => e.IdCategoria);
             entity.ToTable("Categoria");
-            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.Descripcion).HasMaxLength(300).IsUnicode(false);
+            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Descripcion).HasMaxLength(300).IsUnicode(false).IsRequired(false);
         });
 
         modelBuilder.Entity<Marca>(entity =>
         {
             entity.HasKey(e => e.IdMarca);
             entity.ToTable("Marca");
-            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
         });
 
         modelBuilder.Entity<Proveedor>(entity =>
         {
             entity.HasKey(e => e.IdProveedor);
             entity.ToTable("Proveedor");
-            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false);
-            entity.Property(e => e.Contacto).HasMaxLength(100).IsUnicode(false);
-            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false);
-            entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Contacto).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false).IsRequired(false);
         });
 
         modelBuilder.Entity<MovimientoInventario>(entity =>

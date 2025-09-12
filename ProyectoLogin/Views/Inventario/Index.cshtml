@@ -21,19 +21,16 @@
             <input type="text" name="searchString" class="form-control" placeholder="Buscar producto..."
                    value="@Context.Request.Query["searchString"]" />
         </div>
-
         <div class="col-md-3">
             <select name="categoriaId" class="form-control" asp-items="ViewBag.Categorias">
                 <option value="">Todas las categorías</option>
             </select>
         </div>
-        
         <div class="col-md-3">
             <select name="marcaId" class="form-control" asp-items="ViewBag.Marcas">
                 <option value="">Todas las marcas</option>
             </select>
         </div>
-        
         <div class="col-md-2">
             <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
         </div>
@@ -50,7 +47,8 @@
                     <th>Marca</th>
                     <th>Precio Venta</th>
                     <th>Stock</th>
-                    <th>Acciones</th>
+                    <th>Proveedor</th> 
+                    <th>Acciones</th> 
                 </tr>
             </thead>
             <tbody>
@@ -61,13 +59,15 @@
                         <td>@producto.CodigoBarras</td>
                         <td>@producto.Categoria?.Nombre</td>
                         <td>@producto.Marca?.Nombre</td>
-                        <td>@producto.PrecioVenta.ToString("C")</td>
-                        <td>@producto.Proveedor?.Nombre</td>
+                        <td>Q @producto.PrecioVenta.ToString("N2")</td>
+                        @*stock*@
                         <td>
                             <span class="@(producto.Stock <= producto.StockMinimo ? "text-danger fw-bold" : "")">
                                 @producto.Stock
                             </span>
                         </td>
+                        <td>@producto.Proveedor?.Nombre</td> 
+
                         <td>
                             <a asp-controller="Inventario" asp-action="Detalles" asp-route-id="@producto.IdProducto"
                                class="btn btn-sm btn-info">Detalles</a>
