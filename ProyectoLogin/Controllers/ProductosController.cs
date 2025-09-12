@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using System.Security.Claims;
@@ -20,7 +21,7 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> Create()
         {
             await CargarViewData();
-            return View();
+            return View("~/Views/Inventario/Create.cshtml");
         }
 
         // POST: Productos/Create
@@ -42,8 +43,9 @@ namespace ProyectoLogin.Controllers
 
                 return RedirectToAction(nameof(InventarioController.Index), "Inventario");
             }
+
             await CargarViewData();
-            return View(producto);
+            return View("~/Views/Inventario/Create.cshtml", producto); // Ruta completa con modelo
         }
 
         // GET: Productos/Edit/5
@@ -178,9 +180,20 @@ namespace ProyectoLogin.Controllers
 
         private async Task CargarViewData()
         {
-            ViewBag.Categorias = await _context.Categorias.Where(c => c.Activo).ToListAsync();
-            ViewBag.Marcas = await _context.Marcas.Where(m => m.Activo).ToListAsync();
-            ViewBag.Proveedores = await _context.Proveedores.Where(p => p.Activo).ToListAsync();
+            ViewBag.Categorias = await _context.Categorias
+                .Where(c => c.Activo)
+                .Select(c => new SelectListItem { Value = c.IdCategoria.ToString(), Text = c.Nombre })
+                .ToListAsync();
+
+            ViewBag.Marcas = await _context.Marcas
+                .Where(m => m.Activo)
+                .Select(m => new SelectListItem { Value = m.IdMarca.ToString(), Text = m.Nombre })
+                .ToListAsync();
+
+            ViewBag.Proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .Select(p => new SelectListItem { Value = p.IdProveedor.ToString(), Text = p.Nombre })
+                .ToListAsync();
         }
 
         private async Task RegistrarMovimiento(int idProducto, string tipoMovimiento, int cantidad,
