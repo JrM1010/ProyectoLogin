@@ -199,10 +199,21 @@ namespace ProyectoLogin.Controllers
         private async Task RegistrarMovimiento(int idProducto, string tipoMovimiento, int cantidad,
             string motivo, int stockAnterior = 0, int stockNuevo = 0)
         {
+
+            // Obtener el ID del usuario de forma segura
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                // Si no hay usuario autenticado, usar un valor por defecto o lanzar excepción
+                // Dependiendo de tu lógica de negocio
+                userId = 1; // O manejar el error apropiadamente
+            }
+
             var movimiento = new MovimientoInventario
             {
                 IdProducto = idProducto,
-                IdUsuario = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value),
+                IdUsuario = userId, // Usar el ID obtenido
                 TipoMovimiento = tipoMovimiento,
                 Cantidad = cantidad,
                 StockAnterior = stockAnterior,

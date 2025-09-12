@@ -71,6 +71,7 @@ namespace ProyectoLogin.Controllers
 
             // Claims con rol incluido
             List<Claim> claims = new List<Claim>() {
+        new Claim(ClaimTypes.NameIdentifier, usuario_encontrado.IdUsuario.ToString()),
         new Claim(ClaimTypes.Name, usuario_encontrado.NombreUsuario),
         new Claim(ClaimTypes.Role, usuario_encontrado.Rol.NombreRol) //Ahora viene de la tabla Rol
             };
