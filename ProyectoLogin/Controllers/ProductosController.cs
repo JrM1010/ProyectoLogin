@@ -57,7 +57,7 @@ namespace ProyectoLogin.Controllers
                 return NotFound();
             }
             await CargarViewData();
-            return View(producto);
+            return View("~/Views/Inventario/Edit.cshtml", producto);
         }
 
         // POST: Productos/Edit/5
@@ -74,7 +74,13 @@ namespace ProyectoLogin.Controllers
             {
                 try
                 {
-                    _context.Update(producto);
+                    // Mantener el stock original y fecha de creación
+                    var productoExistente = await _context.Productos.FindAsync(id);
+                    producto.Stock = productoExistente.Stock;
+                    producto.FechaCreacion = productoExistente.FechaCreacion;
+                    producto.Activo = productoExistente.Activo;
+
+                    _context.Entry(productoExistente).CurrentValues.SetValues(producto);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -91,24 +97,24 @@ namespace ProyectoLogin.Controllers
                 return RedirectToAction(nameof(InventarioController.Index), "Inventario");
             }
             await CargarViewData();
-            return View(producto);
+            return View("~/Views/Inventario/Edit.cshtml", producto);
         }
 
         // GET: Productos/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
             var producto = await _context.Productos
-                .Include(p => p.Categoria)
-                .Include(p => p.Marca)
-                .Include(p => p.Proveedor)
-                .FirstOrDefaultAsync(p => p.IdProducto == id);
+         .Include(p => p.Categoria)
+         .Include(p => p.Marca)
+         .Include(p => p.Proveedor)
+         .FirstOrDefaultAsync(p => p.IdProducto == id);
 
             if (producto == null)
             {
                 return NotFound();
             }
 
-            return View(producto);
+            return View("~/Views/Inventario/Delete.cshtml", producto);
         }
 
         // POST: Productos/Delete/5
@@ -116,13 +122,38 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
-            if (producto != null)
+            try
             {
-                producto.Activo = false;
-                _context.Update(producto);
-                await _context.SaveChangesAsync();
+                var producto = await _context.Productos.FindAsync(id);
+                if (producto != null)
+                {
+                    // Verificar si hay movimientos de inventario recientes
+                    var tieneMovimientosRecientes = await _context.MovimientosInventario
+                        .AnyAsync(m => m.IdProducto == id && m.FechaMovimiento > DateTime.Now.AddDays(-30));
+
+                    if (tieneMovimientosRecientes)
+                    {
+                        TempData["DeleteError"] = "No se puede eliminar el producto porque tiene movimientos de inventario recientes.";
+                        return RedirectToAction(nameof(InventarioController.Index), "Inventario");
+                    }
+
+                    // Eliminación suave (soft delete)
+                    producto.Activo = false;
+                    _context.Update(producto);
+                    await _context.SaveChangesAsync();
+
+                    TempData["DeleteSuccess"] = $"Producto '{producto.Nombre}' eliminado correctamente.";
+                }
             }
+            catch (DbUpdateException ex)
+            {
+                TempData["DeleteError"] = "No se puede eliminar el producto porque está siendo utilizado en otras operaciones.";
+            }
+            catch (Exception ex)
+            {
+                TempData["DeleteError"] = "Ocurrió un error al eliminar el producto.";
+            }
+
             return RedirectToAction(nameof(InventarioController.Index), "Inventario");
         }
 
@@ -136,7 +167,7 @@ namespace ProyectoLogin.Controllers
             }
 
             ViewBag.Producto = producto;
-            return View();
+            return View("~/Views/Inventario/AjustarStock.cshtml", producto);
         }
 
         // POST: Productos/AjustarStock/5
@@ -158,6 +189,12 @@ namespace ProyectoLogin.Controllers
             }
             else if (tipoMovimiento == "SALIDA")
             {
+                if (cantidad > producto.Stock)
+                {
+                    ModelState.AddModelError("", "No puede retirar más unidades de las que existen en stock");
+                    ViewBag.Producto = producto;
+                    return View("~/Views/Inventario/AjustarStock.cshtml", producto);
+                }
                 producto.Stock = Math.Max(0, producto.Stock - cantidad);
             }
             else if (tipoMovimiento == "AJUSTE")
@@ -170,7 +207,7 @@ namespace ProyectoLogin.Controllers
 
             await RegistrarMovimiento(id, tipoMovimiento, cantidad, motivo, stockAnterior, producto.Stock);
 
-            return RedirectToAction(nameof(InventarioController.Index), "Inventario");
+            return RedirectToAction("Detalles", "Inventario", new { id = id });
         }
 
         private bool ProductoExists(int id)
@@ -195,6 +232,11 @@ namespace ProyectoLogin.Controllers
                 .Select(p => new SelectListItem { Value = p.IdProveedor.ToString(), Text = p.Nombre })
                 .ToListAsync();
         }
+
+
+
+
+
 
         private async Task RegistrarMovimiento(int idProducto, string tipoMovimiento, int cantidad,
             string motivo, int stockAnterior = 0, int stockNuevo = 0)

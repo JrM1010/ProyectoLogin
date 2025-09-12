@@ -71,16 +71,76 @@
                         <td>@producto.Proveedor?.Nombre</td> 
 
                         <td>
+                            <!--boton para detalle-->
                             <a asp-controller="Inventario" asp-action="Detalles" asp-route-id="@producto.IdProducto"
-                               class="btn btn-sm btn-info">Detalles</a>
+                               class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> Detalles
+                            </a>
 
+
+                               
                             @if (User.IsInRole("Administrador") || User.IsInRole("Gerente"))
                             {
+                                <!--boton para editar--->
                                 <a asp-controller="Productos" asp-action="Edit" asp-route-id="@producto.IdProducto"
-                                   class="btn btn-sm btn-warning">Editar</a>
+                                   class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <!--boton para stock--->
                                 <a asp-controller="Productos" asp-action="AjustarStock" asp-route-id="@producto.IdProducto"
-                                   class="btn btn-sm btn-secondary">Stock</a>
+                                   class="btn btn-sm btn-secondary">
+                                    <i class="bi bi-box-arrow-in-down"></i> Stock
+                                </a>
+
+                                <!-- Botón de Eliminar con Modal de Confirmación -->
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal@(producto.IdProducto)"
+                                        title="Eliminar producto">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             }
+                            
+                            
+
+                            <!-- Modal de Confirmación de Eliminación -->
+                            <div class="modal fade" id="deleteModal@(producto.IdProducto)" tabindex="-1"
+                                 aria-labelledby="deleteModalLabel@(producto.IdProducto)" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title" id="deleteModalLabel@(producto.IdProducto)">
+                                                <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>¿Está seguro de que desea eliminar el siguiente producto?</p>
+                                            <div class="alert alert-warning">
+                                                <strong>@producto.Nombre</strong><br>
+                                                Código: @(producto.CodigoBarras ?? "N/A")<br>
+                                                Stock actual: @producto.Stock unidades
+                                            </div>
+                                            <p class="text-danger">
+                                                <i class="bi bi-info-circle"></i>
+                                                Esta acción desactivará el producto pero mantendrá los registros históricos.
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-circle"></i> Cancelar
+                                            </button>
+                                            <form asp-controller="Productos" asp-action="Delete" asp-route-id="@producto.IdProducto"
+                                                  method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-trash"></i> Confirmar Eliminación
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </td>
                     </tr>
                 }
@@ -88,3 +148,65 @@
         </table>
     </div>
 </div>
+
+<!-- Mensaje si no hay productos -->
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center mt-4">
+        <i class="bi bi-info-circle"></i> No se encontraron productos en el inventario.
+    </div>
+}
+</div>
+
+@section Scripts {
+    <script>
+        // Script para manejar la eliminación
+        $(document).ready(function() {
+            // Mostrar mensaje de éxito si existe
+            @if (TempData["DeleteSuccess"] != null)
+            {
+                    <text>
+                    toastr.success('@TempData["DeleteSuccess"]', 'Éxito', {
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 3000
+                    });
+                    </text>
+            }
+
+            // Mostrar mensaje de error si existe
+            @if (TempData["DeleteError"] != null)
+            {
+                    <text>
+                    toastr.error('@TempData["DeleteError"]', 'Error', {
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 5000
+                    });
+                    </text>
+            }
+        });
+    </script>
+}
+
+<style>
+    .btn-group .btn {
+        margin-right: 2px;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .modal-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffc107;
+    }
+</style>
+
+

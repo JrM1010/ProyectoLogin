@@ -12,14 +12,14 @@
             @if (User.IsInRole("Administrador") || User.IsInRole("Gerente") || User.IsInRole("Vendedor"))
             {
                 <a asp-controller="Inventario" asp-action="Index" class="btn btn-primary btn-lg">
-                    <i class="bi bi-box-seam"></i> Gestionar Productos
+                    <i class="bi bi-box-seam"></i> Productos
                 </a>
             }
 
             @if (User.IsInRole("Administrador"))
             {
                 <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-secondary btn-lg">
-                    <i class="bi bi-people"></i> Gestionar Usuarios
+                    <i class="bi bi-people"></i> Usuarios
                 </a>
             }
         </div>

@@ -1,24 +1,28 @@
 ﻿@model ProyectoLogin.Models.Producto
 @{
-    ViewData["Title"] = "Ingresar Producto";
+    ViewData["Title"] = "Editar Producto";
 }
+
 
     <div class="container mt-4">
         <div class="row">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Crear Nuevo Producto</h2>
+                    <h2>Editar Producto</h2>
+
                     <a asp-controller="Inventario" asp-action="Index" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Volver al Inventario
                     </a>
+                
                 </div>
                 <hr />
             </div>
         </div>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Edit" method="post">
         @Html.AntiForgeryToken()
-        
+        <input type="hidden" asp-for="IdProducto" />
+
         <div class="row">
             <!-- Columna izquierda -->
             <div class="col-md-6">
@@ -30,19 +34,19 @@
                     <div class="card-body">
                         <div class="form-group mb-3">
                             <label asp-for="Nombre" class="form-label">Nombre del Producto *</label>
-                            <input asp-for="Nombre" class="form-control" placeholder="Ej: iPhone 13 Pro" />
+                            <input asp-for="Nombre" class="form-control" />
                             <span asp-validation-for="Nombre" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="Descripcion" class="form-label">Descripción</label>
-                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción del producto..."></textarea>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Descripcion" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
-                            <input asp-for="CodigoBarras" class="form-control" placeholder="Ej: 1234567890123" />
+                            <input asp-for="CodigoBarras" class="form-control" />
                             <span asp-validation-for="CodigoBarras" class="text-danger"></span>
                         </div>
                     </div>
@@ -78,16 +82,20 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group mb-3">
-                            <label asp-for="Stock" class="form-label">Stock Inicial *</label>
-                            <input asp-for="Stock" type="number" min="0" class="form-control" />
-                            <span asp-validation-for="Stock" class="text-danger"></span>
+                            <label asp-for="Stock" class="form-label">Stock Actual *</label>
+                            <input asp-for="Stock" type="number" min="0" class="form-control" readonly />
+                            <small class="form-text text-muted">Use el botón 'Stock' para ajustar el inventario</small>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="StockMinimo" class="form-label">Stock Mínimo *</label>
                             <input asp-for="StockMinimo" type="number" min="0" class="form-control" />
                             <span asp-validation-for="StockMinimo" class="text-danger"></span>
-                            <small class="form-text text-muted">Se alertará cuando el stock llegue a este nivel</small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Fecha de Creación</label>
+                            <input type="text" class="form-control" value="@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")" readonly />
                         </div>
                     </div>
                 </div>
@@ -131,10 +139,14 @@
             <div class="col-12">
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Guardar Producto
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
                     </button>
                     <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
                         <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <a asp-controller="Productos" asp-action="AjustarStock" asp-route-id="@Model.IdProducto"
+                       class="btn btn-warning">
+                        <i class="bi bi-box-arrow-in-down"></i> Ajustar Stock
                     </a>
                 </div>
             </div>
@@ -146,51 +158,20 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    
+
     <script>
-        // Validación básica del lado del cliente
         $(document).ready(function() {
             $('form').on('submit', function() {
-                // Validar que el precio de venta sea mayor al de compra
                 const precioCompra = parseFloat($('#PrecioCompra').val());
                 const precioVenta = parseFloat($('#PrecioVenta').val());
-                
+
                 if (precioVenta <= precioCompra) {
                     alert('El precio de venta debe ser mayor al precio de compra');
                     return false;
                 }
-                
-                // Validar que el stock mínimo sea menor o igual al stock inicial
-                const stock = parseInt($('#Stock').val());
-                const stockMinimo = parseInt($('#StockMinimo').val());
-                
-                if (stockMinimo > stock) {
-                    alert('El stock mínimo no puede ser mayor al stock inicial');
-                    return false;
-                }
-                
+
                 return true;
             });
         });
     </script>
 }
-
-<style>
-    .card {
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        border: 1px solid #dee2e6;
-    }
-    
-    .card-header {
-        font-weight: 600;
-    }
-    
-    .form-label {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-    
-    .btn {
-        min-width: 120px;
-    }
-</style>

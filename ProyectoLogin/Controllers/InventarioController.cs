@@ -108,7 +108,7 @@ namespace ProyectoLogin.Controllers
                 return NotFound();
             }
 
-            return View(producto);
+            return View("Detalles", producto);
         }
     }
 }
