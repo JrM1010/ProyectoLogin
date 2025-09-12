@@ -5,4 +5,26 @@
 <div class="text-center">
     <h1 class="display-4">Bienvenido @ViewData["nombreUsuario"]</h1>
     <p>Exitos en sus Labores</p>
+
+    <div class="mt-4">
+        <h3>Accesos Rápidos</h3>
+        <div class="d-flex justify-content-center gap-3 mt-3">
+            @if (User.IsInRole("Administrador") || User.IsInRole("Gerente") || User.IsInRole("Vendedor"))
+            {
+                <a asp-controller="Inventario" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-seam"></i> Gestionar Productos
+                </a>
+            }
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-people"></i> Gestionar Usuarios
+                </a>
+            }
+        </div>
+    </div>
+
 </div>
+
+

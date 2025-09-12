@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using System.Linq;
@@ -43,31 +44,54 @@ namespace ProyectoLogin.Controllers
                 productos = productos.Where(p => p.IdMarca == marcaId);
             }
 
-            ViewBag.Categorias = await _context.Categorias.Where(c => c.Activo).ToListAsync();
-            ViewBag.Marcas = await _context.Marcas.Where(m => m.Activo).ToListAsync();
+            // CONVERTIR a SelectListItem
+            ViewBag.Categorias = _context.Categorias
+                .Where(c => c.Activo)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.IdCategoria.ToString(),
+                    Text = c.Nombre
+                })
+                .ToList();
+
+            ViewBag.Marcas = _context.Marcas
+                .Where(m => m.Activo)
+                .Select(m => new SelectListItem
+                {
+                    Value = m.IdMarca.ToString(),
+                    Text = m.Nombre
+                })
+                .ToList();
 
             return View(await productos.ToListAsync());
         }
+
+
+
 
         // GET: Buscar productos (para vendedores)
         [Authorize(Roles = "Vendedor,Administrador,Gerente")]
         public async Task<IActionResult> Buscar(string term)
         {
             var productos = await _context.Productos
-                .Where(p => p.Activo &&
-                    (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
-                .Select(p => new {
-                    id = p.IdProducto,
-                    text = p.Nombre,
-                    precio = p.PrecioVenta,
-                    stock = p.Stock,
-                    stockMinimo = p.StockMinimo
-                })
-                .Take(10)
-                .ToListAsync();
+                    .Where(p => p.Activo &&
+            (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
+                    .Select(p => new {
+            id = p.IdProducto,
+            text = p.Nombre,
+            precio = p.PrecioVenta,
+            stock = p.Stock,
+            stockMinimo = p.StockMinimo
+        })
+        .Take(10)
+        .ToListAsync();
 
             return Json(productos);
         }
+
+
+
+
 
         // GET: Detalles del producto
         [Authorize(Roles = "Vendedor,Administrador,Gerente")]

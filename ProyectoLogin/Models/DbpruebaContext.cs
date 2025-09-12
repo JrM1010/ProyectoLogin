@@ -67,12 +67,17 @@ public partial class DbpruebaContext : DbContext
 
         modelBuilder.Entity<Producto>(entity =>
         {
+
+
+
             entity.HasKey(e => e.IdProducto);
             entity.ToTable("Producto");
 
-            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false);
-            entity.Property(e => e.Descripcion).HasMaxLength(500).IsUnicode(false);
-            entity.Property(e => e.CodigoBarras).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false); 
+            entity.Property(e => e.Descripcion).HasMaxLength(500).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.CodigoBarras).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+
+
             entity.Property(e => e.PrecioCompra).HasColumnType("decimal(18,2)");
             entity.Property(e => e.PrecioVenta).HasColumnType("decimal(18,2)");
 

@@ -25,6 +25,7 @@ namespace ProyectoLogin.Controllers
             _logger = logger;
         }
 
+
         // Acción principal es la vista inicial después del login.
         public IActionResult Index()
         {
