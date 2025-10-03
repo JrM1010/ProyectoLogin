@@ -16,15 +16,19 @@ namespace ProyectoLogin.Controllers
                 _context = context;
             }
 
-            // LISTAR
-            public async Task<IActionResult> Index()
+        // LISTAR con opción de ordenar
+        public async Task<IActionResult> Index(bool ordenar = false)
             {
-                var proveedores = await _context.Proveedores.Where(p => p.Activo).ToListAsync();
-                return View(proveedores);
+            var proveedores = _context.Proveedores.AsQueryable();
+
+            if (ordenar)
+                proveedores = proveedores.OrderBy(p => p.Nombre);
+
+            return View(await proveedores.ToListAsync());
             }
 
-            // CREAR GET
-            public IActionResult Create()
+        // CREAR GET
+        public IActionResult Create()
             {
                 return View();
             }
@@ -98,6 +102,19 @@ namespace ProyectoLogin.Controllers
             }
 
 
+        // ACTIVAR Proveedor
+        [HttpPost]
+        public async Task<IActionResult> Activar(int id)
+        {
+            var proveedor = await _context.Proveedores.FindAsync(id);
+            if (proveedor != null)
+            {
+                proveedor.Activo = true;
+                _context.Update(proveedor);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
 
     }
 }
