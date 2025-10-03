@@ -26,19 +26,27 @@
                             <div class="mb-3">
                                 <label for="correo" class="form-label">Correo electrónico</label>
                                 <input id="correo" class="form-control" type="text"
-                                       placeholder="Ejemplo: usuario@correo.com"
+                                       placeholder="Ejem: usuario@correo.com"
                                        required name="correo" />
                             </div>
 
                             <div class="mb-3">
                                 <label for="clave" class="form-label">Contraseña</label>
-                                <input id="clave" class="form-control" type="password"
-                                       placeholder="Ingrese su contraseña"
-                                       required name="clave" />
+                                <div class="password-container">
+                                    <input id="clave" class="form-control" type="password"
+                                           placeholder="Ingrese su contraseña"
+                                           required name="clave" />
+                                    <button type="button" id="togglePassword" class="toggle-password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
+                            <!--boton inicio de sesion-->
                             <div class="d-grid gap-2 mb-3">
-                                <button class="btn btn-primary" type="submit">Iniciar Sesión</button>
+                                <button id="loginButton" class="btn btn-primary" type="submit">
+                                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                                </button>
                             </div>
 
                             @if (ViewData["Mensaje"] != null)
@@ -67,3 +75,54 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+<!--CSS-->
+<script>
+    $(document).ready(function() {
+        // Función para mostrar/ocultar contraseña
+        $('#togglePassword').click(function() {
+            const passwordField = $('#clave');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+
+            // Cambiar icono
+            $(this).find('i').toggleClass('bi-eye bi-eye-slash');
+        });
+
+        // Mostrar loading al enviar formulario
+        $('form').on('submit', function() {
+            $('#loginButton').prop('disabled', true);
+            $('#loginButton').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Iniciando sesión...');
+        });
+    });
+</script>
+
+<style>
+    .password-container {
+        position: relative;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+        .toggle-password:hover {
+            color: #495057;
+        }
+
+    #clave {
+        padding-right: 40px;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+</style>

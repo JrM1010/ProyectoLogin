@@ -3,8 +3,7 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Bienvenido @ViewData["nombreUsuario"]</h1>
-    <p>Exitos en sus Labores</p>
+    <h1 class="display-4">Bienvenido al Sistema @ViewData["nombreUsuario"]</h1>
 
     <div class="mt-4">
         <h3>Accesos Rápidos</h3>
@@ -22,6 +21,14 @@
                     <i class="bi bi-people"></i> Usuarios
                 </a>
             }
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Proveedores" asp-action="Index" class="btn btn-info btn-lg">
+                    <i class="bi bi-truck"></i> Proveedores
+                </a>
+            }
+
         </div>
     </div>
 

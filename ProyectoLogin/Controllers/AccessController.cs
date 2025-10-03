@@ -11,13 +11,12 @@ namespace ProyectoLogin.Controllers
         // Contexto de base de datos para acceder a la tabla Usuarios
         private readonly DbpruebaContext _context;
 
-        // Constructor: recibe el contexto por inyección de dependencias
         public AccessController(DbpruebaContext context)
         {
             _context = context;
         }
 
-        // Vista principal (Index) del controlador
+        // Vista principal
         public IActionResult Index()
         {
             return View();
@@ -27,8 +26,13 @@ namespace ProyectoLogin.Controllers
         [HttpGet]
         public ActionResult StartRecovery()
         {
+            // Limpiar mensajes temporales al cargar la vista
+            TempData.Remove("SuccessMessage");
+            TempData.Remove("ErrorMessage");
             return View(new Models.ViewModel.RecoveryViewModel());
         }
+
+
 
         // POST: procesa el formulario de recuperación de contraseña
         [HttpPost]
@@ -43,8 +47,7 @@ namespace ProyectoLogin.Controllers
 
             if (usuario != null)
             {
-
-                var resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString()); // Generación de token único de recuperación
+                var resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString());
 
                 // Crear registro en la tabla RecuperacionPassword
                 var recuperacion = new RecuperacionPassword
@@ -66,25 +69,37 @@ namespace ProyectoLogin.Controllers
                 // Asunto y cuerpo del correo con el enlace
                 string subject = "Recuperación de Contraseña";
                 string body = $@"
-                    <h3>Hola {usuario.NombreUsuario},</h3>
-                    <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-                    <p><a href='{link}'>Restablecer Contraseña</a></p>
-                    <p>Este enlace es válido por 2 horas.</p>";
+            <h3>Hola {usuario.NombreUsuario},</h3>
+            <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+            <p><a href='{link}'>Restablecer Contraseña</a></p>
+            <p>Este enlace es válido por 2 horas.</p>";
 
-                // Envía el correo al usuario
-                emailService.SendEmail(usuario.Correo, subject, body);
+                try
+                {
+                    // Envía el correo al usuario
+                    emailService.SendEmail(usuario.Correo, subject, body);
 
-                // Mensaje de confirmación
-                ViewBag.Message = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
+                    // Mensaje de éxito
+                    TempData["SuccessMessage"] = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
+                }
+                catch (Exception ex)
+                {
+                    // Error al enviar el correo
+                    TempData["ErrorMessage"] = "Error al enviar el correo. Por favor, intenta nuevamente.";
+                }
             }
             else
             {
                 // Si no existe el correo, muestra error
-                ModelState.AddModelError("", "No se encontró un usuario con ese correo.");
+                TempData["ErrorMessage"] = "No se encontró un usuario con ese correo electrónico.";
             }
 
             return View(model);
         }
+
+
+
+
 
         // GET: muestra la vista para ingresar nueva contraseña
         [HttpGet]
@@ -123,21 +138,29 @@ namespace ProyectoLogin.Controllers
 
             if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
             {
-                ModelState.AddModelError("", "El token es inválido o ha expirado.");
+                TempData["ErrorMessage"] = "El token es inválido o ha expirado.";
                 return View(model);
             }
 
-            // Encripta y guarda la nueva contraseña
-            recuperacion.Usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
+            try
+            {
+                // Encripta y guarda la nueva contraseña
+                recuperacion.Usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
 
+                // Limpia el token para que no pueda usarse otra vez
+                recuperacion.Usado = true;
 
-            // Limpia el token para que no pueda usarse otra vez
-            recuperacion.Usado = true;
+                // Actualiza cambios en la BD
+                _context.SaveChanges();
 
-            // Actualiza cambios en la BD
-            _context.SaveChanges();
-
-            return RedirectToAction("Index", "Home");
+                TempData["SuccessMessage"] = "Contraseña restablecida correctamente. Ya puedes iniciar sesión.";
+                return RedirectToAction("IniciarSesion", "Inicio");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error al restablecer la contraseña. Por favor, intenta nuevamente.";
+                return View(model);
+            }
         }
     }
 }

@@ -6,20 +6,20 @@ namespace ProyectoLogin.Models.ViewModel
     {
 
         [Required]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Required]
-        public string resetToken { get; set; }
+        public string? resetToken { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Este campo debe ser llenado.")]
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
-        public string NewPassword { get; set; }
+        public string? NewPassword { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Este campo debe ser llenado.")]
         [DataType(DataType.Password)]
         [Compare("NewPassword", ErrorMessage = "Las contraseñas no coinciden")]
-        public string ConfirmPassword { get; set; }
+        public string? ConfirmPassword { get; set; }
 
     }
 }

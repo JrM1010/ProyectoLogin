@@ -8,6 +8,8 @@ public partial class Usuario
 {
     public int IdUsuario { get; set; }
     public string? NombreUsuario { get; set; }
+
+    
     public string? Correo { get; set; }
 
     [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
@@ -16,6 +18,6 @@ public partial class Usuario
 
     // Relaciones
     public int IdRol { get; set; }
-    public virtual Rol Rol { get; set; }
+    public virtual Rol? Rol { get; set; }
 
 }

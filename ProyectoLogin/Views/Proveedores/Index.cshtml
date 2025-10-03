@@ -1,0 +1,38 @@
+﻿@model IEnumerable<ProyectoLogin.Models.Proveedor>
+
+<h2>Gestión de Proveedores</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">➕ Agregar Proveedor</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Contacto</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Contacto</td>
+                <td>@p.Telefono</td>
+                <td>@p.Email</td>
+                <td>@p.Direccion</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@p.IdProveedor" class="btn btn-warning btn-sm">✏ Editar</a>
+                    <form asp-action="Delete" asp-route-id="@p.IdProveedor" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
