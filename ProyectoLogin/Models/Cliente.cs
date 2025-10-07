@@ -10,7 +10,7 @@ namespace ProyectoLogin.Models
         [Required]
         [StringLength(12)]
         [Display(Name = "Nit")]
-        public string? Nit { get; set; }  // Numero de Identificación Tributaria
+        public string Nit { get; set; }  // Numero de Identificación Tributaria
 
         [Required]
         [StringLength(100)]

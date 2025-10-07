@@ -1,13 +1,13 @@
 ﻿@model ProyectoLogin.Models.Cliente
 
 @{
-    ViewData["Title"] = "Crear Cliente";
+    ViewData["Title"] = "Editar Cliente";
 }
 
-<h2>Crear Cliente</h2>
+<h2>Editar Cliente</h2>
 
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="IdCliente" />
 
     <div class="form-group">
         <label asp-for="Nit"></label>
@@ -15,17 +15,16 @@
         <span asp-validation-for="Nit" class="text-danger"></span>
     </div>
 
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label asp-for="Nombres"></label>
-            <input asp-for="Nombres" class="form-control" />
-            <span asp-validation-for="Nombres" class="text-danger"></span>
-        </div>
-        <div class="form-group col-md-6">
-            <label asp-for="Apellidos"></label>
-            <input asp-for="Apellidos" class="form-control" />
-            <span asp-validation-for="Apellidos" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="Nombres"></label>
+        <input asp-for="Nombres" class="form-control" />
+        <span asp-validation-for="Nombres" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Apellidos"></label>
+        <input asp-for="Apellidos" class="form-control" />
+        <span asp-validation-for="Apellidos" class="text-danger"></span>
     </div>
 
     <div class="form-group">
@@ -47,8 +46,8 @@
     </div>
 
     <br />
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
+    
+    <button type="submit" class="btn btn-success">Guardar cambios</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 

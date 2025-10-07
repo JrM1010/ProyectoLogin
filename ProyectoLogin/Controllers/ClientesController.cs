@@ -16,23 +16,22 @@ namespace ProyectoLogin.Controllers
 
 
         // GET: Clientes
-        public async Task<IActionResult> Index(string q, bool incluirInactivos = false)
+        public async Task<IActionResult> Index(string q)
         {
-            var query = _context.Clientes
-                        .AsNoTracking()
-                        .OrderBy(c => c.Nombres)
-                        .AsQueryable();
+            var query = _context.Clientes.AsQueryable();
 
-            if (!incluirInactivos)
-                query = query.Where(c => c.Activo);
+            if (!string.IsNullOrEmpty(q))
+                query = query.Where(c =>
+                    c.Nombres.Contains(q) ||
+                    c.Apellidos.Contains(q) ||
+                    c.Correo.Contains(q) ||
+                    c.Telefono.Contains(q) ||
+                    c.Nit.Contains(q));
 
-            if (!string.IsNullOrWhiteSpace(q))
-                query = query.Where(c => c.Nombres.Contains(q) || c.Apellidos.Contains(q) || c.Correo.Contains(q) || c.Telefono.Contains(q));
-
-            var clientes = await query.ToListAsync();
 
             ViewData["q"] = q ?? "";
-            ViewData["incluirInactivos"] = incluirInactivos;
+
+            var clientes = await query.OrderBy(c => c.Nombres).ToListAsync();
 
             return View(clientes);
         }
@@ -48,6 +47,7 @@ namespace ProyectoLogin.Controllers
             if (cliente == null) return NotFound();
             return View(cliente);
         }
+
 
         // GET: Clientes/Create
         public IActionResult Create()
@@ -70,6 +70,7 @@ namespace ProyectoLogin.Controllers
             }
             return View(cliente);
         }
+
 
         // GET: Clientes/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -105,6 +106,7 @@ namespace ProyectoLogin.Controllers
             return View(cliente);
         }
 
+
         // GET: Clientes/Delete/5 (confirmación)
         public async Task<IActionResult> Delete(int? id)
         {
@@ -137,6 +139,21 @@ namespace ProyectoLogin.Controllers
         private bool ClienteExists(int id)
         {
             return _context.Clientes.Any(e => e.IdCliente == id);
+        }
+
+        // POST: Clientes/ToggleActivo/5 (activar/desactivar)
+        [HttpPost]
+        public async Task<IActionResult> ToggleActivo(int id)
+        {
+            var cliente = await _context.Clientes.FindAsync(id);
+            if (cliente == null)
+                return NotFound();
+
+            cliente.Activo = !cliente.Activo;
+            _context.Update(cliente);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
