@@ -1,0 +1,47 @@
+﻿@model IEnumerable<ProyectoLogin.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h2>Clientes</h2>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Nuevo Cliente</a>
+</p>
+
+<form method="get" class="form-inline mb-2">
+    <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control mr-2" placeholder="Buscar..." />
+    <label class="form-check-label mr-2">
+        <input type="checkbox" name="incluirInactivos" value="true" @( (ViewData["incluirInactivos"] is bool b && b) ? "checked" : "" ) /> Mostrar inactivos
+    </label>
+    <button class="btn btn-secondary">Buscar</button>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Activo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(item.Nombres) @(item.Apellidos)</td>
+                <td>@item.Correo</td>
+                <td>@item.Telefono</td>
+                <td>@(item.Activo ? "Sí" : "No")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.IdCliente">Detalles</a> |
+                    <a asp-action="Edit" asp-route-id="@item.IdCliente">Editar</a> |
+                    <a asp-action="Delete" asp-route-id="@item.IdCliente">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
