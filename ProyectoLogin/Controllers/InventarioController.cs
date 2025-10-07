@@ -10,9 +10,9 @@ namespace ProyectoLogin.Controllers
     [Authorize(Roles = "Administrador,Gerente")]
     public class InventarioController : Controller
     {
-        private readonly DbpruebaContext _context;
+        private readonly DbPruebaContext _context;
 
-        public InventarioController(DbpruebaContext context)
+        public InventarioController(DbPruebaContext context)
         {
             _context = context;
         }

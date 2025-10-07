@@ -9,9 +9,9 @@ namespace ProyectoLogin.Controllers
     public class AccessController : Controller
     {
         // Contexto de base de datos para acceder a la tabla Usuarios
-        private readonly DbpruebaContext _context;
+        private readonly DbPruebaContext _context;
 
-        public AccessController(DbpruebaContext context)
+        public AccessController(DbPruebaContext context)
         {
             _context = context;
         }

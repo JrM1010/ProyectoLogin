@@ -15,12 +15,14 @@
     <label class="form-check-label mr-2">
         <input type="checkbox" name="incluirInactivos" value="true" @( (ViewData["incluirInactivos"] is bool b && b) ? "checked" : "" ) /> Mostrar inactivos
     </label>
+    <br />
     <button class="btn btn-secondary">Buscar</button>
 </form>
 
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>Nit</th>
             <th>Nombre</th>
             <th>Correo</th>
             <th>Teléfono</th>
@@ -32,6 +34,7 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td>@item.Nit</td>
                 <td>@(item.Nombres) @(item.Apellidos)</td>
                 <td>@item.Correo</td>
                 <td>@item.Telefono</td>

@@ -1,10 +1,12 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Proveedor>
 
-<h2>Gestión de Proveedores</h2>
-
-<p>
-    <a asp-action="Create" class="btn btn-success">➕ Agregar Proveedor</a>
-</p>
+<h2>Proveedores Activos</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p>
+        <a asp-action="Create" class="btn btn-success">➕ Agregar Proveedor</a>
+    </p>
+    <a asp-action="Index" asp-route-ordenar="true" class="btn btn-primary">Ordenar A-Z</a>
+</div>
 
 <table class="table table-striped">
     <thead>
@@ -18,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var p in Model)
+        @foreach (var p in Model.Where(x => x.Activo))
         {
             <tr>
                 <td>@p.Nombre</td>
@@ -29,7 +31,42 @@
                 <td>
                     <a asp-action="Edit" asp-route-id="@p.IdProveedor" class="btn btn-warning btn-sm">✏ Editar</a>
                     <form asp-action="Delete" asp-route-id="@p.IdProveedor" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-danger btn-sm">🗑 Eliminar</button>
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Desactivar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h2>Proveedores Inactivos</h2>
+<a asp-action="Index" asp-route-ordenar="true" class="btn btn-primary">Ordenar A-Z</a>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Contacto</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Where(x => !x.Activo))
+        {
+            <tr class="table-secondary">
+                <td>@p.Nombre</td>
+                <td>@p.Contacto</td>
+                <td>@p.Telefono</td>
+                <td>@p.Email</td>
+                <td>@p.Direccion</td>
+                <td>
+                    <form asp-action="Activar" asp-route-id="@p.IdProveedor" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm">✅ Activar</button>
                     </form>
                 </td>
             </tr>

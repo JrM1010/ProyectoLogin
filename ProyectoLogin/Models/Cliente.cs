@@ -4,6 +4,7 @@ namespace ProyectoLogin.Models
 {
     public class Cliente
     {
+        [Key]
         public int IdCliente { get; set; }
 
         [Required]

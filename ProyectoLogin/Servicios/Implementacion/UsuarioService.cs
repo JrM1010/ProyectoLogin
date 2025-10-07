@@ -10,11 +10,11 @@ namespace ProyectoLogin.Servicios.Implementacion
     public class UsuarioService : IUsuarioService
     {
         // Campo privado para acceder al contexto de base de datos (Entity Framework).
-        private readonly DbpruebaContext _dbContext;
+        private readonly DbPruebaContext _dbContext;
 
         // Constructor: recibe el DbContext por inyección de dependencias.
         // Esto permite usar la conexión a la base de datos sin crearla manualmente aquí.
-        public UsuarioService(DbpruebaContext dbContext)
+        public UsuarioService(DbPruebaContext dbContext)
         {
             _dbContext = dbContext;
         }

@@ -3,12 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using System;
 
+
 namespace ProyectoLogin.Controllers
 {
     public class ClientesController : Controller
     {
-        private readonly Models.DbpruebaContext _context;
-        public ClientesController(Models.DbpruebaContext context)
+        private readonly Models.DbPruebaContext _context;
+        public ClientesController(Models.DbPruebaContext context)
         {
             _context = context;
         }

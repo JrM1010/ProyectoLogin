@@ -9,19 +9,23 @@ namespace ProyectoLogin.Controllers
     public class ProveedoresController : Controller
     {
         
-            private readonly DbpruebaContext _context;
+            private readonly DbPruebaContext _context;
 
-            public ProveedoresController(DbpruebaContext context)
+            public ProveedoresController(DbPruebaContext context)
             {
                 _context = context;
             }
 
-            // LISTAR
-            public async Task<IActionResult> Index()
-            {
-                var proveedores = await _context.Proveedores.Where(p => p.Activo).ToListAsync();
-                return View(proveedores);
-            }
+        // LISTAR con opción de ordenar
+        public async Task<IActionResult> Index(bool ordenar = false)
+        {
+            var proveedores = _context.Proveedores.AsQueryable();
+
+            if (ordenar)
+                proveedores = proveedores.OrderBy(p => p.Nombre);
+
+            return View(await proveedores.ToListAsync());
+        }
 
             // CREAR GET
             public IActionResult Create()
@@ -98,6 +102,19 @@ namespace ProyectoLogin.Controllers
             }
 
 
+        // ACTIVAR Proveedor
+        [HttpPost]
+        public async Task<IActionResult> Activar(int id)
+        {
+            var proveedor = await _context.Proveedores.FindAsync(id);
+            if (proveedor != null)
+            {
+                proveedor.Activo = true;
+                _context.Update(proveedor);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
 
     }
 }

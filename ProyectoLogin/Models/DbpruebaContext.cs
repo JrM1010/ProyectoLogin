@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ProyectoLogin.Models;
 
-public partial class DbpruebaContext : DbContext
+public partial class DbPruebaContext : DbContext
 {
     // Constructor que recibe las opciones de configuración del contexto.
     // ASP.NET Core lo usa para conectar la base de datos cuando registras el servicio en Program.cs.
-    public DbpruebaContext(DbContextOptions<DbpruebaContext> options)
+    public DbPruebaContext(DbContextOptions<DbPruebaContext> options)
         : base(options)
     {
     }
@@ -23,6 +23,7 @@ public partial class DbpruebaContext : DbContext
     public virtual DbSet<Marca> Marcas { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<MovimientoInventario> MovimientosInventario { get; set; }
+    public virtual DbSet<Cliente> Clientes { get; set; } 
 
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
@@ -133,6 +134,11 @@ public partial class DbpruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(m => m.IdUsuario);
         });
+
+        modelBuilder.Entity<Cliente>()
+        .HasIndex(c => c.Nit)
+        .IsUnique(false); // cambia a true si quieres forzar unicidad
+
 
 
 

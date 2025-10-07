@@ -8,9 +8,9 @@ namespace ProyectoLogin.Controllers
     [Authorize(Roles = "Administrador,Gerente")]
     public class CategoriasController : Controller
     {
-        private readonly DbpruebaContext _context;
+        private readonly DbPruebaContext _context;
 
-        public CategoriasController(DbpruebaContext context)
+        public CategoriasController(DbPruebaContext context)
         {
             _context = context;
         }

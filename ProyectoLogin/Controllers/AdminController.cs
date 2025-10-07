@@ -6,9 +6,9 @@ using ProyectoLogin.Models;
 [Authorize(Roles = "Administrador")] //Solo admins
 public class AdminController : Controller
 {
-    private readonly DbpruebaContext _context;
+    private readonly DbPruebaContext _context;
 
-    public AdminController(DbpruebaContext context)
+    public AdminController(DbPruebaContext context)
     {
         _context = context;
     }
