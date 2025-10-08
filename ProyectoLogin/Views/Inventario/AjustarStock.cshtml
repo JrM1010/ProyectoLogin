@@ -1,0 +1,254 @@
+﻿@model ProyectoLogin.Models.Producto
+@{
+    ViewData["Title"] = "Ajustar Stock";
+}
+
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Ajustar Stock</h2>
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Inventario
+                    </a>
+                </div>
+                <hr />
+            </div>
+        </div>
+
+    <!-- Información del producto -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-box"></i> Información del Producto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Producto:</strong> @Model.Nombre
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Código:</strong> @(Model.CodigoBarras ?? "N/A")
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Stock Actual:</strong>
+                            <span class="@(Model.Stock <= Model.StockMinimo ? "text-danger fw-bold" : "text-success")">
+                                @Model.Stock unidades
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stock Mínimo:</strong> @Model.StockMinimo unidades
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de ajuste de stock -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="bi bi-sliders"></i> Tipo de Movimiento</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Productos" asp-action="AjustarStock" method="post">
+                        <input type="hidden" name="id" value="@Model.IdProducto" />
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Tipo de Movimiento *</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoMovimiento"
+                                               id="entrada" value="ENTRADA" checked>
+                                        <label class="form-check-label text-success fw-bold" for="entrada">
+                                            <i class="bi bi-box-arrow-in-down"></i> Entrada
+                                        </label>
+                                        <small class="form-text text-muted d-block">Aumentar stock</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoMovimiento"
+                                               id="salida" value="SALIDA">
+                                        <label class="form-check-label text-danger fw-bold" for="salida">
+                                            <i class="bi bi-box-arrow-up"></i> Salida
+                                        </label>
+                                        <small class="form-text text-muted d-block">Disminuir stock</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoMovimiento"
+                                               id="ajuste" value="AJUSTE">
+                                        <label class="form-check-label text-primary fw-bold" for="ajuste">
+                                            <i class="bi bi-sliders"></i> Ajuste
+                                        </label>
+                                        <small class="form-text text-muted d-block">Establecer stock exacto</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="cantidad" class="form-label fw-bold">Cantidad *</label>
+                            <input type="number" name="cantidad" id="cantidad" class="form-control"
+                                   min="1" required placeholder="Ingrese la cantidad">
+                            <small class="form-text text-muted" id="cantidadHelp"></small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="motivo" class="form-label fw-bold">Motivo *</label>
+                            <textarea name="motivo" id="motivo" class="form-control" rows="3"
+                                      required placeholder="Ej: Compra a proveedor, Venta a cliente, Ajuste de inventario..."></textarea>
+                        </div>
+
+                        <!-- Preview del resultado -->
+                        <div class="card mb-3" id="previewCard" style="display: none;">
+                            <div class="card-header bg-light">
+                                <h6><i class="bi bi-eye"></i> Vista Previa</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="previewContent"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Aplicar Ajuste
+                            </button>
+                            <a asp-controller="Inventario" asp-action="Detalles" asp-route-id="@Model.IdProducto"
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const stockActual = @Model.Stock;
+            const stockMinimo = @Model.StockMinimo;
+
+            // Actualizar ayuda según el tipo de movimiento
+            $('input[name="tipoMovimiento"]').change(function() {
+                updateCantidadHelp();
+                updatePreview();
+            });
+
+            $('#cantidad').on('input', function() {
+                updatePreview();
+            });
+
+            function updateCantidadHelp() {
+                const tipo = $('input[name="tipoMovimiento"]:checked').val();
+                let helpText = '';
+
+                switch(tipo) {
+                    case 'ENTRADA':
+                        helpText = 'Ingrese la cantidad a agregar al stock actual';
+                        break;
+                    case 'SALIDA':
+                        helpText = 'Ingrese la cantidad a retirar del stock actual (máximo: ' + stockActual + ')';
+                        $('#cantidad').attr('max', stockActual);
+                        break;
+                    case 'AJUSTE':
+                        helpText = 'Ingrese el nuevo valor exacto de stock';
+                        $('#cantidad').removeAttr('max');
+                        break;
+                }
+
+                $('#cantidadHelp').text(helpText);
+            }
+
+            function updatePreview() {
+                const tipo = $('input[name="tipoMovimiento"]:checked').val();
+                const cantidad = parseInt($('#cantidad').val()) || 0;
+                let nuevoStock = stockActual;
+                let operacion = '';
+
+                switch(tipo) {
+                    case 'ENTRADA':
+                        nuevoStock = stockActual + cantidad;
+                        operacion = `+${cantidad}`;
+                        break;
+                    case 'SALIDA':
+                        nuevoStock = Math.max(0, stockActual - cantidad);
+                        operacion = `-${cantidad}`;
+                        break;
+                    case 'AJUSTE':
+                        nuevoStock = cantidad;
+                        operacion = `=${cantidad}`;
+                        break;
+                }
+
+                if (cantidad > 0) {
+                    $('#previewCard').show();
+                    const stockClass = nuevoStock <= stockMinimo ? 'text-danger' : 'text-success';
+                    const alertClass = nuevoStock <= stockMinimo ? 'alert-warning' : 'alert-success';
+
+                    $('#previewContent').html(`
+                        <div class="alert ${alertClass}">
+                            <strong>Operación:</strong> Stock actual ${operacion}<br>
+                            <strong>Nuevo stock:</strong> <span class="${stockClass} fw-bold">${nuevoStock} unidades</span><br>
+                            <strong>Estado:</strong> ${nuevoStock == 0 ? 'AGOTADO' : nuevoStock <= stockMinimo ? 'STOCK BAJO' : 'NORMAL'}
+                        </div>
+                    `);
+                } else {
+                    $('#previewCard').hide();
+                }
+            }
+
+            // Validación del formulario
+            $('form').on('submit', function(e) {
+                const tipo = $('input[name="tipoMovimiento"]:checked').val();
+                const cantidad = parseInt($('#cantidad').val());
+
+                if (tipo === 'SALIDA' && cantidad > stockActual) {
+                    e.preventDefault();
+                    alert('No puede retirar más unidades de las que existen en stock');
+                    return false;
+                }
+
+                if (cantidad <= 0) {
+                    e.preventDefault();
+                    alert('La cantidad debe ser mayor a cero');
+                    return false;
+                }
+            });
+
+            // Inicializar
+            updateCantidadHelp();
+        });
+    </script>
+
+    <style>
+        .form-check-input:checked {
+            border-color: #0d6efd;
+            background-color: #0d6efd;
+        }
+
+        .form-check-label {
+            cursor: pointer;
+        }
+
+        #previewCard {
+            transition: all 0.3s ease;
+        }
+
+        .card-header h5, .card-header h6 {
+            margin: 0;
+        }
+    </style>
+}

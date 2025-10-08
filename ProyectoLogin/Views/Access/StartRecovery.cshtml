@@ -6,24 +6,93 @@
 <div class="row">
     <div class="col-md-6 offset-3">
         <div class="form-style">
-            <form action="@Url.Content("~/Access/StartRecovery")" method="post">
+            <!-- Mensajes de alerta -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-                <label>Escribe tu Correo Electrónico</label>
-                @Html.TextBoxFor(d => d.Email, null, new { @class = "form-control"})
-                @Html.ValidationMessageFor(d=> d.Email,null,new {style="color:red;"})
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-                <br/> @*salto de linea*@
-                <div class ="text-right">
-                    <button class="btn btn-primary">Recuperar</button>
-                    <a href="@Url.Action("IniciarSesion", "Inicio")" class="btn btn-secondary">
-                        Volver al Inicio
-                    </a>
+            <form id="recoveryForm" action="@Url.Content("~/Access/StartRecovery")" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label">Escribe tu Correo Electrónico</label>
+                    @Html.TextBoxFor(d => d.Email, new { @class = "form-control", placeholder = "ejemplo@correo.com" })
+                    @Html.ValidationMessageFor(d => d.Email, null, new { @class = "text-danger" })
                 </div>
 
-                
-
+                <br />
+                <div class="text-right">
+                    <button id="recoveryButton" type="submit" class="btn btn-primary">
+                        <i class="bi bi-envelope"></i> Recuperar
+                    </button>
+                    <a href="@Url.Action("IniciarSesion", "Inicio")" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Inicio
+                    </a>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Manejar el envío del formulario
+            $('#recoveryForm').on('submit', function() {
+                // Mostrar loading
+                $('#recoveryButton').prop('disabled', true);
+                $('#recoveryButton').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...');
+
+                // Limpiar mensajes anteriores
+                $('.alert').remove();
+
+                return true; // Continuar con el envío
+            });
+
+            // Rehabilitar botón si hay error de validación
+            @if (!ViewData.ModelState.IsValid)
+            {
+                    <text>
+                    $('#recoveryButton').prop('disabled', false);
+                    $('#recoveryButton').html('<i class="bi bi-envelope"></i> Recuperar');
+                    </text>
+            }
+        });
+    </script>
+
+    <style>
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.8;
+        }
+
+        .alert {
+            margin-bottom: 1rem;
+        }
+
+        .form-style {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    </style>
+}
 

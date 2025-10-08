@@ -4,17 +4,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ProyectoLogin.Models;
 
-public partial class DbpruebaContext : DbContext
+public partial class DbPruebaContext : DbContext
 {
     // Constructor que recibe las opciones de configuración del contexto.
     // ASP.NET Core lo usa para conectar la base de datos cuando registras el servicio en Program.cs.
-    public DbpruebaContext(DbContextOptions<DbpruebaContext> options)
+    public DbPruebaContext(DbContextOptions<DbPruebaContext> options)
         : base(options)
     {
     }
 
-    // Representa la tabla "Usuario" en la base de datos.
+    // Representa las tablas en la base de datos.
     public virtual DbSet<Usuario> Usuarios { get; set; }
+    public virtual DbSet<Rol> Roles { get; set; }
+    public virtual DbSet<RecuperacionPassword> Recuperaciones { get; set; }
+
+    public virtual DbSet<Producto> Productos { get; set; }
+    public virtual DbSet<Categoria> Categorias { get; set; }
+    public virtual DbSet<Marca> Marcas { get; set; }
+    public virtual DbSet<Proveedor> Proveedores { get; set; }
+    public virtual DbSet<MovimientoInventario> MovimientosInventario { get; set; }
+    public virtual DbSet<Cliente> Clientes { get; set; } 
 
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
@@ -22,39 +31,121 @@ public partial class DbpruebaContext : DbContext
     {
         modelBuilder.Entity<Usuario>(entity =>
         {
-            // Define la clave primaria de la tabla
-            entity.HasKey(e => e.IdUsuario).HasName("PK__Usuario__5B65BF976FF740F1");
-
-            // Define el nombre de la tabla en la BD
+            entity.HasKey(e => e.IdUsuario);
             entity.ToTable("Usuario");
 
-            // Configuración de la columna "clave"
-            entity.Property(e => e.Clave)
-                .HasMaxLength(100)   
-                .IsUnicode(false)    
-                .HasColumnName("clave"); 
+            entity.Property(e => e.NombreUsuario).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.Correo).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.Clave).HasMaxLength(500).IsUnicode(false);
 
-            // Configuración de la columna "Correo"
-            entity.Property(e => e.Correo)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-
-            // Configuración de la columna "NombreUsuario"
-            entity.Property(e => e.NombreUsuario)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-
-            // Campos para recuperación de contraseña
-            entity.Property(e => e.Token_Recovery) // token de seguridad único para resetear clave
-                .HasMaxLength(200)
-                .IsUnicode(false);
-
-            entity.Property(e => e.Date_Created); // fecha de creación del token
+            // Relación Usuario → Rol
+            entity.HasOne(u => u.Rol)
+                  .WithMany(r => r.Usuarios)
+                  .HasForeignKey(u => u.IdRol);
         });
 
-        // Permite extender la configuración en otro archivo parcial si lo necesitas.
-        OnModelCreatingPartial(modelBuilder);
+        modelBuilder.Entity<Rol>(entity =>
+        {
+            entity.HasKey(e => e.IdRol);
+            entity.ToTable("Rol");
+            entity.Property(e => e.NombreRol).HasMaxLength(50).IsUnicode(false);
+        });
+
+        modelBuilder.Entity<RecuperacionPassword>(entity =>
+        {
+            entity.HasKey(e => e.IdRecuperacion);
+            entity.ToTable("RecuperacionPassword");
+
+            entity.Property(e => e.Token).HasMaxLength(200).IsUnicode(false);
+
+            // Relación con Usuario
+            entity.HasOne(r => r.Usuario)
+                  .WithMany()
+                  .HasForeignKey(r => r.IdUsuario);
+        });
+
+        //Aqui empieza la implementacion de Productos en el POS
+
+        modelBuilder.Entity<Producto>(entity =>
+        {
+            entity.HasKey(e => e.IdProducto);
+            entity.ToTable("Producto");
+
+            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false); 
+            entity.Property(e => e.Descripcion).HasMaxLength(500).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.CodigoBarras).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+
+
+            entity.Property(e => e.PrecioCompra).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PrecioVenta).HasColumnType("decimal(18,2)");
+
+            entity.HasOne(p => p.Categoria)
+                  .WithMany(c => c.Productos)
+                  .HasForeignKey(p => p.IdCategoria);
+
+            entity.HasOne(p => p.Marca)
+                  .WithMany(m => m.Productos)
+                  .HasForeignKey(p => p.IdMarca);
+
+            entity.HasOne(p => p.Proveedor)
+                  .WithMany(pr => pr.Productos)
+                  .HasForeignKey(p => p.IdProveedor);
+        });
+
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.HasKey(e => e.IdCategoria);
+            entity.ToTable("Categoria");
+            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Descripcion).HasMaxLength(300).IsUnicode(false).IsRequired(false);
+        });
+
+        modelBuilder.Entity<Marca>(entity =>
+        {
+            entity.HasKey(e => e.IdMarca);
+            entity.ToTable("Marca");
+            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+        });
+
+        modelBuilder.Entity<Proveedor>(entity =>
+        {
+            entity.HasKey(e => e.IdProveedor);
+            entity.ToTable("Proveedor");
+            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Contacto).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+        });
+
+        modelBuilder.Entity<MovimientoInventario>(entity =>
+        {
+            entity.HasKey(e => e.IdMovimiento);
+            entity.ToTable("MovimientoInventario");
+
+            entity.Property(e => e.TipoMovimiento).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.Cantidad).HasColumnType("int");
+            entity.Property(e => e.Motivo).HasMaxLength(300).IsUnicode(false);
+
+            entity.HasOne(m => m.Producto)
+                  .WithMany()
+                  .HasForeignKey(m => m.IdProducto);
+
+            entity.HasOne(m => m.Usuario)
+                  .WithMany()
+                  .HasForeignKey(m => m.IdUsuario);
+        });
+
+        modelBuilder.Entity<Cliente>()
+        .HasIndex(c => c.Nit)
+        .IsUnique(false); // cambia a true si quieres forzar unicidad
+
+
+
+
     }
+
+    
+    
 
     // Método parcial para agregar configuración adicional.
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

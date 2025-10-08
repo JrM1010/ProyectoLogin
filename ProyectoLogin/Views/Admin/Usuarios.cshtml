@@ -1,0 +1,37 @@
+﻿@model IEnumerable<ProyectoLogin.Models.Usuario>
+
+<h2>Gestión de Usuarios</h2>
+
+<p>
+    <a class="btn btn-success" asp-controller="Inicio" asp-action="Registrarse">➕ Registrar Usuario</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var usuario in Model)
+        {
+            <tr>
+                <td>@usuario.IdUsuario</td>
+                <td>@usuario.NombreUsuario</td>
+                <td>@usuario.Correo</td>
+                <td>@usuario.Rol?.NombreRol</td>
+                <td>
+                    <a asp-action="Editar" asp-route-id="@usuario.IdUsuario" class="btn btn-warning btn-sm">✏ Editar</a>
+                    <form asp-action="Eliminar" asp-route-id="@usuario.IdUsuario" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

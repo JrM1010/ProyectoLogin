@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Recursos;
 using System;
@@ -8,15 +9,14 @@ namespace ProyectoLogin.Controllers
     public class AccessController : Controller
     {
         // Contexto de base de datos para acceder a la tabla Usuarios
-        private readonly DbpruebaContext _context;
+        private readonly DbPruebaContext _context;
 
-        // Constructor: recibe el contexto por inyección de dependencias
-        public AccessController(DbpruebaContext context)
+        public AccessController(DbPruebaContext context)
         {
             _context = context;
         }
 
-        // Vista principal (Index) del controlador
+        // Vista principal
         public IActionResult Index()
         {
             return View();
@@ -26,8 +26,13 @@ namespace ProyectoLogin.Controllers
         [HttpGet]
         public ActionResult StartRecovery()
         {
+            // Limpiar mensajes temporales al cargar la vista
+            TempData.Remove("SuccessMessage");
+            TempData.Remove("ErrorMessage");
             return View(new Models.ViewModel.RecoveryViewModel());
         }
+
+
 
         // POST: procesa el formulario de recuperación de contraseña
         [HttpPost]
@@ -42,14 +47,19 @@ namespace ProyectoLogin.Controllers
 
             if (usuario != null)
             {
-                
-                string resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString()); // Generación de token único de recuperación
+                var resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString());
 
-                usuario.Token_Recovery = resetToken;
-                usuario.Date_Created = DateTime.Now.AddHours(2); //le da tiempo al token de dos horas 
+                // Crear registro en la tabla RecuperacionPassword
+                var recuperacion = new RecuperacionPassword
+                {
+                    IdUsuario = usuario.IdUsuario,
+                    Token = resetToken,
+                    FechaCreacion = DateTime.Now,
+                    FechaExpiracion = DateTime.Now.AddHours(2),
+                    Usado = false
+                };
 
-                // Actualiza el usuario en la BD
-                _context.Update(usuario);
+                _context.Recuperaciones.Add(recuperacion);
                 _context.SaveChanges();
 
                 // Genera el enlace para restablecer contraseña
@@ -59,36 +69,48 @@ namespace ProyectoLogin.Controllers
                 // Asunto y cuerpo del correo con el enlace
                 string subject = "Recuperación de Contraseña";
                 string body = $@"
-                    <h3>Hola {usuario.NombreUsuario},</h3>
-                    <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-                    <p><a href='{link}'>Restablecer Contraseña</a></p>
-                    <p>Este enlace es válido por 2 horas.</p>";
+            <h3>Hola {usuario.NombreUsuario},</h3>
+            <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+            <p><a href='{link}'>Restablecer Contraseña</a></p>
+            <p>Este enlace es válido por 2 horas.</p>";
 
-                // Envía el correo al usuario
-                emailService.SendEmail(usuario.Correo, subject, body);
+                try
+                {
+                    // Envía el correo al usuario
+                    emailService.SendEmail(usuario.Correo, subject, body);
 
-                // Mensaje de confirmación
-                ViewBag.Message = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
+                    // Mensaje de éxito
+                    TempData["SuccessMessage"] = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
+                }
+                catch (Exception ex)
+                {
+                    // Error al enviar el correo
+                    TempData["ErrorMessage"] = "Error al enviar el correo. Por favor, intenta nuevamente.";
+                }
             }
             else
             {
                 // Si no existe el correo, muestra error
-                ModelState.AddModelError("", "No se encontró un usuario con ese correo.");
+                TempData["ErrorMessage"] = "No se encontró un usuario con ese correo electrónico.";
             }
 
             return View(model);
         }
+
+
+
+
 
         // GET: muestra la vista para ingresar nueva contraseña
         [HttpGet]
         public ActionResult Recovery(string resetToken, string email)
         {
             // Busca al usuario con correo y token válidos
-            var usuario = _context.Usuarios
-                                 .FirstOrDefault(u => u.Correo == email && u.Token_Recovery == resetToken);
+            var recuperacion = _context.Recuperaciones
+                .Include(r => r.Usuario) //Incluye el usuario relacionado
+                .FirstOrDefault(r => r.Token == resetToken && r.Usuario.Correo == email);
 
-            // Valida que el token no haya expirado
-            if (usuario == null || usuario.Date_Created < DateTime.Now)
+            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
             {
                 return BadRequest("El token es inválido o ha expirado.");
             }
@@ -110,27 +132,35 @@ namespace ProyectoLogin.Controllers
                 return View(model);
 
             // Busca al usuario con correo y token
-            var usuario = _context.Usuarios
-                .FirstOrDefault(u => u.Correo == model.Email && u.Token_Recovery == model.resetToken);
+            var recuperacion = _context.Recuperaciones
+                    .Include(r => r.Usuario)
+                    .FirstOrDefault(r => r.Token == model.resetToken && r.Usuario.Correo == model.Email);
 
-            // Si no existe o expiró, error
-            if (usuario == null || usuario.Date_Created < DateTime.Now)
+            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
             {
-                ModelState.AddModelError("", "El token es inválido o ha expirado.");
+                TempData["ErrorMessage"] = "El token es inválido o ha expirado.";
                 return View(model);
             }
 
-            // Encripta y guarda la nueva contraseña
-            usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
+            try
+            {
+                // Encripta y guarda la nueva contraseña
+                recuperacion.Usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
 
-            // Limpia el token para que no pueda usarse otra vez
-            usuario.Token_Recovery = null;
+                // Limpia el token para que no pueda usarse otra vez
+                recuperacion.Usado = true;
 
-            // Actualiza cambios en la BD
-            _context.Update(usuario);
-            _context.SaveChanges();
+                // Actualiza cambios en la BD
+                _context.SaveChanges();
 
-            return RedirectToAction("Index", "Home");
+                TempData["SuccessMessage"] = "Contraseña restablecida correctamente. Ya puedes iniciar sesión.";
+                return RedirectToAction("IniciarSesion", "Inicio");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error al restablecer la contraseña. Por favor, intenta nuevamente.";
+                return View(model);
+            }
         }
     }
 }

@@ -1,0 +1,177 @@
+﻿@model ProyectoLogin.Models.Producto
+@{
+    ViewData["Title"] = "Editar Producto";
+}
+
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Editar Producto</h2>
+
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver al Inventario
+                    </a>
+                
+                </div>
+                <hr />
+            </div>
+        </div>
+
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="IdProducto" />
+
+        <div class="row">
+            <!-- Columna izquierda -->
+            <div class="col-md-6">
+                <!-- Información básica del producto -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Información Básica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="Nombre" class="form-label">Nombre del Producto *</label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
+                            <input asp-for="CodigoBarras" class="form-control" />
+                            <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precios -->
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h5>Precios</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="PrecioCompra" class="form-label">Precio de Compra (Q) *</label>
+                            <input asp-for="PrecioCompra" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="PrecioCompra" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PrecioVenta" class="form-label">Precio de Venta (Q) *</label>
+                            <input asp-for="PrecioVenta" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="PrecioVenta" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha -->
+            <div class="col-md-6">
+                <!-- Inventario -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h5>Inventario</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="Stock" class="form-label">Stock Actual *</label>
+                            <input asp-for="Stock" type="number" min="0" class="form-control" readonly />
+                            <small class="form-text text-muted">Use el botón 'Stock' para ajustar el inventario</small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="StockMinimo" class="form-label">Stock Mínimo *</label>
+                            <input asp-for="StockMinimo" type="number" min="0" class="form-control" />
+                            <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Fecha de Creación</label>
+                            <input type="text" class="form-control" value="@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categorías y Relaciones -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5>Categorías y Proveedores</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="IdCategoria" class="form-label">Categoría</label>
+                            <select asp-for="IdCategoria" class="form-control" asp-items="ViewBag.Categorias">
+                                <option value="">-- Seleccionar Categoría --</option>
+                            </select>
+                            <span asp-validation-for="IdCategoria" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="IdMarca" class="form-label">Marca</label>
+                            <select asp-for="IdMarca" class="form-control" asp-items="ViewBag.Marcas">
+                                <option value="">-- Seleccionar Marca --</option>
+                            </select>
+                            <span asp-validation-for="IdMarca" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="IdProveedor" class="form-label">Proveedor</label>
+                            <select asp-for="IdProveedor" class="form-control" asp-items="ViewBag.Proveedores">
+                                <option value="">-- Seleccionar Proveedor --</option>
+                            </select>
+                            <span asp-validation-for="IdProveedor" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
+                    </button>
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <a asp-controller="Productos" asp-action="AjustarStock" asp-route-id="@Model.IdProducto"
+                       class="btn btn-warning">
+                        <i class="bi bi-box-arrow-in-down"></i> Ajustar Stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            $('form').on('submit', function() {
+                const precioCompra = parseFloat($('#PrecioCompra').val());
+                const precioVenta = parseFloat($('#PrecioVenta').val());
+
+                if (precioVenta <= precioCompra) {
+                    alert('El precio de venta debe ser mayor al precio de compra');
+                    return false;
+                }
+
+                return true;
+            });
+        });
+    </script>
+}

@@ -1,0 +1,91 @@
+﻿@model IEnumerable<ProyectoLogin.Models.Cliente>
+
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+<h2 class="mb-4">Clientes</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Create" class="btn btn-success">➕ Nuevo Cliente</a>
+
+    <form method="get" class="form-inline">
+        <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control mr-2" placeholder="Buscar cliente..." />
+        <br />
+        <button type="submit" class="btn btn-secondary">🔍 Buscar</button>
+    </form>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+
+<!-- CLIENTES ACTIVOS -->
+<h4>Clientes Activos</h4>
+
+<table class="table table-striped table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>NIT</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Where(x => x.Activo))
+        {
+            <tr>
+                <td>@c.Nit</td>
+                <td>@c.Nombres @c.Apellidos</td>
+                <td>@c.Correo</td>
+                <td>@c.Telefono</td>
+                <td>@c.Direccion</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@c.IdCliente" class="btn btn-warning btn-sm">✏ Editar</a>
+                    <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Desactivar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- CLIENTES INACTIVOS -->
+<h4 class="mt-5">Clientes Inactivos</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr class="table-secondary">
+            <th>NIT</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model.Where(x => !x.Activo))
+        {
+            <tr class="table-light">
+                <td>@c.Nit</td>
+                <td>@c.Nombres @c.Apellidos</td>
+                <td>@c.Correo</td>
+                <td>@c.Telefono</td>
+                <td>@c.Direccion</td>
+                <td>
+                    <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-sm">✅ Activar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

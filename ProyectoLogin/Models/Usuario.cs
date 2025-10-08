@@ -8,13 +8,16 @@ public partial class Usuario
 {
     public int IdUsuario { get; set; }
     public string? NombreUsuario { get; set; }
+
+    
     public string? Correo { get; set; }
 
     [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
     public string? Clave { get; set; }
 
-    //campos para la recuperacion de contraseña
-    public string? Token_Recovery { get; set; }
-    public DateTime? Date_Created { get; set; } 
+
+    // Relaciones
+    public int IdRol { get; set; }
+    public virtual Rol? Rol { get; set; }
 
 }

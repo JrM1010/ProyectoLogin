@@ -33,7 +33,7 @@ builder.Services.AddSingleton<EmailService>();
 
 // Configurar DbContext para conectarse a SQL Server usando la cadena de conexión definida en appsettings.json
 // Configura la cadena de conexión desde appsettings.json
-builder.Services.AddDbContext<DbpruebaContext>(options =>
+builder.Services.AddDbContext<DbPruebaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CadenaSQL")));
 
 builder.Services.AddControllersWithViews();

@@ -1,0 +1,219 @@
+﻿@model ProyectoLogin.Models.Producto
+@{
+    ViewData["Title"] = "Detalles del Producto";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Detalles del Producto</h2>
+                <a asp-controller="Inventario" asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Inventario
+                </a>
+            </div>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna izquierda - Información principal -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="bi bi-info-circle"></i> Información General</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Nombre:</div>
+                        <div class="col-8">@Model.Nombre</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Descripción:</div>
+                        <div class="col-8">@(string.IsNullOrEmpty(Model.Descripcion) ? "N/A" : Model.Descripcion)</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Código de Barras:</div>
+                        <div class="col-8">@(string.IsNullOrEmpty(Model.CodigoBarras) ? "N/A" : Model.CodigoBarras)</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Fecha de Creación:</div>
+                        <div class="col-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Estado:</div>
+                        <div class="col-8">
+                            <span class="badge @(Model.Activo ? "bg-success" : "bg-danger")">
+                                @(Model.Activo ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="bi bi-currency-exchange"></i> Información de Precios</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Precio de Compra:</div>
+                        <div class="col-6">Q @Model.PrecioCompra.ToString("N2")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Precio de Venta:</div>
+                        <div class="col-6">Q @Model.PrecioVenta.ToString("N2")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Margen de Ganancia:</div>
+                        <div class="col-6">
+                            @{
+                                var margen = Model.PrecioVenta - Model.PrecioCompra;
+                                var porcentajeMargen = Model.PrecioCompra > 0 ? (margen / Model.PrecioCompra) * 100 : 0;
+                            }
+                            Q @margen.ToString("N2") (@porcentajeMargen.ToString("N1")%)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha - Inventario y Categorías -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="bi bi-boxes"></i> Gestión de Inventario</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Stock Actual:</div>
+                        <div class="col-6">
+                            <span class="@(Model.Stock <= Model.StockMinimo ? "text-danger fw-bold" : "text-success")">
+                                @Model.Stock unidades
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Stock Mínimo:</div>
+                        <div class="col-6">@Model.StockMinimo unidades</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Estado de Stock:</div>
+                        <div class="col-6">
+                            @if (Model.Stock == 0)
+                            {
+                                <span class="badge bg-danger">Agotado</span>
+                            }
+                            else if (Model.Stock <= Model.StockMinimo)
+                            {
+                                <span class="badge bg-warning text-dark">Stock Bajo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Disponible</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6 fw-bold">Diferencia:</div>
+                        <div class="col-6">
+                            @{
+                                var diferencia = Model.Stock - Model.StockMinimo;
+                                var textoDiferencia = diferencia >= 0 ? $"+{diferencia}" : diferencia.ToString();
+                                var claseDiferencia = diferencia >= 0 ? "text-success" : "text-danger";
+                            }
+                            <span class="@claseDiferencia">@textoDiferencia unidades</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-tags"></i> Categorías y Proveedores</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Categoría:</div>
+                        <div class="col-8">@(Model.Categoria?.Nombre ?? "N/A")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Marca:</div>
+                        <div class="col-8">@(Model.Marca?.Nombre ?? "N/A")</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-4 fw-bold">Proveedor:</div>
+                        <div class="col-8">@(Model.Proveedor?.Nombre ?? "N/A")</div>
+                    </div>
+
+                    @if (Model.Proveedor != null)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-4 fw-bold">Contacto:</div>
+                            <div class="col-8">@(Model.Proveedor?.Contacto ?? "N/A")</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 fw-bold">Teléfono:</div>
+                            <div class="col-8">@(Model.Proveedor?.Telefono ?? "N/A")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="d-flex gap-2 justify-content-center">
+                @if (User.IsInRole("Administrador") || User.IsInRole("Gerente"))
+                {
+                    <a asp-controller="Productos" asp-action="Edit" asp-route-id="@Model.IdProducto"
+                       class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar Producto
+                    </a>
+
+                    <a asp-controller="Productos" asp-action="AjustarStock" asp-route-id="@Model.IdProducto"
+                       class="btn btn-secondary">
+                        <i class="bi bi-box-arrow-in-down"></i> Ajustar Stock
+                    </a>
+                }
+
+                <a asp-controller="Inventario" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-list"></i> Volver al Listado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid #dee2e6;
+    }
+
+    .card-header {
+        font-weight: 600;
+    }
+
+    .fw-bold {
+        color: #495057;
+    }
+
+    .badge {
+        font-size: 0.85em;
+    }
+</style>
