@@ -1,0 +1,45 @@
+﻿@model IEnumerable<ProyectoLogin.Models.ModelosProducts.Inventario>
+
+@{
+    ViewData["Title"] = "Inventario";
+}
+
+<h2>Inventario</h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <form method="get" class="form-inline">
+        <input type="text" name="q" class="form-control"
+               placeholder="Buscar producto..."
+               value="@ViewBag.Busqueda" /> 
+        <button type="submit" class="btn btn-secondary ms-2">Buscar</button>
+    </form>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Stock actual</th>
+            <th>Stock mínimo</th>
+            <th>Última actualización</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var i in Model)
+        {
+            var alerta = i.StockActual < i.StockMinimo ? "table-danger" : "";
+            <tr class="@alerta">
+                <td>@i.Producto?.Nombre</td>
+                <td>@i.StockActual</td>
+                <td>@i.StockMinimo</td>
+                <td>@i.FechaUltimaActualizacion.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Movimientos" asp-route-id="@i.IdProducto" class="btn btn-info btn-sm">📄 Movimientos</a>
+                    <a asp-action="Ajuste" asp-route-id="@i.IdProducto" class="btn btn-warning btn-sm">⚙ Ajuste</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

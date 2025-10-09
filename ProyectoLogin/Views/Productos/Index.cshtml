@@ -1,0 +1,75 @@
+﻿@model IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoCore>
+
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<h2 class="mb-4">Productos</h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <a asp-action="Create" class="btn btn-success">➕ Nuevo Producto</a>
+
+    <form method="get" class="form-inline">
+        <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control" placeholder="Buscar..." />
+        <button type="submit" class="btn btn-secondary ms-2">🔍 Buscar</button>
+    </form>
+</div>
+
+<h4>Activos</h4>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Código de Barras</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Where(x => x.Activo))
+        {
+            <tr>
+                <td>@p.Nombre</td>
+                <td>@p.Categoria?.Nombre</td>
+                <td>@p.Marca?.Nombre</td>
+                <td>@p.CodigoBarras</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@p.IdProducto" class="btn btn-warning btn-sm">✏ Editar</a>
+                    <form asp-action="Delete" asp-route-id="@p.IdProducto" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Desactivar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4 class="mt-5">Inactivos</h4>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model.Where(x => !x.Activo))
+        {
+            <tr class="table-secondary">
+                <td>@p.Nombre</td>
+                <td>@p.Categoria?.Nombre</td>
+                <td>@p.Marca?.Nombre</td>
+                <td>
+                    <form asp-action="Activar" asp-route-id="@p.IdProducto" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-sm">✅ Activar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

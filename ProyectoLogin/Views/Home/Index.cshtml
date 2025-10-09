@@ -11,6 +11,13 @@
             
             @if (User.IsInRole("Administrador"))
             {
+                <a asp-controller="Productos" asp-action="Index" class="btn btn-info btn-lg">
+                    <i class="bi bi-box-seam"></i> Productos
+            </a>
+            }
+
+            @if (User.IsInRole("Administrador"))
+            {
                 <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-secondary btn-lg">
                     <i class="bi bi-people"></i> Usuarios
                 </a>
@@ -29,6 +36,14 @@
                     <i class="bi bi-person-lines-fill"></i> Clientes
                 </a>
             }
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Inventario" asp-action="Index" class="btn btn-warning btn-lg">
+                    <i class="bi bi-clipboard-data"></i> Inventario
+                </a>
+            }
+
 
         </div>
     </div>

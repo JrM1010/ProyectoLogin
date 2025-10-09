@@ -1,0 +1,37 @@
+﻿@model IEnumerable<ProyectoLogin.Models.ModelosProducts.MovInventario>
+@{
+    ViewData["Title"] = "Movimientos";
+    var producto = ViewBag.Producto as ProyectoLogin.Models.ModelosProducts.ProductoCore;
+}
+
+<h2>Movimientos de Inventario - @producto?.Nombre</h2>
+
+<a asp-action="Index" class="btn btn-secondary mb-3">⬅ Volver</a>
+<a asp-action="Ajuste" asp-route-id="@producto?.IdProducto" class="btn btn-warning mb-3">⚙ Nuevo ajuste</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Cantidad</th>
+            <th>Referencia</th>
+            <th>Observación</th>
+        </tr>
+    </thead>
+    <tbody>
+
+
+        @foreach (var m in Model)
+        {
+            var color = m.TipoMovimiento == "Entrada" ? "table-success" : "table-danger";
+            <tr class="@color">
+                <td>@m.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@m.TipoMovimiento</td>
+                <td>@string.Format("{0:0}", m.Cantidad)</td>
+                <td>@m.Referencia</td>
+                <td>@m.Observacion</td>
+            </tr>
+        }
+    </tbody>
+</table>
