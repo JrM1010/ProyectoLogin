@@ -10,6 +10,6 @@
         public string? Direccion { get; set; }
         public bool Activo { get; set; }
 
-        public virtual ICollection<Producto>? Productos { get; set; }
+        
     }
 }

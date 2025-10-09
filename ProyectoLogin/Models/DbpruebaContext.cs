@@ -17,12 +17,7 @@ public partial class DbPruebaContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Rol> Roles { get; set; }
     public virtual DbSet<RecuperacionPassword> Recuperaciones { get; set; }
-
-    public virtual DbSet<Producto> Productos { get; set; }
-    public virtual DbSet<Categoria> Categorias { get; set; }
-    public virtual DbSet<Marca> Marcas { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
-    public virtual DbSet<MovimientoInventario> MovimientosInventario { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; } 
 
 
@@ -64,49 +59,6 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(r => r.IdUsuario);
         });
 
-        //Aqui empieza la implementacion de Productos en el POS
-
-        modelBuilder.Entity<Producto>(entity =>
-        {
-            entity.HasKey(e => e.IdProducto);
-            entity.ToTable("Producto");
-
-            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false); 
-            entity.Property(e => e.Descripcion).HasMaxLength(500).IsUnicode(false).IsRequired(false);
-            entity.Property(e => e.CodigoBarras).HasMaxLength(100).IsUnicode(false).IsRequired(false);
-
-
-            entity.Property(e => e.PrecioCompra).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.PrecioVenta).HasColumnType("decimal(18,2)");
-
-            entity.HasOne(p => p.Categoria)
-                  .WithMany(c => c.Productos)
-                  .HasForeignKey(p => p.IdCategoria);
-
-            entity.HasOne(p => p.Marca)
-                  .WithMany(m => m.Productos)
-                  .HasForeignKey(p => p.IdMarca);
-
-            entity.HasOne(p => p.Proveedor)
-                  .WithMany(pr => pr.Productos)
-                  .HasForeignKey(p => p.IdProveedor);
-        });
-
-        modelBuilder.Entity<Categoria>(entity =>
-        {
-            entity.HasKey(e => e.IdCategoria);
-            entity.ToTable("Categoria");
-            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
-            entity.Property(e => e.Descripcion).HasMaxLength(300).IsUnicode(false).IsRequired(false);
-        });
-
-        modelBuilder.Entity<Marca>(entity =>
-        {
-            entity.HasKey(e => e.IdMarca);
-            entity.ToTable("Marca");
-            entity.Property(e => e.Nombre).HasMaxLength(100).IsUnicode(false).IsRequired(false);
-        });
-
         modelBuilder.Entity<Proveedor>(entity =>
         {
             entity.HasKey(e => e.IdProveedor);
@@ -117,23 +69,6 @@ public partial class DbPruebaContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false).IsRequired(false);
         });
 
-        modelBuilder.Entity<MovimientoInventario>(entity =>
-        {
-            entity.HasKey(e => e.IdMovimiento);
-            entity.ToTable("MovimientoInventario");
-
-            entity.Property(e => e.TipoMovimiento).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Cantidad).HasColumnType("int");
-            entity.Property(e => e.Motivo).HasMaxLength(300).IsUnicode(false);
-
-            entity.HasOne(m => m.Producto)
-                  .WithMany()
-                  .HasForeignKey(m => m.IdProducto);
-
-            entity.HasOne(m => m.Usuario)
-                  .WithMany()
-                  .HasForeignKey(m => m.IdUsuario);
-        });
 
         modelBuilder.Entity<Cliente>()
         .HasIndex(c => c.Nit)
