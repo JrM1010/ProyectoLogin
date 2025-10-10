@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Detalle de Compra";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h3 class="fw-bold text-primary mb-4">📋 Detalle de Compra</h3>
+
+    <div class="card shadow-sm p-3 mb-4">
+        <div class="row">
+            <div class="col-md-4"><strong>Proveedor:</strong> @Model.Proveedor?.Nombre</div>
+            <div class="col-md-4"><strong>Fecha:</strong> @Model.FechaCompra.ToString("dd/MM/yyyy")</div>
+            <div class="col-md-4"><strong>Documento:</strong> @Model.NumeroDocumento</div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-4"><strong>Método de Pago:</strong> @Model.MetodoPago</div>
+            <div class="col-md-4"><strong>Estado:</strong> <span class="badge bg-success">@Model.Estado</span></div>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Producto</th>
+                <th>Unidad</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario (Q)</th>
+                <th>Subtotal (Q)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Detalles)
+            {
+                <tr>
+                    <td>@d.Producto?.Nombre</td>
+                    <td>@d.Unidad?.Nombre</td>
+                    <td>@d.Cantidad</td>
+                    <td>@d.PrecioUnitario.ToString("N2")</td>
+                    <td>@d.Subtotal.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-end">
+        <h5><strong>Total: Q @Model.Total.ToString("N2")</strong></h5>
+    </div>
+
+    <div class="text-end mt-3">
+        <a href="@Url.Action("Index", "Compras")" class="btn btn-secondary">Volver</a>
+    </div>
+</div>
+
