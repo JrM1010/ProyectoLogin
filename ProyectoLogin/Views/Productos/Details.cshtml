@@ -45,11 +45,7 @@
             <strong>Stock mínimo:</strong> @(inventario?.StockMinimo ?? 0)
         </div>
 
-        <div class="mb-3">
-            <!-- Botón para ajustar stock en caso que tengas acción AjusteStock en el controlador -->
-            <a asp-action="AjusteStock" asp-route-idProducto="@Model.IdProducto" class="btn btn-outline-primary">Ajustar stock</a>
-            <small class="form-text text-muted">Usa ajustes para entradas/salidas manuales. Las compras y ventas actualizan el stock automáticamente.</small>
-        </div>
+        
     </div>
 </div>
 

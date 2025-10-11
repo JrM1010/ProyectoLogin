@@ -5,6 +5,7 @@
 <h2>Crear Producto</h2>
 
 <form asp-action="Create" method="post">
+
     <div class="mb-3">
         <label>Nombre</label>
         <input asp-for="Nombre" class="form-control" />
@@ -39,8 +40,9 @@
     </div>
 
     <div class="mb-3">
-        <label>Stock inicial</label>
-        <input name="inicialStock" type="number" class="form-control" value="0" />
+        <label>Cantidad mínima de Stock</label>
+        <input name="stockMinimo" type="number" class="form-control" value="1" min="0" />
+        <small class="text-muted">Cuando el stock actual sea igual o menor a este valor, el sistema mostrará una alerta de producto por agotarse.</small>
     </div>
 
     <div class="mb-3">

@@ -57,7 +57,7 @@ namespace ProyectoLogin.Controllers
         // POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProductoCore producto, int inicialStock = 0, decimal precioVenta = 0, int unidadParaPrecio = 0)
+        public async Task<IActionResult> Create(ProductoCore producto, int stockMinimo = 0, decimal precioVenta = 0, int unidadParaPrecio = 0)
         {
             if (!ModelState.IsValid)
             {
@@ -75,7 +75,7 @@ namespace ProyectoLogin.Controllers
             var inv = new Inventario
             {
                 IdProducto = producto.IdProducto,
-                StockActual = inicialStock,
+                StockActual = 0,
                 StockMinimo = 0
             };
             _context.Inventarios.Add(inv);
@@ -108,6 +108,10 @@ namespace ProyectoLogin.Controllers
             ViewBag.Inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == id);
             ViewBag.Precios = await _context.ProductoPrecio.Where(p => p.IdProducto == id).OrderByDescending(p => p.FechaInicio).ToListAsync();
             ViewBag.Unidades = _context.Unidades.ToList();
+
+
+
+
             return View(producto);
         }
 
