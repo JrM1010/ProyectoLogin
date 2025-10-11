@@ -1,0 +1,147 @@
+﻿@model ProyectoLogin.Models.ModelosProducts.ProductoCore
+
+
+@{
+    ViewData["Title"] = "Editar Producto";
+    var inventario = ViewBag.Inventario as ProyectoLogin.Models.ModelosProducts.Inventario;
+    var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>;
+}
+
+<h2>Editar Producto</h2>
+
+<form asp-action="Edit" method="post" class="mb-4">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="IdProducto" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label">Nombre</label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CodigoBarras" class="form-label">Código de barras</label>
+                <input asp-for="CodigoBarras" class="form-control" />
+                <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="IdCategoria" class="form-label">Categoría</label>
+                <select asp-for="IdCategoria" class="form-select">
+                    <option value="">-- Seleccionar categoría --</option>
+                    
+                    @foreach (var c in (ViewBag.Categorias ?? new List<dynamic>()))
+                    {
+                        <option value="@c.IdCategoria" selected="@(c.IdCategoria == Model.IdCategoria)">
+                            @c.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="IdMarca" class="form-label">Marca</label>
+                <select asp-for="IdMarca" class="form-select">
+                    <option value="">-- Seleccionar marca --</option>
+                    @foreach (var m in (ViewBag.Marcas ?? new List<dynamic>()))
+                    {
+                        <option value="@m.IdMarca" selected="@(m.IdMarca == Model.IdMarca)">
+                            @m.Nombre
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="Activo" class="form-check-input" type="checkbox" />
+                <label asp-for="Activo" class="form-check-label">Activo</label>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="6"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Stock actual</label>
+                <input class="form-control" value="@(inventario?.StockActual ?? 0)" disabled />
+                <small class="form-text text-muted">El stock se actualiza por Compras/Ventas/Ajustes.</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Stock mínimo</label>
+                <input class="form-control" value="@(inventario?.StockMinimo ?? 0)" disabled />
+            </div>
+
+            <div class="mb-3">
+                <a asp-action="Details" asp-route-id="@Model.IdProducto" class="btn btn-outline-secondary">Ver detalles & movimientos</a>
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<hr />
+
+<h4>Precios recientes</h4>
+@if (precios != null && precios.Any())
+{
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Precio Compra</th>
+                <th>Precio Venta</th>
+                <th>Desde</th>
+                <th>Activo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in precios.Take(10))
+            {
+                <tr>
+                    <td>@p.PrecioCompra.ToString("N2")</td>
+                    <td>@p.PrecioVenta.ToString("N2")</td>
+                    <td>@p.FechaInicio.ToString("g")</td>
+                    <td>@(p.Activo ? "Sí" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-muted">No hay precios registrados para este producto.</p>
+}
+
+<!--
+    Si quieres un formulario para agregar precio o hacer ajuste manual de stock,
+    puedes descomentar y adaptar los siguientes bloques, pero recuerda que
+    solicitaste que Edit no modifique el stock directamente.
+-->
+
+<!--
+<form asp-action="AddPrecio" method="post" class="mt-4">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="idProducto" value="@Model.IdProducto" />
+    <div class="row">
+        <div class="col-md-3">
+            <input name="precioCompra" class="form-control" placeholder="Precio compra" step="0.01" type="number" />
+        </div>
+        <div class="col-md-3">
+            <input name="precioVenta" class="form-control" placeholder="Precio venta" step="0.01" type="number" />
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-sm btn-success" type="submit">Añadir precio</button>
+        </div>
+    </div>
+</form>
+-->
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

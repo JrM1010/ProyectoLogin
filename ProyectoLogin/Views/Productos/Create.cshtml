@@ -1,0 +1,53 @@
+﻿@model ProyectoLogin.Models.ModelosProducts.ProductoCore
+@{
+    ViewData["Title"] = "Crear Producto";
+}
+<h2>Crear Producto</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label>Nombre</label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label>Categoría</label>
+        <select asp-for="IdCategoria" class="form-select">
+            <option value="">--Seleccione--</option>
+            @foreach (var c in ViewBag.Categorias)
+            {
+                <option value="@c.IdCategoria">@c.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Marca</label>
+        <select asp-for="IdMarca" class="form-select">
+            <option value="">--Seleccione--</option>
+            @foreach (var m in ViewBag.Marcas)
+            {
+                <option value="@m.IdMarca">@m.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Descripcion</label>
+        <textarea asp-for="Descripcion" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Stock inicial</label>
+        <input name="inicialStock" type="number" class="form-control" value="0" />
+    </div>
+
+    <div class="mb-3">
+        <label>Precio venta (opcional)</label>
+        <input name="precioVenta" step="0.01" type="number" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

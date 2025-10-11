@@ -9,7 +9,13 @@
         <h3>Accesos Rápidos</h3>
         <div class="d-flex justify-content-center gap-3 mt-3">
             
-           
+           @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-seam"></i> Productos
+                </a>
+            }
+
             @if (User.IsInRole("Administrador"))
             {
                 <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-secondary btn-lg">

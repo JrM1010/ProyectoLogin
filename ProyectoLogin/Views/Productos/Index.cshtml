@@ -1,0 +1,168 @@
+﻿@model IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoCore>
+
+@{
+    ViewData["Title"] = "Productos";
+    var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio> ?? Enumerable.Empty<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>();
+    // Separar en listas activas / inactivas
+    var activos = Model?.Where(p => p.Activo).OrderBy(p => p.Nombre).ToList() ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>();
+    var inactivos = Model?.Where(p => !p.Activo).OrderBy(p => p.Nombre).ToList() ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>();
+
+    // Convertir precios a diccionario para acceso rápido (si hay muchos registros)
+    var precioDict = precios.ToDictionary(x => x.IdProducto, x => x);
+}
+
+<h2>Productos</h2>
+
+<div class="mb-3 d-flex align-items-center">
+    <a class="btn btn-success me-2" asp-action="Create">➕ Nuevo Producto</a>
+
+    <form class="d-flex ms-auto" method="get" asp-action="Index" style="gap:6px;">
+        <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control" style="width:220px" placeholder="Buscar por nombre o código..." />
+        <button class="btn btn-secondary">🔍</button>
+    </form>
+</div>
+
+<!-- TABLA: PRODUCTOS ACTIVOS -->
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+        <strong class="me-2">Productos activos</strong>
+        <span class="badge bg-primary">@activos.Count()</span>
+    </div>
+    <div class="card-body p-0">
+        @if (!activos.Any())
+        {
+            <div class="p-3 text-muted">No hay productos activos.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            <th>Categoría</th>
+                            <th>Marca</th>
+                            <th class="text-end">Stock</th>
+                            <th class="text-end">Precio venta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in activos)
+                        {
+                            precioDict.TryGetValue(p.IdProducto, out var precio);
+
+                            var stockActual = p.Inventario?.StockActual ?? 0;
+                            var stockMin = p.Inventario?.StockMinimo ?? 0;
+                            var isLow = (p.Inventario != null) && (stockActual <= stockMin);
+
+                            <tr @(isLow ? "class=\"table-warning\"" : "")>
+                                <td>@p.Nombre</td>
+                                <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
+                                <td>@p.Categoria?.Nombre</td>
+                                <td>@p.Marca?.Nombre</td>
+                                <td class="text-end">
+                                    @stockActual
+                                    @if (isLow)
+                                    {
+                                        <span class="badge bg-danger ms-2" title="Stock bajo: mínimo @stockMin" aria-label="Stock bajo">
+                                            Bajo
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
+                                <td>
+                                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
+                                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@p.IdProducto">Editar</a>
+
+                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Estás seguro que deseas desactivar este producto?');">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-danger" type="submit">Desactivar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- TABLA: PRODUCTOS DESACTIVADOS -->
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center">
+        <strong class="me-2">Productos desactivados</strong>
+        <span class="badge bg-secondary">@inactivos.Count()</span>
+    </div>
+    <div class="card-body p-0">
+        @if (!inactivos.Any())
+        {
+            <div class="p-3 text-muted">No hay productos desactivados.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Código</th>
+                            <th>Categoría</th>
+                            <th>Marca</th>
+                            <th class="text-end">Stock</th>
+                            <th class="text-end">Precio venta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in inactivos)
+                        {
+                            precioDict.TryGetValue(p.IdProducto, out var precio);
+
+                            var stockActual = p.Inventario?.StockActual ?? 0;
+                            var stockMin = p.Inventario?.StockMinimo ?? 0;
+                            var isLow = (p.Inventario != null) && (stockActual <= stockMin);
+
+                            <tr class="table-muted @(isLow ? "table-warning" : "")">
+                                <td>@p.Nombre</td>
+                                <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
+                                <td>@p.Categoria?.Nombre</td>
+                                <td>@p.Marca?.Nombre</td>
+                                <td class="text-end">
+                                    @stockActual
+                                    @if (isLow)
+                                    {
+                                        <span class="badge bg-danger ms-2" title="Stock bajo: mínimo @stockMin" aria-label="Stock bajo">
+                                            Bajo
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
+                                <td>
+                                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
+
+                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Estás seguro que deseas activar este producto?');">
+                                        @Html.AntiForgeryToken()
+                                        <button class="btn btn-sm btn-success" type="submit">Activar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // opcional: enfoque rápido en el campo búsqueda al cargar
+        document.addEventListener('DOMContentLoaded', function () {
+            var input = document.querySelector('input[name="q"]');
+            if (input) input.focus();
+        });
+    </script>
+}

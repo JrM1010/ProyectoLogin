@@ -27,13 +27,12 @@ public partial class DbPruebaContext : DbContext
     public virtual DbSet<Marca> Marcas { get; set; }
     public virtual DbSet<Inventario> Inventarios { get; set; }
     public virtual DbSet<MovInventario> MovInventarios { get; set; }
-
+    public DbSet<ProductoPrecio> ProductoPrecio { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
 
 
     //Entidades de Compras
-
     public virtual DbSet<Compra> Compras { get; set; }
     public virtual DbSet<DetalleCompra> DetallesCompra { get; set; }
     public virtual DbSet<UnidadMedida> Unidades { get; set; }
@@ -297,6 +296,38 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(d => d.IdUnidad)
                   .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // ------------------ PRODUCTO PRECIO ------------------
+        modelBuilder.Entity<ProductoPrecio>(entity =>
+        {
+            entity.HasKey(e => e.IdPrecio);
+            entity.ToTable("ProductoPrecio"); // asegurar nombre exacto de la tabla
+
+            entity.Property(e => e.PrecioCompra)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(e => e.PrecioVenta)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(e => e.FechaInicio)
+                  .HasColumnType("datetime")
+                  .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.FechaFin)
+                  .HasColumnType("datetime")
+                  .IsRequired(false);
+
+            entity.Property(e => e.Activo)
+                  .HasDefaultValue(true);
+
+            // Mapeo explícito de la relación con ProductoCore usando la propiedad FK IdProducto
+            entity.HasOne(pp => pp.Producto)     // navegación en ProductoPrecio
+                  .WithMany()                    // si ProductoCore no tiene colección, dejar sin argumento; si tiene, poner p => p.ProductoPrecios
+                  .HasForeignKey(pp => pp.IdProducto)
+                  .HasPrincipalKey(p => p.IdProducto)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
     }
 
 
