@@ -18,6 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Scoped: se crea una instancia por cada solicitud HTTP
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
+
+
 // Configurar autenticación basada en cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
@@ -37,6 +39,7 @@ builder.Services.AddDbContext<DbPruebaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CadenaSQL")));
 
 builder.Services.AddControllersWithViews();
+
 
 
 // Configuración adicional para MVC: agregar un filtro global para evitar cache de respuestas
