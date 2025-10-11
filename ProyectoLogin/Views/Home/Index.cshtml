@@ -44,6 +44,12 @@
                 </a>
             }
 
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Compras" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-cart4"></i> Compras
+                </a>
+            }
 
         </div>
     </div>
