@@ -49,8 +49,7 @@ namespace ProyectoLogin.Controllers
         {
             ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
             ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
-            // Opcional: unidades de medida para precios/presentaciones
-            ViewBag.Unidades = _context.Unidades.ToList();
+            
 
             ViewBag.CodigoGenerado = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{new Random().Next(0, 10000):D4}";
             ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
@@ -65,7 +64,7 @@ namespace ProyectoLogin.Controllers
         {
             ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
             ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
-            ViewBag.Unidades = _context.Unidades.ToList();
+           
             ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
 
             if (!ModelState.IsValid)
@@ -163,7 +162,7 @@ namespace ProyectoLogin.Controllers
             ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
             ViewBag.Inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == id);
             ViewBag.Precios = await _context.ProductoPrecio.Where(p => p.IdProducto == id).OrderByDescending(p => p.FechaInicio).ToListAsync();
-            ViewBag.Unidades = _context.Unidades.ToList();
+            
 
 
 
