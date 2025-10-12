@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
 using System;
 using System.Collections.Generic;
@@ -31,11 +30,6 @@ public partial class DbPruebaContext : DbContext
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
 
-
-    //Entidades de Compras
-    public virtual DbSet<Compra> Compras { get; set; }
-    public virtual DbSet<DetalleCompra> DetallesCompra { get; set; }
-    public virtual DbSet<UnidadMedida> Unidades { get; set; }
 
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
@@ -209,93 +203,9 @@ public partial class DbPruebaContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // ------------------ UNIDAD DE MEDIDA ------------------
-        modelBuilder.Entity<UnidadMedida>(entity =>
-        {
-            entity.HasKey(e => e.IdUnidad);
-            entity.ToTable("UnidadMedida");
+        
 
-            entity.Property(e => e.Nombre)
-                  .HasMaxLength(100)
-                  .IsRequired();
-
-            entity.Property(e => e.FactorConversion)
-                  .HasColumnType("decimal(18,2)")
-                  .HasDefaultValue(1m);
-        });
-
-        // ------------------ COMPRAS ------------------
-        modelBuilder.Entity<Compra>(entity =>
-        {
-            entity.HasKey(e => e.IdCompra);
-            entity.ToTable("Compras");
-
-            entity.Property(e => e.FechaCompra)
-                  .HasColumnType("datetime")
-                  .HasDefaultValueSql("GETDATE()");
-
-            entity.Property(e => e.NumeroDocumento)
-                  .HasMaxLength(50)
-                  .IsUnicode(false);
-
-            entity.Property(e => e.Subtotal)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.Property(e => e.IVA)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.Property(e => e.Total)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.Property(e => e.MetodoPago)
-                  .HasMaxLength(50)
-                  .IsUnicode(false);
-
-            entity.Property(e => e.Observaciones)
-                  .HasMaxLength(255)
-                  .IsUnicode(false);
-
-            entity.Property(e => e.Estado)
-                  .HasMaxLength(30)
-                  .IsUnicode(false)
-                  .HasDefaultValue("Completada");
-
-            entity.HasOne(c => c.Proveedor)
-                  .WithMany()
-                  .HasForeignKey(c => c.IdProveedor)
-                  .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // ------------------ DETALLE COMPRA ------------------
-        modelBuilder.Entity<DetalleCompra>(entity =>
-        {
-            entity.HasKey(e => e.IdDetalle);
-            entity.ToTable("DetalleCompra");
-
-            entity.Property(e => e.Cantidad)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.Property(e => e.PrecioUnitario)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.Property(e => e.Subtotal)
-                  .HasColumnType("decimal(18,2)");
-
-            entity.HasOne(d => d.Compra)
-                  .WithMany(c => c.Detalles)
-                  .HasForeignKey(d => d.IdCompra)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(d => d.Producto)
-                  .WithMany()
-                  .HasForeignKey(d => d.IdProducto)
-                  .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(d => d.Unidad)
-                  .WithMany()
-                  .HasForeignKey(d => d.IdUnidad)
-                  .OnDelete(DeleteBehavior.Restrict);
-        });
+        
 
         // ------------------ PRODUCTO PRECIO ------------------
         modelBuilder.Entity<ProductoPrecio>(entity =>
