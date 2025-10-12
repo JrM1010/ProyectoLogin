@@ -114,7 +114,7 @@ namespace ProyectoLogin.Controllers
                         CostoCompra = 0, // inicial, se actualizará en compras
                         FechaUltimaCompra = null
                     };
-                    _context.ProductoProveedor.Add(rel);
+                    _context.ProductosProveedores.Add(rel);
                 }
 
 

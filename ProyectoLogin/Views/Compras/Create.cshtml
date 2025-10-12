@@ -1,74 +1,99 @@
 ﻿@model ProyectoLogin.Models.ModelosCompras.Compra
+
 @{
     var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
     var productos = ViewBag.Productos as List<ProyectoLogin.Models.ModelosProducts.ProductoCore>;
     var unidades = ViewBag.Unidades as List<ProyectoLogin.Models.ModelosCompras.UnidadMedida>;
+    int? proveedorSel = ViewBag.ProveedorSeleccionado as int?;
 }
 
 <h2>Nueva Compra</h2>
-<form asp-action="Create" method="post">
+
+<!-- FORMULARIO DE PROVEEDOR -->
+<form method="get" action="/Compras/Create">
     <div class="mb-3">
-        <label>Proveedor</label>
-        <select name="IdProveedor" class="form-control">
-            <option value="">--Seleccione--</option>
+        <label>Proveedor:</label>
+        <select name="idProveedor" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Seleccione un proveedor --</option>
             @foreach (var p in proveedores)
             {
-                <option value="@p.IdProveedor">@p.Nombre</option>
+                if (proveedorSel == p.IdProveedor)
+                {
+                    <option value="@p.IdProveedor" selected>@p.Nombre</option>
+                }
+                else
+                {
+                    <option value="@p.IdProveedor">@p.Nombre</option>
+                }
             }
         </select>
     </div>
+</form>
 
-    <div id="detallesContainer">
-        <table class="table">
-            <thead><tr><th>Producto</th><th>Unidad</th><th>Cantidad</th><th>Precio unit.</th><th>Acción</th></tr></thead>
-            <tbody id="detallesBody"></tbody>
-        </table>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="addRow()">Agregar línea</button>
-    </div>
+<hr />
 
-    <input type="hidden" name="Subtotal" id="Subtotal" />
-    <input type="hidden" name="IVA" id="IVA" />
-    <input type="hidden" name="Total" id="Total" />
+<!-- FORMULARIO DE COMPRA -->
+<form method="post" action="/Compras/Create">
+    <input type="hidden" name="IdProveedor" value="@proveedorSel" />
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Unidad</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="detallesBody"></tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">Agregar producto</button>
 
     <div class="mt-3">
         <button type="submit" class="btn btn-primary">Guardar compra</button>
-        <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+        <a href="/Compras/Index" class="btn btn-secondary">Cancelar</a>
     </div>
 </form>
 
-<!-- Row template + JS -->
+<!-- =============== SCRIPT =============== -->
 <script>
     let index = 0;
-    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productos));
-    const unidades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(unidades));
+    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productos ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>()));
+    const unidades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(unidades ?? new List<ProyectoLogin.Models.ModelosCompras.UnidadMedida>()));
 
-    function addRow(){
-      const tbody = document.getElementById('detallesBody');
-      const tr = document.createElement('tr');
-      tr.id = 'row_'+index;
-      tr.innerHTML = `
-        <td>
-          <select name="detalles[${index}].IdProducto" class="form-control" required>
-            <option value="">--</option>
-            ${productos.map(p => `<option value="${p.idProducto}">${p.nombre}</option>`).join('')}
-          </select>
-        </td>
-        <td>
-          <select name="detalles[${index}].IdUnidad" class="form-control">
-            ${unidades.map(u => `<option value="${u.idUnidad}">${u.nombre}</option>`).join('')}
-          </select>
-        </td>
-        <td><input name="detalles[${index}].Cantidad" type="number" step="1" min="1" class="form-control" value="1" required /></td>
-        <td><input name="detalles[${index}].PrecioUnitario" type="number" step="0.01" min="0" class="form-control" value="0.00" required /></td>
-        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(${index})">Quitar</button></td>
-      `;
-      tbody.appendChild(tr);
-      index++;
+    function addRow() {
+        if (productos.length === 0) {
+            alert("Seleccione primero un proveedor que tenga productos disponibles.");
+            return;
+        }
+
+        const tbody = document.getElementById('detallesBody');
+        const tr = document.createElement('tr');
+        tr.id = 'row_' + index;
+        tr.innerHTML = `
+            <td>
+                <select name="detalles[${index}].IdProducto" class="form-control" required>
+                    <option value="">-- Producto --</option>
+                    ${productos.map(p => `<option value="${p.IdProducto}">${p.Nombre}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <select name="detalles[${index}].IdUnidad" class="form-control">
+                    ${unidades.map(u => `<option value="${u.IdUnidad}">${u.Nombre}</option>`).join('')}
+                </select>
+            </td>
+            <td><input name="detalles[${index}].Cantidad" type="number" min="1" value="1" class="form-control" required /></td>
+            <td><input name="detalles[${index}].PrecioUnitario" type="number" min="0" step="0.01" value="0.00" class="form-control" required /></td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button></td>
+        `;
+        tbody.appendChild(tr);
+        index++;
     }
 
-    function removeRow(i){
-      const r = document.getElementById('row_'+i);
-      if(r) r.remove();
+    function removeRow(i) {
+        const row = document.getElementById('row_' + i);
+        if (row) row.remove();
     }
 </script>
-

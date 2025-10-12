@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,13 @@ public partial class DbPruebaContext : DbContext
     public DbSet<ProductoPrecio> ProductoPrecio { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
-    public DbSet<ProductoProveedor> ProductoProveedor { get; set; }
+    
+
+
+    //Parte de Compras
+    public virtual DbSet<Compra> Compras { get; set; }
+    public virtual DbSet<DetalleCompra> DetallesCompra { get; set; }
+    public virtual DbSet<ProductoProveedor> ProductosProveedores { get; set; }
 
 
 
@@ -238,6 +245,51 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(pp => pp.IdProducto)
                   .HasPrincipalKey(p => p.IdProducto)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+
+        // ------------------ COMPRAS Y DETALLES ------------------
+        modelBuilder.Entity<Compra>(entity =>
+        {
+            entity.HasKey(e => e.IdCompra);
+            entity.ToTable("Compras");
+
+            entity.Property(e => e.MetodoPago).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.NumeroDocumento).HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.Observaciones).HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.Estado).HasMaxLength(30).IsUnicode(false);
+
+            entity.HasOne(e => e.Proveedor)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdProveedor);
+        });
+
+        modelBuilder.Entity<DetalleCompra>(entity =>
+        {
+            entity.HasKey(e => e.IdDetalle);
+            entity.ToTable("DetalleCompra");
+
+            entity.HasOne(d => d.Compra)
+                  .WithMany(c => c.Detalles)
+                  .HasForeignKey(d => d.IdCompra);
+
+            entity.HasOne(d => d.Producto)
+                  .WithMany()
+                  .HasForeignKey(d => d.IdProducto);
+        });
+
+        modelBuilder.Entity<ProductoProveedor>(entity =>
+        {
+            entity.HasKey(e => e.IdProductoProveedor);
+            entity.ToTable("ProductoProveedor");
+
+            entity.HasOne(e => e.Producto)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdProducto);
+
+            entity.HasOne(e => e.Proveedor)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdProveedor);
         });
 
     }

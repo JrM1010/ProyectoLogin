@@ -16,7 +16,6 @@ namespace ProyectoLogin.Models.ModelosCompras
         public decimal FactorConversion { get; set; } = 1m;
 
 
-        public decimal DescuentoPorcentual { get; set; } = 5m;
 
 
     }
