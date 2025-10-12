@@ -5,6 +5,8 @@
 <h2>Crear Producto</h2>
 
 <form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
         <label>Nombre</label>
@@ -35,21 +37,48 @@
     </div>
 
     <div class="mb-3">
-        <label>Descripcion</label>
+        <label>Proveedor</label>
+        <select name="idProveedor" class="form-select">
+            <option value="">--Seleccione--</option>
+            @foreach (var p in ViewBag.Proveedores)
+            {
+                <option value="@p.IdProveedor">@p.Nombre</option>
+            }
+        </select>
+    </div>
+
+
+    <div class="mb-3">
+        <label>Descripción</label>
         <textarea asp-for="Descripcion" class="form-control"></textarea>
     </div>
 
     <div class="mb-3">
         <label>Cantidad mínima de Stock</label>
         <input name="stockMinimo" type="number" class="form-control" value="1" min="0" />
-        <small class="text-muted">Cuando el stock actual sea igual o menor a este valor, el sistema mostrará una alerta de producto por agotarse.</small>
+        <small class="text-muted">
+            Cuando el stock actual sea igual o menor a este valor,
+            el sistema mostrará una alerta de producto por agotarse.
+        </small>
     </div>
 
-    <div class="mb-3">
-        <label>Precio venta (opcional)</label>
-        <input name="precioVenta" step="0.01" type="number" class="form-control" />
-    </div>
+    @if (ViewBag.CodigoGenerado != null)
+    {
+        <div class="mb-3">
+            <label>Código sugerido</label>
+            <input type="text" class="form-control" value="@ViewBag.CodigoGenerado" readonly />
+            <small class="text-muted">El sistema generará (y podrá modificar) un código definitivo al guardar.</small>
+        </div>
+    }
 
-    <button class="btn btn-primary">Guardar</button>
+    <input type="hidden" asp-for="Activo" value="true" />
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

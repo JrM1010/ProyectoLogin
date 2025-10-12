@@ -4,6 +4,7 @@ using ProyectoLogin.Models.ModelosProducts;
 using System;
 using System.Collections.Generic;
 
+
 namespace ProyectoLogin.Models;
 
 public partial class DbPruebaContext : DbContext
@@ -30,6 +31,7 @@ public partial class DbPruebaContext : DbContext
     public DbSet<ProductoPrecio> ProductoPrecio { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
+    public DbSet<ProductoProveedor> ProductoProveedor { get; set; }
 
 
     //Entidades de Compras

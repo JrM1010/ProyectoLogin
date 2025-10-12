@@ -1,0 +1,18 @@
+﻿@model IEnumerable<ProyectoLogin.Models.ModelosCompras.Compra>
+<h2>Compras</h2>
+<p><a class="btn btn-primary" href="@Url.Action("Create")">Nueva Compra</a></p>
+<table class="table">
+    <thead><tr><th>ID</th><th>Proveedor</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.IdCompra</td>
+                <td>@(c.Proveedor?.Nombre ?? "-")</td>
+                <td>@c.FechaCompra</td>
+                <td>@c.Total.ToString("N2")</td>
+                <td><a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Details", new { id = c.IdCompra })">Ver</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

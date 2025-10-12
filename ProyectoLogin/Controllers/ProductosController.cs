@@ -51,51 +51,107 @@ namespace ProyectoLogin.Controllers
             ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
             // Opcional: unidades de medida para precios/presentaciones
             ViewBag.Unidades = _context.Unidades.ToList();
+
+            ViewBag.CodigoGenerado = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{new Random().Next(0, 10000):D4}";
+            ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
+
             return View();
         }
 
         // POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProductoCore producto, int stockMinimo = 0, decimal precioVenta = 0, int unidadParaPrecio = 0)
+        public async Task<IActionResult> Create(ProductoCore producto, int stockMinimo = 0, int idProveedor = 0)
         {
+            ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
+            ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
+            ViewBag.Unidades = _context.Unidades.ToList();
+            ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
-                ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
-                ViewBag.Unidades = _context.Unidades.ToList();
                 return View(producto);
             }
 
-            // Crear producto
-            _context.Productos.Add(producto);
-            await _context.SaveChangesAsync();
-
-            // Crear inventario asociado (si no existe)
-            var inv = new Inventario
+            try
             {
-                IdProducto = producto.IdProducto,
-                StockActual = 0,
-                StockMinimo = 0
-            };
-            _context.Inventarios.Add(inv);
-
-            // Crear precio inicial si se proporcionó
-            if (precioVenta > 0)
-            {
-                _context.ProductoPrecio.Add(new ProductoPrecio
+                // Si no trae código (o quieres siempre sobrescribir), generamos uno único
+                if (string.IsNullOrWhiteSpace(producto.CodigoBarras))
                 {
-                    IdProducto = producto.IdProducto,
-                    PrecioCompra = 0,
-                    PrecioVenta = precioVenta,
-                    FechaInicio = DateTime.Now,
-                    Activo = true
-                });
+                    producto.CodigoBarras = await GenerarCodigoProductoAsync();
+                }
+
+                producto.Activo = true;
+                _context.Productos.Add(producto);
+                await _context.SaveChangesAsync();
+
+                var invExistente = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == producto.IdProducto);
+                if (invExistente == null)
+                {
+                    var inv = new Inventario
+                    {
+                        IdProducto = producto.IdProducto,
+                        StockActual = 0,
+                        StockMinimo = stockMinimo
+                    };
+                    _context.Inventarios.Add(inv);
+
+
+                }
+                else
+                {
+                    
+                    invExistente.StockMinimo = stockMinimo;
+                    _context.Inventarios.Update(invExistente);
+                }
+
+                // Relacionar proveedor (si se eligió uno)
+                if (idProveedor > 0)
+                {
+                    var rel = new ProductoProveedor
+                    {
+                        IdProducto = producto.IdProducto,
+                        IdProveedor = idProveedor,
+                        CostoCompra = 0, // inicial, se actualizará en compras
+                        FechaUltimaCompra = null
+                    };
+                    _context.ProductoProveedor.Add(rel);
+                }
+
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Error guardando producto: " + ex.Message);
+                return View(producto);
+            }
+        }
 
-            await _context.SaveChangesAsync();
+        // Genera un código legible y chequea unicidad (async)
+        private async Task<string> GenerarCodigoProductoAsync()
+        {
+            
+            string codigo;
+            var rnd = new Random();
+            int intentos = 0;
 
-            return RedirectToAction(nameof(Index));
+            do
+            {
+                var sufijo = rnd.Next(0, 10000).ToString("D4"); // 0000..9999
+                codigo = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{sufijo}";
+                intentos++;
+                // Evita bucle infinito: si muchos choques (improbable), genera GUID como fallback
+                if (intentos > 10)
+                {
+                    codigo = "PROD-" + Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
+                    break;
+                }
+            }
+            while (await _context.Productos.AnyAsync(p => p.CodigoBarras == codigo));
+
+            return codigo;
         }
 
         // GET: Edit
@@ -118,7 +174,7 @@ namespace ProyectoLogin.Controllers
         // POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ProductoCore model)
+        public async Task<IActionResult> Edit(int id, ProductoCore model, int stockMinimo)
         {
             if (id != model.IdProducto) return BadRequest();
 
@@ -141,6 +197,15 @@ namespace ProyectoLogin.Controllers
             producto.Activo = model.Activo;
 
             _context.Update(producto);
+
+            // Actualizar stock mínimo del inventario
+            var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == id);
+            if (inventario != null)
+            {
+                inventario.StockMinimo = stockMinimo;
+                _context.Update(inventario);
+            }
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));

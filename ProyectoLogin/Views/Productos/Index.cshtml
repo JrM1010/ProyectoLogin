@@ -43,7 +43,8 @@
                             <th>Código</th>
                             <th>Categoría</th>
                             <th>Marca</th>
-                            <th class="text-end">Stock</th>
+                            <th class="text-end">Stock Actual</th>
+                            <th class="text-end">Stock Minimo</th>
                             <th class="text-end">Precio venta</th>
                             <th>Acciones</th>
                         </tr>
@@ -62,6 +63,7 @@
                                 <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
                                 <td>@p.Categoria?.Nombre</td>
                                 <td>@p.Marca?.Nombre</td>
+                                
                                 <td class="text-end">
                                     @stockActual
                                     @if (isLow)
@@ -71,6 +73,9 @@
                                         </span>
                                     }
                                 </td>
+
+                                <td>@p.Inventario?.StockMinimo</td>
+
                                 <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
                                 <td>
                                     <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
@@ -111,7 +116,8 @@
                             <th>Código</th>
                             <th>Categoría</th>
                             <th>Marca</th>
-                            <th class="text-end">Stock</th>
+                            <th class="text-end">Stock Actual</th>
+                            <th class="text-end">Stock Minimo</th>
                             <th class="text-end">Precio venta</th>
                             <th>Acciones</th>
                         </tr>
@@ -130,15 +136,9 @@
                                 <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
                                 <td>@p.Categoria?.Nombre</td>
                                 <td>@p.Marca?.Nombre</td>
-                                <td class="text-end">
-                                    @stockActual
-                                    @if (isLow)
-                                    {
-                                        <span class="badge bg-danger ms-2" title="Stock bajo: mínimo @stockMin" aria-label="Stock bajo">
-                                            Bajo
-                                        </span>
-                                    }
-                                </td>
+                                <td>@p.Inventario.StockActual</td>
+                                <td>@p.Inventario.StockMinimo</td>
+
                                 <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
                                 <td>
                                     <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>

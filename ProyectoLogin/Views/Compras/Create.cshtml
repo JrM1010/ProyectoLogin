@@ -1,0 +1,74 @@
+﻿@model ProyectoLogin.Models.ModelosCompras.Compra
+@{
+    var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
+    var productos = ViewBag.Productos as List<ProyectoLogin.Models.ModelosProducts.ProductoCore>;
+    var unidades = ViewBag.Unidades as List<ProyectoLogin.Models.ModelosCompras.UnidadMedida>;
+}
+
+<h2>Nueva Compra</h2>
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label>Proveedor</label>
+        <select name="IdProveedor" class="form-control">
+            <option value="">--Seleccione--</option>
+            @foreach (var p in proveedores)
+            {
+                <option value="@p.IdProveedor">@p.Nombre</option>
+            }
+        </select>
+    </div>
+
+    <div id="detallesContainer">
+        <table class="table">
+            <thead><tr><th>Producto</th><th>Unidad</th><th>Cantidad</th><th>Precio unit.</th><th>Acción</th></tr></thead>
+            <tbody id="detallesBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="addRow()">Agregar línea</button>
+    </div>
+
+    <input type="hidden" name="Subtotal" id="Subtotal" />
+    <input type="hidden" name="IVA" id="IVA" />
+    <input type="hidden" name="Total" id="Total" />
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Guardar compra</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+<!-- Row template + JS -->
+<script>
+    let index = 0;
+    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productos));
+    const unidades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(unidades));
+
+    function addRow(){
+      const tbody = document.getElementById('detallesBody');
+      const tr = document.createElement('tr');
+      tr.id = 'row_'+index;
+      tr.innerHTML = `
+        <td>
+          <select name="detalles[${index}].IdProducto" class="form-control" required>
+            <option value="">--</option>
+            ${productos.map(p => `<option value="${p.idProducto}">${p.nombre}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <select name="detalles[${index}].IdUnidad" class="form-control">
+            ${unidades.map(u => `<option value="${u.idUnidad}">${u.nombre}</option>`).join('')}
+          </select>
+        </td>
+        <td><input name="detalles[${index}].Cantidad" type="number" step="1" min="1" class="form-control" value="1" required /></td>
+        <td><input name="detalles[${index}].PrecioUnitario" type="number" step="0.01" min="0" class="form-control" value="0.00" required /></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(${index})">Quitar</button></td>
+      `;
+      tbody.appendChild(tr);
+      index++;
+    }
+
+    function removeRow(i){
+      const r = document.getElementById('row_'+i);
+      if(r) r.remove();
+    }
+</script>
+

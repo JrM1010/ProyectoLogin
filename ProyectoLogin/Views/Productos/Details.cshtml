@@ -34,19 +34,9 @@
             <a asp-action="Edit" asp-route-id="@Model.IdProducto" class="btn btn-warning">Editar datos</a>
             <a asp-action="Index" class="btn btn-secondary">Volver</a>
         </p>
+
     </div>
 
-    <div class="col-md-6">
-        <h5>Inventario</h5>
-        <div class="mb-2">
-            <strong>Stock actual:</strong> <span class="h4">@(inventario?.StockActual ?? 0)</span>
-        </div>
-        <div class="mb-2">
-            <strong>Stock mínimo:</strong> @(inventario?.StockMinimo ?? 0)
-        </div>
-
-        
-    </div>
 </div>
 
 <hr />

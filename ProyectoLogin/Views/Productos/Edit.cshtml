@@ -39,6 +39,7 @@
                     </div>
                 </div>
 
+
                 <!-- CATEGORÍA Y MARCA -->
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -58,6 +59,14 @@
                         </select>
                         <span asp-validation-for="IdMarca" class="text-danger"></span>
                     </div>
+                </div>
+
+
+                <!--Stock minimo-->
+                <div class="mb-3">
+                    <label>Stock mínimo</label>
+                    <input name="stockMinimo" type="number" class="form-control"
+                           value="@(ViewBag.Inventario?.StockMinimo ?? 0)" min="0" />
                 </div>
 
                 <!-- ESTADO -->

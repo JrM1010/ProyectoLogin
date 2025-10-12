@@ -37,9 +37,6 @@ namespace ProyectoLogin.Models.ModelosProducts
 
         public virtual Inventario? Inventario { get; set; }
 
-        // Opcional: colección de precios si las tienes
-        //public virtual ICollection<ProductoPrecio>? Precios { get; set; }
-
 
     }
 }

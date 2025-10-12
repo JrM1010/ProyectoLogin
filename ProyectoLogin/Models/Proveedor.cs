@@ -10,6 +10,8 @@
         public string? Direccion { get; set; }
         public bool Activo { get; set; } = true;
 
-        
+
+
+
     }
 }
