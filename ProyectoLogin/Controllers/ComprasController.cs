@@ -106,7 +106,8 @@ namespace ProyectoLogin.Controllers
             if (!ModelState.IsValid || detalles == null || detalles.Count == 0)
             {
                 TempData["Error"] = "Debe completar todos los campos y agregar productos a la compra.";
-                return RedirectToAction(nameof(Create));
+                await CargarDatosVista(compra.IdProveedor);
+                return View("~/Views/Compras/Create.cshtml", compra);
             }
 
             // Si la vista envió Subtotal (por seguridad)
@@ -232,5 +233,53 @@ namespace ProyectoLogin.Controllers
 
             return View("~/Views/Compras/Details.cshtml", compra);
         }
+
+
+        private async Task CargarDatosVista(int? idProveedor)
+        {
+            ViewBag.Proveedores = await _context.Proveedores.Where(p => p.Activo).ToListAsync();
+            var unidades = await _context.UnidadesMedida
+                .Where(u => u.Activo)
+                .Select(u => new { u.IdUnidad, u.Nombre, u.EquivalenciaEnUnidades })
+                .ToListAsync();
+            ViewBag.Unidades = unidades;
+
+            if (idProveedor != null)
+            {
+                var productosProveedor = await _context.ProductosProveedores
+                    .Include(pp => pp.Producto)
+                        .ThenInclude(p => p.ProductosUnidades)
+                            .ThenInclude(pu => pu.UnidadMedida)
+                    .Where(pp => pp.IdProveedor == idProveedor)
+                    .Select(pp => new
+                    {
+                        pp.Producto.IdProducto,
+                        pp.Producto.Nombre,
+                        Unidades = pp.Producto.ProductosUnidades.Any()
+                            ? pp.Producto.ProductosUnidades.Select(pu => new
+                            {
+                                pu.IdUnidad,
+                                Nombre = pu.UnidadMedida.Nombre,
+                                pu.FactorConversion
+                            })
+                            : unidades.Select(u => new
+                            {
+                                IdUnidad = u.IdUnidad,
+                                Nombre = u.Nombre,
+                                FactorConversion = u.EquivalenciaEnUnidades
+                            })
+                    })
+                    .ToListAsync();
+
+                ViewBag.Productos = productosProveedor;
+                ViewBag.ProveedorSeleccionado = idProveedor;
+            }
+            else
+            {
+                ViewBag.Productos = new List<object>();
+            }
+        }
+
+
     }
 }
