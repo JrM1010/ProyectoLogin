@@ -346,50 +346,51 @@ namespace ProyectoLogin.Controllers
 
 
         // =======================
-        // CREAR CATEGORÍA
+        // CATEGORÍAS
         // =======================
-        [HttpPost]
         [HttpPost]
         public async Task<IActionResult> CrearCategoria(string nombre, string descripcion)
         {
+            TempData["AbrirModal"] = "Categoria";
+
             if (string.IsNullOrWhiteSpace(nombre))
             {
-                TempData["ErrorCategoria"] = "El nombre de la categoría es obligatorio.";
+                TempData["MensajeCategoria"] = "El nombre de la categoría es obligatorio.";
+                TempData["TipoCategoria"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
             var existe = await _context.Categorias.AnyAsync(c => c.Nombre == nombre);
             if (existe)
             {
-                TempData["ErrorCategoria"] = "Ya existe una categoría con ese nombre.";
+                TempData["MensajeCategoria"] = "Ya existe una categoría con ese nombre.";
+                TempData["TipoCategoria"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
-            var nueva = new Categoria
+            _context.Categorias.Add(new Categoria
             {
                 Nombre = nombre,
                 Descripcion = descripcion,
                 Activo = true
-            };
-
-            _context.Categorias.Add(nueva);
+            });
             await _context.SaveChangesAsync();
 
-            TempData["SuccessCategoria"] = "Categoría creada correctamente.";
+            TempData["MensajeCategoria"] = "Categoría creada correctamente.";
+            TempData["TipoCategoria"] = "success";
             return RedirectToAction("Create", "Productos");
         }
 
-
-        // =======================
-        // EDITAR CATEGORÍA
-        // =======================
         [HttpPost]
         public async Task<IActionResult> EditarCategoria(int id, string nombre, string descripcion)
         {
+            TempData["AbrirModal"] = "Categoria";
+
             var categoria = await _context.Categorias.FindAsync(id);
             if (categoria == null)
             {
-                TempData["ErrorCategoria"] = "Categoría no encontrada.";
+                TempData["MensajeCategoria"] = "Categoría no encontrada.";
+                TempData["TipoCategoria"] = "danger";
                 return RedirectToAction("Create", "Productos");
             }
 
@@ -397,20 +398,21 @@ namespace ProyectoLogin.Controllers
             categoria.Descripcion = descripcion;
             await _context.SaveChangesAsync();
 
-            TempData["SuccessCategoria"] = "Categoría actualizada correctamente.";
+            TempData["MensajeCategoria"] = "Categoría actualizada correctamente.";
+            TempData["TipoCategoria"] = "info";
             return RedirectToAction("Create", "Productos");
         }
 
-        // =======================
-        // ELIMINAR CATEGORÍA
-        // =======================
         [HttpPost]
         public async Task<IActionResult> EliminarCategoria(int id)
         {
+            TempData["AbrirModal"] = "Categoria";
+
             var tieneProductos = await _context.Productos.AnyAsync(p => p.IdCategoria == id);
             if (tieneProductos)
             {
-                TempData["ErrorCategoria"] = "No se puede eliminar: hay productos asociados.";
+                TempData["MensajeCategoria"] = "No se puede eliminar: hay productos asociados.";
+                TempData["TipoCategoria"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
@@ -419,69 +421,77 @@ namespace ProyectoLogin.Controllers
             {
                 _context.Categorias.Remove(categoria);
                 await _context.SaveChangesAsync();
-                TempData["SuccessCategoria"] = "Categoría eliminada correctamente.";
+
+                TempData["MensajeCategoria"] = "Categoría eliminada correctamente.";
+                TempData["TipoCategoria"] = "danger";
             }
 
             return RedirectToAction("Create", "Productos");
         }
 
+
         // =======================
-        // CREAR MARCA
+        // MARCAS
         // =======================
         [HttpPost]
         public async Task<IActionResult> CrearMarca(string nombre)
         {
+            TempData["AbrirModal"] = "Marca";
+
             if (string.IsNullOrWhiteSpace(nombre))
             {
-                TempData["ErrorCategoria"] = "El nombre de la marca es obligatorio.";
+                TempData["MensajeMarca"] = "El nombre de la marca es obligatorio.";
+                TempData["TipoMarca"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
             var existe = await _context.Marcas.AnyAsync(m => m.Nombre == nombre);
             if (existe)
             {
-                TempData["ErrorCategoria"] = "Ya existe una marca con ese nombre.";
+                TempData["MensajeMarca"] = "Ya existe una marca con ese nombre.";
+                TempData["TipoMarca"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
             _context.Marcas.Add(new Marca { Nombre = nombre, Activo = true });
             await _context.SaveChangesAsync();
 
-            TempData["SuccessCategoria"] = "Marca creada correctamente.";
+            TempData["MensajeMarca"] = "Marca creada correctamente.";
+            TempData["TipoMarca"] = "success";
             return RedirectToAction("Create", "Productos");
         }
 
-
-        // =======================
-        // EDITAR MARCA
-        // =======================
         [HttpPost]
         public async Task<IActionResult> EditarMarca(int id, string nombre)
         {
+            TempData["AbrirModal"] = "Marca";
+
             var marca = await _context.Marcas.FindAsync(id);
             if (marca == null)
             {
-                TempData["ErrorCategoria"] = "Marca no encontrada.";
+                TempData["MensajeMarca"] = "Marca no encontrada.";
+                TempData["TipoMarca"] = "danger";
                 return RedirectToAction("Create", "Productos");
             }
 
             marca.Nombre = nombre;
             await _context.SaveChangesAsync();
 
-            TempData["SuccessCategoria"] = "Marca actualizada correctamente.";
+            TempData["MensajeMarca"] = "Marca actualizada correctamente.";
+            TempData["TipoMarca"] = "info";
             return RedirectToAction("Create", "Productos");
         }
 
-        // =======================
-        // ELIMINAR MARCA
-        // =======================
         [HttpPost]
         public async Task<IActionResult> EliminarMarca(int id)
         {
+            TempData["AbrirModal"] = "Marca";
+
             var tieneProductos = await _context.Productos.AnyAsync(p => p.IdMarca == id);
             if (tieneProductos)
             {
-                TempData["ErrorCategoria"] = "No se puede eliminar: hay productos asociados.";
+                TempData["MensajeMarca"] = "No se puede eliminar: hay productos asociados.";
+                TempData["TipoMarca"] = "warning";
                 return RedirectToAction("Create", "Productos");
             }
 
@@ -490,10 +500,13 @@ namespace ProyectoLogin.Controllers
             {
                 _context.Marcas.Remove(marca);
                 await _context.SaveChangesAsync();
-                TempData["SuccessCategoria"] = "Marca eliminada correctamente.";
+
+                TempData["MensajeMarca"] = "Marca eliminada correctamente.";
+                TempData["TipoMarca"] = "danger";
             }
 
             return RedirectToAction("Create", "Productos");
         }
+
     }
 }

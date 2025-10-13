@@ -10,7 +10,7 @@ namespace ProyectoLogin.Models.ModelosCompras
 
         [Required]
         [StringLength(100)]
-        public string Nombre { get; set; }
+        public string? Nombre { get; set; }
 
         // Factor de conversión (por ejemplo: 1 para unidad, 12 para caja si una caja = 12 unidades)
         public decimal FactorConversion { get; set; } = 1m;
