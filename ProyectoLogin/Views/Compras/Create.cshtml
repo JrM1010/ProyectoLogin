@@ -1,198 +1,234 @@
 ﻿@model ProyectoLogin.Models.ModelosCompras.Compra
 
 @{
-    var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
-    var productos = ViewBag.Productos as List<ProyectoLogin.Models.ModelosProducts.ProductoCore>;
-    var unidades = ViewBag.Unidades as List<ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida>;
-    int? proveedorSel = ViewBag.ProveedorSeleccionado as int?;
+    ViewData["Title"] = "Registrar Compra";
+    var productos = ViewBag.Productos as IEnumerable<dynamic> ?? new List<dynamic>();
+    var unidades = ViewBag.Unidades as IEnumerable<ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida> ?? new List<ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida>();
+    var proveedorSeleccionado = ViewBag.ProveedorSeleccionado as int?;
+    var proveedores = ViewBag.Proveedores as IEnumerable<dynamic> ?? new List<dynamic>();
 }
 
-<h2>Nueva Compra</h2>
+<div class="container mt-4">
+    <h2 class="mb-3">Registrar Compra</h2>
 
-<!-- FORMULARIO DE PROVEEDOR -->
-<form method="get" action="/Compras/Create">
-    <div class="mb-3">
-        <label>Proveedor:</label>
-        <select name="idProveedor" class="form-control" onchange="this.form.submit()">
-            <option value="">-- Seleccione un proveedor --</option>
-            @foreach (var p in proveedores)
-            {
-                if (proveedorSel == p.IdProveedor)
-                {
-                    <option value="@p.IdProveedor" selected>@p.Nombre</option>
-                }
-                else
-                {
-                    <option value="@p.IdProveedor">@p.Nombre</option>
-                }
+    <!-- FORM para GET al cambiar proveedor (más fiable que window.location.href dentro del form POST) -->
+    <form id="formProveedor" method="get" action="/Compras/Create" class="mb-3">
+        <div class="card p-3 mb-4 shadow-sm">
+            <h5 class="mb-3">Proveedor</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Proveedor</label>
+                    <select id="proveedorSelect" name="idProveedor" class="form-control" onchange="document.getElementById('formProveedor').submit();">
+                        <option value="">--Seleccione proveedor--</option>
+                        @foreach (var prov in proveedores)
+                        {
+                            if (proveedorSeleccionado.HasValue && proveedorSeleccionado.Value == prov.IdProveedor)
+                            {
+                                <option value="@prov.IdProveedor" selected>@prov.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@prov.IdProveedor">@prov.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Número de documento</label>
+                    <!-- Este input NO forma parte del GET de proveedor (se usa en POST), por eso lo dejamos vacío aquí -->
+                    <input type="text" id="NumeroDocumentoTemp" class="form-control" placeholder="Factura / Recibo" />
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- FORM principal (POST) para guardar compra -->
+    <form asp-action="Create" method="post">
+        <!-- Hidden: el proveedor seleccionado (se rellena desde server cuando recargas con idProveedor) -->
+        <input type="hidden" name="IdProveedor" id="IdProveedorHidden" value="@(proveedorSeleccionado ?? 0)" />
+
+        <div class="card p-3 shadow-sm">
+            <h5 class="mb-3">Detalles de la compra</h5>
+            <table class="table table-bordered align-middle" id="tablaDetalles">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Unidad</th>
+                        <th>Cantidad</th>
+                        <th>Precio compra (Q)</th>
+                        <th>Precio venta (Q)</th>
+                        <th>Subtotal (Q)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="detallesBody"></tbody>
+            </table>
+
+            <button type="button" class="btn btn-outline-primary" id="btnAgregar">
+                + Agregar producto
+            </button>
+        </div>
+
+        <!-- Totales -->
+        <div class="card p-3 mt-3 shadow-sm">
+            <div class="row">
+                <div class="col-md-4 ms-auto">
+                    <div class="mb-2">
+                        <label class="form-label">Subtotal</label>
+                        <input type="text" id="subtotal" name="Subtotal" class="form-control text-end" readonly />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">IVA (12%)</label>
+                        <input type="text" id="iva" name="IVA" class="form-control text-end" readonly />
+                    </div>
+                    <div>
+                        <label class="form-label">Total</label>
+                        <input type="text" id="total" name="Total" class="form-control text-end fw-bold" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-end">
+            <a asp-action="Index" class="btn btn-secondary me-2">Cancelar</a>
+            <button type="submit" class="btn btn-success">Guardar Compra</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Serialización segura: si no hay productos, usamos lista vacía
+        const productos = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(productos));
+        const margen = 0.25; // 25% de ganancia
+
+        const tablaBody = document.getElementById("detallesBody");
+        const btnAgregar = document.getElementById("btnAgregar");
+        const idProveedorHidden = document.getElementById("IdProveedorHidden");
+
+        // Si se cambió el proveedor vía GET, actualizar el hidden actual para el POST
+        const proveedorSelect = document.getElementById("proveedorSelect");
+        if (proveedorSelect) {
+            // Inicializar hidden (por si el usuario no recarga la página)
+            if (proveedorSelect.value) idProveedorHidden.value = proveedorSelect.value;
+
+            // Si el usuario cambia el proveedor con el select GET, el form se envía y la página recarga.
+            // Pero si en algún flujo quieres sincronizar el hidden sin recargar, podrías hacerlo aquí:
+            proveedorSelect.addEventListener("change", function () {
+                // sincronizar el hidden (esto ayuda si el usuario no recarga la página manualmente)
+                idProveedorHidden.value = this.value || 0;
+            });
+        }
+
+        // ➕ Agregar fila
+        btnAgregar.addEventListener("click", function () {
+            // Impedir agregar líneas si no hay proveedor seleccionado
+            if (!idProveedorHidden.value || parseInt(idProveedorHidden.value) === 0) {
+                alert("Seleccione primero un proveedor para ver sus productos.");
+                return;
             }
-        </select>
-    </div>
-</form>
 
-<hr />
+            const index = tablaBody.querySelectorAll("tr").length;
+            const fila = document.createElement("tr");
 
-<!-- FORMULARIO DE COMPRA -->
-<form method="post" action="/Compras/Create">
-    <input type="hidden" name="IdProveedor" value="@proveedorSel" />
+            fila.innerHTML = `
+                <td>
+                    <select name="detalles[${index}].IdProducto" class="form-control productoSelect" required>
+                        <option value="">--Seleccione--</option>
+                        ${productos.map(p => `<option value="${p.IdProducto}">${p.Nombre}</option>`).join('')}
+                    </select>
+                </td>
+                <td>
+                    <select name="detalles[${index}].IdUnidad" class="form-control unidadSelect" required>
+                        <option value="">--Seleccione--</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="detalles[${index}].Cantidad" class="form-control cantidadInput" min="1" value="1" required />
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="detalles[${index}].PrecioUnitario" class="form-control precioCompraInput" required />
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control precioVentaInput" readonly />
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control subtotalInput" readonly />
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm btnQuitar">&times;</button>
+                </td>
+            `;
+            tablaBody.appendChild(fila);
+        });
 
-    <table class="table table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Producto</th>
-                <th>Presentacion</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario (Q)</th>
-                <th>Subtotal (Q)</th> <!-- 🟩 NUEVO -->
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="detallesBody"></tbody>
-        <tfoot>
-            <tr>
-                <td colspan="4" class="text-end fw-bold">TOTAL COMPRA (Q):</td>
-                <td id="totalCompra" class="fw-bold text-success">0.00</td> <!-- 🟩 NUEVO -->
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
+        // Delegación de eventos
+        document.addEventListener("change", function (e) {
 
-    <input type="hidden" id="Subtotal" name="Subtotal" value="0" /> <!-- 🟩 NUEVO -->
+            // Cargar unidades del producto seleccionado (usamos productos cargados por server para el proveedor actual)
+            if (e.target.classList.contains("productoSelect")) {
+                const fila = e.target.closest("tr");
+                const unidadSelect = fila.querySelector(".unidadSelect");
+                const productoId = parseInt(e.target.value);
+                const producto = productos.find(p => p.IdProducto === productoId);
 
-    <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">Agregar producto</button>
-
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">Guardar compra</button>
-        <a href="/Compras/Index" class="btn btn-secondary">Cancelar</a>
-    </div>
-</form>
+                unidadSelect.innerHTML = '<option value="">--Seleccione--</option>';
 
 
-
-<!-- =============== SCRIPT =============== -->
-<script>
-    let index = 0;
-
-    // Productos del proveedor con sus unidades
-    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Productos ?? new List<object>()));
-
-    function addRow() {
-        if (!productos || productos.length === 0) {
-            alert("Seleccione primero un proveedor que tenga productos disponibles.");
-            return;
-        }
-
-        const tbody = document.getElementById('detallesBody');
-        const tr = document.createElement('tr');
-        tr.id = 'row_' + index;
-
-        tr.innerHTML = `
-            <td>
-                <select name="detalles[${index}].IdProducto" class="form-control productoSelect" required>
-                    <option value="">-- Producto --</option>
-                    ${productos.map(p => `<option value="${p.IdProducto}">${p.Nombre}</option>`).join('')}
-                </select>
-            </td>
-            <td>
-                <select name="detalles[${index}].IdUnidad" class="form-control unidadSelect" required disabled>
-                    <option value="">-- Unidad --</option>
-                </select>
-            </td>
-            <td><input name="detalles[${index}].Cantidad" type="number" min="1" value="1" class="form-control cantidad" required /></td>
-            <td><input name="detalles[${index}].PrecioUnitario" type="number" min="0" step="0.01" value="0.00" class="form-control precio" required /></td>
-            <td class="subtotal text-end">0.00</td>
-            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button></td>
-        `;
-        tbody.appendChild(tr);
-        index++;
-
-        actualizarEventos();
-        calcularTotales();
-    }
-
-    function removeRow(i) {
-        const row = document.getElementById('row_' + i);
-        if (row) row.remove();
-        calcularTotales();
-    }
-
-    // --- Cargar unidades según producto seleccionado ---
-    function handleProductoChange(event) {
-        const productoId = parseInt(event.target.value);
-        const row = event.target.closest('tr');
-        const unidadSelect = row.querySelector('.unidadSelect');
-
-        unidadSelect.innerHTML = '<option value="">-- Unidad --</option>';
-        unidadSelect.disabled = true;
-
-        const producto = productos.find(p => p.IdProducto === productoId);
-        if (producto && producto.Unidades?.length > 0) {
+                        if (producto && producto.Unidades && producto.Unidades.length > 0) {
             producto.Unidades.forEach(u => {
-                unidadSelect.innerHTML += `<option value="${u.IdUnidad}" data-factor="${u.FactorConversion}">${u.Nombre} (x${u.FactorConversion})</option>`;
+                unidadSelect.innerHTML += `<option value="${u.IdUnidad}">${u.Nombre} (x${u.FactorConversion})</option>`;
             });
-            unidadSelect.disabled = false;
-        }
-    }
-
-    // --- Recalcula precio y subtotal al cambiar unidad ---
-    function handleUnidadChange(event) {
-        const select = event.target;
-        const factor = parseFloat(select.selectedOptions[0]?.getAttribute('data-factor') || 1);
-        const row = select.closest('tr');
-        const precioInput = row.querySelector('.precio');
-        const cantidadInput = row.querySelector('.cantidad');
-
-        const precioBase = parseFloat(precioInput.getAttribute('data-base') || precioInput.value || 0);
-
-        // Guardar precio base la primera vez
-        if (!precioInput.getAttribute('data-base')) {
-            precioInput.setAttribute('data-base', precioBase);
+        } else {
+            // Si no hay unidades asociadas al producto, mostrar todas las del sistema
+            const todasUnidades = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Unidades ?? new List<object>()));
+            todasUnidades.forEach(u => {
+                unidadSelect.innerHTML += `<option value="${u.IdUnidad}">${u.Nombre}</option>`;
+            });
         }
 
-        // Recalcular según factor de conversión
-        const nuevoPrecio = factor > 1
-            ? (precioBase * factor)
-            : (precioBase / (factor || 1));
+            }
 
-        precioInput.value = nuevoPrecio.toFixed(2);
-        calcularTotales();
-    }
+            // Recalcular precios al cambiar cantidad o precio
+            if (e.target.classList.contains("precioCompraInput") ||
+                e.target.classList.contains("cantidadInput")) {
 
-    // --- Calcula subtotales y total ---
-    function calcularTotales() {
-        let total = 0;
-        document.querySelectorAll('#detallesBody tr').forEach(row => {
-            const cantidad = parseFloat(row.querySelector('.cantidad')?.value || 0);
-            const precio = parseFloat(row.querySelector('.precio')?.value || 0);
-            const subtotal = cantidad * precio;
-            row.querySelector('.subtotal').textContent = subtotal.toLocaleString('es-GT', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                const fila = e.target.closest("tr");
+                const precioCompra = parseFloat(fila.querySelector(".precioCompraInput").value) || 0;
+                const cantidad = parseFloat(fila.querySelector(".cantidadInput").value) || 0;
+
+                const precioVentaInput = fila.querySelector(".precioVentaInput");
+                const subtotalInput = fila.querySelector(".subtotalInput");
+
+                const precioVenta = precioCompra * (1 + margen);
+                const subtotal = precioCompra * cantidad;
+
+                precioVentaInput.value = precioVenta.toFixed(2);
+                subtotalInput.value = subtotal.toFixed(2);
+
+                recalcularTotales();
+            }
+
+            // Quitar fila
+            if (e.target.classList.contains("btnQuitar")) {
+                e.target.closest("tr").remove();
+                recalcularTotales();
+            }
+        });
+
+        // Totales generales
+        function recalcularTotales() {
+            let subtotal = 0;
+            tablaBody.querySelectorAll(".subtotalInput").forEach(inp => {
+                subtotal += parseFloat(inp.value) || 0;
             });
-            total += subtotal;
-        });
-        document.getElementById('totalCompra').textContent = total.toLocaleString('es-GT', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
 
-    // --- Asignar eventos ---
-    function actualizarEventos() {
-        document.querySelectorAll('.productoSelect').forEach(sel => {
-            sel.removeEventListener('change', handleProductoChange);
-            sel.addEventListener('change', handleProductoChange);
-        });
+            const iva = subtotal * 0.12;
+            const total = subtotal + iva;
 
-        document.querySelectorAll('.unidadSelect').forEach(sel => {
-            sel.removeEventListener('change', handleUnidadChange);
-            sel.addEventListener('change', handleUnidadChange);
-        });
-
-        document.querySelectorAll('.cantidad, .precio').forEach(input => {
-            input.removeEventListener('input', calcularTotales);
-            input.addEventListener('input', calcularTotales);
-        });
-    }
-</script>
-
+            document.getElementById("subtotal").value = subtotal.toFixed(2);
+            document.getElementById("iva").value = iva.toFixed(2);
+            document.getElementById("total").value = total.toFixed(2);
+        }
+    </script>
+}
