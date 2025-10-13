@@ -278,6 +278,11 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(d => d.IdProducto);
         });
 
+
+
+
+
+        //----------------- PRODUCTO PROVEEDOR -----------------
         modelBuilder.Entity<ProductoProveedor>(entity =>
         {
             entity.HasKey(e => e.IdProductoProveedor);

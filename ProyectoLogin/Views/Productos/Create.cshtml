@@ -2,7 +2,24 @@
 @{
     ViewData["Title"] = "Crear Producto";
 }
+
 <h2>Crear Producto</h2>
+
+<!-- =================== MENSAJES DE CATEGORÍA =================== -->
+@if (TempData["SuccessCategoria"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" id="alertCategoria">
+        <i class="bi bi-check-circle"></i> @TempData["SuccessCategoria"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorCategoria"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="alertCategoria">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorCategoria"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
@@ -14,28 +31,33 @@
         <span asp-validation-for="Nombre" class="text-danger"></span>
     </div>
 
+    <!-- =================== CATEGORÍA =================== -->
     <div class="mb-3">
         <label>Categoría</label>
-        <select asp-for="IdCategoria" class="form-select">
-            <option value="">--Seleccione--</option>
-            @foreach (var c in ViewBag.Categorias)
-            {
-                <option value="@c.IdCategoria">@c.Nombre</option>
-            }
-        </select>
+        <div class="input-group">
+            <select asp-for="IdCategoria" asp-items="ViewBag.CategoriasSelect" class="form-control">
+                <option value="">--Seleccione--</option>
+            </select>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalCategoria">+</button>
+        </div>
+        <span asp-validation-for="IdCategoria" class="text-danger"></span>
     </div>
 
+    <!-- =================== MARCA =================== -->
     <div class="mb-3">
         <label>Marca</label>
-        <select asp-for="IdMarca" class="form-select">
-            <option value="">--Seleccione--</option>
-            @foreach (var m in ViewBag.Marcas)
-            {
-                <option value="@m.IdMarca">@m.Nombre</option>
-            }
-        </select>
+        <div class="input-group">
+            <select asp-for="IdMarca" asp-items="ViewBag.MarcasSelect" class="form-control">
+                <option value="">--Seleccione--</option>
+            </select>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalMarca">+</button>
+        </div>
+        <span asp-validation-for="IdMarca" class="text-danger"></span>
     </div>
 
+
+
+    <!-- =================== PROVEEDOR =================== -->
     <div class="mb-3">
         <label>Proveedor</label>
         <select name="idProveedor" class="form-select">
@@ -47,12 +69,13 @@
         </select>
     </div>
 
-
+    <!-- =================== DESCRIPCIÓN =================== -->
     <div class="mb-3">
         <label>Descripción</label>
         <textarea asp-for="Descripcion" class="form-control"></textarea>
     </div>
 
+    <!-- =================== STOCK =================== -->
     <div class="mb-3">
         <label>Cantidad mínima de Stock</label>
         <input name="stockMinimo" type="number" class="form-control" value="1" min="0" />
@@ -77,8 +100,215 @@
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
 
+<!-- =================== MODAL CRUD DE CATEGORÍA =================== -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalCategoriaLabel">Administrar Categorías</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Crear / Editar categoría -->
+                <form method="post" id="formCategoria" asp-action="CrearCategoria">
+                    <input type="hidden" id="idCategoria" name="id" value="" />
+
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input id="nombreCategoria" name="nombre" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Descripción</label>
+                        <textarea id="descripcionCategoria" name="descripcion" class="form-control"></textarea>
+                    </div>
+
+                    <button type="submit" id="btnGuardarCategoria" class="btn btn-success">Guardar nueva</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarEdicion" style="display:none;">Cancelar</button>
+                </form>
+
+                <hr />
+
+                <!-- Listado para editar/eliminar -->
+                <h6>Categorías existentes</h6>
+                <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%;">Nombre</th>
+                            <th style="width: 50%;">Descripción</th>
+                            <th style="width: 25%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var categorias = ViewBag.CategoriasLista as List<ProyectoLogin.Models.ModelosProducts.Categoria>
+                            ?? new List<ProyectoLogin.Models.ModelosProducts.Categoria>();
+                        }
+
+                        @foreach (var c in categorias)
+                        {
+                            <tr>
+                                <td>@c.Nombre</td>
+                                <td>@(string.IsNullOrWhiteSpace(c.Descripcion) ? "-" : c.Descripcion)</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-sm me-1"
+                                            onclick="editarCategoria('@c.IdCategoria', '@c.Nombre', '@(c.Descripcion ?? "")')">
+                                        Editar
+                                    </button>
+
+                                    <form method="post" asp-action="EliminarCategoria" style="display:inline;"
+                                          onsubmit="return confirm('¿Eliminar esta categoría?');">
+                                        <input type="hidden" name="id" value="@c.IdCategoria" />
+                                        <button class="btn btn-danger btn-sm">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =================== MODAL CRUD DE MARCA =================== -->
+<div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalMarcaLabel">Administrar Marcas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Crear / Editar marca -->
+                <form method="post" id="formMarca" asp-action="CrearMarca">
+                    <input type="hidden" id="idMarca" name="id" value="" />
+
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input id="nombreMarca" name="nombre" class="form-control" required />
+                    </div>
+
+                    <button type="submit" id="btnGuardarMarca" class="btn btn-success">Guardar nueva</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarEdicionMarca" style="display:none;">Cancelar</button>
+                </form>
+
+                <hr />
+
+                <!-- Listado de marcas -->
+                <h6>Marcas existentes</h6>
+                <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60%;">Nombre</th>
+                            <th style="width: 40%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var marcas = ViewBag.MarcasLista as List<ProyectoLogin.Models.ModelosProducts.Marca>
+                            ?? new List<ProyectoLogin.Models.ModelosProducts.Marca>();
+                        }
+
+                        @foreach (var m in marcas)
+                        {
+                            <tr>
+                                <td>@m.Nombre</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning btn-sm me-1"
+                                            onclick="editarMarca('@m.IdMarca', '@m.Nombre')">
+                                        Editar
+                                    </button>
+
+                                    <form method="post" asp-action="EliminarMarca" style="display:inline;"
+                                          onsubmit="return confirm('¿Eliminar esta marca?');">
+                                        <input type="hidden" name="id" value="@m.IdMarca" />
+                                        <button class="btn btn-danger btn-sm">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        // Ocultar automáticamente alertas
+        setTimeout(() => {
+            const alert = document.getElementById('alertCategoria');
+            if (alert) {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                bsAlert.close();
+            }
+        }, 4000);
+
+        // --- FUNCIÓN: Cargar datos en formulario para editar ---
+        function editarCategoria(id, nombre, descripcion) {
+            document.getElementById('idCategoria').value = id;
+            document.getElementById('nombreCategoria').value = nombre;
+            document.getElementById('descripcionCategoria').value = descripcion;
+
+            const form = document.getElementById('formCategoria');
+            form.setAttribute('action', '/Productos/EditarCategoria');
+
+            document.getElementById('btnGuardarCategoria').textContent = 'Guardar cambios';
+            document.getElementById('btnGuardarCategoria').classList.remove('btn-success');
+            document.getElementById('btnGuardarCategoria').classList.add('btn-warning');
+            document.getElementById('btnCancelarEdicion').style.display = 'inline-block';
+        }
+
+        // --- FUNCIÓN: Cancelar edición ---
+        document.getElementById('btnCancelarEdicion').addEventListener('click', () => {
+            const form = document.getElementById('formCategoria');
+            form.reset();
+            document.getElementById('idCategoria').value = '';
+            form.setAttribute('action', '/Productos/CrearCategoria');
+
+            document.getElementById('btnGuardarCategoria').textContent = 'Guardar nueva';
+            document.getElementById('btnGuardarCategoria').classList.remove('btn-warning');
+            document.getElementById('btnGuardarCategoria').classList.add('btn-success');
+            document.getElementById('btnCancelarEdicion').style.display = 'none';
+        });
+    </script>
+
+    <script>
+        // --- FUNCIÓN: Cargar datos de marca para editar ---
+        function editarMarca(id, nombre) {
+            document.getElementById('idMarca').value = id;
+            document.getElementById('nombreMarca').value = nombre;
+
+            const form = document.getElementById('formMarca');
+            form.setAttribute('action', '/Productos/EditarMarca');
+
+            document.getElementById('btnGuardarMarca').textContent = 'Guardar cambios';
+            document.getElementById('btnGuardarMarca').classList.remove('btn-success');
+            document.getElementById('btnGuardarMarca').classList.add('btn-warning');
+            document.getElementById('btnCancelarEdicionMarca').style.display = 'inline-block';
+        }
+
+        // --- FUNCIÓN: Cancelar edición ---
+        document.getElementById('btnCancelarEdicionMarca').addEventListener('click', () => {
+            const form = document.getElementById('formMarca');
+            form.reset();
+            document.getElementById('idMarca').value = '';
+            form.setAttribute('action', '/Productos/CrearMarca');
+
+            document.getElementById('btnGuardarMarca').textContent = 'Guardar nueva';
+            document.getElementById('btnGuardarMarca').classList.remove('btn-warning');
+            document.getElementById('btnGuardarMarca').classList.add('btn-success');
+            document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
+        });
+    </script>
 }

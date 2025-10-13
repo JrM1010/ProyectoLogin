@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosProducts;
@@ -45,14 +46,34 @@ namespace ProyectoLogin.Controllers
         }
 
         // GET: Create
-        public IActionResult Create()
+            public async Task<IActionResult> Create()
         {
-            ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
-            ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
-            
+            // Cargar categorías
+            var categorias = await _context.Categorias
+                .OrderBy(c => c.Nombre)
+                .ToListAsync();
 
+            // Cargar marcas
+            var marcas = await _context.Marcas
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .ToListAsync();
+
+            // Cargar proveedores
+            var proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            // Asignaciones a ViewBag para la vista
+            ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
+            ViewBag.CategoriasLista = categorias;
+
+            ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
+            ViewBag.Proveedores = proveedores;
+            ViewBag.MarcasLista = marcas;
+            // Código sugerido
             ViewBag.CodigoGenerado = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{new Random().Next(0, 10000):D4}";
-            ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
 
             return View();
         }
@@ -62,10 +83,31 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductoCore producto, int stockMinimo = 0, int idProveedor = 0)
         {
-            ViewBag.Categorias = _context.Categorias.Where(c => c.Activo).ToList();
-            ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
-           
-            ViewBag.Proveedores = _context.Proveedores.Where(p => p.Activo).ToList();
+
+            var categorias = await _context.Categorias
+                .Where(c => c.Activo)
+                .OrderBy(c => c.Nombre)
+                .ToListAsync();
+
+            var marcas = await _context.Marcas
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .ToListAsync();
+
+            var proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            // ✅ Categorías (dos versiones)
+            ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
+            ViewBag.CategoriasLista = categorias;
+
+            // ✅ Marcas (convertida correctamente)
+            ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
+
+            // ✅ Proveedores (no usa asp-items, así que queda lista normal)
+            ViewBag.Proveedores = proveedores;
 
             if (!ModelState.IsValid)
             {
@@ -299,6 +341,159 @@ namespace ProyectoLogin.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = idProducto });
+        }
+
+
+
+        // =======================
+        // CREAR CATEGORÍA
+        // =======================
+        [HttpPost]
+        [HttpPost]
+        public async Task<IActionResult> CrearCategoria(string nombre, string descripcion)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                TempData["ErrorCategoria"] = "El nombre de la categoría es obligatorio.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            var existe = await _context.Categorias.AnyAsync(c => c.Nombre == nombre);
+            if (existe)
+            {
+                TempData["ErrorCategoria"] = "Ya existe una categoría con ese nombre.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            var nueva = new Categoria
+            {
+                Nombre = nombre,
+                Descripcion = descripcion,
+                Activo = true
+            };
+
+            _context.Categorias.Add(nueva);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessCategoria"] = "Categoría creada correctamente.";
+            return RedirectToAction("Create", "Productos");
+        }
+
+
+        // =======================
+        // EDITAR CATEGORÍA
+        // =======================
+        [HttpPost]
+        public async Task<IActionResult> EditarCategoria(int id, string nombre, string descripcion)
+        {
+            var categoria = await _context.Categorias.FindAsync(id);
+            if (categoria == null)
+            {
+                TempData["ErrorCategoria"] = "Categoría no encontrada.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            categoria.Nombre = nombre;
+            categoria.Descripcion = descripcion;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessCategoria"] = "Categoría actualizada correctamente.";
+            return RedirectToAction("Create", "Productos");
+        }
+
+        // =======================
+        // ELIMINAR CATEGORÍA
+        // =======================
+        [HttpPost]
+        public async Task<IActionResult> EliminarCategoria(int id)
+        {
+            var tieneProductos = await _context.Productos.AnyAsync(p => p.IdCategoria == id);
+            if (tieneProductos)
+            {
+                TempData["ErrorCategoria"] = "No se puede eliminar: hay productos asociados.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            var categoria = await _context.Categorias.FindAsync(id);
+            if (categoria != null)
+            {
+                _context.Categorias.Remove(categoria);
+                await _context.SaveChangesAsync();
+                TempData["SuccessCategoria"] = "Categoría eliminada correctamente.";
+            }
+
+            return RedirectToAction("Create", "Productos");
+        }
+
+        // =======================
+        // CREAR MARCA
+        // =======================
+        [HttpPost]
+        public async Task<IActionResult> CrearMarca(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                TempData["ErrorCategoria"] = "El nombre de la marca es obligatorio.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            var existe = await _context.Marcas.AnyAsync(m => m.Nombre == nombre);
+            if (existe)
+            {
+                TempData["ErrorCategoria"] = "Ya existe una marca con ese nombre.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            _context.Marcas.Add(new Marca { Nombre = nombre, Activo = true });
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessCategoria"] = "Marca creada correctamente.";
+            return RedirectToAction("Create", "Productos");
+        }
+
+
+        // =======================
+        // EDITAR MARCA
+        // =======================
+        [HttpPost]
+        public async Task<IActionResult> EditarMarca(int id, string nombre)
+        {
+            var marca = await _context.Marcas.FindAsync(id);
+            if (marca == null)
+            {
+                TempData["ErrorCategoria"] = "Marca no encontrada.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            marca.Nombre = nombre;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessCategoria"] = "Marca actualizada correctamente.";
+            return RedirectToAction("Create", "Productos");
+        }
+
+        // =======================
+        // ELIMINAR MARCA
+        // =======================
+        [HttpPost]
+        public async Task<IActionResult> EliminarMarca(int id)
+        {
+            var tieneProductos = await _context.Productos.AnyAsync(p => p.IdMarca == id);
+            if (tieneProductos)
+            {
+                TempData["ErrorCategoria"] = "No se puede eliminar: hay productos asociados.";
+                return RedirectToAction("Create", "Productos");
+            }
+
+            var marca = await _context.Marcas.FindAsync(id);
+            if (marca != null)
+            {
+                _context.Marcas.Remove(marca);
+                await _context.SaveChangesAsync();
+                TempData["SuccessCategoria"] = "Marca eliminada correctamente.";
+            }
+
+            return RedirectToAction("Create", "Productos");
         }
     }
 }
