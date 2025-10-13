@@ -176,8 +176,9 @@
 
 
                         if (producto && producto.Unidades && producto.Unidades.length > 0) {
-            producto.Unidades.forEach(u => {
-                unidadSelect.innerHTML += `<option value="${u.IdUnidad}">${u.Nombre} (x${u.FactorConversion})</option>`;
+                producto.Unidades.forEach(u => { 
+                unidadSelect.innerHTML += `<option value="${u.IdUnidad}" data-factor="${u.FactorConversion}" > ${u.Nombre} (x${u.FactorConversion})
+                </option>`;
             });
         } else {
             // Si no hay unidades asociadas al producto, mostrar todas las del sistema
@@ -190,30 +191,67 @@
             }
 
             // Recalcular precios al cambiar cantidad o precio
-            if (e.target.classList.contains("precioCompraInput") ||
-                e.target.classList.contains("cantidadInput")) {
+                    // 🔹 Recalcular precios cuando cambia cantidad, unidad o precio de compra
+        if (
+            e.target.classList.contains("precioCompraInput") ||
+            e.target.classList.contains("cantidadInput") ||
+            e.target.classList.contains("unidadSelect")
+        ) {
+            const fila = e.target.closest("tr");
 
-                const fila = e.target.closest("tr");
-                const precioCompra = parseFloat(fila.querySelector(".precioCompraInput").value) || 0;
-                const cantidad = parseFloat(fila.querySelector(".cantidadInput").value) || 0;
+            const precioCompraInput = fila.querySelector(".precioCompraInput");
+            const cantidadInput = fila.querySelector(".cantidadInput");
+            const unidadSelect = fila.querySelector(".unidadSelect");
 
-                const precioVentaInput = fila.querySelector(".precioVentaInput");
-                const subtotalInput = fila.querySelector(".subtotalInput");
+            const precioVentaInput = fila.querySelector(".precioVentaInput");
+            const subtotalInput = fila.querySelector(".subtotalInput");
 
-                const precioVenta = precioCompra * (1 + margen);
-                const subtotal = precioCompra * cantidad;
+            const precioBase = parseFloat(precioCompraInput.value) || 0;
+            const cantidad = parseFloat(cantidadInput.value) || 0;
 
-                precioVentaInput.value = precioVenta.toFixed(2);
-                subtotalInput.value = subtotal.toFixed(2);
+            // 🔹 Leer el factor de conversión de la unidad seleccionada (ej. 12 unidades por caja)
+            const unidadSeleccionada = unidadSelect.options[unidadSelect.selectedIndex];
+            const factor = parseFloat(unidadSeleccionada?.dataset.factor || 1);
 
-                recalcularTotales();
+            // 🔹 Definir un descuento por mayoreo (ej. 10%)
+            const descuentoMayoreo = 0.10;
+
+            // 🔹 Calcular precio de compra ajustado
+            let precioCompraAjustado = precioBase;
+
+            if (factor > 1) {
+                // Es una presentación mayor (como caja, paquete, docena)
+                precioCompraAjustado = (precioBase * factor) * (1 - descuentoMayoreo);
             }
 
-            // Quitar fila
+            // 🔹 Calcular precio de venta con margen (ej. 25%)
+            const margen = 0.25;
+            const precioVenta = precioCompraAjustado * (1 + margen);
+
+            // 🔹 Calcular subtotal de la línea
+            const subtotal = precioCompraAjustado * cantidad;
+
+            // 🔹 Asignar valores al formulario
+            precioVentaInput.value = precioVenta.toFixed(2);
+            subtotalInput.value = subtotal.toFixed(2);
+
+            // 🔹 Actualizar totales generales
+            recalcularTotales();
+        }
+
+
+           // 🗑️ Eliminar filas dinámicamente
+            document.addEventListener("click", function (e) {
             if (e.target.classList.contains("btnQuitar")) {
-                e.target.closest("tr").remove();
-                recalcularTotales();
+                e.preventDefault();
+                const fila = e.target.closest("tr");
+                if (fila) {
+                    fila.remove();
+                    recalcularTotales();
+                }
             }
+            });
+
         });
 
         // Totales generales
@@ -223,12 +261,14 @@
                 subtotal += parseFloat(inp.value) || 0;
             });
 
-            const iva = subtotal * 0.12;
+            const iva = subtotal * 0.12; //calculando precio iva
             const total = subtotal + iva;
 
             document.getElementById("subtotal").value = subtotal.toFixed(2);
             document.getElementById("iva").value = iva.toFixed(2);
             document.getElementById("total").value = total.toFixed(2);
         }
+
+            
     </script>
 }

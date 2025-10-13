@@ -119,15 +119,22 @@ namespace ProyectoLogin.Controllers
             // 🔹 Recalcular subtotales de manera segura usando equivalencias de la BD
             foreach (var det in detalles)
             {
+                // Buscar equivalencia entre unidad seleccionada y producto
                 var equivalencia = await _context.ProductosUnidades
                     .Where(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad)
                     .Select(pu => pu.FactorConversion)
                     .FirstOrDefaultAsync();
 
                 if (equivalencia <= 0)
-                    equivalencia = 1;
+                    equivalencia = 1; // valor por defecto si no hay relación
 
-                det.Subtotal = det.Cantidad * det.PrecioUnitario * equivalencia;
+                // Aplicar descuento por mayoreo si factor > 1
+                var descuentoMayoreo = equivalencia > 1 ? 0.10m : 0m;
+
+                // Calcular subtotal con equivalencia y descuento
+                var precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuentoMayoreo);
+
+                det.Subtotal = det.Cantidad * precioAjustado;
             }
 
             // 🔹 Calcular totales generales
