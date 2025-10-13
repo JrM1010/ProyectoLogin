@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Models.UnidadesDeMedida;
 
 namespace ProyectoLogin.Controllers
 {
@@ -40,36 +41,33 @@ namespace ProyectoLogin.Controllers
                 .Where(p => p.Activo)
                 .ToListAsync();
 
-            // Cargar productos (vista simple)
-            ViewBag.Productos = await _context.Set<ProductoCore>()
-                .Where(p => p.Activo)
+            // Cargar unidades base (por si acaso)
+            ViewBag.Unidades = await _context.UnidadesMedida
+                .Where(u => u.Activo)
                 .ToListAsync();
-            
-            // Cargar unidades (fijas)
-            ViewBag.Unidades = new List<UnidadMedida>
-            {
-              new UnidadMedida { IdUnidad = 1, Nombre = "Unidad" },
-              new UnidadMedida { IdUnidad = 2, Nombre = "Caja" }
-            };
 
-            // Si no hay proveedor seleccionado aún
             if (idProveedor == null)
             {
-                ViewBag.Productos = new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>();
+                ViewBag.Productos = new List<object>();
                 return View("~/Views/Compras/Create.cshtml", new Compra());
             }
 
-            // Cargar productos asociados al proveedor seleccionado
+            // Productos asociados al proveedor con sus unidades
             var productosProveedor = await _context.ProductosProveedores
                 .Include(pp => pp.Producto)
+                    .ThenInclude(p => p.ProductosUnidades)
+                        .ThenInclude(pu => pu.UnidadMedida)
                 .Where(pp => pp.IdProveedor == idProveedor)
-                .Select(pp => new ProyectoLogin.Models.ModelosProducts.ProductoCore
+                .Select(pp => new
                 {
-                    IdProducto = pp.Producto.IdProducto,
-                    Nombre = pp.Producto.Nombre,
-                    Descripcion = pp.Producto.Descripcion,
-                    CodigoBarras = pp.Producto.CodigoBarras,
-                    Activo = pp.Producto.Activo
+                    pp.Producto.IdProducto,
+                    pp.Producto.Nombre,
+                    Unidades = pp.Producto.ProductosUnidades.Select(pu => new
+                    {
+                        pu.IdUnidad,
+                        Nombre = pu.UnidadMedida.Nombre,
+                        pu.FactorConversion
+                    })
                 })
                 .ToListAsync();
 
@@ -77,6 +75,8 @@ namespace ProyectoLogin.Controllers
             ViewBag.ProveedorSeleccionado = idProveedor;
             return View("~/Views/Compras/Create.cshtml", new Compra { IdProveedor = idProveedor.Value });
         }
+
+
 
         // =======================
         // CREAR COMPRA (POST)
@@ -91,32 +91,37 @@ namespace ProyectoLogin.Controllers
                 return RedirectToAction(nameof(Create));
             }
 
-            // 🟩 Si la vista envió Subtotal, úsalo como respaldo
+            // Si la vista envió Subtotal (por seguridad)
             if (compra.Subtotal == 0 && Request.Form["Subtotal"].Count > 0)
             {
                 decimal.TryParse(Request.Form["Subtotal"], out var subtotalForm);
                 compra.Subtotal = subtotalForm;
             }
 
-            // Recalcular subtotales por seguridad
+            // 🔹 Recalcular subtotales de manera segura usando equivalencias de la BD
             foreach (var det in detalles)
             {
-                // Descuento del 5% si la unidad es caja
-                if (det.IdUnidad == 12)
-                    det.PrecioUnitario *= 0.95m;
+                // Buscar equivalencia entre unidad seleccionada y producto
+                var equivalencia = await _context.ProductosUnidades
+                    .Where(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad)
+                    .Select(pu => pu.FactorConversion)
+                    .FirstOrDefaultAsync();
 
-                det.Subtotal = det.Cantidad * det.PrecioUnitario;
+                if (equivalencia <= 0)
+                    equivalencia = 1; // valor por defecto si no hay relación
+
+                // Calcular subtotal con equivalencia (ej. 2 cajas * 24 unidades * Q500)
+                det.Subtotal = det.Cantidad * det.PrecioUnitario * equivalencia;
             }
 
-            // Si no venía del form, calcular desde los detalles
-            if (compra.Subtotal == 0)
-                compra.Subtotal = detalles.Sum(d => d.Subtotal);
-
+            // 🔹 Calcular totales generales
+            compra.Subtotal = detalles.Sum(d => d.Subtotal);
             compra.IVA = compra.Subtotal * 0.12m;
             compra.Total = compra.Subtotal + compra.IVA;
             compra.FechaCompra = DateTime.Now;
             compra.Estado = "Completada";
 
+            // 🔹 Guardar encabezado y detalles
             _context.Add(compra);
             await _context.SaveChangesAsync();
 
@@ -131,6 +136,7 @@ namespace ProyectoLogin.Controllers
             TempData["Success"] = "Compra registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }
+
 
 
 

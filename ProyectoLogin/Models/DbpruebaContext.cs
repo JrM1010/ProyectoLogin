@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Models.UnidadesDeMedida;
 using System;
 using System.Collections.Generic;
 
@@ -14,7 +15,6 @@ public partial class DbPruebaContext : DbContext
     {
     }
 
-    // Representa las tablas en la base de datos.
 
     // Parte de Usuarios, roles y recuperación de contraseña
     public virtual DbSet<Usuario> Usuarios { get; set; }
@@ -39,6 +39,10 @@ public partial class DbPruebaContext : DbContext
     public virtual DbSet<DetalleCompra> DetallesCompra { get; set; }
     public virtual DbSet<ProductoProveedor> ProductosProveedores { get; set; }
 
+
+    //Unidades de medida
+    public DbSet<UnidadMedida> UnidadesMedida { get; set; }
+    public DbSet<ProductoUnidad> ProductosUnidades { get; set; }
 
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
@@ -277,6 +281,20 @@ public partial class DbPruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.IdProducto);
         });
+
+        // ------------------ UNIDADES DE MEDIDA ------------------
+        modelBuilder.Entity<ProductoUnidad>()
+    .HasKey(pu => new { pu.IdProducto, pu.IdUnidad });
+
+        modelBuilder.Entity<ProductoUnidad>()
+            .HasOne(pu => pu.Producto)
+            .WithMany(p => p.ProductosUnidades)
+            .HasForeignKey(pu => pu.IdProducto);
+
+        modelBuilder.Entity<ProductoUnidad>()
+            .HasOne(pu => pu.UnidadMedida)
+            .WithMany(u => u.ProductosUnidades)
+            .HasForeignKey(pu => pu.IdUnidad);
 
 
 

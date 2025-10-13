@@ -96,7 +96,6 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("MetodoPago")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
@@ -485,6 +484,59 @@ namespace ProyectoLogin.Migrations
                     b.ToTable("Rol", (string)null);
                 });
 
+            modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.ProductoUnidad", b =>
+                {
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdUnidad")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("FactorConversion")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("IdProductoUnidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdProductoUnidad"));
+
+                    b.Property<decimal>("PrecioCompra")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdProducto", "IdUnidad");
+
+                    b.HasIndex("IdUnidad");
+
+                    b.ToTable("ProductosUnidades");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida", b =>
+                {
+                    b.Property<int>("IdUnidad")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUnidad"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("EquivalenciaEnUnidades")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("IdUnidad");
+
+                    b.ToTable("UnidadesMedida");
+                });
+
             modelBuilder.Entity("ProyectoLogin.Models.Usuario", b =>
                 {
                     b.Property<int>("IdUsuario")
@@ -630,6 +682,25 @@ namespace ProyectoLogin.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.ProductoUnidad", b =>
+                {
+                    b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
+                        .WithMany("ProductosUnidades")
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida", "UnidadMedida")
+                        .WithMany("ProductosUnidades")
+                        .HasForeignKey("IdUnidad")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("UnidadMedida");
+                });
+
             modelBuilder.Entity("ProyectoLogin.Models.Usuario", b =>
                 {
                     b.HasOne("ProyectoLogin.Models.Rol", "Rol")
@@ -649,11 +720,18 @@ namespace ProyectoLogin.Migrations
             modelBuilder.Entity("ProyectoLogin.Models.ModelosProducts.ProductoCore", b =>
                 {
                     b.Navigation("Inventario");
+
+                    b.Navigation("ProductosUnidades");
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.Rol", b =>
                 {
                     b.Navigation("Usuarios");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida", b =>
+                {
+                    b.Navigation("ProductosUnidades");
                 });
 #pragma warning restore 612, 618
         }

@@ -3,7 +3,7 @@
 @{
     var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
     var productos = ViewBag.Productos as List<ProyectoLogin.Models.ModelosProducts.ProductoCore>;
-    var unidades = ViewBag.Unidades as List<ProyectoLogin.Models.ModelosCompras.UnidadMedida>;
+    var unidades = ViewBag.Unidades as List<ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida>;
     int? proveedorSel = ViewBag.ProveedorSeleccionado as int?;
 }
 
@@ -72,11 +72,12 @@
 <!-- =============== SCRIPT =============== -->
 <script>
     let index = 0;
-    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productos ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>()));
-    const unidades = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(unidades ?? new List<ProyectoLogin.Models.ModelosCompras.UnidadMedida>()));
+
+    // Productos del proveedor con sus unidades
+    const productos = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Productos ?? new List<object>()));
 
     function addRow() {
-        if (productos.length === 0) {
+        if (!productos || productos.length === 0) {
             alert("Seleccione primero un proveedor que tenga productos disponibles.");
             return;
         }
@@ -84,32 +85,23 @@
         const tbody = document.getElementById('detallesBody');
         const tr = document.createElement('tr');
         tr.id = 'row_' + index;
+
         tr.innerHTML = `
             <td>
-                <select name="detalles[${index}].IdProducto" class="form-control" required>
+                <select name="detalles[${index}].IdProducto" class="form-control productoSelect" required>
                     <option value="">-- Producto --</option>
                     ${productos.map(p => `<option value="${p.IdProducto}">${p.Nombre}</option>`).join('')}
                 </select>
             </td>
             <td>
-                <select name="detalles[${index}].IdUnidad" class="form-control">
-                    ${unidades.map(u => `<option value="${u.IdUnidad}">${u.Nombre}</option>`).join('')}
+                <select name="detalles[${index}].IdUnidad" class="form-control unidadSelect" required disabled>
+                    <option value="">-- Unidad --</option>
                 </select>
             </td>
-            <td>
-                <input name="detalles[${index}].Cantidad"
-                       type="number" min="1" value="1"
-                       class="form-control cantidad" required />
-            </td>
-            <td>
-                <input name="detalles[${index}].PrecioUnitario"
-                       type="number" min="0" step="0.01" value="0.00"
-                       class="form-control precio" required />
-            </td>
+            <td><input name="detalles[${index}].Cantidad" type="number" min="1" value="1" class="form-control cantidad" required /></td>
+            <td><input name="detalles[${index}].PrecioUnitario" type="number" min="0" step="0.01" value="0.00" class="form-control precio" required /></td>
             <td class="subtotal text-end">0.00</td>
-            <td>
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button>
-            </td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button></td>
         `;
         tbody.appendChild(tr);
         index++;
@@ -124,41 +116,83 @@
         calcularTotales();
     }
 
-    // 🟩 Recalcula subtotales y total, formateando solo las celdas visibles
+    // --- Cargar unidades según producto seleccionado ---
+    function handleProductoChange(event) {
+        const productoId = parseInt(event.target.value);
+        const row = event.target.closest('tr');
+        const unidadSelect = row.querySelector('.unidadSelect');
+
+        unidadSelect.innerHTML = '<option value="">-- Unidad --</option>';
+        unidadSelect.disabled = true;
+
+        const producto = productos.find(p => p.IdProducto === productoId);
+        if (producto && producto.Unidades?.length > 0) {
+            producto.Unidades.forEach(u => {
+                unidadSelect.innerHTML += `<option value="${u.IdUnidad}" data-factor="${u.FactorConversion}">${u.Nombre} (x${u.FactorConversion})</option>`;
+            });
+            unidadSelect.disabled = false;
+        }
+    }
+
+    // --- Recalcula precio y subtotal al cambiar unidad ---
+    function handleUnidadChange(event) {
+        const select = event.target;
+        const factor = parseFloat(select.selectedOptions[0]?.getAttribute('data-factor') || 1);
+        const row = select.closest('tr');
+        const precioInput = row.querySelector('.precio');
+        const cantidadInput = row.querySelector('.cantidad');
+
+        const precioBase = parseFloat(precioInput.getAttribute('data-base') || precioInput.value || 0);
+
+        // Guardar precio base la primera vez
+        if (!precioInput.getAttribute('data-base')) {
+            precioInput.setAttribute('data-base', precioBase);
+        }
+
+        // Recalcular según factor de conversión
+        const nuevoPrecio = factor > 1
+            ? (precioBase * factor)
+            : (precioBase / (factor || 1));
+
+        precioInput.value = nuevoPrecio.toFixed(2);
+        calcularTotales();
+    }
+
+    // --- Calcula subtotales y total ---
     function calcularTotales() {
         let total = 0;
         document.querySelectorAll('#detallesBody tr').forEach(row => {
             const cantidad = parseFloat(row.querySelector('.cantidad')?.value || 0);
             const precio = parseFloat(row.querySelector('.precio')?.value || 0);
             const subtotal = cantidad * precio;
-
-            // Mostrar solo en formato con comas y punto decimal
-            row.querySelector('.subtotal').textContent = subtotal.toLocaleString("en-US", {
+            row.querySelector('.subtotal').textContent = subtotal.toLocaleString('es-GT', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-
             total += subtotal;
         });
-
-        // Total general formateado igual
-        document.getElementById('totalCompra').textContent = total.toLocaleString("en-US", {
+        document.getElementById('totalCompra').textContent = total.toLocaleString('es-GT', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-
-        // Guardar valor limpio en el hidden (sin comas)
-        document.getElementById('Subtotal').value = total.toFixed(2);
     }
 
-    // 🟩 Asignar eventos dinámicos
+    // --- Asignar eventos ---
     function actualizarEventos() {
+        document.querySelectorAll('.productoSelect').forEach(sel => {
+            sel.removeEventListener('change', handleProductoChange);
+            sel.addEventListener('change', handleProductoChange);
+        });
+
+        document.querySelectorAll('.unidadSelect').forEach(sel => {
+            sel.removeEventListener('change', handleUnidadChange);
+            sel.addEventListener('change', handleUnidadChange);
+        });
+
         document.querySelectorAll('.cantidad, .precio').forEach(input => {
             input.removeEventListener('input', calcularTotales);
             input.addEventListener('input', calcularTotales);
         });
     }
-
-    // 🟩 Recalcular antes de enviar
-    document.querySelector('form[action="/Compras/Create"]').addEventListener('submit', calcularTotales);
 </script>
+

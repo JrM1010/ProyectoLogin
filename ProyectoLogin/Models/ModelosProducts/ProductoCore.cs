@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProyectoLogin.Models.UnidadesDeMedida;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoLogin.Models.ModelosProducts
 {
@@ -36,6 +37,10 @@ namespace ProyectoLogin.Models.ModelosProducts
         public virtual Marca? Marca { get; set; }
 
         public virtual Inventario? Inventario { get; set; }
+
+
+        //Relación inversa con ProductoUnidad
+        public ICollection<ProductoUnidad>? ProductosUnidades { get; set; }
 
 
     }

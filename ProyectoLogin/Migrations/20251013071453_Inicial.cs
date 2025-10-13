@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProyectoLogin.Migrations
 {
     /// <inheritdoc />
-    public partial class PrimerMigracion : Migration
+    public partial class Inicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -92,6 +92,21 @@ namespace ProyectoLogin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UnidadesMedida",
+                columns: table => new
+                {
+                    IdUnidad = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EquivalenciaEnUnidades = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UnidadesMedida", x => x.IdUnidad);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProductoCore",
                 columns: table => new
                 {
@@ -134,7 +149,7 @@ namespace ProyectoLogin.Migrations
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Total = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    MetodoPago = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    MetodoPago = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
                     Observaciones = table.Column<string>(type: "varchar(255)", unicode: false, maxLength: 255, nullable: true),
                     Estado = table.Column<string>(type: "varchar(30)", unicode: false, maxLength: 30, nullable: true)
                 },
@@ -270,6 +285,34 @@ namespace ProyectoLogin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductosUnidades",
+                columns: table => new
+                {
+                    IdProducto = table.Column<int>(type: "int", nullable: false),
+                    IdUnidad = table.Column<int>(type: "int", nullable: false),
+                    IdProductoUnidad = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FactorConversion = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    PrecioCompra = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductosUnidades", x => new { x.IdProducto, x.IdUnidad });
+                    table.ForeignKey(
+                        name: "FK_ProductosUnidades_ProductoCore_IdProducto",
+                        column: x => x.IdProducto,
+                        principalTable: "ProductoCore",
+                        principalColumn: "IdProducto",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductosUnidades_UnidadesMedida_IdUnidad",
+                        column: x => x.IdUnidad,
+                        principalTable: "UnidadesMedida",
+                        principalColumn: "IdUnidad",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DetalleCompra",
                 columns: table => new
                 {
@@ -379,6 +422,11 @@ namespace ProyectoLogin.Migrations
                 column: "IdProveedor");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductosUnidades_IdUnidad",
+                table: "ProductosUnidades",
+                column: "IdUnidad");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RecuperacionPassword_IdUsuario",
                 table: "RecuperacionPassword",
                 column: "IdUsuario");
@@ -411,6 +459,9 @@ namespace ProyectoLogin.Migrations
                 name: "ProductoProveedor");
 
             migrationBuilder.DropTable(
+                name: "ProductosUnidades");
+
+            migrationBuilder.DropTable(
                 name: "RecuperacionPassword");
 
             migrationBuilder.DropTable(
@@ -418,6 +469,9 @@ namespace ProyectoLogin.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProductoCore");
+
+            migrationBuilder.DropTable(
+                name: "UnidadesMedida");
 
             migrationBuilder.DropTable(
                 name: "Usuario");
