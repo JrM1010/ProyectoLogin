@@ -36,26 +36,38 @@
 <form method="post" action="/Compras/Create">
     <input type="hidden" name="IdProveedor" value="@proveedorSel" />
 
-    <table class="table table-bordered">
-        <thead>
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
             <tr>
                 <th>Producto</th>
-                <th>Unidad</th>
+                <th>Presentacion</th>
                 <th>Cantidad</th>
-                <th>Precio Unitario</th>
+                <th>Precio Unitario (Q)</th>
+                <th>Subtotal (Q)</th> <!-- 🟩 NUEVO -->
                 <th></th>
             </tr>
         </thead>
         <tbody id="detallesBody"></tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-end fw-bold">TOTAL COMPRA (Q):</td>
+                <td id="totalCompra" class="fw-bold text-success">0.00</td> <!-- 🟩 NUEVO -->
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
+
+    <input type="hidden" id="Subtotal" name="Subtotal" value="0" /> <!-- 🟩 NUEVO -->
 
     <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">Agregar producto</button>
 
-    <div class="mt-3">
+    <div class="mt-4">
         <button type="submit" class="btn btn-primary">Guardar compra</button>
         <a href="/Compras/Index" class="btn btn-secondary">Cancelar</a>
     </div>
 </form>
+
+
 
 <!-- =============== SCRIPT =============== -->
 <script>
@@ -84,16 +96,69 @@
                     ${unidades.map(u => `<option value="${u.IdUnidad}">${u.Nombre}</option>`).join('')}
                 </select>
             </td>
-            <td><input name="detalles[${index}].Cantidad" type="number" min="1" value="1" class="form-control" required /></td>
-            <td><input name="detalles[${index}].PrecioUnitario" type="number" min="0" step="0.01" value="0.00" class="form-control" required /></td>
-            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button></td>
+            <td>
+                <input name="detalles[${index}].Cantidad"
+                       type="number" min="1" value="1"
+                       class="form-control cantidad" required />
+            </td>
+            <td>
+                <input name="detalles[${index}].PrecioUnitario"
+                       type="number" min="0" step="0.01" value="0.00"
+                       class="form-control precio" required />
+            </td>
+            <td class="subtotal text-end">0.00</td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(${index})">X</button>
+            </td>
         `;
         tbody.appendChild(tr);
         index++;
+
+        actualizarEventos();
+        calcularTotales();
     }
 
     function removeRow(i) {
         const row = document.getElementById('row_' + i);
         if (row) row.remove();
+        calcularTotales();
     }
+
+    // 🟩 Recalcula subtotales y total, formateando solo las celdas visibles
+    function calcularTotales() {
+        let total = 0;
+        document.querySelectorAll('#detallesBody tr').forEach(row => {
+            const cantidad = parseFloat(row.querySelector('.cantidad')?.value || 0);
+            const precio = parseFloat(row.querySelector('.precio')?.value || 0);
+            const subtotal = cantidad * precio;
+
+            // Mostrar solo en formato con comas y punto decimal
+            row.querySelector('.subtotal').textContent = subtotal.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            total += subtotal;
+        });
+
+        // Total general formateado igual
+        document.getElementById('totalCompra').textContent = total.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        // Guardar valor limpio en el hidden (sin comas)
+        document.getElementById('Subtotal').value = total.toFixed(2);
+    }
+
+    // 🟩 Asignar eventos dinámicos
+    function actualizarEventos() {
+        document.querySelectorAll('.cantidad, .precio').forEach(input => {
+            input.removeEventListener('input', calcularTotales);
+            input.addEventListener('input', calcularTotales);
+        });
+    }
+
+    // 🟩 Recalcular antes de enviar
+    document.querySelector('form[action="/Compras/Create"]').addEventListener('submit', calcularTotales);
 </script>

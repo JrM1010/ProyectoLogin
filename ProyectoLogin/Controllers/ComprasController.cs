@@ -91,7 +91,14 @@ namespace ProyectoLogin.Controllers
                 return RedirectToAction(nameof(Create));
             }
 
-            // Calcular subtotales
+            // 🟩 Si la vista envió Subtotal, úsalo como respaldo
+            if (compra.Subtotal == 0 && Request.Form["Subtotal"].Count > 0)
+            {
+                decimal.TryParse(Request.Form["Subtotal"], out var subtotalForm);
+                compra.Subtotal = subtotalForm;
+            }
+
+            // Recalcular subtotales por seguridad
             foreach (var det in detalles)
             {
                 // Descuento del 5% si la unidad es caja
@@ -101,17 +108,18 @@ namespace ProyectoLogin.Controllers
                 det.Subtotal = det.Cantidad * det.PrecioUnitario;
             }
 
-            compra.Subtotal = detalles.Sum(d => d.Subtotal);
+            // Si no venía del form, calcular desde los detalles
+            if (compra.Subtotal == 0)
+                compra.Subtotal = detalles.Sum(d => d.Subtotal);
+
             compra.IVA = compra.Subtotal * 0.12m;
             compra.Total = compra.Subtotal + compra.IVA;
             compra.FechaCompra = DateTime.Now;
             compra.Estado = "Completada";
 
-            // Guardar encabezado
             _context.Add(compra);
             await _context.SaveChangesAsync();
 
-            // Guardar detalles
             foreach (var det in detalles)
             {
                 det.IdCompra = compra.IdCompra;
@@ -123,6 +131,8 @@ namespace ProyectoLogin.Controllers
             TempData["Success"] = "Compra registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }
+
+
 
         // =======================
         // DETALLES DE COMPRA

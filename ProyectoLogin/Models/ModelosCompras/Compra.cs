@@ -13,11 +13,11 @@ namespace ProyectoLogin.Models.ModelosCompras
         public decimal Subtotal { get; set; }
         public decimal IVA { get; set; }
         public decimal Total { get; set; }
-        public string MetodoPago { get; set; }
+        public string? MetodoPago { get; set; }
         public string? Observaciones { get; set; }
         public string? Estado { get; set; }
 
-        public virtual Proveedor Proveedor { get; set; }
+        public virtual Proveedor? Proveedor { get; set; }
         public virtual ICollection<DetalleCompra>? Detalles { get; set; }
 
 
