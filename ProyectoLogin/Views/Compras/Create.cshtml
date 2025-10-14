@@ -81,7 +81,12 @@
                     <td><input type="number" class="form-control cantidadInput" min="1" value="1" required /></td>
                     <td><input type="number" step="0.01" class="form-control precioInput" required /></td>
                     <td><input type="text" class="form-control precioVentaInput text-end" readonly /></td>
-                    <td><input type="text" class="form-control descuentoInput text-end" readonly value="0" /></td>
+                    <td>
+                        <!-- campo visible para mostrar "10%" -->
+                        <input type="text" class="form-control descuentoDisplay text-end" readonly />
+                        <!-- campo oculto que SÍ se enviará al servidor: valor ejemplo "0.10" -->
+                        <input type="hidden" class="descuentoHidden" />
+                    </td>
                     <td><input type="text" class="form-control subtotalInput text-end" readonly /></td>
                     <td class="text-center">
                         <button type="button" class="btn btn-danger btn-sm btnQuitar">&times;</button>
@@ -147,7 +152,7 @@
                     if (el.classList.contains("cantidadInput")) el.name = `detalles[${index}].Cantidad`;
                     if (el.classList.contains("precioInput")) el.name = `detalles[${index}].PrecioUnitario`;
                     if (el.classList.contains("precioVentaInput")) el.name = `detalles[${index}].PrecioVenta`;
-                    if (el.classList.contains("descuentoInput")) el.name = `detalles[${index}].Descuento`;
+                    if (el.classList.contains("descuentoHidden")) el.name = `detalles[${index}].Descuento`;
                 });
 
                 tablaBody.appendChild(clone);
@@ -196,43 +201,61 @@
                 });
             }
 
-            // 🔹 Calcular totales
+
                     function recalcularTotales() {
-            const margen = 0.25; // 🔹 Margen de ganancia 25 %
+            const margen = 0.25; // 25% ganancia
             let subtotal = 0;
+
+            // 🧩 Función auxiliar para formato visual
+            const formatear = valor =>
+                valor.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             tablaBody.querySelectorAll("tr").forEach(fila => {
                 const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
                 const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
-                const unidad = fila.querySelector(".unidadSelect")?.selectedOptions[0]?.textContent.toLowerCase() || "";
 
-                // 🔹 Aplicar descuento si la unidad contiene "caja"
-                let descuento = 0;
-                if (unidad.includes("caja")) descuento = 10; // 10% de descuento
+                // obtener factor desde la opción seleccionada (data-factor)
+                const unidadOption = fila.querySelector(".unidadSelect")?.selectedOptions[0];
+                const factor = parseFloat(unidadOption?.dataset.factor) || 1;
 
-                // 🔹 Calcular precios
-                const precioConDescuento = precio * (1 - descuento / 100);
+                // detectar si la unidad contiene "caja" (o cualquier regla que uses)
+                const unidadTexto = unidadOption?.textContent?.toLowerCase() || "";
+                let descuentoPct = 0;
+                if (unidadTexto.includes("caja")) descuentoPct = 10; // 10 %
+
+                // ---- Cálculo correcto aplicando factor ----
+                const precioConDescuento = precio * factor * (1 - (descuentoPct / 100));
+                const subtotalFila = cantidad * precioConDescuento;
                 const precioVenta = precioConDescuento * (1 + margen);
-                const subtotalFila = precioConDescuento * cantidad;
 
-                // 🔹 Mostrar valores en la fila
-                fila.querySelector(".descuentoInput").value = descuento.toFixed(0);
-                fila.querySelector(".precioVentaInput").value = precioVenta.toFixed(2);
-                fila.querySelector(".subtotalInput").value = subtotalFila.toFixed(2);
+                // ---- escribir en campos ----
+                const display = fila.querySelector(".descuentoDisplay");
+                if (display) display.value = descuentoPct.toFixed(0) + "%";
+
+                const hiddenDesc = fila.querySelector(".descuentoHidden");
+                if (hiddenDesc) hiddenDesc.value = (descuentoPct / 100).toFixed(2);
+
+                // ✅ aplicar formato visual a los campos mostrados
+                const pvInput = fila.querySelector(".precioVentaInput");
+                if (pvInput) pvInput.value = formatear(precioVenta);
+
+                const subInput = fila.querySelector(".subtotalInput");
+                if (subInput) subInput.value = formatear(subtotalFila);
 
                 subtotal += subtotalFila;
             });
 
-            // 🔹 Totales generales
             const iva = subtotal * 0.12;
             const total = subtotal + iva;
 
-            document.getElementById("subtotal").value = subtotal.toFixed(2);
-            document.getElementById("iva").value = iva.toFixed(2);
-            document.getElementById("total").value = total.toFixed(2);
+            // ✅ Totales formateados visualmente
+            document.getElementById("subtotal").value = formatear(subtotal);
+            document.getElementById("iva").value = formatear(iva);
+            document.getElementById("total").value = formatear(total);
         }
 
-            // 🔹 Validar antes de enviar
+
+                    // 🔹 Validar antes de enviar
             document.querySelector("form[asp-action='Create']").addEventListener("submit", e => {
                 tablaBody.querySelectorAll("tr").forEach(fila => {
                     const idProd = fila.querySelector(".productoSelect")?.value;
