@@ -23,7 +23,7 @@ namespace ProyectoLogin.Controllers
         // =======================
         public async Task<IActionResult> Index()
         {
-            var compras = await _context.Set<Compra>()
+            var compras = await _context.Compras
                 .Include(c => c.Proveedor)
                 .OrderByDescending(c => c.FechaCompra)
                 .ToListAsync();
@@ -32,35 +32,16 @@ namespace ProyectoLogin.Controllers
         }
 
         // =======================
-        // CREAR COMPRA (GET)
+        // GET: CREAR COMPRA
         // =======================
         public async Task<IActionResult> Create(int? idProveedor)
         {
-            // 🔹 1. Cargar proveedores activos
-            ViewBag.Proveedores = await _context.Proveedores
-                .Where(p => p.Activo)
-                .ToListAsync();
+            await CargarDatosVista(idProveedor);
 
-            // 🔹 2. Cargar TODAS las unidades de medida activas
-            var unidades = await _context.UnidadesMedida
-                .Where(u => u.Activo)
-                .Select(u => new
-                {
-                    u.IdUnidad,
-                    u.Nombre,
-                    u.EquivalenciaEnUnidades
-                })
-                .ToListAsync();
-            ViewBag.Unidades = unidades;
-
-            // 🔹 Si no hay proveedor seleccionado, aún no mostramos productos
             if (idProveedor == null)
-            {
-                ViewBag.Productos = new List<object>();
-                return View("~/Views/Compras/Create.cshtml", new Compra());
-            }
+                return View(new Compra());
 
-            // 🔹 3. Cargar productos del proveedor con sus posibles unidades (si tiene)
+            // 🔹 Cargar productos del proveedor (con unidades o fallback)
             var productosProveedor = await _context.ProductosProveedores
                 .Include(pp => pp.Producto)
                     .ThenInclude(p => p.ProductosUnidades)
@@ -70,7 +51,6 @@ namespace ProyectoLogin.Controllers
                 {
                     pp.Producto.IdProducto,
                     pp.Producto.Nombre,
-                    // Si el producto no tiene unidades configuradas, cargamos todas las unidades del catálogo
                     Unidades = pp.Producto.ProductosUnidades.Any()
                         ? pp.Producto.ProductosUnidades.Select(pu => new
                         {
@@ -78,143 +58,64 @@ namespace ProyectoLogin.Controllers
                             Nombre = pu.UnidadMedida.Nombre,
                             pu.FactorConversion
                         })
-                        : unidades.Select(u => new
-                        {
-                            IdUnidad = u.IdUnidad,
-                            Nombre = u.Nombre,
-                            FactorConversion = u.EquivalenciaEnUnidades
-                        })
+                        : _context.UnidadesMedida
+                            .Where(u => u.Activo)
+                            .Select(u => new
+                            {
+                                u.IdUnidad,
+                                Nombre = u.Nombre,
+                                FactorConversion = u.EquivalenciaEnUnidades
+                            })
                 })
                 .ToListAsync();
 
             ViewBag.Productos = productosProveedor;
             ViewBag.ProveedorSeleccionado = idProveedor;
 
-            return View("~/Views/Compras/Create.cshtml", new Compra { IdProveedor = idProveedor.Value });
+            // 🔹 Generar código aleatorio de compra
+            var random = new Random();
+            ViewBag.NumeroDocumento = random.Next(100000000, 999999999).ToString();
+
+            return View(new Compra { IdProveedor = idProveedor.Value });
         }
 
-
-
-
         // =======================
-        // CREAR COMPRA (POST)
+        // POST: CREAR COMPRA
         // =======================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detalles)
         {
-            if (!ModelState.IsValid || detalles == null || detalles.Count == 0)
+            // 🧹 Filtrar filas vacías
+            detalles = detalles
+                .Where(d => d.IdProducto > 0 && d.Cantidad > 0 && d.PrecioUnitario > 0)
+                .ToList();
+
+            if (!ValidarCompra(compra, detalles))
             {
-                TempData["Error"] = "Debe completar todos los campos y agregar productos a la compra.";
+                TempData["Error"] = "Debe seleccionar un proveedor válido y agregar productos a la compra.";
                 await CargarDatosVista(compra.IdProveedor);
-                return View("~/Views/Compras/Create.cshtml", compra);
+                return View(compra);
             }
 
-            // Si la vista envió Subtotal (por seguridad)
-            if (compra.Subtotal == 0 && Request.Form["Subtotal"].Count > 0)
-            {
-                decimal.TryParse(Request.Form["Subtotal"], out var subtotalForm);
-                compra.Subtotal = subtotalForm;
-            }
+            // ❌ Eliminar posibles detalles asociados antes de agregar la compra al contexto
+            compra.Detalles = null;
 
-            // 🔹 Recalcular subtotales de manera segura usando equivalencias de la BD
-            foreach (var det in detalles)
-            {
-                // Buscar equivalencia entre unidad seleccionada y producto
-                var equivalencia = await _context.ProductosUnidades
-                    .Where(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad)
-                    .Select(pu => pu.FactorConversion)
-                    .FirstOrDefaultAsync();
+            // 🔹 Calcular totales
+            await CalcularTotalesAsync(compra, detalles);
 
-                if (equivalencia <= 0)
-                    equivalencia = 1; // valor por defecto si no hay relación
+            
 
-                // Aplicar descuento por mayoreo si factor > 1
-                var descuentoMayoreo = equivalencia > 1 ? 0.10m : 0m;
-
-                // Calcular subtotal con equivalencia y descuento
-                var precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuentoMayoreo);
-
-                det.Subtotal = det.Cantidad * precioAjustado;
-            }
-
-            // 🔹 Calcular totales generales
-            compra.Subtotal = detalles.Sum(d => d.Subtotal);
-            compra.IVA = compra.Subtotal * 0.12m;
-            compra.Total = compra.Subtotal + compra.IVA;
-            compra.FechaCompra = DateTime.Now;
-            compra.Estado = "Completada";
-
-            // Guardar encabezado
-            _context.Add(compra);
+            // 🔹 Guardar solo el encabezado
+            _context.Compras.Add(compra);
             await _context.SaveChangesAsync();
 
-            // 🔹 Procesar detalles y actualizar precios
-            const decimal margenGanancia = 0.25m; // 25% de ganancia
+            // 🔹 Guardar detalles manualmente
+            await GuardarDetallesYActualizarPreciosAsync(compra, detalles);
 
-            foreach (var det in detalles)
-            {
-                det.IdCompra = compra.IdCompra;
-                _context.Add(det);
-
-                // ===============================
-                // 1️⃣ Actualizar costo en ProductoProveedor
-                // ===============================
-                var prodProv = await _context.ProductosProveedores
-                    .FirstOrDefaultAsync(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
-
-                if (prodProv != null)
-                {
-                    prodProv.CostoCompra = det.PrecioUnitario;
-                    prodProv.FechaUltimaCompra = DateTime.Now;
-                    _context.Update(prodProv);
-                }
-
-                // ===============================
-                // 2️⃣ Actualizar precio de compra en ProductosUnidades
-                // ===============================
-                var prodUnidad = await _context.ProductosUnidades
-                    .FirstOrDefaultAsync(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
-
-                if (prodUnidad != null)
-                {
-                    prodUnidad.PrecioCompra = det.PrecioUnitario;
-                    _context.Update(prodUnidad);
-                }
-
-                // ===============================
-                // 3️⃣ Actualizar precio de venta automático
-                // ===============================
-                var preciosAntiguos = await _context.ProductoPrecio
-                    .Where(p => p.IdProducto == det.IdProducto && p.Activo)
-                    .ToListAsync();
-
-                foreach (var precio in preciosAntiguos)
-                {
-                    precio.Activo = false;
-                    precio.FechaFin = DateTime.Now;
-                    _context.Update(precio);
-                }
-
-                var nuevoPrecioVenta = det.PrecioUnitario * (1 + margenGanancia);
-
-                var nuevoPrecio = new ProductoPrecio
-                {
-                    IdProducto = det.IdProducto,
-                    PrecioCompra = det.PrecioUnitario,
-                    PrecioVenta = nuevoPrecioVenta,
-                    FechaInicio = DateTime.Now,
-                    Activo = true
-                };
-                _context.ProductoPrecio.Add(nuevoPrecio);
-            }
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Compra registrada y precios actualizados correctamente.";
+            TempData["Success"] = "Compra registrada correctamente.";
             return RedirectToAction(nameof(Index));
         }
-
 
 
         // =======================
@@ -222,7 +123,7 @@ namespace ProyectoLogin.Controllers
         // =======================
         public async Task<IActionResult> Details(int id)
         {
-            var compra = await _context.Set<Compra>()
+            var compra = await _context.Compras
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
@@ -235,51 +136,119 @@ namespace ProyectoLogin.Controllers
         }
 
 
+        // ============================================================
+        // 🔹 MÉTODOS AUXILIARES PRIVADOS
+        // ============================================================
         private async Task CargarDatosVista(int? idProveedor)
         {
-            ViewBag.Proveedores = await _context.Proveedores.Where(p => p.Activo).ToListAsync();
-            var unidades = await _context.UnidadesMedida
+            ViewBag.Proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewBag.Unidades = await _context.UnidadesMedida
                 .Where(u => u.Activo)
                 .Select(u => new { u.IdUnidad, u.Nombre, u.EquivalenciaEnUnidades })
                 .ToListAsync();
-            ViewBag.Unidades = unidades;
 
-            if (idProveedor != null)
-            {
-                var productosProveedor = await _context.ProductosProveedores
-                    .Include(pp => pp.Producto)
-                        .ThenInclude(p => p.ProductosUnidades)
-                            .ThenInclude(pu => pu.UnidadMedida)
-                    .Where(pp => pp.IdProveedor == idProveedor)
-                    .Select(pp => new
-                    {
-                        pp.Producto.IdProducto,
-                        pp.Producto.Nombre,
-                        Unidades = pp.Producto.ProductosUnidades.Any()
-                            ? pp.Producto.ProductosUnidades.Select(pu => new
-                            {
-                                pu.IdUnidad,
-                                Nombre = pu.UnidadMedida.Nombre,
-                                pu.FactorConversion
-                            })
-                            : unidades.Select(u => new
-                            {
-                                IdUnidad = u.IdUnidad,
-                                Nombre = u.Nombre,
-                                FactorConversion = u.EquivalenciaEnUnidades
-                            })
-                    })
-                    .ToListAsync();
+            ViewBag.ProveedorSeleccionado = idProveedor ?? 0;
+        }
 
-                ViewBag.Productos = productosProveedor;
-                ViewBag.ProveedorSeleccionado = idProveedor;
-            }
-            else
-            {
-                ViewBag.Productos = new List<object>();
-            }
+        private static bool ValidarCompra(Compra compra, List<DetalleCompra> detalles)
+        {
+            return compra.IdProveedor > 0 && detalles != null && detalles.Any();
         }
 
 
+        private async Task CalcularTotalesAsync(Compra compra, List<DetalleCompra> detalles)
+        {
+            // 🔹 Cargamos productos con sus unidades y nombres de unidad
+            var productosUnidades = await _context.ProductosUnidades
+                .Include(pu => pu.UnidadMedida)
+                .ToListAsync();
+
+            foreach (var det in detalles)
+            {
+                var productoUnidad = productosUnidades
+                    .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+
+                decimal equivalencia = productoUnidad?.FactorConversion ?? 1;
+                decimal descuento = 0;
+
+                // 🔹 Si la unidad es "caja", aplicamos 10% de descuento
+                if (productoUnidad?.UnidadMedida?.Nombre?.ToLower() == "caja")
+                {
+                    descuento = 0.10m;
+                }
+
+                det.Descuento = descuento; // ✅ guardamos el descuento aplicado
+
+                // 🔹 Calculamos el subtotal con el descuento incluido
+                decimal precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuento);
+                det.Subtotal = det.Cantidad * precioAjustado;
+            }
+
+            // 🔹 Totales generales
+            compra.Subtotal = detalles.Sum(d => d.Subtotal);
+            compra.IVA = compra.Subtotal * 0.12m;
+            compra.Total = compra.Subtotal + compra.IVA;
+            compra.FechaCompra = DateTime.Now;
+            compra.Estado = "Completada";
+        }
+
+        private async Task GuardarDetallesYActualizarPreciosAsync(Compra compra, List<DetalleCompra> detalles)
+        {
+            const decimal margenGanancia = 0.25m;
+
+            var productosProveedores = await _context.ProductosProveedores.ToListAsync();
+            var productosUnidades = await _context.ProductosUnidades.ToListAsync();
+            var precios = await _context.ProductoPrecio.ToListAsync();
+
+            foreach (var det in detalles)
+            {
+                det.IdCompra = compra.IdCompra;
+                _context.DetallesCompra.Add(det);
+
+                // 🔹 Actualizar costo proveedor
+                var prodProv = productosProveedores
+                    .FirstOrDefault(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
+                if (prodProv != null)
+                {
+                    prodProv.CostoCompra = det.PrecioUnitario;
+                    prodProv.FechaUltimaCompra = DateTime.Now;
+                }
+
+                // 🔹 Actualizar precio por unidad
+                var prodUnidad = productosUnidades
+                    .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+                if (prodUnidad != null)
+                    prodUnidad.PrecioCompra = det.PrecioUnitario;
+
+                // 🔹 Desactivar precios antiguos
+                var preciosAntiguos = precios
+                    .Where(p => p.IdProducto == det.IdProducto && p.Activo)
+                    .ToList();
+
+                foreach (var p in preciosAntiguos)
+                {
+                    p.Activo = false;
+                    p.FechaFin = DateTime.Now;
+                }
+
+                // 🔹 Crear nuevo precio
+                var nuevoPrecio = new ProductoPrecio
+                {
+                    IdProducto = det.IdProducto,
+                    PrecioCompra = det.PrecioUnitario,
+                    PrecioVenta = det.PrecioUnitario * (1 + margenGanancia),
+                    FechaInicio = DateTime.Now,
+                    Activo = true
+                };
+
+                _context.ProductoPrecio.Add(nuevoPrecio);
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

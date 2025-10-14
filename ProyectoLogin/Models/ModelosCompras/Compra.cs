@@ -18,7 +18,7 @@ namespace ProyectoLogin.Models.ModelosCompras
         public string? Estado { get; set; }
 
         public virtual Proveedor? Proveedor { get; set; }
-        public virtual ICollection<DetalleCompra>? Detalles { get; set; }
+        public ICollection<DetalleCompra>? Detalles { get; set; }
 
 
     }

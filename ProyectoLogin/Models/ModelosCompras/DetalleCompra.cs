@@ -16,8 +16,11 @@ namespace ProyectoLogin.Models.ModelosCompras
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
 
-        public virtual Compra Compra { get; set; }
-        public virtual ProductoCore Producto { get; set; }
+        public decimal Descuento { get; set; }
+
+
+        public virtual Compra? Compra { get; set; }
+        public virtual ProductoCore? Producto { get; set; }
 
 
     }
