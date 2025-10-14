@@ -17,8 +17,8 @@ namespace ProyectoLogin.Models.UnidadesDeMedida
         public int IdUnidad { get; set; }
         public UnidadMedida UnidadMedida { get; set; } = null!;
 
-        [Precision(18, 2)]
-        public decimal FactorConversion { get; set; } // Ej: 12 si Caja equivale a 12 Unidades
+        
+        public int FactorConversion { get; set; } // Ej: 12 si Caja equivale a 12 Unidades
         [Precision(18, 2)]
         public decimal PrecioCompra { get; set; } // (opcional) Si cambia según presentación
 

@@ -196,18 +196,64 @@ namespace ProyectoLogin.Controllers
             compra.Estado = "Completada";
         }
 
+
+
         private async Task GuardarDetallesYActualizarPreciosAsync(Compra compra, List<DetalleCompra> detalles)
         {
             const decimal margenGanancia = 0.25m;
 
             var productosProveedores = await _context.ProductosProveedores.ToListAsync();
-            var productosUnidades = await _context.ProductosUnidades.ToListAsync();
+            var productosUnidades = await _context.ProductosUnidades
+                .Include(pu => pu.UnidadMedida)
+                .ToListAsync();
+            var unidadesGlobales = await _context.UnidadesMedida.ToListAsync(); // 🔹 fallback global
             var precios = await _context.ProductoPrecio.ToListAsync();
 
             foreach (var det in detalles)
             {
                 det.IdCompra = compra.IdCompra;
                 _context.DetallesCompra.Add(det);
+
+                // 🔹 Buscar primero en ProductosUnidades
+                var prodUnidad = productosUnidades
+                    .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+
+                decimal factor = prodUnidad?.FactorConversion ?? 1;
+
+                // 🔹 Si no existe, intentar buscar directamente en UnidadesMedida
+                if (prodUnidad == null)
+                {
+                    var unidadGlobal = unidadesGlobales.FirstOrDefault(u => u.IdUnidad == det.IdUnidad);
+                    if (unidadGlobal != null)
+                        factor = unidadGlobal.EquivalenciaEnUnidades != 0
+                            ? unidadGlobal.EquivalenciaEnUnidades
+                            : 1;
+                }
+
+                // 🔹 Calcular unidades equivalentes
+                int cantidadEquivalente = (int)(det.Cantidad * factor);
+
+                // 🔹 Obtener inventario actualizado directamente de la BD
+                var inventario = await _context.Inventarios
+                    .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
+
+                if (inventario != null)
+                {
+                    inventario.StockActual += cantidadEquivalente;
+                    inventario.FechaUltimaActualizacion = DateTime.Now;
+                    _context.Inventarios.Update(inventario);
+                }
+                else
+                {
+                    var nuevoInventario = new Inventario
+                    {
+                        IdProducto = det.IdProducto,
+                        StockActual = cantidadEquivalente,
+                        StockMinimo = 0,
+                        FechaUltimaActualizacion = DateTime.Now
+                    };
+                    _context.Inventarios.Add(nuevoInventario);
+                }
 
                 // 🔹 Actualizar costo proveedor
                 var prodProv = productosProveedores
@@ -218,9 +264,7 @@ namespace ProyectoLogin.Controllers
                     prodProv.FechaUltimaCompra = DateTime.Now;
                 }
 
-                // 🔹 Actualizar precio por unidad
-                var prodUnidad = productosUnidades
-                    .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+                // 🔹 Actualizar precio compra por unidad
                 if (prodUnidad != null)
                     prodUnidad.PrecioCompra = det.PrecioUnitario;
 
@@ -250,5 +294,9 @@ namespace ProyectoLogin.Controllers
 
             await _context.SaveChangesAsync();
         }
+
+
+
+
     }
 }
