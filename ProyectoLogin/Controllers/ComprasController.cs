@@ -101,6 +101,19 @@ namespace ProyectoLogin.Controllers
             // ❌ Eliminar posibles detalles asociados antes de agregar la compra al contexto
             compra.Detalles = null;
 
+
+            foreach (var det in detalles)
+            {
+                // Validar cantidad entera
+                if (det.Cantidad % 1 != 0)
+                {
+                    TempData["Error"] = $"El producto con ID {det.IdProducto} tiene una cantidad no entera ({det.Cantidad}).";
+                    await CargarDatosVista(compra.IdProveedor);
+                    return View(compra);
+                }
+            }
+
+
             // 🔹 Calcular totales
             await CalcularTotalesAsync(compra, detalles);
 
@@ -209,6 +222,10 @@ namespace ProyectoLogin.Controllers
             var unidadesGlobales = await _context.UnidadesMedida.ToListAsync(); // 🔹 fallback global
             var precios = await _context.ProductoPrecio.ToListAsync();
 
+
+          try
+          {
+
             foreach (var det in detalles)
             {
                 det.IdCompra = compra.IdCompra;
@@ -230,8 +247,16 @@ namespace ProyectoLogin.Controllers
                             : 1;
                 }
 
-                // 🔹 Calcular unidades equivalentes
-                int cantidadEquivalente = (int)(det.Cantidad * factor);
+                // Validar que la multiplicación dé un entero exacto
+                decimal totalUnidades = det.Cantidad * factor;
+                if (totalUnidades % 1 != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"El total de unidades ({totalUnidades}) no es entero. Revisa el factor de conversión de la unidad seleccionada.");
+                }
+
+                // Redondeo seguro hacia el entero más cercano
+                int cantidadEquivalente = (int)Math.Round(totalUnidades, MidpointRounding.AwayFromZero);
 
                 // 🔹 Obtener inventario actualizado directamente de la BD
                 var inventario = await _context.Inventarios
@@ -293,6 +318,14 @@ namespace ProyectoLogin.Controllers
             }
 
             await _context.SaveChangesAsync();
+          }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+                await CargarDatosVista(compra.IdProveedor);
+                return;
+            }
+
         }
 
 
