@@ -5,6 +5,8 @@ using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
 using ProyectoLogin.Models.UnidadesDeMedida;
+using ProyectoLogin.Recursos;
+using System;
 
 namespace ProyectoLogin.Controllers
 {
@@ -41,7 +43,6 @@ namespace ProyectoLogin.Controllers
             if (idProveedor == null)
                 return View(new Compra());
 
-            // 🔹 Cargar productos del proveedor (con unidades o fallback)
             var productosProveedor = await _context.ProductosProveedores
                 .Include(pp => pp.Producto)
                     .ThenInclude(p => p.ProductosUnidades)
@@ -72,7 +73,6 @@ namespace ProyectoLogin.Controllers
             ViewBag.Productos = productosProveedor;
             ViewBag.ProveedorSeleccionado = idProveedor;
 
-            // 🔹 Generar código aleatorio de compra
             var random = new Random();
             ViewBag.NumeroDocumento = random.Next(100000000, 999999999).ToString();
 
@@ -98,38 +98,55 @@ namespace ProyectoLogin.Controllers
                 return View(compra);
             }
 
-            // ❌ Eliminar posibles detalles asociados antes de agregar la compra al contexto
-            compra.Detalles = null;
-
-
+            // ✅ Validar cantidades enteras (regla de negocio)
             foreach (var det in detalles)
             {
-                // Validar cantidad entera
                 if (det.Cantidad % 1 != 0)
                 {
-                    TempData["Error"] = $"El producto con ID {det.IdProducto} tiene una cantidad no entera ({det.Cantidad}).";
+                    TempData["Error"] = $"La cantidad del producto con ID {det.IdProducto} debe ser un número entero.";
                     await CargarDatosVista(compra.IdProveedor);
                     return View(compra);
                 }
             }
 
+            // ❌ Evitar detalles pegados al encabezado antes de insertarlo
+            compra.Detalles = null;
 
-            // 🔹 Calcular totales
+            // 🔹 Calcular totales (solo calcula; no persiste la compra aún)
             await CalcularTotalesAsync(compra, detalles);
 
-            
+            // ============================
+            // — Iniciamos transacción aquí —
+            // ============================
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Guardar encabezado (necesitamos el IdCompra generado para los detalles)
+                _context.Compras.Add(compra);
+                await _context.SaveChangesAsync(); // queda dentro de la transacción
 
-            // 🔹 Guardar solo el encabezado
-            _context.Compras.Add(compra);
-            await _context.SaveChangesAsync();
+                // Guardar detalles + actualizar inventario/precios (lanza si hay error)
+                await GuardarDetallesYActualizarPreciosAsync(compra, detalles);
 
-            // 🔹 Guardar detalles manualmente
-            await GuardarDetallesYActualizarPreciosAsync(compra, detalles);
+                // Si todo OK, commit
+                await transaction.CommitAsync();
 
-            TempData["Success"] = "Compra registrada correctamente.";
-            return RedirectToAction(nameof(Index));
+                TempData["Success"] = "Compra registrada correctamente.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                // Rollback explícito y mensaje
+                await transaction.RollbackAsync();
+
+                // Loggear idealmente con ILogger (aquí usamos TempData para mostrar al usuario)
+                TempData["Error"] = "Error al registrar la compra: " + ex.Message;
+
+                // Recargar datos para la vista y devolver la vista de creación con el objeto compra (no persistido)
+                await CargarDatosVista(compra.IdProveedor);
+                return View(compra);
+            }
         }
-
 
         // =======================
         // DETALLES DE COMPRA
@@ -147,7 +164,6 @@ namespace ProyectoLogin.Controllers
 
             return View("~/Views/Compras/Details.cshtml", compra);
         }
-
 
         // ============================================================
         // 🔹 MÉTODOS AUXILIARES PRIVADOS
@@ -172,10 +188,8 @@ namespace ProyectoLogin.Controllers
             return compra.IdProveedor > 0 && detalles != null && detalles.Any();
         }
 
-
         private async Task CalcularTotalesAsync(Compra compra, List<DetalleCompra> detalles)
         {
-            // 🔹 Cargamos productos con sus unidades y nombres de unidad
             var productosUnidades = await _context.ProductosUnidades
                 .Include(pu => pu.UnidadMedida)
                 .ToListAsync();
@@ -188,28 +202,23 @@ namespace ProyectoLogin.Controllers
                 decimal equivalencia = productoUnidad?.FactorConversion ?? 1;
                 decimal descuento = 0;
 
-                // 🔹 Si la unidad es "caja", aplicamos 10% de descuento
                 if (productoUnidad?.UnidadMedida?.Nombre?.ToLower() == "caja")
                 {
                     descuento = 0.10m;
                 }
 
-                det.Descuento = descuento; // ✅ guardamos el descuento aplicado
+                det.Descuento = descuento;
 
-                // 🔹 Calculamos el subtotal con el descuento incluido
                 decimal precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuento);
                 det.Subtotal = det.Cantidad * precioAjustado;
             }
 
-            // 🔹 Totales generales
             compra.Subtotal = detalles.Sum(d => d.Subtotal);
             compra.IVA = compra.Subtotal * 0.12m;
             compra.Total = compra.Subtotal + compra.IVA;
-            compra.FechaCompra = DateTime.Now;
+            compra.FechaCompra = FechaLocal.Ahora();
             compra.Estado = "Completada";
         }
-
-
 
         private async Task GuardarDetallesYActualizarPreciosAsync(Compra compra, List<DetalleCompra> detalles)
         {
@@ -219,25 +228,21 @@ namespace ProyectoLogin.Controllers
             var productosUnidades = await _context.ProductosUnidades
                 .Include(pu => pu.UnidadMedida)
                 .ToListAsync();
-            var unidadesGlobales = await _context.UnidadesMedida.ToListAsync(); // 🔹 fallback global
+            var unidadesGlobales = await _context.UnidadesMedida.ToListAsync();
             var precios = await _context.ProductoPrecio.ToListAsync();
-
-
-          try
-          {
 
             foreach (var det in detalles)
             {
+                // asignar FK IdCompra (ya generado)
                 det.IdCompra = compra.IdCompra;
                 _context.DetallesCompra.Add(det);
 
-                // 🔹 Buscar primero en ProductosUnidades
+                // Buscar factor de conversión
                 var prodUnidad = productosUnidades
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
 
                 decimal factor = prodUnidad?.FactorConversion ?? 1;
 
-                // 🔹 Si no existe, intentar buscar directamente en UnidadesMedida
                 if (prodUnidad == null)
                 {
                     var unidadGlobal = unidadesGlobales.FirstOrDefault(u => u.IdUnidad == det.IdUnidad);
@@ -247,25 +252,25 @@ namespace ProyectoLogin.Controllers
                             : 1;
                 }
 
-                // Validar que la multiplicación dé un entero exacto
+                // Validar que la multiplicación dé un entero exacto (porque manejamos stock en enteros)
                 decimal totalUnidades = det.Cantidad * factor;
                 if (totalUnidades % 1 != 0)
                 {
+                    // Lanzar excepción para que la transacción haga rollback y se muestre mensaje
                     throw new InvalidOperationException(
-                        $"El total de unidades ({totalUnidades}) no es entero. Revisa el factor de conversión de la unidad seleccionada.");
+                        $"El total de unidades ({totalUnidades}) para el producto {det.IdProducto} no es un número entero. Revisa el factor de conversión.");
                 }
 
-                // Redondeo seguro hacia el entero más cercano
                 int cantidadEquivalente = (int)Math.Round(totalUnidades, MidpointRounding.AwayFromZero);
 
-                // 🔹 Obtener inventario actualizado directamente de la BD
+                // Obtener inventario (y actualizarlo)
                 var inventario = await _context.Inventarios
                     .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
 
                 if (inventario != null)
                 {
                     inventario.StockActual += cantidadEquivalente;
-                    inventario.FechaUltimaActualizacion = DateTime.Now;
+                    inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
                     _context.Inventarios.Update(inventario);
                 }
                 else
@@ -280,20 +285,24 @@ namespace ProyectoLogin.Controllers
                     _context.Inventarios.Add(nuevoInventario);
                 }
 
-                // 🔹 Actualizar costo proveedor
+                // Actualizar costo proveedor
                 var prodProv = productosProveedores
                     .FirstOrDefault(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
                 if (prodProv != null)
                 {
                     prodProv.CostoCompra = det.PrecioUnitario;
-                    prodProv.FechaUltimaCompra = DateTime.Now;
+                    prodProv.FechaUltimaCompra = FechaLocal.Ahora();
+                    _context.ProductosProveedores.Update(prodProv);
                 }
 
-                // 🔹 Actualizar precio compra por unidad
+                // Actualizar precio compra por presentación si aplica
                 if (prodUnidad != null)
+                {
                     prodUnidad.PrecioCompra = det.PrecioUnitario;
+                    _context.ProductosUnidades.Update(prodUnidad);
+                }
 
-                // 🔹 Desactivar precios antiguos
+                // Desactivar precios antiguos
                 var preciosAntiguos = precios
                     .Where(p => p.IdProducto == det.IdProducto && p.Activo)
                     .ToList();
@@ -302,34 +311,24 @@ namespace ProyectoLogin.Controllers
                 {
                     p.Activo = false;
                     p.FechaFin = DateTime.Now;
+                    _context.ProductoPrecio.Update(p);
                 }
 
-                // 🔹 Crear nuevo precio
+                // Crear nuevo precio (por producto)
                 var nuevoPrecio = new ProductoPrecio
                 {
                     IdProducto = det.IdProducto,
                     PrecioCompra = det.PrecioUnitario,
                     PrecioVenta = det.PrecioUnitario * (1 + margenGanancia),
-                    FechaInicio = DateTime.Now,
+                    FechaInicio = FechaLocal.Ahora(),
                     Activo = true
                 };
 
                 _context.ProductoPrecio.Add(nuevoPrecio);
             }
 
+            // Guardar todos los cambios (detalles, inventarios, precios, relaciones)
             await _context.SaveChangesAsync();
-          }
-            catch (InvalidOperationException ex)
-            {
-                TempData["Error"] = ex.Message;
-                await CargarDatosVista(compra.IdProveedor);
-                return;
-            }
-
         }
-
-
-
-
     }
 }

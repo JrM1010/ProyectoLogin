@@ -59,7 +59,7 @@
                 <tr>
                     <td>@p.PrecioCompra.ToString("N2")</td>
                     <td>@p.PrecioVenta.ToString("N2")</td>
-                    <td>@p.FechaInicio.ToString("g")</td>
+                    <td>@p.FechaInicio.ToString("dd/MM/yyyy")</td>
                     <td>@(p.Activo ? "Sí" : "No")</td>
                 </tr>
             }
@@ -90,7 +90,7 @@ else
             @foreach (var m in movimientos)
             {
                 <tr>
-                    <td>@m.Fecha.ToString("g")</td>
+                    <td>@m.Fecha.ToString("dd/MM/yyyy")</td>
                     <td>@m.TipoMovimiento</td>
                     <td>@m.Cantidad</td>
                     <td>@m.Referencia</td>

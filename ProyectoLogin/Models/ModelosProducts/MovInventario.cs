@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProyectoLogin.Recursos;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProyectoLogin.Models.ModelosProducts
@@ -14,7 +15,7 @@ namespace ProyectoLogin.Models.ModelosProducts
 
         [Required]
         [Display(Name = "Fecha del movimiento")]
-        public DateTime Fecha { get; set; } = DateTime.Now;
+        public DateTime Fecha { get; set; } = FechaLocal.Ahora();
 
         [Required]
         [Display(Name = "Cantidad")]

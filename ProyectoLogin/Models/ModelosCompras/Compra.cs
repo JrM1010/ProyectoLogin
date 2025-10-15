@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProyectoLogin.Recursos;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoLogin.Models.ModelosCompras
 {
@@ -8,7 +9,7 @@ namespace ProyectoLogin.Models.ModelosCompras
         public int IdCompra { get; set; }
 
         public int IdProveedor { get; set; }
-        public DateTime FechaCompra { get; set; } = DateTime.Now;
+        public DateTime FechaCompra { get; set; } = FechaLocal.Ahora();
         public string? NumeroDocumento { get; set; }
         public decimal Subtotal { get; set; }
         public decimal IVA { get; set; }

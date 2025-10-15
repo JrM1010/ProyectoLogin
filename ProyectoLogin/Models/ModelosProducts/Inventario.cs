@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProyectoLogin.Recursos;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProyectoLogin.Models.ModelosProducts
@@ -21,7 +22,7 @@ namespace ProyectoLogin.Models.ModelosProducts
         public int StockMinimo { get; set; }
 
         [Display(Name = "Última actualización")]
-        public DateTime FechaUltimaActualizacion { get; set; } = DateTime.Now;
+        public DateTime FechaUltimaActualizacion { get; set; } = FechaLocal.Ahora();
 
         public virtual ProductoCore? Producto { get; set; }
 

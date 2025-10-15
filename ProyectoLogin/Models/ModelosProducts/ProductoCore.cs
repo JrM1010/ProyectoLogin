@@ -1,4 +1,5 @@
 ﻿using ProyectoLogin.Models.UnidadesDeMedida;
+using ProyectoLogin.Recursos;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoLogin.Models.ModelosProducts
@@ -30,7 +31,7 @@ namespace ProyectoLogin.Models.ModelosProducts
         public bool Activo { get; set; } = true;
 
         [Display(Name = "Fecha de Creación")]
-        public DateTime FechaCreacion { get; set; } = DateTime.Now;
+        public DateTime FechaCreacion { get; set; } = FechaLocal.Ahora();   
 
         // Relaciones
         public virtual Categoria? Categoria { get; set; }

@@ -54,8 +54,8 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = usuario.IdUsuario,
                     Token = resetToken,
-                    FechaCreacion = DateTime.Now,
-                    FechaExpiracion = DateTime.Now.AddHours(2),
+                    FechaCreacion = FechaLocal.Ahora(),
+                    FechaExpiracion = FechaLocal.Ahora().AddHours(1),
                     Usado = false
                 };
 
@@ -72,7 +72,7 @@ namespace ProyectoLogin.Controllers
             <h3>Hola {usuario.NombreUsuario},</h3>
             <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
             <p><a href='{link}'>Restablecer Contraseña</a></p>
-            <p>Este enlace es válido por 2 horas.</p>";
+            <p>Este enlace es válido por 1 hora.</p>";
 
                 try
                 {
@@ -110,7 +110,7 @@ namespace ProyectoLogin.Controllers
                 .Include(r => r.Usuario) //Incluye el usuario relacionado
                 .FirstOrDefault(r => r.Token == resetToken && r.Usuario.Correo == email);
 
-            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
+            if (recuperacion == null || recuperacion.FechaExpiracion < FechaLocal.Ahora() || recuperacion.Usado)
             {
                 return BadRequest("El token es inválido o ha expirado.");
             }
@@ -136,7 +136,7 @@ namespace ProyectoLogin.Controllers
                     .Include(r => r.Usuario)
                     .FirstOrDefault(r => r.Token == model.resetToken && r.Usuario.Correo == model.Email);
 
-            if (recuperacion == null || recuperacion.FechaExpiracion < DateTime.Now || recuperacion.Usado)
+            if (recuperacion == null || recuperacion.FechaExpiracion < FechaLocal.Ahora() || recuperacion.Usado)
             {
                 TempData["ErrorMessage"] = "El token es inválido o ha expirado.";
                 return View(model);

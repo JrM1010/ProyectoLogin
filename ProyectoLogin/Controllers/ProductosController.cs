@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Recursos;
 
 
 namespace ProyectoLogin.Controllers
@@ -181,12 +182,13 @@ namespace ProyectoLogin.Controllers
             do
             {
                 var sufijo = rnd.Next(0, 10000).ToString("D4"); // 0000..9999
-                codigo = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{sufijo}";
+                codigo = $"PRO-{FechaLocal.Ahora:yyyyMMdd-HHmmss}-{sufijo}";
                 intentos++;
+
                 // Evita bucle infinito: si muchos choques (improbable), genera GUID como fallback
                 if (intentos > 10)
                 {
-                    codigo = "PROD-" + Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
+                    codigo = "PRO-" + Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
                     break;
                 }
             }
@@ -300,7 +302,7 @@ namespace ProyectoLogin.Controllers
                 IdProducto = idProducto,
                 PrecioCompra = precioCompra,
                 PrecioVenta = precioVenta,
-                FechaInicio = DateTime.Now,
+                FechaInicio = FechaLocal.Ahora(),
                 Activo = true
             };
 
@@ -317,31 +319,75 @@ namespace ProyectoLogin.Controllers
         // Ajuste de stock manual (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AjusteStock(int idProducto, decimal cantidad, string tipo, string? referencia = null, string? observacion = null)
+        public async Task<IActionResult> AjusteStock(int idProducto, int cantidad, string tipo, string? referencia = null, string? observacion = null)
         {
-            var inv = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == idProducto);
-            if (inv == null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                inv = new Inventario { IdProducto = idProducto, StockActual = 0, StockMinimo = 0 };
-                _context.Inventarios.Add(inv);
+                var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == idProducto);
+
+                if (inventario == null)
+                {
+                    inventario = new Inventario
+                    {
+                        IdProducto = idProducto,
+                        StockActual = 0,
+                        StockMinimo = 0,
+                        FechaUltimaActualizacion = FechaLocal.Ahora()
+                    };
+                    _context.Inventarios.Add(inventario);
+                }
+
+                // ✅ Validación de stock y tipo de movimiento
+                if (tipo == "entrada")
+                {
+                    inventario.StockActual += cantidad;
+                }
+                else if (tipo == "salida")
+                {
+                    if (inventario.StockActual < cantidad)
+                    {
+                        TempData["Error"] = "No se puede realizar la salida. Stock insuficiente.";
+                        return RedirectToAction("Details", new { id = idProducto });
+                    }
+                    inventario.StockActual -= cantidad;
+                }
+                else
+                {
+                    TempData["Error"] = "Tipo de movimiento no válido.";
+                    return RedirectToAction("Details", new { id = idProducto });
+                }
+
+                inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
+
+                // Registrar movimiento
+                var movimiento = new MovInventario
+                {
+                    IdProducto = idProducto,
+                    Cantidad = cantidad,
+                    Fecha = FechaLocal.Ahora(),
+                    TipoMovimiento = tipo == "entrada" ? "Ajuste entrada" : "Ajuste salida",
+                    Referencia = referencia,
+                    Observacion = observacion
+                };
+
+                _context.MovInventarios.Add(movimiento);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Mensaje"] = $"Ajuste de stock ({movimiento.TipoMovimiento}) realizado correctamente.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["Error"] = $"Error al ajustar el stock: {ex.Message}";
             }
 
-            if (tipo == "entrada") inv.StockActual += (int)cantidad;
-            else inv.StockActual -= (int)cantidad;
-
-            _context.MovInventarios.Add(new MovInventario
-            {
-                IdProducto = idProducto,
-                Cantidad = cantidad,
-                Fecha = DateTime.Now,
-                TipoMovimiento = tipo == "entrada" ? "Ajuste entrada" : "Ajuste salida",
-                Referencia = referencia,
-                Observacion = observacion
-            });
-
-            await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = idProducto });
         }
+
 
 
 

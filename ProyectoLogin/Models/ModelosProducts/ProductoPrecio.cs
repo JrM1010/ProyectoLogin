@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ProyectoLogin.Recursos;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProyectoLogin.Models.ModelosProducts
 {
@@ -16,7 +17,7 @@ namespace ProyectoLogin.Models.ModelosProducts
         [Required]
         public decimal PrecioVenta { get; set; }
 
-        public DateTime FechaInicio { get; set; } = DateTime.Now;
+        public DateTime FechaInicio { get; set; } = FechaLocal.Ahora();
         public DateTime? FechaFin { get; set; }
         public bool Activo { get; set; } = true;
 
