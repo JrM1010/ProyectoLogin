@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Usuario>
+@{
+    var inactivos = ViewBag.UsuariosInactivos as List<ProyectoLogin.Models.Usuario>;
+}
 
 <h2>Gestión de Usuarios</h2>
 
@@ -6,6 +9,7 @@
     <a class="btn btn-success" asp-controller="Inicio" asp-action="Registrarse">➕ Registrar Usuario</a>
 </p>
 
+<h3>Usuarios Activos</h3>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -26,8 +30,8 @@
                 <td>@usuario.Rol?.NombreRol</td>
                 <td>
                     <a asp-action="Editar" asp-route-id="@usuario.IdUsuario" class="btn btn-warning btn-sm">✏ Editar</a>
-                    <form asp-action="Eliminar" asp-route-id="@usuario.IdUsuario" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-danger btn-sm">🗑 Eliminar</button>
+                    <form asp-action="Desactivar" asp-route-id="@usuario.IdUsuario" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-danger btn-sm">🗑 Desactivar</button>
                     </form>
                 </td>
             </tr>
@@ -35,3 +39,34 @@
     </tbody>
 </table>
 
+@if (inactivos != null && inactivos.Any())
+{
+    <h3 class="mt-5">Usuarios Inactivos</h3>
+    <table class="table table-bordered table-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var usuario in inactivos)
+            {
+                <tr>
+                    <td>@usuario.IdUsuario</td>
+                    <td>@usuario.NombreUsuario</td>
+                    <td>@usuario.Correo</td>
+                    <td>@usuario.Rol?.NombreRol</td>
+                    <td>
+                        <form asp-action="Activar" asp-route-id="@usuario.IdUsuario" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-success btn-sm">✔ Activar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoLogin.Models;
 
@@ -11,9 +12,11 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    partial class DbPruebaContextModelSnapshot : ModelSnapshot
+    [Migration("20251015194930_Correccion_Tabla_ProductoUnidad")]
+    partial class Correccion_Tabla_ProductoUnidad
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -358,16 +361,9 @@ namespace ProyectoLogin.Migrations
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
                     b.HasKey("IdPrecio");
 
-                    b.HasIndex("IdProducto", "FechaInicio")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProductoPrecio_IdProducto_FechaInicio");
+                    b.HasIndex("IdProducto");
 
                     b.ToTable("ProductoPrecio", (string)null);
                 });
@@ -555,11 +551,6 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
 
                     b.Property<string>("Clave")
                         .HasMaxLength(500)

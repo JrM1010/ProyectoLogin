@@ -24,6 +24,7 @@ namespace ProyectoLogin.Controllers
                 .Include(p => p.Categoria)
                 .Include(p => p.Marca)
                 .Include(p => p.Inventario)
+                .WhereActivo() // ✅ ahora solo productos activos
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(q))
@@ -34,7 +35,6 @@ namespace ProyectoLogin.Controllers
 
             var lista = await productos.OrderBy(p => p.Nombre).ToListAsync();
 
-            // Obtener precios activos por producto (último precio activo)
             var precios = await _context.ProductoPrecio
                 .Where(pp => pp.Activo)
                 .GroupBy(pp => pp.IdProducto)
@@ -47,7 +47,7 @@ namespace ProyectoLogin.Controllers
         }
 
         // GET: Create
-            public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create()
         {
             // Cargar categorías
             var categorias = await _context.Categorias

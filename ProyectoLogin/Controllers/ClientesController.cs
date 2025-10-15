@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
+using ProyectoLogin.Recursos;
 using System;
 
 
@@ -18,7 +19,9 @@ namespace ProyectoLogin.Controllers
         // GET: Clientes
         public async Task<IActionResult> Index(string q)
         {
-            var query = _context.Clientes.AsQueryable();
+            var query = _context.Clientes
+                .WhereActivo() // ✅ ahora solo clientes activos
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(q))
                 query = query.Where(c =>
@@ -27,7 +30,6 @@ namespace ProyectoLogin.Controllers
                     c.Correo.Contains(q) ||
                     c.Telefono.Contains(q) ||
                     c.Nit.Contains(q));
-
 
             ViewData["q"] = q ?? "";
 

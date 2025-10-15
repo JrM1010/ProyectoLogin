@@ -58,6 +58,9 @@ public partial class DbPruebaContext : DbContext
             entity.Property(e => e.Correo).HasMaxLength(100).IsUnicode(false);
             entity.Property(e => e.Clave).HasMaxLength(500).IsUnicode(false);
 
+            // 🔹 Valor por defecto
+            entity.Property(e => e.Activo).HasDefaultValue(true);
+
             entity.HasOne(u => u.Rol)
                   .WithMany(r => r.Usuarios)
                   .HasForeignKey(u => u.IdRol);
@@ -283,18 +286,21 @@ public partial class DbPruebaContext : DbContext
         });
 
         // ------------------ UNIDADES DE MEDIDA ------------------
-        modelBuilder.Entity<ProductoUnidad>()
-    .HasKey(pu => new { pu.IdProducto, pu.IdUnidad });
+        modelBuilder.Entity<ProductoUnidad>(entity =>
+        {
+            entity.HasKey(e => e.IdProductoUnidad);
+            entity.ToTable("ProductosUnidades");
 
-        modelBuilder.Entity<ProductoUnidad>()
-            .HasOne(pu => pu.Producto)
-            .WithMany(p => p.ProductosUnidades)
-            .HasForeignKey(pu => pu.IdProducto);
+            entity.HasIndex(e => new { e.IdProducto, e.IdUnidad }).IsUnique();
 
-        modelBuilder.Entity<ProductoUnidad>()
-            .HasOne(pu => pu.UnidadMedida)
-            .WithMany(u => u.ProductosUnidades)
-            .HasForeignKey(pu => pu.IdUnidad);
+            entity.HasOne(e => e.Producto)
+                  .WithMany(p => p.ProductosUnidades)
+                  .HasForeignKey(e => e.IdProducto);
+
+            entity.HasOne(e => e.UnidadMedida)
+                  .WithMany(u => u.ProductosUnidades)
+                  .HasForeignKey(e => e.IdUnidad);
+        });
 
 
 

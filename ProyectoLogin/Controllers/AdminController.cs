@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 
-[Authorize(Roles = "Administrador")] //Solo admins
+[Authorize(Roles = "Administrador")]
 public class AdminController : Controller
 {
     private readonly DbPruebaContext _context;
@@ -13,39 +13,62 @@ public class AdminController : Controller
         _context = context;
     }
 
-    //Listar usuarios
+    // ✅ LISTAR USUARIOS (activos e inactivos)
     public async Task<IActionResult> Usuarios()
     {
-        var usuarios = await _context.Usuarios.Include(u => u.Rol).ToListAsync();
-        return View(usuarios);
+        var usuariosActivos = await _context.Usuarios
+            .Include(u => u.Rol)
+            .Where(u => u.Activo)
+            .ToListAsync();
+
+        var usuariosInactivos = await _context.Usuarios
+            .Include(u => u.Rol)
+            .Where(u => !u.Activo)
+            .ToListAsync();
+
+        ViewBag.UsuariosInactivos = usuariosInactivos;
+        return View(usuariosActivos);
     }
 
-    //Eliminar usuario
+    // ✅ DESACTIVAR USUARIO (soft delete)
     [HttpPost]
-    public async Task<IActionResult> Eliminar(int id)
+    public async Task<IActionResult> Desactivar(int id)
     {
         var usuario = await _context.Usuarios.FindAsync(id);
         if (usuario != null)
         {
-            _context.Usuarios.Remove(usuario);
+            usuario.Activo = false;
+            _context.Update(usuario);
             await _context.SaveChangesAsync();
         }
         return RedirectToAction("Usuarios");
     }
 
-    //Editar usuario (GET)
+    // ✅ REACTIVAR USUARIO
+    [HttpPost]
+    public async Task<IActionResult> Activar(int id)
+    {
+        var usuario = await _context.Usuarios.FindAsync(id);
+        if (usuario != null)
+        {
+            usuario.Activo = true;
+            _context.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToAction("Usuarios");
+    }
+
+    // 🔧 Editar usuario (sin cambios)
     [HttpGet]
     public async Task<IActionResult> Editar(int id)
     {
         var usuario = await _context.Usuarios.FindAsync(id);
         if (usuario == null) return NotFound();
 
-        // Pasar lista de roles a la vista
         ViewBag.Roles = await _context.Roles.ToListAsync();
         return View(usuario);
     }
 
-    //Editar usuario (POST)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(Usuario model)
@@ -60,17 +83,10 @@ public class AdminController : Controller
             return View(model);
         }
 
-        // Aquí sí se actualiza el rol
         usuario.IdRol = model.IdRol;
         _context.Update(usuario);
         await _context.SaveChangesAsync();
 
         return RedirectToAction("Usuarios");
     }
-
-
-
-
-
 }
-

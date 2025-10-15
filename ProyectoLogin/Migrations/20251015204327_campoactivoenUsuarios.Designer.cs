@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoLogin.Models;
 
@@ -11,9 +12,11 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    partial class DbPruebaContextModelSnapshot : ModelSnapshot
+    [Migration("20251015204327_campoactivoenUsuarios")]
+    partial class campoactivoenUsuarios
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -358,16 +361,9 @@ namespace ProyectoLogin.Migrations
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
                     b.HasKey("IdPrecio");
 
-                    b.HasIndex("IdProducto", "FechaInicio")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProductoPrecio_IdProducto_FechaInicio");
+                    b.HasIndex("IdProducto");
 
                     b.ToTable("ProductoPrecio", (string)null);
                 });

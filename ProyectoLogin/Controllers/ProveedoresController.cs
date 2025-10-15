@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
+using ProyectoLogin.Recursos;
 
 namespace ProyectoLogin.Controllers
 {
@@ -19,7 +20,9 @@ namespace ProyectoLogin.Controllers
         // LISTAR con opción de ordenar
         public async Task<IActionResult> Index(bool ordenar = false)
         {
-            var proveedores = _context.Proveedores.AsQueryable();
+            var proveedores = _context.Proveedores
+                .WhereActivo() // ✅ solo activos
+                .AsQueryable();
 
             if (ordenar)
                 proveedores = proveedores.OrderBy(p => p.Nombre);
@@ -27,8 +30,8 @@ namespace ProyectoLogin.Controllers
             return View(await proveedores.ToListAsync());
         }
 
-            // CREAR GET
-            public IActionResult Create()
+        // CREAR GET
+        public IActionResult Create()
             {
                 return View();
             }

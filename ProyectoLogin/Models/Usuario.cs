@@ -20,4 +20,7 @@ public partial class Usuario
     public int IdRol { get; set; }
     public virtual Rol? Rol { get; set; }
 
+    // 🔹 Nuevo campo para soft delete
+    public bool Activo { get; set; } = true;
+
 }

@@ -31,24 +31,39 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Registrarse(Usuario modelo)
         {
-            
+            if (!ModelState.IsValid)
+            {
+                ViewData["Mensaje"] = "Datos inválidos";
+                return View(modelo);
+            }
 
+            // Encriptar contraseña (si viene)
+            if (!string.IsNullOrWhiteSpace(modelo.Clave))
+                modelo.Clave = Utilidades.EncriptarClave(modelo.Clave);
 
-            modelo.Clave = Utilidades.EncriptarClave(modelo.Clave); // Antes de guardar al usuario, se encripta la contra-
-           
-            Usuario usuario_creado = await _usuarioServicio.SaveUsuario(modelo); // Se llama al servicio de usuarios para guardar el nuevo usuario en la base de datos.
+            Usuario usuario_creado = await _usuarioServicio.SaveUsuario(modelo);
 
-            if (usuario_creado.IdUsuario > 0) // Si el usuario fue creado correctamente, debería tener un Id mayor a 0.
+            if (usuario_creado != null && usuario_creado.IdUsuario > 0)
+            {
+                TempData["Success"] = "Usuario creado correctamente.";
 
-                return RedirectToAction("IniciarSesion", "Inicio"); // Redirige a la acción "IniciarSesion" del controlador "Inicio".
+                // Si quien creó es un admin (estás dentro de un Authorize admin, pero conservamos la comprobación)
+                if (User?.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Administrador"))
+                {
+                    return RedirectToAction("Usuarios", "Admin");
+                }
 
-            ViewData["Mensaje"] = "No se pudo crear el usuario"; // Si no se pudo crear el usuario, se muestra un mensaje de error en la vista.
-            return View();
+                // Flujo público (si en otro escenario se usa esta acción sin autenticación)
+                return RedirectToAction("IniciarSesion", "Inicio");
+            }
+
+            ViewData["Mensaje"] = "No se pudo crear el usuario";
+            return View(modelo);
         }
 
 
 
-        
+
         // Devuelve la vista vacía para que el usuario ingrese su correo y contraseña.
         public IActionResult IniciarSesion()
         {
