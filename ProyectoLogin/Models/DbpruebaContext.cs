@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Models.ModelosVentas;
 using ProyectoLogin.Models.UnidadesDeMedida;
+using ProyectoLogin.Recursos;
 using System;
 using System.Collections.Generic;
-using ProyectoLogin.Recursos;
 
 
 namespace ProyectoLogin.Models;
@@ -40,6 +41,9 @@ public partial class DbPruebaContext : DbContext
     public virtual DbSet<DetalleCompra> DetallesCompra { get; set; }
     public virtual DbSet<ProductoProveedor> ProductosProveedores { get; set; }
 
+    //Parte de Ventas
+    public DbSet<Venta> Ventas { get; set; }
+    public DbSet<DetalleVenta> DetallesVenta { get; set; }
 
     //Unidades de medida
     public DbSet<UnidadMedida> UnidadesMedida { get; set; }
@@ -228,7 +232,7 @@ public partial class DbPruebaContext : DbContext
         modelBuilder.Entity<ProductoPrecio>(entity =>
         {
             entity.HasKey(e => e.IdPrecio);
-            entity.ToTable("ProductoPrecio"); // asegurar nombre exacto de la tabla
+            entity.ToTable("ProductoPrecio"); 
 
             entity.Property(e => e.PrecioCompra)
                   .HasColumnType("decimal(18,2)");
@@ -248,8 +252,8 @@ public partial class DbPruebaContext : DbContext
                   .HasDefaultValue(true);
 
             // Mapeo explícito de la relación con ProductoCore usando la propiedad FK IdProducto
-            entity.HasOne(pp => pp.Producto)     // navegación en ProductoPrecio
-                  .WithMany()                    // si ProductoCore no tiene colección, dejar sin argumento; si tiene, poner p => p.ProductoPrecios
+            entity.HasOne(pp => pp.Producto)     
+                  .WithMany()                    
                   .HasForeignKey(pp => pp.IdProducto)
                   .HasPrincipalKey(p => p.IdProducto)
                   .OnDelete(DeleteBehavior.Cascade);
@@ -322,11 +326,70 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(e => e.IdProveedor);
         });
 
+        // ------------------ VENTAS Y DETALLES ------------------
+        modelBuilder.Entity<Venta>(entity =>
+        {
+            entity.ToTable("Ventas");
+
+            entity.HasKey(v => v.IdVenta);
+
+            entity.Property(v => v.Subtotal)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(v => v.IVA)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(v => v.Total)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(v => v.MetodoPago)
+                  .HasColumnType("varchar(50)");
+
+            entity.Property(v => v.Estado)
+                  .HasColumnType("varchar(30)")
+                  .HasDefaultValue("Completada");
+
+            // Relaciones
+            entity.HasOne(v => v.Cliente)
+                  .WithMany()
+                  .HasForeignKey(v => v.IdCliente)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(v => v.Usuario)
+                  .WithMany()
+                  .HasForeignKey(v => v.IdUsuario)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<DetalleVenta>(entity =>
+        {
+            entity.ToTable("DetalleVenta");
+
+            entity.HasKey(d => d.IdDetalleVenta);
+
+            entity.Property(d => d.PrecioUnitario)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(d => d.Descuento)
+                  .HasColumnType("decimal(18,2)")
+                  .HasDefaultValue(0);
+
+            entity.Property(d => d.Subtotal)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.HasOne(d => d.Venta)
+                  .WithMany(v => v.Detalles)
+                  .HasForeignKey(d => d.IdVenta)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                  .WithMany()
+                  .HasForeignKey(d => d.IdProducto)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+
+
     }
 
-
-
-
-    // Método parcial para agregar configuración adicional.
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

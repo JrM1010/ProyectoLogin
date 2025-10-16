@@ -44,6 +44,14 @@
                 </a>
             }
 
+            @if (User.IsInRole("Administrador") || User.IsInRole("Vendedor"))
+            {
+                <a asp-controller="Ventas" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-cart4"></i> Ventas
+
+                </a>
+            }
+
         </div>
     </div>
 
