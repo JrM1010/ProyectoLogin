@@ -5,7 +5,7 @@ namespace ProyectoLogin.Recursos
     public static class FechaLocal
     {
         private static readonly TimeZoneInfo ZonaGuatemala =
-            TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"); 
+            TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
 
         public static DateTime Ahora()
         {

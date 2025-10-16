@@ -280,7 +280,7 @@ namespace ProyectoLogin.Controllers
                         IdProducto = det.IdProducto,
                         StockActual = cantidadEquivalente,
                         StockMinimo = 0,
-                        FechaUltimaActualizacion = DateTime.Now
+                        FechaUltimaActualizacion = FechaLocal.Ahora()
                     };
                     _context.Inventarios.Add(nuevoInventario);
                 }
@@ -310,7 +310,7 @@ namespace ProyectoLogin.Controllers
                 foreach (var p in preciosAntiguos)
                 {
                     p.Activo = false;
-                    p.FechaFin = DateTime.Now;
+                    p.FechaFin = FechaLocal.Ahora();
                     _context.ProductoPrecio.Update(p);
                 }
 

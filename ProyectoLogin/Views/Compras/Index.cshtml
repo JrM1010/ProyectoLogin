@@ -11,7 +11,7 @@
                 <td>@(c.Proveedor?.Nombre ?? "-")</td>
                 <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
                 <td>@c.Total.ToString("N2")</td>
-                <td><a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Details", new { id = c.IdCompra })">Ver</a></td>
+                
             </tr>
         }
     </tbody>

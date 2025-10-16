@@ -18,7 +18,7 @@ namespace ProyectoLogin.Models.ModelosProducts
         public decimal PrecioVenta { get; set; }
 
         public DateTime FechaInicio { get; set; } = FechaLocal.Ahora();
-        public DateTime? FechaFin { get; set; }
+        public DateTime? FechaFin { get; set; } = FechaLocal.Ahora();
         public bool Activo { get; set; } = true;
 
         public virtual ProductoCore? Producto { get; set; }

@@ -308,7 +308,12 @@ namespace ProyectoLogin.Controllers
 
             // Desactivar precios anteriores si quieres mantener uno activo por producto:
             var activos = await _context.ProductoPrecio.Where(p => p.IdProducto == idProducto && p.Activo).ToListAsync();
-            foreach (var a in activos) { a.Activo = false; _context.Update(a); }
+            foreach (var a in activos) 
+            { 
+                a.Activo = false;
+                a.FechaFin = FechaLocal.Ahora();
+                _context.Update(a); 
+            }
 
             _context.ProductoPrecio.Add(precio);
             await _context.SaveChangesAsync();

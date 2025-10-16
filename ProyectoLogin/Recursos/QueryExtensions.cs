@@ -1,20 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ProyectoLogin.Models;
+using ProyectoLogin.Models.ModelosProducts;
 
 namespace ProyectoLogin.Recursos
 {
     public static class QueryExtensions
     {
-
-        /// Filtra solo los registros cuyo campo Activo == true (si el modelo tiene esa propiedad)
-        public static IQueryable<T> WhereActivo<T>(this IQueryable<T> query) where T : class
+        public static IQueryable<Cliente> WhereActivo(this IQueryable<Cliente> query)
         {
-            var property = typeof(T).GetProperty("Activo");
-            if (property == null)
-                return query; // si el modelo no tiene "Activo", retorna igual
-
-            // EF.Property permite acceder dinámicamente a la propiedad "Activo"
-            return query.Where(e => EF.Property<bool>(e, "Activo"));
+            return query.Where(c => c.Activo);
         }
 
+        public static IQueryable<Proveedor> WhereActivo(this IQueryable<Proveedor> query)
+        {
+            return query.Where(p => p.Activo);
+        }
+
+        public static IQueryable<ProductoCore> WhereActivo(this IQueryable<ProductoCore> query)
+        {
+            return query.Where(p => p.Activo);
+        }
+
+        public static IQueryable<Marca> WhereActivo(this IQueryable<Marca> query)
+        {
+            return query.Where(m => m.Activo);
+        }
     }
 }
