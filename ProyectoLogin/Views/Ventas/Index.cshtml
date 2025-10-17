@@ -44,6 +44,7 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
+                    <div id="mensajeSistema" class="alert d-none mt-2" role="alert" aria-live="polite"></div>
                     <h5 class="card-title text-center text-primary fw-bold">Resumen de Venta</h5>
                     <hr />
 
@@ -125,23 +126,61 @@
 <!-- 🔹 MODAL DE PAGO -->
 <!-- =========================== -->
 <div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="bi bi-cash-stack"></i> Finalizar Venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Total a pagar: <strong class="text-success fs-5" id="totalCobro">Q0.00</strong></p>
+
+                <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
+                <hr>
+
+                <!-- 🔹 Selección de método de pago -->
                 <div class="mb-3">
+                    <label class="form-label fw-semibold">Método de Pago</label>
+                    <select id="metodoPago" class="form-select">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="tarjeta">Tarjeta de Crédito / Débito</option>
+                        <option value="transferencia">Transferencia Bancaria</option>
+                        <option value="mixto">Pago Mixto</option>
+                    </select>
+                </div>
+
+                <!-- 🔹 EFECTIVO -->
+                <div id="pagoEfectivo" class="metodoPago">
                     <label class="form-label">Monto recibido:</label>
                     <input type="number" id="montoRecibido" class="form-control" min="0" step="0.01" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Cambio:</label>
+                    <label class="form-label mt-2">Cambio:</label>
                     <input type="text" id="cambio" class="form-control" readonly />
                 </div>
+
+                <!-- 🔹 TARJETA -->
+                <div id="pagoTarjeta" class="metodoPago d-none">
+                    <label class="form-label">Monto con tarjeta:</label>
+                    <input type="number" id="montoTarjeta" class="form-control" min="0" step="0.01" />
+                    <small class="text-muted">Simulación de cobro — no se conecta a TPV real.</small>
+                </div>
+
+                <!-- 🔹 TRANSFERENCIA -->
+                <div id="pagoTransferencia" class="metodoPago d-none">
+                    <label class="form-label">Monto por transferencia:</label>
+                    <input type="number" id="montoTransferencia" class="form-control" min="0" step="0.01" />
+                    <small class="text-muted">Ingrese el monto transferido (simulación académica).</small>
+                </div>
+
+                <!-- 🔹 MIXTO -->
+                <div id="pagoMixto" class="metodoPago d-none">
+                    <label class="form-label">Monto en efectivo:</label>
+                    <input type="number" id="montoMixtoEfectivo" class="form-control mb-2" min="0" step="0.01" />
+                    <label class="form-label">Monto en tarjeta:</label>
+                    <input type="number" id="montoMixtoTarjeta" class="form-control mb-2" min="0" step="0.01" />
+                    <label class="form-label">Monto en transferencia:</label>
+                    <input type="number" id="montoMixtoTransferencia" class="form-control" min="0" step="0.01" />
+                </div>
             </div>
+
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button class="btn btn-success" id="btnConfirmarCobro"><i class="bi bi-check2-circle"></i> Confirmar Pago</button>
@@ -149,6 +188,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- =========================== -->
 <!-- 🔸 ESTILOS -->
@@ -200,6 +240,22 @@
 
         let productosSeleccionados = [];
         let ultimosResultados = [];
+
+        // ==========================================
+        // 📢 FUNCIÓN PARA MOSTRAR MENSAJES EN VISTA
+        // ==========================================
+        function mostrarMensaje(texto, tipo = "info", duracion = 4000) {
+            const div = document.getElementById("mensajeSistema");
+            if (!div) return;
+            div.textContent = texto;
+            div.className = "alert mt-2";
+            div.classList.add(`alert-${tipo}`);
+            div.classList.remove("d-none");
+
+            if (duracion > 0) {
+                setTimeout(() => div.classList.add("d-none"), duracion);
+            }
+        }
 
         // ==========================================
         // 🔍 BÚSQUEDA DE PRODUCTOS (con Enter)
@@ -288,23 +344,19 @@
             recalcularTotales();
         }
 
-
+        // ==========================================
+        // 🔍 CLIENTE: BUSCAR / REGISTRAR / CF
+        // ==========================================
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
             const nit = document.getElementById("nitCliente").value.trim();
             const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
 
             if (!nit) {
-                // Si no se ingresa NIT → Consumidor Final
-                document.getElementById("nombreCliente").innerText = "Consumidor Final (CF)";
-                document.getElementById("correoCliente").innerText = "-";
-                document.getElementById("direccionCliente").innerText = "-";
-                document.getElementById("datosCliente").classList.remove("d-none");
-                document.getElementById("formNuevoCliente").classList.add("d-none");
+                mostrarMensaje("Por favor ingrese un NIT antes de buscar.", "warning");
                 return;
             }
 
             const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
-
             const data = await res.json();
 
             if (data.encontrado) {
@@ -313,19 +365,26 @@
                 document.getElementById("direccionCliente").innerText = data.cliente.direccion;
                 document.getElementById("datosCliente").classList.remove("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
+                mostrarMensaje("Cliente encontrado correctamente.", "success");
             } else {
                 document.getElementById("formNuevoCliente").classList.remove("d-none");
                 document.getElementById("datosCliente").classList.add("d-none");
+                mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
             }
         });
-        
-        // ==========================================
-        // 🔍 Permitir buscar cliente con tecla ENTER
-        // ==========================================
+
         document.getElementById("nitCliente").addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
-                event.preventDefault(); // evita que se envíe el formulario
-                document.getElementById("btnBuscarCliente").click(); // simula el click del botón
+                event.preventDefault();
+                document.getElementById("btnBuscarCliente").click();
+            }
+        });
+
+        document.getElementById("nitCliente").addEventListener("input", function () {
+            const nit = this.value.trim();
+            if (!nit) {
+                document.getElementById("datosCliente").classList.add("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
             }
         });
 
@@ -336,7 +395,7 @@
                 apellidos: document.getElementById("nuevoApellido").value,
                 correo: document.getElementById("nuevoCorreo").value,
                 direccion: document.getElementById("nuevoDireccion").value,
-                telefono: "N/A" // o puedes agregar campo si lo necesitas
+                telefono: "N/A"
             };
 
             const res = await fetch("/Ventas/RegistrarClienteRapido", {
@@ -347,7 +406,7 @@
 
             if (res.ok) {
                 const data = await res.json();
-                alert("Cliente registrado correctamente.");
+                mostrarMensaje("Cliente registrado correctamente.", "success");
                 document.getElementById("nombreCliente").innerText = `${data.nombres} ${data.apellidos}`;
                 document.getElementById("correoCliente").innerText = data.correo;
                 document.getElementById("direccionCliente").innerText = data.direccion;
@@ -355,15 +414,89 @@
                 document.getElementById("formNuevoCliente").classList.add("d-none");
             } else {
                 const err = await res.text();
-                alert("Error: " + err);
+                mostrarMensaje("Error al registrar cliente: " + err, "danger", 0);
             }
         });
 
+        // ==========================================
+        // 💰 PROCESO DE PAGO Y COBRO
+        // ==========================================
+        const metodoPago = document.getElementById("metodoPago");
+        const seccionesPago = document.querySelectorAll(".metodoPago");
+        const totalInput = document.querySelector("#total");
+        const totalCobro = document.querySelector("#totalCobro");
+
+        metodoPago.addEventListener("change", () => {
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            const id = `#pago${metodoPago.value.charAt(0).toUpperCase() + metodoPago.value.slice(1)}`;
+            document.querySelector(id).classList.remove("d-none");
+        });
+
+        btnCobrar.addEventListener("click", () => {
+            const total = parseFloat(totalInput.value);
+            totalCobro.textContent = `Q${total.toFixed(2)}`;
+            metodoPago.value = "efectivo";
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            document.querySelector("#pagoEfectivo").classList.remove("d-none");
+            new bootstrap.Modal(document.getElementById("modalCobro")).show();
+        });
+
+        document.querySelector("#montoRecibido").addEventListener("input", () => {
+            const total = parseFloat(totalInput.value);
+            const recibido = parseFloat(document.querySelector("#montoRecibido").value);
+            const cambio = recibido - total;
+            document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
+        });
+
+        document.querySelector("#btnConfirmarCobro").addEventListener("click", () => {
+            const total = parseFloat(totalInput.value);
+            const metodo = metodoPago.value;
+            let pagado = 0;
+
+            switch (metodo) {
+                case "efectivo":
+                    pagado = parseFloat(document.getElementById("montoRecibido").value) || 0;
+                    break;
+                case "tarjeta":
+                    pagado = parseFloat(document.getElementById("montoTarjeta").value) || 0;
+                    break;
+                case "transferencia":
+                    pagado = parseFloat(document.getElementById("montoTransferencia").value) || 0;
+                    break;
+                case "mixto":
+                    const ef = parseFloat(document.getElementById("montoMixtoEfectivo").value) || 0;
+                    const ta = parseFloat(document.getElementById("montoMixtoTarjeta").value) || 0;
+                    const tr = parseFloat(document.getElementById("montoMixtoTransferencia").value) || 0;
+                    pagado = ef + ta + tr;
+                    break;
+            }
+
+            if (pagado < total) {
+                mostrarMensaje("El monto total pagado es insuficiente.", "danger");
+                return;
+            }
+
+            mostrarMensaje(`✅ Venta confirmada (${metodo.toUpperCase()}). Total pagado: Q${pagado.toFixed(2)}`, "success");
+            productosSeleccionados = [];
+            renderTabla();
+            bootstrap.Modal.getInstance(document.getElementById("modalCobro")).hide();
+
+            mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
+        });
+
+        // ==========================================
+        // ⚡ ACCIONES RÁPIDAS
+        // ==========================================
+        btnCancelar.addEventListener("click", () => {
+            productosSeleccionados = [];
+            renderTabla();
+            mostrarMensaje("Venta cancelada correctamente.", "info");
+        });
 
         function cambiarCantidad(i, d) { productosSeleccionados[i].cantidad = Math.max(1, productosSeleccionados[i].cantidad + d); renderTabla(); }
         function actualizarCantidad(i, v) { productosSeleccionados[i].cantidad = Math.max(1, parseInt(v)); renderTabla(); }
         function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
-        function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); }
+        function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "warning"); }
 
         function recalcularTotales() {
             let subtotal = 0;
@@ -374,39 +507,6 @@
         }
 
         // ==========================================
-        // ⚡ ACCIONES RÁPIDAS
-        // ==========================================
-        btnCancelar.addEventListener("click", () => {
-            if (confirm("¿Seguro que deseas cancelar esta venta?")) {
-                productosSeleccionados = [];
-                renderTabla();
-            }
-        });
-
-
-        btnCobrar.addEventListener("click", () => {
-            const total = parseFloat(document.querySelector("#total").value);
-            document.querySelector("#totalCobro").textContent = `Q${total.toFixed(2)}`;
-            document.querySelector("#montoRecibido").value = "";
-            document.querySelector("#cambio").value = "";
-            new bootstrap.Modal(document.getElementById("modalCobro")).show();
-        });
-
-        document.querySelector("#montoRecibido").addEventListener("input", () => {
-            const total = parseFloat(document.querySelector("#total").value);
-            const recibido = parseFloat(document.querySelector("#montoRecibido").value);
-            const cambio = recibido - total;
-            document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
-        });
-
-        document.querySelector("#btnConfirmarCobro").addEventListener("click", () => {
-            alert("✅ Venta cobrada con éxito.");
-            productosSeleccionados = [];
-            renderTabla();
-            bootstrap.Modal.getInstance(document.getElementById("modalCobro")).hide();
-        });
-
-                // ==========================================
         // 🧭 SELECCIÓN DEL TIPO DE CLIENTE (NIT / CF)
         // ==========================================
         const opcionNit = document.getElementById("opcionNit");
@@ -428,8 +528,12 @@
                 seccionNit.classList.add("d-none");
             }
         });
-
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 }
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+}
+
