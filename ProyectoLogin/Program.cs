@@ -47,6 +47,7 @@ builder.Services.AddControllersWithViews(options =>
     );
 });
 
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
