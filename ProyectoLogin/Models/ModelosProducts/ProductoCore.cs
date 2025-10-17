@@ -11,7 +11,7 @@ namespace ProyectoLogin.Models.ModelosProducts
 
         [Required(ErrorMessage = "El nombre es obligatorio")]
         [StringLength(200)]
-        public string Nombre { get; set; }
+        public string? Nombre { get; set; }
 
         [StringLength(500)]
         public string? Descripcion { get; set; }
