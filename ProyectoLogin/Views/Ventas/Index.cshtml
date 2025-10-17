@@ -48,12 +48,49 @@
                     <hr />
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Cliente</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="clienteNombre" class="form-control" placeholder="Cliente no asignado" readonly>
-                            <button class="btn btn-outline-secondary" id="btnAgregarCliente"><i class="bi bi-person-plus"></i></button>
+                        <label class="form-label fw-semibold">Seleccionar tipo de cliente</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionNit" value="nit" checked>
+                                <label class="form-check-label" for="opcionNit">Cliente con NIT</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionCF" value="cf">
+                                <label class="form-check-label" for="opcionCF">Consumidor Final (CF)</label>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- 🔹 SECCIÓN BUSCAR CLIENTE POR NIT -->
+                    <div id="seccionNit">
+                        <label for="nitCliente" class="form-label">NIT del Cliente</label>
+                        <input type="text" id="nitCliente" class="form-control" placeholder="Ej: 1234567-8" />
+                        <button id="btnBuscarCliente" type="button" class="btn btn-primary mt-2">Buscar Cliente</button>
+
+                        <div id="datosCliente" class="border rounded p-3 mt-3 d-none">
+                            <h5>Datos del Cliente</h5>
+                            <p><strong>Nombre:</strong> <span id="nombreCliente"></span></p>
+                            <p><strong>Correo:</strong> <span id="correoCliente"></span></p>
+                            <p><strong>Dirección:</strong> <span id="direccionCliente"></span></p>
+                        </div>
+
+                        <!-- Formulario rápido de nuevo cliente -->
+                        <div id="formNuevoCliente" class="border rounded p-3 mt-3 d-none">
+                            <h5>Registrar nuevo cliente</h5>
+                            <input type="text" id="nuevoNombre" class="form-control mb-2" placeholder="Nombres" />
+                            <input type="text" id="nuevoApellido" class="form-control mb-2" placeholder="Apellidos" />
+                            <input type="email" id="nuevoCorreo" class="form-control mb-2" placeholder="Correo electrónico" />
+                            <input type="text" id="nuevoDireccion" class="form-control mb-2" placeholder="Dirección" />
+                            <button id="btnGuardarCliente" class="btn btn-success">Guardar Cliente</button>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 SECCIÓN CONSUMIDOR FINAL -->
+                    <div id="seccionCF" class="border rounded p-3 mt-3 d-none">
+                        <h5>Datos del Cliente</h5>
+                        <p><strong>Nombre:</strong> <span id="nombreClienteCF">Consumidor Final (CF)</span></p>
+                    </div>
+
 
                     <hr />
 
@@ -160,8 +197,6 @@
         const inputBusqueda = document.querySelector("#busqueda");
         const btnCobrar = document.querySelector("#btnCobrar");
         const btnCancelar = document.querySelector("#btnCancelar");
-        const btnSuspender = document.querySelector("#btnSuspender");
-        const btnAgregarCliente = document.querySelector("#btnAgregarCliente");
 
         let productosSeleccionados = [];
         let ultimosResultados = [];
@@ -253,6 +288,78 @@
             recalcularTotales();
         }
 
+
+        document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
+            const nit = document.getElementById("nitCliente").value.trim();
+            const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
+
+            if (!nit) {
+                // Si no se ingresa NIT → Consumidor Final
+                document.getElementById("nombreCliente").innerText = "Consumidor Final (CF)";
+                document.getElementById("correoCliente").innerText = "-";
+                document.getElementById("direccionCliente").innerText = "-";
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+                return;
+            }
+
+            const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
+
+            const data = await res.json();
+
+            if (data.encontrado) {
+                document.getElementById("nombreCliente").innerText = `${data.cliente.nombres} ${data.cliente.apellidos}`;
+                document.getElementById("correoCliente").innerText = data.cliente.correo;
+                document.getElementById("direccionCliente").innerText = data.cliente.direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+            } else {
+                document.getElementById("formNuevoCliente").classList.remove("d-none");
+                document.getElementById("datosCliente").classList.add("d-none");
+            }
+        });
+        
+        // ==========================================
+        // 🔍 Permitir buscar cliente con tecla ENTER
+        // ==========================================
+        document.getElementById("nitCliente").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // evita que se envíe el formulario
+                document.getElementById("btnBuscarCliente").click(); // simula el click del botón
+            }
+        });
+
+        document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
+            const nuevo = {
+                nit: document.getElementById("nitCliente").value.trim(),
+                nombres: document.getElementById("nuevoNombre").value,
+                apellidos: document.getElementById("nuevoApellido").value,
+                correo: document.getElementById("nuevoCorreo").value,
+                direccion: document.getElementById("nuevoDireccion").value,
+                telefono: "N/A" // o puedes agregar campo si lo necesitas
+            };
+
+            const res = await fetch("/Ventas/RegistrarClienteRapido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(nuevo)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert("Cliente registrado correctamente.");
+                document.getElementById("nombreCliente").innerText = `${data.nombres} ${data.apellidos}`;
+                document.getElementById("correoCliente").innerText = data.correo;
+                document.getElementById("direccionCliente").innerText = data.direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+            } else {
+                const err = await res.text();
+                alert("Error: " + err);
+            }
+        });
+
+
         function cambiarCantidad(i, d) { productosSeleccionados[i].cantidad = Math.max(1, productosSeleccionados[i].cantidad + d); renderTabla(); }
         function actualizarCantidad(i, v) { productosSeleccionados[i].cantidad = Math.max(1, parseInt(v)); renderTabla(); }
         function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
@@ -276,12 +383,6 @@
             }
         });
 
-        btnSuspender.addEventListener("click", () => {
-            if (productosSeleccionados.length === 0) return alert("No hay productos para suspender.");
-            alert("🕓 Venta suspendida. Podrás retomarla más tarde.");
-            productosSeleccionados = [];
-            renderTabla();
-        });
 
         btnCobrar.addEventListener("click", () => {
             const total = parseFloat(document.querySelector("#total").value);
@@ -305,10 +406,29 @@
             bootstrap.Modal.getInstance(document.getElementById("modalCobro")).hide();
         });
 
-        btnAgregarCliente.addEventListener("click", () => {
-            const nombre = prompt("Ingrese el nombre del cliente:");
-            if (nombre) document.querySelector("#clienteNombre").value = nombre;
+                // ==========================================
+        // 🧭 SELECCIÓN DEL TIPO DE CLIENTE (NIT / CF)
+        // ==========================================
+        const opcionNit = document.getElementById("opcionNit");
+        const opcionCF = document.getElementById("opcionCF");
+        const seccionNit = document.getElementById("seccionNit");
+        const seccionCF = document.getElementById("seccionCF");
+
+        opcionNit.addEventListener("change", () => {
+            if (opcionNit.checked) {
+                seccionNit.classList.remove("d-none");
+                seccionCF.classList.add("d-none");
+                document.getElementById("nitCliente").focus();
+            }
         });
+
+        opcionCF.addEventListener("change", () => {
+            if (opcionCF.checked) {
+                seccionCF.classList.remove("d-none");
+                seccionNit.classList.add("d-none");
+            }
+        });
+
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

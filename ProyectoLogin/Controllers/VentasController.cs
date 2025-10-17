@@ -224,5 +224,73 @@ namespace ProyectoLogin.Controllers
 
             return View("~/Views/Ventas/Lista.cshtml", ventas);
         }
+
+
+
+
+        // 🔍 Buscar cliente por NIT (AJAX)
+        [HttpGet]
+        public async Task<IActionResult> BuscarClientePorNit(string nit)
+        {
+            if (string.IsNullOrWhiteSpace(nit))
+                return Json(new { encontrado = false });
+
+            string nitLimpio = new string(nit.Where(char.IsLetterOrDigit).ToArray()); // elimina guiones y espacios
+
+            var cliente = await _context.Clientes
+                .Where(c => c.Nit.Replace("-", "") == nitLimpio && c.Activo)
+                            .Select(c => new
+                {
+                    c.IdCliente,
+                    c.Nit,
+                    c.Nombres,
+                    c.Apellidos,
+                    c.Correo,
+                    c.Direccion
+                })
+                .FirstOrDefaultAsync();
+
+            if (cliente == null)
+                return Json(new { encontrado = false });
+
+            return Json(new { encontrado = true, cliente });
+        }
+
+        // ➕ Registrar cliente rápido desde la venta
+        [HttpPost]
+        public async Task<IActionResult> RegistrarClienteRapido([FromBody] Cliente nuevo)
+        {
+            if (nuevo == null || string.IsNullOrWhiteSpace(nuevo.Nit))
+                return BadRequest("Datos de cliente inválidos.");
+
+            // 🔹 Limpiar el NIT (elimina guiones, espacios y caracteres especiales)
+            nuevo.Nit = new string(nuevo.Nit.Where(char.IsLetterOrDigit).ToArray());
+
+            // 🔹 Evitar duplicados (comparando sin guiones)
+            bool existe = await _context.Clientes
+                .AnyAsync(c => c.Nit.Replace("-", "") == nuevo.Nit);
+
+            if (existe)
+                return BadRequest("Ya existe un cliente con este NIT.");
+
+            // 🔹 Completar datos del nuevo cliente
+            nuevo.FechaCreacion = FechaLocal.Ahora();
+            nuevo.Activo = true;
+
+            _context.Clientes.Add(nuevo);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                idCliente = nuevo.IdCliente,
+                nuevo.Nit,
+                nuevo.Nombres,
+                nuevo.Apellidos,
+                nuevo.Correo,
+                nuevo.Direccion
+            });
+        }
+
+
     }
 }
