@@ -1,0 +1,539 @@
+﻿@{
+    ViewData["Title"] = "Punto de Venta";
+}
+
+<div class="container-fluid mt-3">
+    <div class="row g-3">
+
+        <!-- =========================== -->
+        <!-- 🔹 PANEL IZQUIERDO: PRODUCTOS -->
+        <!-- =========================== -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-basket2-fill"></i> Punto de Venta</h5>
+                    <div class="search-container">
+                        <input type="text" id="busqueda" class="form-control form-control-sm"
+                               placeholder="Buscar producto por nombre o código..." autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0 align-middle text-center" id="tablaProductos">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%;">Descripción del Producto</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th>Desc. %</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================== -->
+        <!-- 🔹 PANEL DERECHO: ACCIONES Y TOTALES -->
+        <!-- =========================== -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div id="mensajeSistema" class="alert d-none mt-2" role="alert" aria-live="polite"></div>
+                    <h5 class="card-title text-center text-primary fw-bold">Resumen de Venta</h5>
+                    <hr />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Seleccionar tipo de cliente</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionNit" value="nit" checked>
+                                <label class="form-check-label" for="opcionNit">Cliente con NIT</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionCF" value="cf">
+                                <label class="form-check-label" for="opcionCF">Consumidor Final (CF)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 SECCIÓN BUSCAR CLIENTE POR NIT -->
+                    <div id="seccionNit">
+                        <label for="nitCliente" class="form-label">NIT del Cliente</label>
+                        <input type="text" id="nitCliente" class="form-control" placeholder="Ej: 1234567-8" />
+                        <button id="btnBuscarCliente" type="button" class="btn btn-primary mt-2">Buscar Cliente</button>
+
+                        <div id="datosCliente" class="border rounded p-3 mt-3 d-none">
+                            <h5>Datos del Cliente</h5>
+                            <p><strong>Nombre:</strong> <span id="nombreCliente"></span></p>
+                            <p><strong>Correo:</strong> <span id="correoCliente"></span></p>
+                            <p><strong>Dirección:</strong> <span id="direccionCliente"></span></p>
+                        </div>
+
+                        <!-- Formulario rápido de nuevo cliente -->
+                        <div id="formNuevoCliente" class="border rounded p-3 mt-3 d-none">
+                            <h5>Registrar nuevo cliente</h5>
+                            <input type="text" id="nuevoNombre" class="form-control mb-2" placeholder="Nombres" />
+                            <input type="text" id="nuevoApellido" class="form-control mb-2" placeholder="Apellidos" />
+                            <input type="email" id="nuevoCorreo" class="form-control mb-2" placeholder="Correo electrónico" />
+                            <input type="text" id="nuevoDireccion" class="form-control mb-2" placeholder="Dirección" />
+                            <button id="btnGuardarCliente" class="btn btn-success">Guardar Cliente</button>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 SECCIÓN CONSUMIDOR FINAL -->
+                    <div id="seccionCF" class="border rounded p-3 mt-3 d-none">
+                        <h5>Datos del Cliente</h5>
+                        <p><strong>Nombre:</strong> <span id="nombreClienteCF">Consumidor Final (CF)</span></p>
+                    </div>
+
+
+                    <hr />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Subtotal</label>
+                        <input type="text" id="subtotal" class="form-control form-control-sm text-end" value="0.00" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">IVA (12%)</label>
+                        <input type="text" id="iva" class="form-control form-control-sm text-end" value="0.00" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Total</label>
+                        <input type="text" id="total" class="form-control form-control-sm text-end fw-bold fs-5 text-success" value="0.00" readonly />
+                    </div>
+
+                    <hr />
+
+                    <!-- 🔹 BOTONES DE ACCIÓN RÁPIDA -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button class="btn btn-success" id="btnCobrar"><i class="bi bi-cash-coin"></i> Cobrar / Pagar</button>
+                        <button class="btn btn-outline-danger" id="btnCancelar"><i class="bi bi-x-circle"></i> Cancelar Venta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- =========================== -->
+<!-- 🔹 MODAL DE PAGO -->
+<!-- =========================== -->
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-cash-stack"></i> Finalizar Venta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
+                <hr>
+
+                <!-- 🔹 Selección de método de pago -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Método de Pago</label>
+                    <select id="metodoPago" class="form-select">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="tarjeta">Tarjeta de Crédito / Débito</option>
+                        <option value="transferencia">Transferencia Bancaria</option>
+                        <option value="mixto">Pago Mixto</option>
+                    </select>
+                </div>
+
+                <!-- 🔹 EFECTIVO -->
+                <div id="pagoEfectivo" class="metodoPago">
+                    <label class="form-label">Monto recibido:</label>
+                    <input type="number" id="montoRecibido" class="form-control" min="0" step="0.01" />
+                    <label class="form-label mt-2">Cambio:</label>
+                    <input type="text" id="cambio" class="form-control" readonly />
+                </div>
+
+                <!-- 🔹 TARJETA -->
+                <div id="pagoTarjeta" class="metodoPago d-none">
+                    <label class="form-label">Monto con tarjeta:</label>
+                    <input type="number" id="montoTarjeta" class="form-control" min="0" step="0.01" />
+                    <small class="text-muted">Simulación de cobro — no se conecta a TPV real.</small>
+                </div>
+
+                <!-- 🔹 TRANSFERENCIA -->
+                <div id="pagoTransferencia" class="metodoPago d-none">
+                    <label class="form-label">Monto por transferencia:</label>
+                    <input type="number" id="montoTransferencia" class="form-control" min="0" step="0.01" />
+                    <small class="text-muted">Ingrese el monto transferido (simulación académica).</small>
+                </div>
+
+                <!-- 🔹 MIXTO -->
+                <div id="pagoMixto" class="metodoPago d-none">
+                    <label class="form-label">Monto en efectivo:</label>
+                    <input type="number" id="montoMixtoEfectivo" class="form-control mb-2" min="0" step="0.01" />
+                    <label class="form-label">Monto en tarjeta:</label>
+                    <input type="number" id="montoMixtoTarjeta" class="form-control mb-2" min="0" step="0.01" />
+                    <label class="form-label">Monto en transferencia:</label>
+                    <input type="number" id="montoMixtoTransferencia" class="form-control" min="0" step="0.01" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" id="btnConfirmarCobro"><i class="bi bi-check2-circle"></i> Confirmar Pago</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- =========================== -->
+<!-- 🔸 ESTILOS -->
+<!-- =========================== -->
+<style>
+    .search-container {
+        position: relative;
+        display: inline-block;
+        width: 50%;
+    }
+
+    .suggestions-box {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        z-index: 9999;
+        max-height: 250px;
+        overflow-y: auto;
+        border-radius: 0 0 0.5rem 0.5rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+        .suggestions-box button {
+            border: none;
+            background: #fff;
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+        }
+
+            .suggestions-box button:hover {
+                background: #f8f9fa;
+            }
+</style>
+
+<!-- =========================== -->
+<!-- 🔸 SCRIPT PRINCIPAL -->
+<!-- =========================== -->
+@section Scripts {
+    <script>
+        const tablaBody = document.querySelector("#tablaProductos tbody");
+        const inputBusqueda = document.querySelector("#busqueda");
+        const btnCobrar = document.querySelector("#btnCobrar");
+        const btnCancelar = document.querySelector("#btnCancelar");
+
+        let productosSeleccionados = [];
+        let ultimosResultados = [];
+
+        // ==========================================
+        // 📢 FUNCIÓN PARA MOSTRAR MENSAJES EN VISTA
+        // ==========================================
+        function mostrarMensaje(texto, tipo = "info", duracion = 4000) {
+            const div = document.getElementById("mensajeSistema");
+            if (!div) return;
+            div.textContent = texto;
+            div.className = "alert mt-2";
+            div.classList.add(`alert-${tipo}`);
+            div.classList.remove("d-none");
+
+            if (duracion > 0) {
+                setTimeout(() => div.classList.add("d-none"), duracion);
+            }
+        }
+
+        // ==========================================
+        // 🔍 BÚSQUEDA DE PRODUCTOS (con Enter)
+        // ==========================================
+        inputBusqueda.addEventListener("keyup", async (e) => {
+            const term = e.target.value.trim();
+            const contenedor = inputBusqueda.closest(".search-container");
+            if (term.length < 2) {
+                const prev = contenedor.querySelector(".suggestions-box");
+                if (prev) prev.remove();
+                return;
+            }
+            const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
+            const data = await resp.json();
+            ultimosResultados = data.results;
+            mostrarSugerencias(ultimosResultados, contenedor);
+        });
+
+        inputBusqueda.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (ultimosResultados.length > 0) {
+                    seleccionarProducto(ultimosResultados[0]);
+                    const contenedor = inputBusqueda.closest(".search-container");
+                    const lista = contenedor.querySelector(".suggestions-box");
+                    if (lista) lista.remove();
+                }
+            }
+        });
+
+        function mostrarSugerencias(lista, contenedor) {
+            const prev = contenedor.querySelector(".suggestions-box");
+            if (prev) prev.remove();
+            if (!lista.length) return;
+
+            const div = document.createElement("div");
+            div.classList.add("suggestions-box");
+            lista.forEach(p => {
+                const item = document.createElement("button");
+                item.type = "button";
+                item.innerHTML = `<strong>${p.text}</strong> <span class="text-muted float-end">Q${p.precio.toFixed(2)}</span>`;
+                item.onclick = () => { seleccionarProducto(p); div.remove(); };
+                div.appendChild(item);
+            });
+            contenedor.appendChild(div);
+            document.addEventListener("click", (ev) => {
+                if (!contenedor.contains(ev.target)) {
+                    const list = contenedor.querySelector(".suggestions-box");
+                    if (list) list.remove();
+                }
+            }, { once: true });
+        }
+
+        // ==========================================
+        // 🧾 GESTIÓN DE PRODUCTOS EN VENTA
+        // ==========================================
+        function seleccionarProducto(prod) {
+            const existente = productosSeleccionados.find(p => p.id === prod.id);
+            if (existente) existente.cantidad++;
+            else productosSeleccionados.push({ id: prod.id, nombre: prod.text, precio: parseFloat(prod.precio), cantidad: 1, descuento: 0 });
+            inputBusqueda.value = "";
+            renderTabla();
+        }
+
+        function renderTabla() {
+            tablaBody.innerHTML = "";
+            productosSeleccionados.forEach((p, i) => {
+                const subtotal = p.precio * p.cantidad * (1 - p.descuento / 100);
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="text-start">${p.nombre}</td>
+                    <td>Q${p.precio.toFixed(2)}</td>
+                    <td>
+                        <div class="input-group input-group-sm justify-content-center">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, -1)">-</button>
+                            <input type="number" min="1" class="form-control text-center" style="max-width:60px;" value="${p.cantidad}" onchange="actualizarCantidad(${i}, this.value)">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm text-center" min="0" max="100" value="${p.descuento}" onchange="actualizarDescuento(${i}, this.value)"></td>
+                    <td>Q${subtotal.toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})"><i class="bi bi-trash"></i></button></td>
+                `;
+                tablaBody.appendChild(tr);
+            });
+            recalcularTotales();
+        }
+
+        // ==========================================
+        // 🔍 CLIENTE: BUSCAR / REGISTRAR / CF
+        // ==========================================
+        document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
+            const nit = document.getElementById("nitCliente").value.trim();
+            const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
+
+            if (!nit) {
+                mostrarMensaje("Por favor ingrese un NIT antes de buscar.", "warning");
+                return;
+            }
+
+            const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
+            const data = await res.json();
+
+            if (data.encontrado) {
+                document.getElementById("nombreCliente").innerText = `${data.cliente.nombres} ${data.cliente.apellidos}`;
+                document.getElementById("correoCliente").innerText = data.cliente.correo;
+                document.getElementById("direccionCliente").innerText = data.cliente.direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+                mostrarMensaje("Cliente encontrado correctamente.", "success");
+            } else {
+                document.getElementById("formNuevoCliente").classList.remove("d-none");
+                document.getElementById("datosCliente").classList.add("d-none");
+                mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
+            }
+        });
+
+        document.getElementById("nitCliente").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("btnBuscarCliente").click();
+            }
+        });
+
+        document.getElementById("nitCliente").addEventListener("input", function () {
+            const nit = this.value.trim();
+            if (!nit) {
+                document.getElementById("datosCliente").classList.add("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+            }
+        });
+
+        document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
+            const nuevo = {
+                nit: document.getElementById("nitCliente").value.trim(),
+                nombres: document.getElementById("nuevoNombre").value,
+                apellidos: document.getElementById("nuevoApellido").value,
+                correo: document.getElementById("nuevoCorreo").value,
+                direccion: document.getElementById("nuevoDireccion").value,
+                telefono: "N/A"
+            };
+
+            const res = await fetch("/Ventas/RegistrarClienteRapido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(nuevo)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                mostrarMensaje("Cliente registrado correctamente.", "success");
+                document.getElementById("nombreCliente").innerText = `${data.nombres} ${data.apellidos}`;
+                document.getElementById("correoCliente").innerText = data.correo;
+                document.getElementById("direccionCliente").innerText = data.direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+            } else {
+                const err = await res.text();
+                mostrarMensaje("Error al registrar cliente: " + err, "danger", 0);
+            }
+        });
+
+        // ==========================================
+        // 💰 PROCESO DE PAGO Y COBRO
+        // ==========================================
+        const metodoPago = document.getElementById("metodoPago");
+        const seccionesPago = document.querySelectorAll(".metodoPago");
+        const totalInput = document.querySelector("#total");
+        const totalCobro = document.querySelector("#totalCobro");
+
+        metodoPago.addEventListener("change", () => {
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            const id = `#pago${metodoPago.value.charAt(0).toUpperCase() + metodoPago.value.slice(1)}`;
+            document.querySelector(id).classList.remove("d-none");
+        });
+
+        btnCobrar.addEventListener("click", () => {
+            const total = parseFloat(totalInput.value);
+            totalCobro.textContent = `Q${total.toFixed(2)}`;
+            metodoPago.value = "efectivo";
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            document.querySelector("#pagoEfectivo").classList.remove("d-none");
+            new bootstrap.Modal(document.getElementById("modalCobro")).show();
+        });
+
+        document.querySelector("#montoRecibido").addEventListener("input", () => {
+            const total = parseFloat(totalInput.value);
+            const recibido = parseFloat(document.querySelector("#montoRecibido").value);
+            const cambio = recibido - total;
+            document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
+        });
+
+        document.querySelector("#btnConfirmarCobro").addEventListener("click", () => {
+            const total = parseFloat(totalInput.value);
+            const metodo = metodoPago.value;
+            let pagado = 0;
+
+            switch (metodo) {
+                case "efectivo":
+                    pagado = parseFloat(document.getElementById("montoRecibido").value) || 0;
+                    break;
+                case "tarjeta":
+                    pagado = parseFloat(document.getElementById("montoTarjeta").value) || 0;
+                    break;
+                case "transferencia":
+                    pagado = parseFloat(document.getElementById("montoTransferencia").value) || 0;
+                    break;
+                case "mixto":
+                    const ef = parseFloat(document.getElementById("montoMixtoEfectivo").value) || 0;
+                    const ta = parseFloat(document.getElementById("montoMixtoTarjeta").value) || 0;
+                    const tr = parseFloat(document.getElementById("montoMixtoTransferencia").value) || 0;
+                    pagado = ef + ta + tr;
+                    break;
+            }
+
+            if (pagado < total) {
+                mostrarMensaje("El monto total pagado es insuficiente.", "danger");
+                return;
+            }
+
+            mostrarMensaje(`✅ Venta confirmada (${metodo.toUpperCase()}). Total pagado: Q${pagado.toFixed(2)}`, "success");
+            productosSeleccionados = [];
+            renderTabla();
+            bootstrap.Modal.getInstance(document.getElementById("modalCobro")).hide();
+
+            mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
+        });
+
+        // ==========================================
+        // ⚡ ACCIONES RÁPIDAS
+        // ==========================================
+        btnCancelar.addEventListener("click", () => {
+            productosSeleccionados = [];
+            renderTabla();
+            mostrarMensaje("Venta cancelada correctamente.", "info");
+        });
+
+        function cambiarCantidad(i, d) { productosSeleccionados[i].cantidad = Math.max(1, productosSeleccionados[i].cantidad + d); renderTabla(); }
+        function actualizarCantidad(i, v) { productosSeleccionados[i].cantidad = Math.max(1, parseInt(v)); renderTabla(); }
+        function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
+        function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "warning"); }
+
+        function recalcularTotales() {
+            let subtotal = 0;
+            productosSeleccionados.forEach(p => subtotal += p.precio * p.cantidad * (1 - p.descuento / 100));
+            document.querySelector("#subtotal").value = subtotal.toFixed(2);
+            document.querySelector("#iva").value = (subtotal * 0.12).toFixed(2);
+            document.querySelector("#total").value = (subtotal * 1.12).toFixed(2);
+        }
+
+        // ==========================================
+        // 🧭 SELECCIÓN DEL TIPO DE CLIENTE (NIT / CF)
+        // ==========================================
+        const opcionNit = document.getElementById("opcionNit");
+        const opcionCF = document.getElementById("opcionCF");
+        const seccionNit = document.getElementById("seccionNit");
+        const seccionCF = document.getElementById("seccionCF");
+
+        opcionNit.addEventListener("change", () => {
+            if (opcionNit.checked) {
+                seccionNit.classList.remove("d-none");
+                seccionCF.classList.add("d-none");
+                document.getElementById("nitCliente").focus();
+            }
+        });
+
+        opcionCF.addEventListener("change", () => {
+            if (opcionCF.checked) {
+                seccionCF.classList.remove("d-none");
+                seccionNit.classList.add("d-none");
+            }
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+}
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+}
+
