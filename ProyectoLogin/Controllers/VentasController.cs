@@ -73,7 +73,6 @@ namespace ProyectoLogin.Controllers
             venta.IdUsuario = int.Parse(userId);
             venta.FechaVenta = FechaLocal.Ahora();
 
-            // Calcula totales
             venta.Subtotal = venta.Detalles.Sum(d => d.Subtotal);
             venta.IVA = venta.Subtotal * 0.12m;
             venta.Total = venta.Subtotal + venta.IVA;
@@ -81,35 +80,18 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Guarda la venta primero
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // 💡 Crea una lista separada para evitar modificar la colección durante el foreach
-                var detallesCopia = venta.Detalles
-                    .Select(d => new DetalleVenta
-                    {
-                        IdVenta = venta.IdVenta,
-                        IdProducto = d.IdProducto,
-                        Cantidad = d.Cantidad,
-                        PrecioUnitario = d.PrecioUnitario,
-                        Descuento = d.Descuento,
-                        Subtotal = d.Subtotal
-                    })
-                    .ToList();
-
-                foreach (var det in detallesCopia)
+                // 🔹 Solo actualiza inventario, NO vuelvas a agregar detalles
+                foreach (var det in venta.Detalles)
                 {
-                    var inventario = await _context.Inventarios
-                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
-
+                    var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
                     if (inventario == null)
                         throw new Exception($"El producto {det.IdProducto} no tiene inventario.");
 
                     inventario.StockActual -= det.Cantidad;
                     inventario.FechaUltimaActualizacion = DateTime.Now;
-
-                    _context.DetallesVenta.Add(det);
                 }
 
                 await _context.SaveChangesAsync();
@@ -123,6 +105,7 @@ namespace ProyectoLogin.Controllers
                 return BadRequest(new { success = false, message = "Error al guardar venta: " + ex.Message });
             }
         }
+
 
 
         // =====================================
