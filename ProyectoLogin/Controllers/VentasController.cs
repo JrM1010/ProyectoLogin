@@ -66,7 +66,6 @@ namespace ProyectoLogin.Controllers
             if (venta == null || venta.Detalles == null || !venta.Detalles.Any())
                 return BadRequest("Datos de venta incompletos.");
 
-            // Asignar usuario logueado
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized("No se pudo identificar el usuario.");
@@ -74,51 +73,42 @@ namespace ProyectoLogin.Controllers
             venta.IdUsuario = int.Parse(userId);
             venta.FechaVenta = FechaLocal.Ahora();
 
-            // Calcular totales
+            // Calcula totales
             venta.Subtotal = venta.Detalles.Sum(d => d.Subtotal);
             venta.IVA = venta.Subtotal * 0.12m;
             venta.Total = venta.Subtotal + venta.IVA;
 
-            // Iniciar transacción
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Guardar encabezado
+                // Guarda la venta primero
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                foreach (var det in venta.Detalles)
-                {
-                    det.IdVenta = venta.IdVenta;
+                // 💡 Crea una lista separada para evitar modificar la colección durante el foreach
+                var detallesCopia = venta.Detalles
+                    .Select(d => new DetalleVenta
+                    {
+                        IdVenta = venta.IdVenta,
+                        IdProducto = d.IdProducto,
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.PrecioUnitario,
+                        Descuento = d.Descuento,
+                        Subtotal = d.Subtotal
+                    })
+                    .ToList();
 
-                    // Descontar del inventario
+                foreach (var det in detallesCopia)
+                {
                     var inventario = await _context.Inventarios
                         .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
 
                     if (inventario == null)
-                    {
-                        throw new InvalidOperationException($"El producto con ID {det.IdProducto} no tiene inventario asociado.");
-                    }
-
-                    if (inventario.StockActual < det.Cantidad)
-                    {
-                        throw new InvalidOperationException($"Stock insuficiente para el producto {det.IdProducto}.");
-                    }
+                        throw new Exception($"El producto {det.IdProducto} no tiene inventario.");
 
                     inventario.StockActual -= det.Cantidad;
-                    inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
+                    inventario.FechaUltimaActualizacion = DateTime.Now;
 
-                    // Registrar movimiento
-                    var mov = new MovInventario
-                    {
-                        IdProducto = det.IdProducto,
-                        Cantidad = det.Cantidad,
-                        Fecha = FechaLocal.Ahora(),
-                        TipoMovimiento = "Venta",
-                        Referencia = $"Venta #{venta.IdVenta}"
-                    };
-
-                    _context.MovInventarios.Add(mov);
                     _context.DetallesVenta.Add(det);
                 }
 
@@ -133,6 +123,7 @@ namespace ProyectoLogin.Controllers
                 return BadRequest(new { success = false, message = "Error al guardar venta: " + ex.Message });
             }
         }
+
 
         // =====================================
         // 4️⃣  Detalle de venta (vista simple)

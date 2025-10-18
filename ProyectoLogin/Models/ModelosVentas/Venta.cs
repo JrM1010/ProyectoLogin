@@ -13,9 +13,17 @@ namespace ProyectoLogin.Models.ModelosVentas
         public int IdUsuario { get; set; }  // Vendedor o Administrador que realiza la venta
 
         public DateTime FechaVenta { get; set; } = FechaLocal.Ahora();
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Subtotal { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal IVA { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Total { get; set; }
+
+
         public string? MetodoPago { get; set; }
         public string? Estado { get; set; } = "Completada";
 

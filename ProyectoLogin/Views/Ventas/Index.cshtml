@@ -240,6 +240,7 @@
 
         let productosSeleccionados = [];
         let ultimosResultados = [];
+        let clienteSeleccionado = null; // <-- nuevo: guarda id del cliente si se encontró/registró
 
         // ==========================================
         // 📢 FUNCIÓN PARA MOSTRAR MENSAJES EN VISTA
@@ -360,6 +361,9 @@
             const data = await res.json();
 
             if (data.encontrado) {
+                // intentar asignar un id del cliente a clienteSeleccionado con tolerancia a nombres de propiedad
+                clienteSeleccionado = data.cliente?.id || data.cliente?.Id || data.cliente?.IdCliente || data.cliente?.clienteId || null;
+
                 document.getElementById("nombreCliente").innerText = `${data.cliente.nombres} ${data.cliente.apellidos}`;
                 document.getElementById("correoCliente").innerText = data.cliente.correo;
                 document.getElementById("direccionCliente").innerText = data.cliente.direccion;
@@ -367,6 +371,7 @@
                 document.getElementById("formNuevoCliente").classList.add("d-none");
                 mostrarMensaje("Cliente encontrado correctamente.", "success");
             } else {
+                clienteSeleccionado = null;
                 document.getElementById("formNuevoCliente").classList.remove("d-none");
                 document.getElementById("datosCliente").classList.add("d-none");
                 mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
@@ -385,6 +390,7 @@
             if (!nit) {
                 document.getElementById("datosCliente").classList.add("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
+                clienteSeleccionado = null;
             }
         });
 
@@ -406,10 +412,13 @@
 
             if (res.ok) {
                 const data = await res.json();
+                // asignar id del cliente si viene
+                clienteSeleccionado = data?.id || data?.Id || data?.IdCliente || data?.clienteId || null;
+
                 mostrarMensaje("Cliente registrado correctamente.", "success");
-                document.getElementById("nombreCliente").innerText = `${data.nombres} ${data.apellidos}`;
-                document.getElementById("correoCliente").innerText = data.correo;
-                document.getElementById("direccionCliente").innerText = data.direccion;
+                document.getElementById("nombreCliente").innerText = `${data.nombres || data.nombresCliente || ''} ${data.apellidos || ''}`.trim();
+                document.getElementById("correoCliente").innerText = data.correo || '';
+                document.getElementById("direccionCliente").innerText = data.direccion || '';
                 document.getElementById("datosCliente").classList.remove("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
             } else {
@@ -448,41 +457,93 @@
             document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
         });
 
-        document.querySelector("#btnConfirmarCobro").addEventListener("click", () => {
-            const total = parseFloat(totalInput.value);
-            const metodo = metodoPago.value;
-            let pagado = 0;
 
-            switch (metodo) {
-                case "efectivo":
-                    pagado = parseFloat(document.getElementById("montoRecibido").value) || 0;
-                    break;
-                case "tarjeta":
-                    pagado = parseFloat(document.getElementById("montoTarjeta").value) || 0;
-                    break;
-                case "transferencia":
-                    pagado = parseFloat(document.getElementById("montoTransferencia").value) || 0;
-                    break;
-                case "mixto":
-                    const ef = parseFloat(document.getElementById("montoMixtoEfectivo").value) || 0;
-                    const ta = parseFloat(document.getElementById("montoMixtoTarjeta").value) || 0;
-                    const tr = parseFloat(document.getElementById("montoMixtoTransferencia").value) || 0;
-                    pagado = ef + ta + tr;
-                    break;
+
+
+        // ---------- HANDLER MODIFICADO: ahora hace POST al backend ----------
+           document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
+            try {
+                const total = parseFloat(totalInput.value);
+                const metodo = metodoPago.value;
+                let pagado = 0;
+
+                switch (metodo) {
+                    case "efectivo":
+                        pagado = parseFloat(document.getElementById("montoRecibido").value) || 0;
+                        break;
+                    case "tarjeta":
+                        pagado = parseFloat(document.getElementById("montoTarjeta").value) || 0;
+                        break;
+                    case "transferencia":
+                        pagado = parseFloat(document.getElementById("montoTransferencia").value) || 0;
+                        break;
+                    case "mixto":
+                        const ef = parseFloat(document.getElementById("montoMixtoEfectivo").value) || 0;
+                        const ta = parseFloat(document.getElementById("montoMixtoTarjeta").value) || 0;
+                        const tr = parseFloat(document.getElementById("montoMixtoTransferencia").value) || 0;
+                        pagado = ef + ta + tr;
+                        break;
+                }
+
+                if (pagado < total) {
+                    mostrarMensaje("El monto total pagado es insuficiente.", "danger");
+                    return;
+                }
+
+                if (!productosSeleccionados.length) {
+                    mostrarMensaje("No hay productos en la venta.", "warning");
+                    return;
+                }
+
+                // 📦 Construir payload
+                const payload = {
+                    IdCliente: clienteSeleccionado || null,
+                    MetodoPago: metodo || "efectivo",
+                    Estado: "Completada",
+                    Detalles: productosSeleccionados.map(p => {
+                        const subtotal = parseFloat(
+                            (p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2)
+                        );
+                        return {
+                            IdProducto: Number(p.id),
+                            Cantidad: Number(p.cantidad),
+                            PrecioUnitario: Number(p.precio),
+                            Descuento: Number(p.descuento || 0),
+                            Subtotal: subtotal
+                        };
+                    })
+                };
+
+                // 💾 Enviar al backend
+                const res = await fetch("/Ventas/GuardarVenta", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
+
+                // ✅ Éxito
+                mostrarMensaje(`✅ ${data.message || "Venta guardada correctamente."}`, "success");
+                productosSeleccionados = [];
+                renderTabla();
+
+                const modalEl = document.getElementById("modalCobro");
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+
+                mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
+
+            } catch (err) {
+                console.error("Error guardando venta:", err);
+                mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
             }
-
-            if (pagado < total) {
-                mostrarMensaje("El monto total pagado es insuficiente.", "danger");
-                return;
-            }
-
-            mostrarMensaje(`✅ Venta confirmada (${metodo.toUpperCase()}). Total pagado: Q${pagado.toFixed(2)}`, "success");
-            productosSeleccionados = [];
-            renderTabla();
-            bootstrap.Modal.getInstance(document.getElementById("modalCobro")).hide();
-
-            mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
         });
+
+
+
 
         // ==========================================
         // ⚡ ACCIONES RÁPIDAS
@@ -532,8 +593,3 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 }
-
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-}
-
