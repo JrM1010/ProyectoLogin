@@ -23,7 +23,7 @@
                         <table class="table table-hover table-sm mb-0 align-middle text-center" id="tablaProductos">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 35%;">Descripción del Producto</th>
+                                    <th style="width: 35%;">Producto</th>
                                     <th>Precio</th>
                                     <th>Cantidad</th>
                                     <th>Desc. %</th>
@@ -69,7 +69,6 @@
                         <button id="btnBuscarCliente" type="button" class="btn btn-primary mt-2">Buscar Cliente</button>
 
                         <div id="datosCliente" class="border rounded p-3 mt-3 d-none">
-                            <h5>Datos del Cliente</h5>
                             <p><strong>Nombre:</strong> <span id="nombreCliente"></span></p>
                             <p><strong>Correo:</strong> <span id="correoCliente"></span></p>
                             <p><strong>Dirección:</strong> <span id="direccionCliente"></span></p>
@@ -88,7 +87,6 @@
 
                     <!-- 🔹 SECCIÓN CONSUMIDOR FINAL -->
                     <div id="seccionCF" class="border rounded p-3 mt-3 d-none">
-                        <h5>Datos del Cliente</h5>
                         <p><strong>Nombre:</strong> <span id="nombreClienteCF">Consumidor Final (CF)</span></p>
                     </div>
 
@@ -122,6 +120,8 @@
     </div>
 </div>
 
+
+
 <!-- =========================== -->
 <!-- 🔹 MODAL DE PAGO -->
 <!-- =========================== -->
@@ -134,60 +134,72 @@
             </div>
             <div class="modal-body">
 
-                <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
-                <hr>
+                <div id="contenidoVentaActiva">
+                    <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
+                    <hr>
 
-                <!-- 🔹 Selección de método de pago -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Método de Pago</label>
-                    <select id="metodoPago" class="form-select">
-                        <option value="efectivo">Efectivo</option>
-                        <option value="tarjeta">Tarjeta de Crédito / Débito</option>
-                        <option value="transferencia">Transferencia Bancaria</option>
-                        <option value="mixto">Pago Mixto</option>
-                    </select>
+                    <!-- 🔹 Selección de método de pago -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Método de Pago</label>
+                        <select id="metodoPago" class="form-select">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="tarjeta">Tarjeta de Crédito / Débito</option>
+                            <option value="transferencia">Transferencia Bancaria</option>
+                            <option value="mixto">Pago Mixto</option>
+                        </select>
+                    </div>
+
+                    <!-- 🔹 EFECTIVO -->
+                    <div id="pagoEfectivo" class="metodoPago">
+                        <label class="form-label">Monto recibido:</label>
+                        <input type="number" id="montoRecibido" class="form-control" min="0" step="0.01" />
+                        <label class="form-label mt-2">Cambio:</label>
+                        <input type="text" id="cambio" class="form-control" readonly />
+                    </div>
+
+                    <!-- 🔹 TARJETA -->
+                    <div id="pagoTarjeta" class="metodoPago d-none">
+                        <label class="form-label">Monto con tarjeta:</label>
+                        <input type="number" id="montoTarjeta" class="form-control" min="0" step="0.01" />
+                    </div>
+
+                    <!-- 🔹 TRANSFERENCIA -->
+                    <div id="pagoTransferencia" class="metodoPago d-none">
+                        <label class="form-label">Monto por transferencia:</label>
+                        <input type="number" id="montoTransferencia" class="form-control" min="0" step="0.01" />
+                        <small class="text-muted">Ingrese el monto transferido.</small>
+                    </div>
+
+                    <!-- 🔹 MIXTO -->
+                    <div id="pagoMixto" class="metodoPago d-none">
+                        <label class="form-label">Monto en efectivo:</label>
+                        <input type="number" id="montoMixtoEfectivo" class="form-control mb-2" min="0" step="0.01" />
+                        <label class="form-label">Monto en tarjeta:</label>
+                        <input type="number" id="montoMixtoTarjeta" class="form-control mb-2" min="0" step="0.01" />
+                        <label class="form-label">Monto en transferencia:</label>
+                        <input type="number" id="montoMixtoTransferencia" class="form-control" min="0" step="0.01" />
+                    </div>
                 </div>
 
-                <!-- 🔹 EFECTIVO -->
-                <div id="pagoEfectivo" class="metodoPago">
-                    <label class="form-label">Monto recibido:</label>
-                    <input type="number" id="montoRecibido" class="form-control" min="0" step="0.01" />
-                    <label class="form-label mt-2">Cambio:</label>
-                    <input type="text" id="cambio" class="form-control" readonly />
+                <!-- 🔹 MENSAJE DESPUÉS DE GUARDAR LA VENTA -->
+                <div id="contenidoVentaFinalizada" class="text-center d-none">
+                    <h4 class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Venta Completada</h4>
+                    <p class="text-muted mb-4">La información de pago ha sido guardada. Descargue Factura.</p>
+                    <button id="btnDescargarFactura" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Descargar factura
+                    </button>
                 </div>
 
-                <!-- 🔹 TARJETA -->
-                <div id="pagoTarjeta" class="metodoPago d-none">
-                    <label class="form-label">Monto con tarjeta:</label>
-                    <input type="number" id="montoTarjeta" class="form-control" min="0" step="0.01" />
-                    <small class="text-muted">Simulación de cobro — no se conecta a TPV real.</small>
-                </div>
-
-                <!-- 🔹 TRANSFERENCIA -->
-                <div id="pagoTransferencia" class="metodoPago d-none">
-                    <label class="form-label">Monto por transferencia:</label>
-                    <input type="number" id="montoTransferencia" class="form-control" min="0" step="0.01" />
-                    <small class="text-muted">Ingrese el monto transferido (simulación académica).</small>
-                </div>
-
-                <!-- 🔹 MIXTO -->
-                <div id="pagoMixto" class="metodoPago d-none">
-                    <label class="form-label">Monto en efectivo:</label>
-                    <input type="number" id="montoMixtoEfectivo" class="form-control mb-2" min="0" step="0.01" />
-                    <label class="form-label">Monto en tarjeta:</label>
-                    <input type="number" id="montoMixtoTarjeta" class="form-control mb-2" min="0" step="0.01" />
-                    <label class="form-label">Monto en transferencia:</label>
-                    <input type="number" id="montoMixtoTransferencia" class="form-control" min="0" step="0.01" />
-                </div>
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button class="btn btn-success" id="btnConfirmarCobro"><i class="bi bi-check2-circle"></i> Confirmar Pago</button>
             </div>
         </div>
     </div>
 </div>
+
 
 
 <!-- =========================== -->
@@ -228,6 +240,8 @@
             }
 </style>
 
+
+
 <!-- =========================== -->
 <!-- 🔸 SCRIPT PRINCIPAL -->
 <!-- =========================== -->
@@ -242,17 +256,53 @@
         let ultimosResultados = [];
         let clienteSeleccionado = null; // guarda id del cliente si se encontró/registró
 
-        function mostrarMensaje(texto, tipo = "info", duracion = 4000) {
-            const div = document.getElementById("mensajeSistema");
-            if (!div) return;
-            div.textContent = texto;
-            div.className = "alert mt-2";
-            div.classList.add(`alert-${tipo}`);
-            div.classList.remove("d-none");
-            if (duracion > 0) setTimeout(() => div.classList.add("d-none"), duracion);
+        // helper para asignar value de forma segura (evita usar ?. en el LHS)
+        function setValueIfExists(selector, value) {
+            const el = document.querySelector(selector);
+            if (el) el.value = value;
         }
 
-        // BUSQUEDA DE PRODUCTOS
+
+         // ==========================================================
+         // 🧱 CENTRO DE ALERTAS FLOTANTES (en esquina inferior izquierda)
+         // ==========================================================
+         function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
+             let contenedor = document.getElementById("centroAlertas");
+             if (!contenedor) {
+                 contenedor = document.createElement("div");
+                 contenedor.id = "centroAlertas";
+                 contenedor.style.position = "fixed";
+                 contenedor.style.bottom = "20px";
+                 contenedor.style.left = "20px";
+                 contenedor.style.zIndex = "1055";
+                 contenedor.style.display = "flex";
+                 contenedor.style.flexDirection = "column";
+                 contenedor.style.gap = "8px";
+                 document.body.appendChild(contenedor);
+             }
+
+              const alerta = document.createElement("div");
+             alerta.className = `alert alert-${tipo} shadow-sm border-0 fade show`;
+             alerta.style.minWidth = "260px";
+             alerta.style.maxWidth = "320px";
+             alerta.style.padding = "10px 14px";
+             alerta.style.fontSize = "0.9rem";
+             alerta.style.cursor = "pointer";
+             alerta.style.borderRadius = "10px";
+             alerta.innerHTML = `<strong>${texto}</strong>`;
+
+             alerta.addEventListener("click", () => alerta.remove());
+             contenedor.appendChild(alerta);
+
+             if (duracion > 0) {
+                 setTimeout(() => alerta.remove(), duracion);
+             }
+         }
+
+
+       // ==========================================================
+        // 🔍 BUSQUEDA DE PRODUCTOS + ALERTA DE STOCK
+        // ==========================================================
         inputBusqueda.addEventListener("keyup", async (e) => {
             const term = e.target.value.trim();
             const contenedor = inputBusqueda.closest(".search-container");
@@ -261,6 +311,7 @@
                 if (prev) prev.remove();
                 return;
             }
+
             const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
             const data = await resp.json();
             ultimosResultados = data.results || [];
@@ -279,59 +330,153 @@
             }
         });
 
-        function mostrarSugerencias(lista, contenedor) {
-            const prev = contenedor.querySelector(".suggestions-box");
-            if (prev) prev.remove();
-            if (!lista.length) return;
-            const div = document.createElement("div");
-            div.classList.add("suggestions-box");
-            lista.forEach(p => {
-                const item = document.createElement("button");
-                item.type = "button";
-                item.innerHTML = `<strong>${p.text}</strong> <span class="text-muted float-end">Q${p.precio.toFixed(2)}</span>`;
-                item.onclick = () => { seleccionarProducto(p); div.remove(); };
-                div.appendChild(item);
-            });
-            contenedor.appendChild(div);
-            document.addEventListener("click", (ev) => {
-                if (!contenedor.contains(ev.target)) {
-                    const list = contenedor.querySelector(".suggestions-box");
-                    if (list) list.remove();
-                }
-            }, { once: true });
-        }
+          function mostrarSugerencias(lista, contenedor) {
+             const prev = contenedor.querySelector(".suggestions-box");
+             if (prev) prev.remove();
+             if (!lista.length) return;
 
-        function seleccionarProducto(prod) {
-            const existente = productosSeleccionados.find(p => p.id === prod.id);
-            if (existente) existente.cantidad++;
-            else productosSeleccionados.push({ id: prod.id, nombre: prod.text, precio: parseFloat(prod.precio), cantidad: 1, descuento: 0 });
-            inputBusqueda.value = "";
-            renderTabla();
-        }
+             const div = document.createElement("div");
+             div.classList.add("suggestions-box");
 
-        function renderTabla() {
-            tablaBody.innerHTML = "";
-            productosSeleccionados.forEach((p, i) => {
-                const subtotal = p.precio * p.cantidad * (1 - p.descuento / 100);
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="text-start">${p.nombre}</td>
-                    <td>Q${p.precio.toFixed(2)}</td>
-                    <td>
-                        <div class="input-group input-group-sm justify-content-center">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, -1)">-</button>
-                            <input type="number" min="1" class="form-control text-center" style="max-width:60px;" value="${p.cantidad}" onchange="actualizarCantidad(${i}, this.value)">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, 1)">+</button>
-                        </div>
-                    </td>
-                    <td><input type="number" class="form-control form-control-sm text-center" min="0" max="100" value="${p.descuento}" onchange="actualizarDescuento(${i}, this.value)"></td>
-                    <td>Q${subtotal.toFixed(2)}</td>
-                    <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})"><i class="bi bi-trash"></i></button></td>
-                `;
-                tablaBody.appendChild(tr);
-            });
-            recalcularTotales();
-        }
+             lista.forEach(p => {
+                 const stock = p.stock ?? 0;
+                 let colorStock = "text-success";
+                 let estado = "Disponible";
+                 if (stock <= 0) { colorStock = "text-danger"; estado = "Sin existencias"; }
+                 else if (stock <= 3) { colorStock = "text-warning"; estado = "Stock bajo"; }
+
+                 const item = document.createElement("button");
+                 item.type = "button";
+                 item.innerHTML = `
+                     <div class="d-flex justify-content-between align-items-center w-100">
+                         <div>
+                             <strong>${p.text}</strong><br>
+                             <small class="${colorStock}">${estado} — Stock: ${stock}</small>
+                         </div>
+                         <span class="text-muted">Q${p.precio.toFixed(2)}</span>
+                     </div>
+                 `;
+                 item.onclick = () => { seleccionarProducto(p); div.remove(); };
+                 div.appendChild(item);
+             });
+
+              contenedor.appendChild(div);
+             document.addEventListener("click", (ev) => {
+                 if (!contenedor.contains(ev.target)) {
+                     const list = contenedor.querySelector(".suggestions-box");
+                     if (list) list.remove();
+                 }
+             }, { once: true });
+         }
+
+          // ==========================================================
+         // 🧾 GESTIÓN DE PRODUCTOS CON VALIDACIÓN DE STOCK
+         // ==========================================================
+         function seleccionarProducto(prod) {
+             const stock = prod.stock ?? 0;
+
+             if (stock <= 0) {
+                 mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
+                 return;
+             } else if (stock <= 3) {
+                 mostrarMensaje(`⚠️ Stock bajo: ${stock} unidades disponibles.`, "warning");
+             } else {
+                 mostrarMensaje(`✅ Stock disponible: ${stock} unidades.`, "success");
+             }
+
+             const existente = productosSeleccionados.find(p => p.id === prod.id);
+             if (existente) {
+                 if (existente.cantidad + 1 > stock) {
+                     mostrarMensaje(`⚠️ No puedes agregar más unidades. Stock disponible: ${stock}`, "warning");
+                     return;
+                 }
+                 existente.cantidad++;
+             } else {
+                 productosSeleccionados.push({
+                     id: prod.id,
+                     nombre: prod.text,
+                     precio: parseFloat(prod.precio),
+                     cantidad: 1,
+                     descuento: 0,
+                     stock: stock
+                 });
+             }
+
+             inputBusqueda.value = "";
+             renderTabla();
+         }
+
+          // ==========================================================
+         // 🧮 TABLA Y TOTALES
+         // ==========================================================
+         function renderTabla() {
+             tablaBody.innerHTML = "";
+             productosSeleccionados.forEach((p, i) => {
+                 const subtotal = p.precio * p.cantidad * (1 - p.descuento / 100);
+                 const tr = document.createElement("tr");
+
+                 let badgeStock = "";
+                 if (p.stock <= 3 && p.stock > 0)
+                     badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
+                 else if (p.stock <= 0)
+                     badgeStock = `<span class="badge bg-danger ms-2">Sin stock</span>`;
+
+                 tr.innerHTML = `
+                     <td class="text-start">${p.nombre} ${badgeStock}</td>
+                     <td>Q${p.precio.toFixed(2)}</td>
+                     <td>
+                         <div class="input-group input-group-sm justify-content-center">
+                             <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, -1)">-</button>
+                             <input type="number" min="1" max="${p.stock}" class="form-control text-center" style="max-width:60px;"
+                                 value="${p.cantidad}" onchange="actualizarCantidad(${i}, this.value)">
+                             <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, 1)">+</button>
+                         </div>
+                     </td>
+                     <td><input type="number" class="form-control form-control-sm text-center" min="0" max="100"
+                         value="${p.descuento}" onchange="actualizarDescuento(${i}, this.value)"></td>
+                     <td>Q${subtotal.toFixed(2)}</td>
+                     <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
+                         <i class="bi bi-trash"></i></button></td>
+                 `;
+                 tablaBody.appendChild(tr);
+             });
+             recalcularTotales();
+         }
+
+          function cambiarCantidad(i, d) {
+             const p = productosSeleccionados[i];
+             const nuevaCantidad = p.cantidad + d;
+             if (nuevaCantidad > p.stock) {
+                 mostrarMensaje(`⚠️ No puedes superar el stock disponible (${p.stock}).`, "warning");
+                 return;
+             }
+             p.cantidad = Math.max(1, nuevaCantidad);
+             renderTabla();
+         }
+
+          function actualizarCantidad(i, v) {
+             const p = productosSeleccionados[i];
+             const val = parseInt(v);
+             if (val > p.stock) {
+                 mostrarMensaje(`⚠️ Stock máximo: ${p.stock}`, "warning");
+                 renderTabla();
+                 return;
+             }
+             p.cantidad = Math.max(1, val);
+             renderTabla();
+         }
+
+           function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
+           function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "info"); }
+
+
+          function recalcularTotales() {
+             let subtotal = 0;
+             productosSeleccionados.forEach(p => subtotal += p.precio * p.cantidad * (1 - p.descuento / 100));
+             document.querySelector("#subtotal").value = subtotal.toFixed(2);
+             document.querySelector("#iva").value = (subtotal * 0.12).toFixed(2);
+             document.querySelector("#total").value = (subtotal * 1.12).toFixed(2);
+         }
 
         // BUSCAR CLIENTE POR NIT
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
@@ -449,13 +594,55 @@
             if (el) el.classList.remove("d-none");
         });
 
+
         btnCobrar.addEventListener("click", () => {
+        // 1) Validar que hay productos
+        if (!productosSeleccionados.length) {
+            mostrarMensaje("No hay productos en la venta. Agrega al menos uno antes de cobrar.", "warning");
+            // opcional: llevar scroll a la tabla para que el usuario la vea
+            const tabla = document.getElementById("tablaProductos");
+            if (tabla) tabla.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+
+        // 2) Validar NIT/CF
+        const opcionNit = document.getElementById("opcionNit");
+        const opcionCF = document.getElementById("opcionCF");
+        const nitInput = document.getElementById("nitCliente");
+
+        if (opcionNit?.checked) {
+            const nit = nitInput?.value.trim();
+            if (!nit) {
+                mostrarMensaje("Por favor ingresa un NIT antes de continuar con el cobro.", "warning");
+                nitInput?.focus();
+                return;
+            }
+
+            // 3) Validar que el NIT fue efectivamente verificado/seleccionado
+            if (clienteSeleccionado == null) {
+                mostrarMensaje("Debes buscar a el cliente ('Buscar Cliente') antes de cobrar.", "warning");
+                // sugerencia visual: abrir el panel de búsqueda (enfocar el input)
+                nitInput?.focus();
+                return;
+            }
+        }
+
             const total = parseFloat(totalInput.value || 0);
             totalCobro.textContent = `Q${total.toFixed(2)}`;
             metodoPago.value = "efectivo";
             seccionesPago.forEach(div => div.classList.add("d-none"));
             const el = document.querySelector("#pagoEfectivo");
             if (el) el.classList.remove("d-none");
+
+            // limpiar montos cada vez que se abre el modal (evita valores residuales)
+            setValueIfExists("#montoRecibido", "");
+            setValueIfExists("#cambio", "");
+            setValueIfExists("#montoTarjeta", "");
+            setValueIfExists("#montoTransferencia", "");
+            setValueIfExists("#montoMixtoEfectivo", "");
+            setValueIfExists("#montoMixtoTarjeta", "");
+            setValueIfExists("#montoMixtoTransferencia", "");
+
             new bootstrap.Modal(document.getElementById("modalCobro")).show();
         });
 
@@ -467,20 +654,19 @@
         });
 
         // Confirmar cobro -> enviar venta
+                // Confirmar cobro -> enviar venta
         document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
             try {
-                const total = parseFloat(totalInput.value || 0);
+                const total = parseFloat(document.querySelector("#total").value || 0);
                 const subtotal = parseFloat(document.querySelector("#subtotal").value || 0);
                 const iva = parseFloat(document.querySelector("#iva").value || 0);
-                const metodo = metodoPago.value || "efectivo";
+                const metodo = document.getElementById("metodoPago").value || "efectivo";
 
-                // Validaciones
                 if (!productosSeleccionados.length) {
                     mostrarMensaje("No hay productos en la venta.", "warning");
                     return;
                 }
 
-                // Recalcula por seguridad (confianza en valores mostrados)
                 const detalles = productosSeleccionados.map(p => {
                     const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
                     return {
@@ -492,57 +678,134 @@
                     };
                 });
 
-                // Construir payload (envío redundante de IdCliente / idCliente)
                 const payload = {
                     IdCliente: clienteSeleccionado ?? null,
-                    idCliente: clienteSeleccionado ?? null,
                     MetodoPago: metodo,
                     Estado: "Completada",
-                    Subtotal: Number(subtotal.toFixed(2)),
-                    IVA: Number(iva.toFixed(2)),
-                    Total: Number(total.toFixed(2)),
+                    Subtotal: subtotal,
+                    IVA: iva,
+                    Total: total,
                     Detalles: detalles
                 };
 
-                console.log("Payload a enviar a /Ventas/GuardarVenta:", payload, "clienteSeleccionado:", clienteSeleccionado, typeof clienteSeleccionado);
-
-                // Enviar al backend
                 const res = await fetch("/Ventas/GuardarVenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                // leer respuesta de forma robusta
                 let data;
-                try { data = await res.json(); } catch (e) { data = { message: await res.text() }; }
+                try { data = await res.json(); } catch { data = { message: await res.text() }; }
 
-                console.log("Respuesta GuardarVenta:", res.status, data);
+                if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
 
-                if (!res.ok) {
-                    throw new Error(data.message || "Error al guardar la venta.");
+                mostrarMensaje(`✅ ${data.message || "Venta registrada correctamente."}`, "success");
+
+
+                 // Ocultar el cuadro de datos del cliente (ya no corresponde mostrar info del cliente anterior)
+                document.getElementById("datosCliente")?.classList.add("d-none");
+                document.getElementById("formNuevoCliente")?.classList.add("d-none");
+
+                 // Mostrar la sección finalizada (descarga) y ocultar la parte activa del modal
+                document.querySelector("#contenidoVentaActiva")?.classList.add("d-none");
+                document.querySelector("#contenidoVentaFinalizada")?.classList.remove("d-none");
+
+                // Asegurar que el botón confirmar queda desactivado y oculto
+                const btnConfirmar = document.getElementById("btnConfirmarCobro");
+                if (btnConfirmar) {
+                    btnConfirmar.disabled = true;
+                    btnConfirmar.classList.add("d-none");
                 }
 
-                mostrarMensaje(`✅ ${data.message || "Venta guardada correctamente."}`, "success");
+
+                // Vaciar productos y refrescar tabla
                 productosSeleccionados = [];
                 renderTabla();
 
-                const modalEl = document.getElementById("modalCobro");
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) modalInstance.hide();
 
-                mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
+                 limpiarCamposDespuesVenta();
+
+                        // Preparar el botón de descarga y hacerlo visible
+        const idVenta = data.idVenta;
+        const btnDescargar = document.getElementById("btnDescargarFactura");
+        if (btnDescargar) {
+            btnDescargar.classList.remove("d-none");
+            btnDescargar.onclick = () => {
+                if (idVenta) {
+                    // abre la ruta de descarga en la misma ventana
+                    window.location.href = `/Ventas/DescargarFactura/${idVenta}`;
+                } else {
+                    mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
+                }
+            };
+            // llevar foco y hacer scroll al apartado de descarga dentro del modal
+            btnDescargar.focus();
+            setTimeout(() => {
+                btnDescargar.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 120);
+        }
+
             } catch (err) {
                 console.error("Error guardando venta:", err);
                 mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
             }
         });
 
-        btnCancelar.addEventListener("click", () => {
-            productosSeleccionados = [];
-            renderTabla();
-            mostrarMensaje("Venta cancelada correctamente.", "info");
-        });
+                    function limpiarCamposDespuesVenta() {
+            // Limpiar cliente (estado)
+            clienteSeleccionado = null;
+            const nitInput = document.querySelector("#nitCliente");
+            if (nitInput) nitInput.value = "";
+
+            // Limpiar campos de etiqueta del cliente por si quedaron visibles en otro lugar
+            const nombreSpan = document.querySelector("#nombreCliente");
+            const correoSpan = document.querySelector("#correoCliente");
+            const direccionSpan = document.querySelector("#direccionCliente");
+            if (nombreSpan) nombreSpan.innerText = "";
+            if (correoSpan) correoSpan.innerText = "";
+            if (direccionSpan) direccionSpan.innerText = "";
+
+            // Reset totales (aunque la vista finalizada muestra info guardada, dejar inputs listos)
+            const subtotalEl = document.querySelector("#subtotal");
+            const ivaEl = document.querySelector("#iva");
+            const totalEl = document.querySelector("#total");
+            if (subtotalEl) subtotalEl.value = "0.00";
+            if (ivaEl) ivaEl.value = "0.00";
+            if (totalEl) totalEl.value = "0.00";
+
+            // Limpiar búsqueda de producto
+            const busquedaInput = document.querySelector("#busqueda");
+            if (busquedaInput) busquedaInput.value = "";
+
+            // eliminar alertaStock si quedó
+            document.querySelector("#alertaStock")?.remove();
+
+            // ---- NUEVO: limpiar los campos del modal de pago ----
+            const montoRecibido = document.querySelector("#montoRecibido");
+            const cambio = document.querySelector("#cambio");
+            const montoTarjeta = document.querySelector("#montoTarjeta");
+            const montoTransferencia = document.querySelector("#montoTransferencia");
+            const montoMixtoE = document.querySelector("#montoMixtoEfectivo");
+            const montoMixtoT = document.querySelector("#montoMixtoTarjeta");
+            const montoMixtoTr = document.querySelector("#montoMixtoTransferencia");
+
+            if (montoRecibido) montoRecibido.value = "";
+            if (cambio) cambio.value = "";
+            if (montoTarjeta) montoTarjeta.value = "";
+            if (montoTransferencia) montoTransferencia.value = "";
+            if (montoMixtoE) montoMixtoE.value = "";
+            if (montoMixtoT) montoMixtoT.value = "";
+            if (montoMixtoTr) montoMixtoTr.value = "";
+        }
+
+
+
+
+         btnCancelar.addEventListener("click", () => {
+             productosSeleccionados = [];
+             renderTabla();
+             mostrarMensaje("Venta cancelada correctamente.", "info");
+         });
 
         function cambiarCantidad(i, d) { productosSeleccionados[i].cantidad = Math.max(1, productosSeleccionados[i].cantidad + d); renderTabla(); }
         function actualizarCantidad(i, v) { productosSeleccionados[i].cantidad = Math.max(1, parseInt(v)); renderTabla(); }
@@ -580,6 +843,97 @@
                 console.log("CF seleccionado. clienteSeleccionado set to null");
             }
         });
+
+
+
+
+
+
+        //Reseteo de datos en la vista
+                    function limpiarFormularioVenta() {
+            // Vaciar productos y refrescar tabla
+            productosSeleccionados = [];
+            renderTabla();
+
+            // Limpiar estado de cliente
+            clienteSeleccionado = null;
+
+            // Limpiar inputs principales
+            const nitInput = document.querySelector("#nitCliente");
+            if (nitInput) nitInput.value = "";
+
+            const busquedaInput = document.querySelector("#busqueda");
+            if (busquedaInput) busquedaInput.value = "";
+
+            // Ocultar cuadro y formulario de cliente (si estaban visibles)
+            document.getElementById("datosCliente")?.classList.add("d-none");
+            document.getElementById("formNuevoCliente")?.classList.add("d-none");
+
+            // Limpiar spans/labels de cliente
+            const nombreSpan = document.querySelector("#nombreCliente");
+            const correoSpan = document.querySelector("#correoCliente");
+            const direccionSpan = document.querySelector("#direccionCliente");
+            if (nombreSpan) nombreSpan.innerText = "";
+            if (correoSpan) correoSpan.innerText = "";
+            if (direccionSpan) direccionSpan.innerText = "";
+
+            // Reset totales
+            const subtotalEl = document.querySelector("#subtotal");
+            const ivaEl = document.querySelector("#iva");
+            const totalEl = document.querySelector("#total");
+            if (subtotalEl) subtotalEl.value = "0.00";
+            if (ivaEl) ivaEl.value = "0.00";
+            if (totalEl) totalEl.value = "0.00";
+
+            // Reset modal: dejar contenido activo visible (pero no forzar ocultación de "finalizada" si la quieres mostrar)
+            // En caso de querer forzar volver al estado inicial completo:
+            document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
+            document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
+
+            // Restaurar método de pago inicial
+            const metodoPago = document.querySelector("#metodoPago");
+            if (metodoPago) {
+                metodoPago.value = "efectivo";
+                document.querySelectorAll(".metodoPago").forEach(div => div.classList.add("d-none"));
+                document.querySelector("#pagoEfectivo")?.classList.remove("d-none");
+            }
+
+            // Limpiar montos del modal
+            ["#montoRecibido", "#cambio", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) el.value = "";
+            });
+
+            // Restaurar botón confirmar
+            const btnConfirmar = document.getElementById("btnConfirmarCobro");
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove("d-none");
+            }
+
+            // Ocultar y limpiar botón descargar (no lo removemos si quieres mantener la sección finalizada visible,
+            // pero normalmente es mejor ocultarlo hasta que haya una nueva venta)
+            const btnDescargar = document.querySelector("#btnDescargarFactura");
+            if (btnDescargar) {
+                btnDescargar.classList.add("d-none");
+                btnDescargar.onclick = null;
+            }
+
+            // Remover alertas temporales
+            document.querySelector("#alertaStock")?.remove();
+            const cont = document.querySelector(".search-container");
+            if (cont) cont.querySelector(".suggestions-box")?.remove();
+        }
+
+        const modalEl = document.getElementById("modalCobro");
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                // limpiar todo cuando el modal se cierre para iniciar nueva venta
+                limpiarFormularioVenta();
+            });
+        }
+
+
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

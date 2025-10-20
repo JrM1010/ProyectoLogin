@@ -64,15 +64,16 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> GuardarVenta([FromBody] Venta venta)
         {
             if (venta == null || venta.Detalles == null || !venta.Detalles.Any())
-                return BadRequest("Datos de venta incompletos.");
+                return BadRequest(new { success = false, message = "Datos de venta incompletos." });
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
-                return Unauthorized("No se pudo identificar el usuario.");
+                return Unauthorized(new { success = false, message = "No se pudo identificar el usuario." });
 
             venta.IdUsuario = int.Parse(userId);
             venta.FechaVenta = FechaLocal.Ahora();
 
+            // Calcular totales
             venta.Subtotal = venta.Detalles.Sum(d => d.Subtotal);
             venta.IVA = venta.Subtotal * 0.12m;
             venta.Total = venta.Subtotal + venta.IVA;
@@ -80,31 +81,72 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                // 🔹 Validar existencia y stock antes de registrar venta
+                foreach (var det in venta.Detalles)
+                {
+                    var inventario = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
+
+                    if (inventario == null)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message = $"El producto con ID {det.IdProducto} no tiene inventario asociado."
+                        });
+                    }
+
+                    if (inventario.StockActual < det.Cantidad)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message = $"Stock insuficiente para el producto '{det.IdProducto}'. " +
+                                      $"Disponible: {inventario.StockActual}, solicitado: {det.Cantidad}."
+                        });
+                    }
+                }
+
+                // 🔹 Registrar venta
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // 🔹 Solo actualiza inventario, NO vuelvas a agregar detalles
+                // 🔹 Descontar stock de cada producto
                 foreach (var det in venta.Detalles)
                 {
-                    var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
-                    if (inventario == null)
-                        throw new Exception($"El producto {det.IdProducto} no tiene inventario.");
+                    var inventario = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
 
-                    inventario.StockActual -= det.Cantidad;
-                    inventario.FechaUltimaActualizacion = DateTime.Now;
+                    if (inventario != null)
+                    {
+                        inventario.StockActual -= det.Cantidad;
+                        inventario.FechaUltimaActualizacion = DateTime.Now;
+                    }
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { success = true, message = "Venta registrada correctamente.", idVenta = venta.IdVenta });
+                return Ok(new
+                {
+                    success = true,
+                    message = "✅ Venta registrada correctamente.",
+                    idVenta = venta.IdVenta
+                });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return BadRequest(new { success = false, message = "Error al guardar venta: " + ex.Message });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "❌ Error al guardar venta: " + ex.Message
+                });
             }
         }
+
 
 
 

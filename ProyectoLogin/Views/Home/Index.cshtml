@@ -11,7 +11,7 @@
             
            @if (User.IsInRole("Administrador"))
             {
-                <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg">
+                <a asp-controller="Productos" asp-action="Index" class="btn btn-dark btn-lg">
                     <i class="bi bi-box-seam"></i> Productos
                 </a>
             }
@@ -32,24 +32,24 @@
             
             @if (User.IsInRole("Administrador"))
             {
-                <a asp-controller="Clientes" asp-action="Index" class="btn btn-success btn-lg">
+                <a asp-controller="Clientes" asp-action="Index" class="btn btn-danger btn-lg">
                     <i class="bi bi-person-lines-fill"></i> Clientes
                 </a>
             }
 
             @if (User.IsInRole("Administrador"))
             {
-                <a asp-controller="Compras" asp-action="Index" class="btn btn-primary btn-lg">
+                <a asp-controller="Compras" asp-action="Index" class="btn btn-info btn-lg">
                     <i class="bi bi-cart4"></i> Compras
                 </a>
             }
 
             @if (User.IsInRole("Administrador") || User.IsInRole("Vendedor"))
             {
-                <a asp-controller="Ventas" asp-action="Index" class="btn btn-primary btn-lg">
+                <a asp-controller="Ventas" asp-action="Index" class="btn btn-warning btn-lg">
                     <i class="bi bi-basket2-fill"></i> Ventas
-
                 </a>
+
             }
 
         </div>
