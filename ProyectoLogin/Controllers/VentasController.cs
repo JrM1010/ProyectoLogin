@@ -256,7 +256,7 @@ namespace ProyectoLogin.Controllers
 
             return Ok(new
             {
-                idCliente = nuevo.IdCliente,
+                IdCliente = nuevo.IdCliente,
                 nuevo.Nit,
                 nuevo.Nombres,
                 nuevo.Apellidos,

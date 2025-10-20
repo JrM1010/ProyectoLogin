@@ -240,11 +240,8 @@
 
         let productosSeleccionados = [];
         let ultimosResultados = [];
-        let clienteSeleccionado = null; // <-- nuevo: guarda id del cliente si se encontró/registró
+        let clienteSeleccionado = null; // guarda id del cliente si se encontró/registró
 
-        // ==========================================
-        // 📢 FUNCIÓN PARA MOSTRAR MENSAJES EN VISTA
-        // ==========================================
         function mostrarMensaje(texto, tipo = "info", duracion = 4000) {
             const div = document.getElementById("mensajeSistema");
             if (!div) return;
@@ -252,15 +249,10 @@
             div.className = "alert mt-2";
             div.classList.add(`alert-${tipo}`);
             div.classList.remove("d-none");
-
-            if (duracion > 0) {
-                setTimeout(() => div.classList.add("d-none"), duracion);
-            }
+            if (duracion > 0) setTimeout(() => div.classList.add("d-none"), duracion);
         }
 
-        // ==========================================
-        // 🔍 BÚSQUEDA DE PRODUCTOS (con Enter)
-        // ==========================================
+        // BUSQUEDA DE PRODUCTOS
         inputBusqueda.addEventListener("keyup", async (e) => {
             const term = e.target.value.trim();
             const contenedor = inputBusqueda.closest(".search-container");
@@ -271,7 +263,7 @@
             }
             const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
             const data = await resp.json();
-            ultimosResultados = data.results;
+            ultimosResultados = data.results || [];
             mostrarSugerencias(ultimosResultados, contenedor);
         });
 
@@ -291,7 +283,6 @@
             const prev = contenedor.querySelector(".suggestions-box");
             if (prev) prev.remove();
             if (!lista.length) return;
-
             const div = document.createElement("div");
             div.classList.add("suggestions-box");
             lista.forEach(p => {
@@ -310,9 +301,6 @@
             }, { once: true });
         }
 
-        // ==========================================
-        // 🧾 GESTIÓN DE PRODUCTOS EN VENTA
-        // ==========================================
         function seleccionarProducto(prod) {
             const existente = productosSeleccionados.find(p => p.id === prod.id);
             if (existente) existente.cantidad++;
@@ -345,13 +333,10 @@
             recalcularTotales();
         }
 
-        // ==========================================
-        // 🔍 CLIENTE: BUSCAR / REGISTRAR / CF
-        // ==========================================
+        // BUSCAR CLIENTE POR NIT
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
             const nit = document.getElementById("nitCliente").value.trim();
             const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
-
             if (!nit) {
                 mostrarMensaje("Por favor ingrese un NIT antes de buscar.", "warning");
                 return;
@@ -360,21 +345,32 @@
             const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
             const data = await res.json();
 
-            if (data.encontrado) {
-                // intentar asignar un id del cliente a clienteSeleccionado con tolerancia a nombres de propiedad
-                clienteSeleccionado = data.cliente?.id || data.cliente?.Id || data.cliente?.IdCliente || data.cliente?.clienteId || null;
+            console.log("Respuesta BuscarClientePorNit:", data);
 
-                document.getElementById("nombreCliente").innerText = `${data.cliente.nombres} ${data.cliente.apellidos}`;
-                document.getElementById("correoCliente").innerText = data.cliente.correo;
-                document.getElementById("direccionCliente").innerText = data.cliente.direccion;
+            if (data.encontrado) {
+                // tolerancia a múltiples nombres de propiedad que el servidor pueda devolver
+                clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.cliente?.id ?? data?.cliente?.Id ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
+
+                // mostrar datos con tolerancia a nombres
+                const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
+                const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
+                const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
+                const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
+
+                document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
+                document.getElementById("correoCliente").innerText = correo;
+                document.getElementById("direccionCliente").innerText = direccion;
                 document.getElementById("datosCliente").classList.remove("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
                 mostrarMensaje("Cliente encontrado correctamente.", "success");
+
+                console.log("clienteSeleccionado asignado:", clienteSeleccionado);
             } else {
                 clienteSeleccionado = null;
                 document.getElementById("formNuevoCliente").classList.remove("d-none");
                 document.getElementById("datosCliente").classList.add("d-none");
                 mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
+                console.log("Cliente no encontrado. clienteSeleccionado=", clienteSeleccionado);
             }
         });
 
@@ -394,6 +390,7 @@
             }
         });
 
+        // REGISTRAR CLIENTE RAPIDO
         document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
             const nuevo = {
                 nit: document.getElementById("nitCliente").value.trim(),
@@ -410,26 +407,36 @@
                 body: JSON.stringify(nuevo)
             });
 
+            console.log("Respuesta RegistrarClienteRapido (raw):", res);
+
             if (res.ok) {
                 const data = await res.json();
-                // asignar id del cliente si viene
-                clienteSeleccionado = data?.id || data?.Id || data?.IdCliente || data?.clienteId || null;
+                console.log("RegistrarClienteRapido -> data:", data);
 
-                mostrarMensaje("Cliente registrado correctamente.", "success");
-                document.getElementById("nombreCliente").innerText = `${data.nombres || data.nombresCliente || ''} ${data.apellidos || ''}`.trim();
-                document.getElementById("correoCliente").innerText = data.correo || '';
-                document.getElementById("direccionCliente").innerText = data.direccion || '';
+                clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
+
+                // mostrar datos
+                const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
+                const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
+                const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
+                const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
+
+                document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
+                document.getElementById("correoCliente").innerText = correo;
+                document.getElementById("direccionCliente").innerText = direccion;
                 document.getElementById("datosCliente").classList.remove("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
+
+                mostrarMensaje("Cliente registrado correctamente.", "success");
+                console.log("clienteSeleccionado (post-registro):", clienteSeleccionado);
             } else {
                 const err = await res.text();
                 mostrarMensaje("Error al registrar cliente: " + err, "danger", 0);
+                console.error("Error RegistrarClienteRapido:", err);
             }
         });
 
-        // ==========================================
-        // 💰 PROCESO DE PAGO Y COBRO
-        // ==========================================
+        // PROCESO DE PAGO Y COBRO
         const metodoPago = document.getElementById("metodoPago");
         const seccionesPago = document.querySelectorAll(".metodoPago");
         const totalInput = document.querySelector("#total");
@@ -438,94 +445,84 @@
         metodoPago.addEventListener("change", () => {
             seccionesPago.forEach(div => div.classList.add("d-none"));
             const id = `#pago${metodoPago.value.charAt(0).toUpperCase() + metodoPago.value.slice(1)}`;
-            document.querySelector(id).classList.remove("d-none");
+            const el = document.querySelector(id);
+            if (el) el.classList.remove("d-none");
         });
 
         btnCobrar.addEventListener("click", () => {
-            const total = parseFloat(totalInput.value);
+            const total = parseFloat(totalInput.value || 0);
             totalCobro.textContent = `Q${total.toFixed(2)}`;
             metodoPago.value = "efectivo";
             seccionesPago.forEach(div => div.classList.add("d-none"));
-            document.querySelector("#pagoEfectivo").classList.remove("d-none");
+            const el = document.querySelector("#pagoEfectivo");
+            if (el) el.classList.remove("d-none");
             new bootstrap.Modal(document.getElementById("modalCobro")).show();
         });
 
-        document.querySelector("#montoRecibido").addEventListener("input", () => {
-            const total = parseFloat(totalInput.value);
-            const recibido = parseFloat(document.querySelector("#montoRecibido").value);
+        document.querySelector("#montoRecibido")?.addEventListener("input", () => {
+            const total = parseFloat(totalInput.value || 0);
+            const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
             const cambio = recibido - total;
             document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
         });
 
-
-
-
-        // ---------- HANDLER MODIFICADO: ahora hace POST al backend ----------
-           document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
+        // Confirmar cobro -> enviar venta
+        document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
             try {
-                const total = parseFloat(totalInput.value);
-                const metodo = metodoPago.value;
-                let pagado = 0;
+                const total = parseFloat(totalInput.value || 0);
+                const subtotal = parseFloat(document.querySelector("#subtotal").value || 0);
+                const iva = parseFloat(document.querySelector("#iva").value || 0);
+                const metodo = metodoPago.value || "efectivo";
 
-                switch (metodo) {
-                    case "efectivo":
-                        pagado = parseFloat(document.getElementById("montoRecibido").value) || 0;
-                        break;
-                    case "tarjeta":
-                        pagado = parseFloat(document.getElementById("montoTarjeta").value) || 0;
-                        break;
-                    case "transferencia":
-                        pagado = parseFloat(document.getElementById("montoTransferencia").value) || 0;
-                        break;
-                    case "mixto":
-                        const ef = parseFloat(document.getElementById("montoMixtoEfectivo").value) || 0;
-                        const ta = parseFloat(document.getElementById("montoMixtoTarjeta").value) || 0;
-                        const tr = parseFloat(document.getElementById("montoMixtoTransferencia").value) || 0;
-                        pagado = ef + ta + tr;
-                        break;
-                }
-
-                if (pagado < total) {
-                    mostrarMensaje("El monto total pagado es insuficiente.", "danger");
-                    return;
-                }
-
+                // Validaciones
                 if (!productosSeleccionados.length) {
                     mostrarMensaje("No hay productos en la venta.", "warning");
                     return;
                 }
 
-                // 📦 Construir payload
+                // Recalcula por seguridad (confianza en valores mostrados)
+                const detalles = productosSeleccionados.map(p => {
+                    const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
+                    return {
+                        IdProducto: Number(p.id),
+                        Cantidad: Number(p.cantidad),
+                        PrecioUnitario: Number(p.precio),
+                        Descuento: Number(p.descuento || 0),
+                        Subtotal: sub
+                    };
+                });
+
+                // Construir payload (envío redundante de IdCliente / idCliente)
                 const payload = {
-                    IdCliente: clienteSeleccionado || null,
-                    MetodoPago: metodo || "efectivo",
+                    IdCliente: clienteSeleccionado ?? null,
+                    idCliente: clienteSeleccionado ?? null,
+                    MetodoPago: metodo,
                     Estado: "Completada",
-                    Detalles: productosSeleccionados.map(p => {
-                        const subtotal = parseFloat(
-                            (p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2)
-                        );
-                        return {
-                            IdProducto: Number(p.id),
-                            Cantidad: Number(p.cantidad),
-                            PrecioUnitario: Number(p.precio),
-                            Descuento: Number(p.descuento || 0),
-                            Subtotal: subtotal
-                        };
-                    })
+                    Subtotal: Number(subtotal.toFixed(2)),
+                    IVA: Number(iva.toFixed(2)),
+                    Total: Number(total.toFixed(2)),
+                    Detalles: detalles
                 };
 
-                // 💾 Enviar al backend
+                console.log("Payload a enviar a /Ventas/GuardarVenta:", payload, "clienteSeleccionado:", clienteSeleccionado, typeof clienteSeleccionado);
+
+                // Enviar al backend
                 const res = await fetch("/Ventas/GuardarVenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
 
-                const data = await res.json();
+                // leer respuesta de forma robusta
+                let data;
+                try { data = await res.json(); } catch (e) { data = { message: await res.text() }; }
 
-                if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
+                console.log("Respuesta GuardarVenta:", res.status, data);
 
-                // ✅ Éxito
+                if (!res.ok) {
+                    throw new Error(data.message || "Error al guardar la venta.");
+                }
+
                 mostrarMensaje(`✅ ${data.message || "Venta guardada correctamente."}`, "success");
                 productosSeleccionados = [];
                 renderTabla();
@@ -535,19 +532,12 @@
                 if (modalInstance) modalInstance.hide();
 
                 mostrarMensaje("Factura generada correctamente. Puede imprimir el recibo.", "info");
-
             } catch (err) {
                 console.error("Error guardando venta:", err);
                 mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
             }
         });
 
-
-
-
-        // ==========================================
-        // ⚡ ACCIONES RÁPIDAS
-        // ==========================================
         btnCancelar.addEventListener("click", () => {
             productosSeleccionados = [];
             renderTabla();
@@ -567,15 +557,13 @@
             document.querySelector("#total").value = (subtotal * 1.12).toFixed(2);
         }
 
-        // ==========================================
-        // 🧭 SELECCIÓN DEL TIPO DE CLIENTE (NIT / CF)
-        // ==========================================
+        // SELECCION TIPO CLIENTE (NIT / CF)
         const opcionNit = document.getElementById("opcionNit");
         const opcionCF = document.getElementById("opcionCF");
         const seccionNit = document.getElementById("seccionNit");
         const seccionCF = document.getElementById("seccionCF");
 
-        opcionNit.addEventListener("change", () => {
+        opcionNit?.addEventListener("change", () => {
             if (opcionNit.checked) {
                 seccionNit.classList.remove("d-none");
                 seccionCF.classList.add("d-none");
@@ -583,10 +571,13 @@
             }
         });
 
-        opcionCF.addEventListener("change", () => {
+        opcionCF?.addEventListener("change", () => {
             if (opcionCF.checked) {
                 seccionCF.classList.remove("d-none");
                 seccionNit.classList.add("d-none");
+                // consumidor final -> aseguramos que no se envíe id de cliente
+                clienteSeleccionado = null;
+                console.log("CF seleccionado. clienteSeleccionado set to null");
             }
         });
     </script>
