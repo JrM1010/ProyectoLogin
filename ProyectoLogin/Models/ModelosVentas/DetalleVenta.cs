@@ -18,7 +18,7 @@ namespace ProyectoLogin.Models.ModelosVentas
         public decimal PrecioUnitario { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Descuento { get; set; } // porcentaje o monto
+        public decimal Descuento { get; set; } // porcentaje
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Subtotal { get; set; }

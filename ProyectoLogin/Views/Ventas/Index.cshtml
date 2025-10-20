@@ -91,8 +91,6 @@
                     </div>
 
 
-                    <hr />
-
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Subtotal</label>
                         <input type="text" id="subtotal" class="form-control form-control-sm text-end" value="0.00" readonly />
@@ -595,35 +593,80 @@
         });
 
 
-        btnCobrar.addEventListener("click", () => {
+            btnCobrar.addEventListener("click", async () => {
         // 1) Validar que hay productos
         if (!productosSeleccionados.length) {
             mostrarMensaje("No hay productos en la venta. Agrega al menos uno antes de cobrar.", "warning");
-            // opcional: llevar scroll a la tabla para que el usuario la vea
             const tabla = document.getElementById("tablaProductos");
             if (tabla) tabla.scrollIntoView({ behavior: "smooth", block: "center" });
             return;
         }
 
-        // 2) Validar NIT/CF
+        // referencias
         const opcionNit = document.getElementById("opcionNit");
-        const opcionCF = document.getElementById("opcionCF");
         const nitInput = document.getElementById("nitCliente");
 
+        // helper: intenta buscar cliente por nit usando el endpoint ya existente
+        async function buscarClientePorNitAuto(nitRaw) {
+            try {
+                const nitLimpio = (nitRaw || "").replace(/[^0-9a-zA-Z]/g, "");
+                const resp = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
+                if (!resp.ok) {
+                    // si el endpoint devuelve 4xx/5xx, tratamos como "no encontrado"
+                    return { encontrado: false };
+                }
+                const data = await resp.json();
+                return data || { encontrado: false };
+            } catch (err) {
+                console.error("Error en buscarClientePorNitAuto:", err);
+                return { encontrado: false };
+            }
+        }
+
+        // 2) Validar NIT/CF: si está NIT, asegurarnos de que exista el nit y esté verificado
         if (opcionNit?.checked) {
             const nit = nitInput?.value.trim();
+
+            // 2.a) Si no hay nit escrito, avisar y detener
             if (!nit) {
                 mostrarMensaje("Por favor ingresa un NIT antes de continuar con el cobro.", "warning");
                 nitInput?.focus();
                 return;
             }
 
-            // 3) Validar que el NIT fue efectivamente verificado/seleccionado
+            // 2.b) Si hay nit escrito pero clienteSeleccionado es null -> intentar buscar automáticamente
             if (clienteSeleccionado == null) {
-                mostrarMensaje("Debes buscar a el cliente ('Buscar Cliente') antes de cobrar.", "warning");
-                // sugerencia visual: abrir el panel de búsqueda (enfocar el input)
-                nitInput?.focus();
-                return;
+                mostrarMensaje("Buscando cliente por NIT...", "info", 1500);
+                const resultado = await buscarClientePorNitAuto(nit);
+
+                if (resultado.encontrado) {
+                    // Toleramos distintos nombres de propiedad devueltos por el backend
+                    const cli = resultado.cliente ?? resultado;
+                    clienteSeleccionado = cli?.idCliente ?? cli?.IdCliente ?? cli?.id ?? cli?.Id ?? resultado?.idCliente ?? resultado?.IdCliente ?? null;
+
+                    // mostrar datos en UI si vienen
+                    const nombres = cli?.nombres ?? cli?.Nombres ?? resultado?.nombres ?? "";
+                    const apellidos = cli?.apellidos ?? cli?.Apellidos ?? resultado?.apellidos ?? "";
+                    const correo = cli?.correo ?? cli?.Correo ?? resultado?.correo ?? "";
+                    const direccion = cli?.direccion ?? cli?.Direccion ?? resultado?.direccion ?? "";
+
+                    if (document.getElementById("nombreCliente")) document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
+                    if (document.getElementById("correoCliente")) document.getElementById("correoCliente").innerText = correo;
+                    if (document.getElementById("direccionCliente")) document.getElementById("direccionCliente").innerText = direccion;
+                    document.getElementById("datosCliente")?.classList.remove("d-none");
+                    document.getElementById("formNuevoCliente")?.classList.add("d-none");
+
+                    mostrarMensaje("Cliente encontrado automáticamente.", "success", 2000);
+                    // continúa el flujo: clienteSeleccionado ahora tiene valor
+                } else {
+                    // No se encontró cliente: avisar y detener, el usuario puede registrar o corregir
+                    mostrarMensaje("No se encontró un cliente con ese NIT. Registra el cliente o corrige el NIT.", "warning");
+                    // mostrar formulario de registro para que el usuario pueda crearlo rápidamente
+                    document.getElementById("formNuevoCliente")?.classList.remove("d-none");
+                    document.getElementById("datosCliente")?.classList.add("d-none");
+                    nitInput?.focus();
+                    return;
+                }
             }
         }
 

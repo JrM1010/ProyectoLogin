@@ -10,7 +10,7 @@ namespace ProyectoLogin.Models.ModelosVentas
         public int IdVenta { get; set; }
 
         public int? IdCliente { get; set; }
-        public int IdUsuario { get; set; }  // Vendedor o Administrador que realiza la venta
+        public int IdUsuario { get; set; }  
 
         public DateTime FechaVenta { get; set; } = FechaLocal.Ahora();
 

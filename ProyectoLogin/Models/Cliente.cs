@@ -10,7 +10,7 @@ namespace ProyectoLogin.Models
         [Required]
         [StringLength(12)]
         [Display(Name = "Nit")]
-        public string? Nit { get; set; }  // Numero de Identificación Tributaria
+        public string? Nit { get; set; }  
 
         [Required]
         [StringLength(100)]
@@ -31,7 +31,7 @@ namespace ProyectoLogin.Models
         [StringLength(250)]
         public string? Direccion { get; set; }
 
-        public bool Activo { get; set; } = true; // soft-delete por defecto true
+        public bool Activo { get; set; } = true; 
 
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
     }
