@@ -2,6 +2,7 @@
 using ProyectoLogin.Models.ModelosCompras;
 using ProyectoLogin.Models.ModelosProducts;
 using ProyectoLogin.Models.ModelosVentas;
+using ProyectoLogin.Models.Promociones;
 using ProyectoLogin.Models.UnidadesDeMedida;
 using ProyectoLogin.Recursos;
 using System;
@@ -50,6 +51,11 @@ public partial class DbPruebaContext : DbContext
     public DbSet<ProductoUnidad> ProductosUnidades { get; set; }
 
 
+    //Promociones de Productos (kits)
+    public DbSet<Kit> Kits { get; set; }
+    public DbSet<KitDetalle> KitDetalles { get; set; }
+
+
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,23 +96,9 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(r => r.IdUsuario);
         });
 
-        // ------------------ PROVEEDOR ------------------
-        modelBuilder.Entity<Proveedor>(entity =>
-        {
-            entity.HasKey(e => e.IdProveedor);
-            entity.ToTable("Proveedor");
+    
 
-            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false);
-            entity.Property(e => e.Contacto).HasMaxLength(100).IsUnicode(false).IsRequired(false);
-            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false).IsRequired(false);
-            entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false).IsRequired(false);
-            entity.Property(p => p.Activo).HasDefaultValue(true);
-        });
 
-        // ------------------ CLIENTE ------------------
-        modelBuilder.Entity<Cliente>()
-            .HasIndex(c => c.Nit)
-            .IsUnique(false);
 
         // ------------------ PRODUCTOS ------------------
         modelBuilder.Entity<ProductoCore>(entity =>
@@ -136,6 +128,21 @@ public partial class DbPruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(p => p.IdMarca)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        //----------------- PRODUCTO PROVEEDOR -----------------
+        modelBuilder.Entity<ProductoProveedor>(entity =>
+        {
+            entity.HasKey(e => e.IdProductoProveedor);
+            entity.ToTable("ProductoProveedor");
+
+            entity.HasOne(e => e.Producto)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdProducto);
+
+            entity.HasOne(e => e.Proveedor)
+                  .WithMany()
+                  .HasForeignKey(e => e.IdProveedor);
         });
 
         // ------------------ CATEGORIA ------------------
@@ -224,9 +231,25 @@ public partial class DbPruebaContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        
+        // ------------------ PROVEEDOR ------------------
+        modelBuilder.Entity<Proveedor>(entity =>
+        {
+            entity.HasKey(e => e.IdProveedor);
+            entity.ToTable("Proveedor");
 
-        
+            entity.Property(e => e.Nombre).HasMaxLength(200).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Contacto).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Telefono).HasMaxLength(20).IsUnicode(false).IsRequired(false);
+            entity.Property(e => e.Email).HasMaxLength(100).IsUnicode(false).IsRequired(false);
+            entity.Property(p => p.Activo).HasDefaultValue(true);
+        });
+
+        // ------------------ CLIENTE ------------------
+        modelBuilder.Entity<Cliente>()
+            .HasIndex(c => c.Nit)
+            .IsUnique(false);
+
+
 
         // ------------------ PRODUCTO PRECIO ------------------
         modelBuilder.Entity<ProductoPrecio>(entity =>
@@ -310,22 +333,6 @@ public partial class DbPruebaContext : DbContext
 
 
 
-
-        //----------------- PRODUCTO PROVEEDOR -----------------
-        modelBuilder.Entity<ProductoProveedor>(entity =>
-        {
-            entity.HasKey(e => e.IdProductoProveedor);
-            entity.ToTable("ProductoProveedor");
-
-            entity.HasOne(e => e.Producto)
-                  .WithMany()
-                  .HasForeignKey(e => e.IdProducto);
-
-            entity.HasOne(e => e.Proveedor)
-                  .WithMany()
-                  .HasForeignKey(e => e.IdProveedor);
-        });
-
         // ------------------ VENTAS Y DETALLES ------------------
         modelBuilder.Entity<Venta>(entity =>
         {
@@ -360,7 +367,6 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(v => v.IdUsuario)
                   .OnDelete(DeleteBehavior.Restrict);
         });
-
         modelBuilder.Entity<DetalleVenta>(entity =>
         {
             entity.ToTable("DetalleVenta");
@@ -388,6 +394,30 @@ public partial class DbPruebaContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
+
+        // ------------------ KITS DE PRODUCTOS PARA PROMOCIONES ------------------
+        modelBuilder.Entity<Kit>(entity =>
+        {
+            entity.ToTable("Kit");
+            entity.HasKey(k => k.IdKit);
+            entity.Property(k => k.Nombre).IsRequired().HasMaxLength(150);
+            entity.Property(k => k.DescuentoPct).HasPrecision(5, 2);
+            entity.Property(k => k.Total).HasPrecision(10, 2);
+        });
+        modelBuilder.Entity<KitDetalle>(entity =>
+        {
+            entity.ToTable("KitDetalle");
+            entity.HasKey(d => d.IdKitDetalle);
+
+            entity.HasOne(d => d.Kit)
+                  .WithMany(k => k.Detalles)
+                  .HasForeignKey(d => d.IdKit)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                  .WithMany()
+                  .HasForeignKey(d => d.IdProducto);
+        });
 
 
     }
