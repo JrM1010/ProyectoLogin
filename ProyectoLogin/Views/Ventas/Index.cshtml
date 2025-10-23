@@ -2,37 +2,41 @@
     ViewData["Title"] = "Punto de Venta";
 }
 
-<div class="container-fluid mt-3">
+<div class="container-fluid mt-4">
     <div class="row g-3">
 
         <!-- =========================== -->
-        <!-- 🔹 PANEL IZQUIERDO: PRODUCTOS -->
+        <!-- 🧾 PANEL IZQUIERDO: PRODUCTOS -->
         <!-- =========================== -->
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-basket2-fill"></i> Punto de Venta</h5>
-                    <div class="search-container">
-                        <input type="text" id="busqueda" class="form-control form-control-sm"
-                               placeholder="Buscar producto por nombre o código..." autocomplete="off" />
-                    </div>
-
-                    <div class="input-group mb-2">
-                        <input type="text" id="busquedaPromocion" class="form-control" placeholder="Buscar promoción..." />
-                        <button class="btn btn-outline-success" type="button" id="btnBuscarPromocion">
-                            <i class="bi bi-gift"></i> Agregar
-                        </button>
-                    </div>
-
-
+        <div class="col-lg-8 col-md-7">
+            <div class="card shadow border-0">
+                <div class="card-header bg-gradient-primary text-white d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-basket2-fill me-2"></i>Punto de Venta</h5>
                 </div>
 
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm mb-0 align-middle text-center" id="tablaProductos">
+                <div class="card-body pt-3">
+                    <!-- 🔹 Buscadores -->
+                    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                        <div class="search-container flex-grow-1">
+                            <input type="text" id="busqueda" class="form-control form-control-sm"
+                                   placeholder="Buscar producto por nombre o código..." autocomplete="off" />
+                        </div>
+
+                        <div class="input-group input-group-sm flex-grow-1">
+                            <input type="text" id="busquedaPromocion" class="form-control form-control-sm"
+                                   placeholder="Buscar promoción o combo..." />
+                            <button class="btn btn-outline-success" id="btnBuscarPromocion">
+                                <i class="bi bi-gift-fill me-1"></i>Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 🔹 Tabla de productos -->
+                    <div class="table-responsive border rounded">
+                        <table class="table table-hover table-sm align-middle text-center mb-0" id="tablaProductos">
                             <thead class="table-light">
-                                <tr>
-                                    <th style="width: 35%;">Producto</th>
+                                <tr class="text-uppercase small">
+                                    <th style="width: 35%;">Producto / Promoción</th>
                                     <th>Precio</th>
                                     <th>Cantidad</th>
                                     <th>Desc. %</th>
@@ -48,82 +52,99 @@
         </div>
 
         <!-- =========================== -->
-        <!-- 🔹 PANEL DERECHO: ACCIONES Y TOTALES -->
+        <!-- 💳 PANEL DERECHO: CLIENTE + TOTALES -->
         <!-- =========================== -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0">
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow border-0 sticky-top" style="top: 1rem;">
                 <div class="card-body">
-                    <div id="mensajeSistema" class="alert d-none mt-2" role="alert" aria-live="polite"></div>
-                    <h5 class="card-title text-center text-primary fw-bold">Resumen de Venta</h5>
-                    <hr />
+                    <h5 class="card-title text-center text-primary fw-bold mb-3">
+                        <i class="bi bi-person-vcard me-1"></i> Datos del Cliente
+                    </h5>
 
+                    <!-- 🔸 Tipo de cliente -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Seleccionar tipo de cliente</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionNit" value="nit" checked>
-                                <label class="form-check-label" for="opcionNit">Cliente con NIT</label>
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionNit" checked>
+                                <label class="form-check-label" for="opcionNit">Con NIT</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionCF" value="cf">
+                                <input class="form-check-input" type="radio" name="tipoCliente" id="opcionCF">
                                 <label class="form-check-label" for="opcionCF">Consumidor Final (CF)</label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 🔹 SECCIÓN BUSCAR CLIENTE POR NIT -->
-                    <div id="seccionNit">
-                        <label for="nitCliente" class="form-label">NIT del Cliente</label>
-                        <input type="text" id="nitCliente" class="form-control" placeholder="Ej: 1234567-8" />
-                        <button id="btnBuscarCliente" type="button" class="btn btn-primary mt-2">Buscar Cliente</button>
-
-                        <div id="datosCliente" class="border rounded p-3 mt-3 d-none">
-                            <p><strong>Nombre:</strong> <span id="nombreCliente"></span></p>
-                            <p><strong>Correo:</strong> <span id="correoCliente"></span></p>
-                            <p><strong>Dirección:</strong> <span id="direccionCliente"></span></p>
+                    <!-- 🔹 Buscar cliente -->
+                    <div id="seccionNit" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" id="nitCliente" class="form-control form-control-sm"
+                                   placeholder="NIT del cliente..." />
+                            <button id="btnBuscarCliente" class="btn btn-sm btn-primary">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
                         </div>
 
-                        <!-- Formulario rápido de nuevo cliente -->
-                        <div id="formNuevoCliente" class="border rounded p-3 mt-3 d-none">
-                            <h5>Registrar nuevo cliente</h5>
-                            <input type="text" id="nuevoNombre" class="form-control mb-2" placeholder="Nombres" />
-                            <input type="text" id="nuevoApellido" class="form-control mb-2" placeholder="Apellidos" />
-                            <input type="email" id="nuevoCorreo" class="form-control mb-2" placeholder="Correo electrónico" />
-                            <input type="text" id="nuevoDireccion" class="form-control mb-2" placeholder="Dirección" />
-                            <button id="btnGuardarCliente" class="btn btn-success">Guardar Cliente</button>
+                        <!-- Datos del cliente encontrado -->
+                        <div id="datosCliente" class="border rounded p-2 mt-3 bg-light d-none">
+                            <p class="mb-1"><strong>Nombre:</strong> <span id="nombreCliente"></span></p>
+                            <p class="mb-1"><strong>Correo:</strong> <span id="correoCliente"></span></p>
+                            <p class="mb-0"><strong>Dirección:</strong> <span id="direccionCliente"></span></p>
+                        </div>
+
+                        <!-- Registrar nuevo cliente -->
+                        <div id="formNuevoCliente" class="border rounded p-2 mt-3 d-none bg-light">
+                            <h6 class="fw-bold text-secondary">Registrar nuevo cliente</h6>
+                            <input type="text" id="nuevoNombre" class="form-control form-control-sm mb-2" placeholder="Nombres" />
+                            <input type="text" id="nuevoApellido" class="form-control form-control-sm mb-2" placeholder="Apellidos" />
+                            <input type="email" id="nuevoCorreo" class="form-control form-control-sm mb-2" placeholder="Correo" />
+                            <input type="text" id="nuevoDireccion" class="form-control form-control-sm mb-2" placeholder="Dirección" />
+                            <button id="btnGuardarCliente" class="btn btn-success btn-sm w-100">
+                                <i class="bi bi-person-plus"></i> Guardar Cliente
+                            </button>
                         </div>
                     </div>
 
-                    <!-- 🔹 SECCIÓN CONSUMIDOR FINAL -->
-                    <div id="seccionCF" class="border rounded p-3 mt-3 d-none">
-                        <p><strong>Nombre:</strong> <span id="nombreClienteCF">Consumidor Final (CF)</span></p>
+                    <!-- 🔹 Consumidor final -->
+                    <div id="seccionCF" class="border rounded p-2 mt-3 d-none bg-light">
+                        <p class="mb-0"><strong>Nombre:</strong> Consumidor Final (CF)</p>
                     </div>
 
+                    <hr class="my-3">
 
-                    <div class="mb-3">
+                    <!-- 🔸 Totales -->
+                    <h6 class="fw-bold text-center text-primary mb-3">
+                        <i class="bi bi-receipt-cutoff me-1"></i> Resumen de Venta
+                    </h6>
+
+                    <div class="mb-2">
                         <label class="form-label fw-semibold">Subtotal</label>
                         <input type="text" id="subtotal" class="form-control form-control-sm text-end" value="0.00" readonly />
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label class="form-label fw-semibold">IVA (12%)</label>
                         <input type="text" id="iva" class="form-control form-control-sm text-end" value="0.00" readonly />
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Total</label>
-                        <input type="text" id="total" class="form-control form-control-sm text-end fw-bold fs-5 text-success" value="0.00" readonly />
+                        <input type="text" id="total" class="form-control form-control-sm text-end fs-5 fw-bold text-success" value="0.00" readonly />
                     </div>
 
                     <hr />
 
-                    <!-- 🔹 BOTONES DE ACCIÓN RÁPIDA -->
-                    <div class="d-grid gap-2 mt-4">
-                        <button class="btn btn-success" id="btnCobrar"><i class="bi bi-cash-coin"></i> Cobrar / Pagar</button>
-                        <button class="btn btn-outline-danger" id="btnCancelar"><i class="bi bi-x-circle"></i> Cancelar Venta</button>
+                    <!-- 🔸 Botones de acción -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg" id="btnCobrar">
+                            <i class="bi bi-cash-coin me-1"></i> Cobrar / Pagar
+                        </button>
+                        <button class="btn btn-outline-danger" id="btnCancelar">
+                            <i class="bi bi-x-circle me-1"></i> Cancelar Venta
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -211,13 +232,35 @@
 
 
 <!-- =========================== -->
-<!-- 🔸 ESTILOS -->
+<!-- 🔸 ESTILOS SIMPLES -->
 <!-- =========================== -->
 <style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .card {
+        border-radius: 8px;
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    .table th {
+        background-color: #f1f3f5;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
     .search-container {
-        position: relative;
-        display: inline-block;
-        width: 50%;
+        flex-grow: 1;
+        min-width: 200px;
     }
 
     .suggestions-box {
@@ -228,11 +271,9 @@
         background: #fff;
         border: 1px solid #dee2e6;
         border-top: none;
-        z-index: 9999;
+        z-index: 1000;
         max-height: 250px;
         overflow-y: auto;
-        border-radius: 0 0 0.5rem 0.5rem;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
         .suggestions-box button {
@@ -246,6 +287,16 @@
             .suggestions-box button:hover {
                 background: #f8f9fa;
             }
+
+    #subtotal,
+    #iva {
+        background-color: #f8f9fa;
+    }
+
+    #total {
+        background-color: #e9f7ef;
+        font-size: 1.1rem;
+    }
 </style>
 
 
@@ -413,8 +464,7 @@
              renderTabla();
          }
 
-
-                // =============================
+        // =============================
         // 🔍 Buscar y agregar promoción
         // =============================
         document.getElementById("btnBuscarPromocion").addEventListener("click", async () => {
@@ -434,21 +484,29 @@
         });
 
         function agregarPromocionAVenta(promo) {
-            // 🟣 Agregar promoción como una sola línea visualmente
-            productosSeleccionados.push({
-                id: "KIT-" + promo.id,
-                idKit: promo.id,
-                nombre: promo.text + " (Promoción)",
-                cantidad: 1,
-                precio: promo.total,  // 💰 precio total del kit
-                subtotal: promo.total,
-                esKit: true
-            });
+            const existente = productosSeleccionados.find(p => p.idKit === promo.id);
+            if (existente) {
+                existente.cantidad += 1;
+                existente.subtotal = existente.precio * existente.cantidad;
+            } else {
+                productosSeleccionados.push({
+                    idKit: promo.id,
+                    id: null, // no tiene idProducto
+                    nombre: promo.text + " (Promoción)",
+                    cantidad: 1,
+                    precio: parseFloat(promo.total) || 0,
+                    descuento: 0, // compatibilidad con renderTabla
+                    stock: 9999, // no limitado (no se edita en tabla)
+                    subtotal: parseFloat(promo.total) || 0,
+                    esKit: true
+                });
+            }
 
             renderTabla();
             recalcularTotales();
             mostrarMensaje(`✅ Promoción "${promo.text}" añadida a la venta.`, "success");
         }
+
 
 
 
@@ -519,13 +577,26 @@
            function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "info"); }
 
 
-          function recalcularTotales() {
-             let subtotal = 0;
-             productosSeleccionados.forEach(p => subtotal += p.precio * p.cantidad * (1 - p.descuento / 100));
-             document.querySelector("#subtotal").value = subtotal.toFixed(2);
-             document.querySelector("#iva").value = (subtotal * 0.12).toFixed(2);
-             document.querySelector("#total").value = (subtotal * 1.12).toFixed(2);
-         }
+        function recalcularTotales() {
+            let subtotal = 0;
+
+            productosSeleccionados.forEach(p => {
+                const precioConDescuento = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
+                subtotal += precioConDescuento;
+            });
+
+            const iva = subtotal * 0.12;
+            const total = subtotal + iva;
+
+            const subEl = document.querySelector("#subtotal");
+            const ivaEl = document.querySelector("#iva");
+            const totEl = document.querySelector("#total");
+
+            if (subEl) subEl.value = subtotal.toFixed(2);
+            if (ivaEl) ivaEl.value = iva.toFixed(2);
+            if (totEl) totEl.value = total.toFixed(2);
+        }
+
 
         // BUSCAR CLIENTE POR NIT
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
@@ -761,16 +832,18 @@
                     return;
                 }
 
-                const detalles = productosSeleccionados.map(p => {
-                    const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
-                    return {
-                        IdProducto: Number(p.id),
-                        Cantidad: Number(p.cantidad),
-                        PrecioUnitario: Number(p.precio),
-                        Descuento: Number(p.descuento || 0),
-                        Subtotal: sub
-                    };
-                });
+                        const detalles = productosSeleccionados.map(p => {
+            const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
+            return {
+                IdProducto: p.esKit ? null : Number(p.id),
+                IdKit: p.esKit ? p.idKit : null,
+                Cantidad: Number(p.cantidad),
+                PrecioUnitario: Number(p.precio),
+                Descuento: Number(p.descuento || 0),
+                Subtotal: sub
+            };
+        });
+
 
                 const payload = {
                     IdCliente: clienteSeleccionado ?? null,
