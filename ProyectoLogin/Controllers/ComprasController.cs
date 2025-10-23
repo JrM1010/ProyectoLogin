@@ -207,6 +207,11 @@ namespace ProyectoLogin.Controllers
                     descuento = 0.10m;
                 }
 
+                if (productoUnidad?.UnidadMedida?.Nombre?.ToLower() == "paquete")
+                {
+                    descuento = 0.05m; // o el porcentaje que desees
+                }
+
                 det.Descuento = descuento;
 
                 decimal precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuento);

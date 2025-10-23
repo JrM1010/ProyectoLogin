@@ -56,7 +56,7 @@
                         <th>Unidad</th>
                         <th>Cantidad</th>
                         <th>Precio Unitario (Q)</th>
-                        <th>Precio venta (Q)</th> 
+                        <th>Precio venta (Q)</th>
                         <th>Descuento (%)</th>
                         <th>Subtotal (Q)</th>
                         <th></th>
@@ -125,8 +125,7 @@
 
 @section Scripts {
     <script>
-            
-            // 🔹 Evitar decimales en cantidades
+        // 🔹 Evitar decimales en cantidades
         document.addEventListener("input", e => {
             if (e.target.classList.contains("cantidadInput")) {
                 // forzar valor entero
@@ -140,6 +139,10 @@
             const tablaBody = document.getElementById("detallesBody");
             const btnAgregar = document.getElementById("btnAgregar");
             const filaTemplate = document.getElementById("filaTemplate");
+
+            // Detectar si 'Paquete' ya existe en el listado global (insensible a mayúsculas)
+            const paqueteGlobal = unidadesGlobales.find(u => (u.Nombre || "").toString().toLowerCase() === "paquete");
+            const paqueteExists = !!paqueteGlobal;
 
             // 🔹 Agregar fila
             btnAgregar.addEventListener("click", () => {
@@ -176,14 +179,36 @@
                 const unidadSelect = e.target.closest("tr").querySelector(".unidadSelect");
                 unidadSelect.innerHTML = '<option value="">--Seleccione--</option>';
 
-                const unidades = producto?.Unidades?.length ? producto.Unidades : unidadesGlobales;
+                // Elegir unidades específicas del producto si existen, si no usar las globales
+                const unidades = (producto?.Unidades?.length) ? producto.Unidades : unidadesGlobales;
+
                 unidades.forEach(u => {
                     const opt = document.createElement("option");
-                    opt.value = u.IdUnidad;
-                    opt.textContent = `${u.Nombre}${u.FactorConversion ? ` (x${u.FactorConversion})` : ""}`;
-                    opt.dataset.factor = u.FactorConversion || 1;
+                    // Cuando u tenga FactorConversion (productos.Unidades) lo usamos;
+                    // cuando provenga de unidadesGlobales puede tener EquivalenciaEnUnidades
+                    const factor = (u.FactorConversion ?? u.EquivalenciaEnUnidades ?? 1);
+
+                    // Si la unidad viene del servidor con IdUnidad, usamos ese id
+                    if (u.IdUnidad !== undefined && u.IdUnidad !== null) {
+                        opt.value = u.IdUnidad;
+                    } else if (u.IdUnidad === undefined && u.IdUnidad === null) {
+                        // fallback - esto apenas raro, dejamos value vacío para forzar validación
+                        opt.value = "";
+                    }
+
+                    opt.textContent = `${u.Nombre}${factor > 1 ? ` (x${factor})` : ""}`;
+                    opt.dataset.factor = factor;
                     unidadSelect.appendChild(opt);
                 });
+
+                // Si 'Paquete' no está en las unidades globales, añadimos la opción visual (con valor especial)
+                if (!paqueteExists) {
+                    const opt = document.createElement("option");
+                    opt.value = "__PAQUETE_MISSING__"; // valor especial: indica que falta crear la unidad en BD
+                    opt.textContent = `Paquete (x6)`;
+                    opt.dataset.factor = 6;
+                    unidadSelect.appendChild(opt);
+                }
             });
 
             // 🔹 Calcular totales + precio venta
@@ -210,66 +235,70 @@
                 });
             }
 
+            function recalcularTotales() {
+                const margen = 0.25; // 25% ganancia
+                let subtotal = 0;
 
-                    function recalcularTotales() {
-            const margen = 0.25; // 25% ganancia
-            let subtotal = 0;
+                // 🧩 Función auxiliar para formato visual
+                const formatear = valor =>
+                    valor.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            // 🧩 Función auxiliar para formato visual
-            const formatear = valor =>
-                valor.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                tablaBody.querySelectorAll("tr").forEach(fila => {
+                    const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
+                    const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
 
-            tablaBody.querySelectorAll("tr").forEach(fila => {
-                const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
-                const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
+                    // obtener factor desde la opción seleccionada (data-factor)
+                    const unidadOption = fila.querySelector(".unidadSelect")?.selectedOptions[0];
+                    const factor = parseFloat(unidadOption?.dataset.factor) || 1;
 
-                // obtener factor desde la opción seleccionada (data-factor)
-                const unidadOption = fila.querySelector(".unidadSelect")?.selectedOptions[0];
-                const factor = parseFloat(unidadOption?.dataset.factor) || 1;
+                    // detectar si la unidad contiene "caja" (o cualquier regla que uses)
+                    const unidadTexto = unidadOption?.textContent?.toLowerCase() || "";
+                    let descuentoPct = 0;
 
-                // detectar si la unidad contiene "caja" (o cualquier regla que uses)
-                const unidadTexto = unidadOption?.textContent?.toLowerCase() || "";
-                let descuentoPct = 0;
-                if (unidadTexto.includes("caja")) descuentoPct = 10; // 10 %
-
-                // ---- Cálculo correcto aplicando factor ----
-                const precioConDescuento = precio * factor * (1 - (descuentoPct / 100));
-                const subtotalFila = cantidad * precioConDescuento;
-                const precioVenta = precioConDescuento * (1 + margen);
-
-                // ---- escribir en campos ----
-                const display = fila.querySelector(".descuentoDisplay");
-                if (display) display.value = descuentoPct.toFixed(0) + "%";
-
-                const hiddenDesc = fila.querySelector(".descuentoHidden");
-                if (hiddenDesc) hiddenDesc.value = (descuentoPct / 100).toFixed(2);
-
-                // ✅ aplicar formato visual a los campos mostrados
-                const pvInput = fila.querySelector(".precioVentaInput");
-                if (pvInput) pvInput.value = formatear(precioVenta);
-
-                const subInput = fila.querySelector(".subtotalInput");
-                if (subInput) subInput.value = formatear(subtotalFila);
-
-                subtotal += subtotalFila;
-            });
-
-            const iva = subtotal * 0.12;
-            const total = subtotal + iva;
-
-            // ✅ Totales formateados visualmente
-            document.getElementById("subtotal").value = formatear(subtotal);
-            document.getElementById("iva").value = formatear(iva);
-            document.getElementById("total").value = formatear(total);
-        }
+                    if (unidadTexto.includes("caja")) descuentoPct = 10;// 10 % si es caja
+                    if (unidadTexto.includes("paquete")) descuentoPct = 5;// 5 % si es paquete
 
 
-                    // 🔹 Validar antes de enviar
+
+                    // ---- Cálculo correcto aplicando factor ----
+                    const precioConDescuento = precio * factor * (1 - (descuentoPct / 100));
+                    const subtotalFila = cantidad * precioConDescuento;
+                    const precioVenta = precioConDescuento * (1 + margen);
+
+                    // ---- escribir en campos ----
+                    const display = fila.querySelector(".descuentoDisplay");
+                    if (display) display.value = descuentoPct.toFixed(0) + "%";
+
+                    const hiddenDesc = fila.querySelector(".descuentoHidden");
+                    if (hiddenDesc) hiddenDesc.value = (descuentoPct / 100).toFixed(2);
+
+                    // ✅ aplicar formato visual a los campos mostrados
+                    const pvInput = fila.querySelector(".precioVentaInput");
+                    if (pvInput) pvInput.value = formatear(precioVenta);
+
+                    const subInput = fila.querySelector(".subtotalInput");
+                    if (subInput) subInput.value = formatear(subtotalFila);
+
+                    subtotal += subtotalFila;
+                });
+
+                const iva = subtotal * 0.12;
+                const total = subtotal + iva;
+
+                // ✅ Totales formateados visualmente
+                document.getElementById("subtotal").value = formatear(subtotal);
+                document.getElementById("iva").value = formatear(iva);
+                document.getElementById("total").value = formatear(total);
+            }
+
+            // 🔹 Validar antes de enviar
             document.querySelector("form[asp-action='Create']").addEventListener("submit", e => {
+                // Limpiamos filas inválidas (igual comportamiento que antes)
                 tablaBody.querySelectorAll("tr").forEach(fila => {
                     const idProd = fila.querySelector(".productoSelect")?.value;
                     const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
                     const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
+                    // si falta datos esenciales removemos la fila
                     if (!idProd || cantidad <= 0 || precio <= 0) {
                         fila.remove();
                     }
@@ -281,6 +310,22 @@
                     alert("Debe agregar al menos un producto válido antes de guardar la compra.");
                     return;
                 }
+
+                // Verificar si alguna fila seleccionó la opción "Paquete" creada solo en UI (no existe en BD)
+                const missingPaquete = Array.from(tablaBody.querySelectorAll("tr")).some(fila => {
+                    const unidadVal = fila.querySelector(".unidadSelect")?.value;
+                    return unidadVal === "__PAQUETE_MISSING__";
+                });
+
+                if (missingPaquete && !paqueteExists) {
+                    // Bloqueamos el envío con un mensaje claro al usuario
+                    e.preventDefault();
+                    alert("Has seleccionado la unidad 'Paquete' pero ésta NO existe en la base de datos. " +
+                          "Crea la unidad 'Paquete' en UnidadesMedida (EquivalenciaEnUnidades = 6) o selecciona otra unidad antes de guardar.");
+                    return;
+                }
+
+                // Si todo OK se permite el envío y se llamará al bloqueo del botón (bloquearBotonGuardar)
             });
 
             // 🔹 Evitar doble envío
