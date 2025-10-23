@@ -16,10 +16,15 @@
                         <input type="text" id="busqueda" class="form-control form-control-sm"
                                placeholder="Buscar producto por nombre o código..." autocomplete="off" />
                     </div>
-                    <div class="search-container ms-2" style="width:30%;">
-                        <input id="busquedaKits" class="form-control" placeholder="Buscar kit / promoción..." autocomplete="off" />
-                        <div id="suggestionsKits" class="suggestions-box" style="display:none;"></div>
+
+                    <div class="input-group mb-2">
+                        <input type="text" id="busquedaPromocion" class="form-control" placeholder="Buscar promoción..." />
+                        <button class="btn btn-outline-success" type="button" id="btnBuscarPromocion">
+                            <i class="bi bi-gift"></i> Agregar
+                        </button>
                     </div>
+
+
                 </div>
 
                 <div class="card-body p-0">
@@ -408,6 +413,48 @@
              renderTabla();
          }
 
+
+                // =============================
+        // 🔍 Buscar y agregar promoción
+        // =============================
+        document.getElementById("btnBuscarPromocion").addEventListener("click", async () => {
+            const term = document.getElementById("busquedaPromocion").value.trim();
+            if (!term) return;
+
+            const res = await fetch(`/Ventas/BuscarPromocion?term=${encodeURIComponent(term)}`);
+            const data = await res.json();
+
+            if (!data.results.length) {
+                mostrarMensaje("No se encontró ninguna promoción.", "warning");
+                return;
+            }
+
+            const promo = data.results[0];
+            agregarPromocionAVenta(promo);
+        });
+
+        function agregarPromocionAVenta(promo) {
+            // 🟣 Agregar promoción como una sola línea visualmente
+            productosSeleccionados.push({
+                id: "KIT-" + promo.id,
+                idKit: promo.id,
+                nombre: promo.text + " (Promoción)",
+                cantidad: 1,
+                precio: promo.total,  // 💰 precio total del kit
+                subtotal: promo.total,
+                esKit: true
+            });
+
+            renderTabla();
+            recalcularTotales();
+            mostrarMensaje(`✅ Promoción "${promo.text}" añadida a la venta.`, "success");
+        }
+
+
+
+
+
+
           // ==========================================================
          // 🧮 TABLA Y TOTALES
          // ==========================================================
@@ -436,7 +483,7 @@
                      </td>
                      <td><input type="number" class="form-control form-control-sm text-center" min="0" max="100"
                          value="${p.descuento}" onchange="actualizarDescuento(${i}, this.value)"></td>
-                     <td>Q${subtotal.toFixed(2)}</td>
+                      <td>Q${isNaN(subtotal) ? "0.00" : subtotal.toFixed(2)}</td>
                      <td><button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
                          <i class="bi bi-trash"></i></button></td>
                  `;

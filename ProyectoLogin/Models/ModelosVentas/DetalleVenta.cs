@@ -1,4 +1,5 @@
 ﻿using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Models.Promociones;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -28,5 +29,10 @@ namespace ProyectoLogin.Models.ModelosVentas
 
         [ForeignKey("IdProducto")]
         public ProductoCore? Producto { get; set; }
+
+
+        public int? IdKit { get; set; }
+        [ForeignKey("IdKit")]
+        public Kit? Kit { get; set; }
     }
 }

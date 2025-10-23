@@ -1,5 +1,6 @@
 ﻿using ProyectoLogin.Models.ModelosProducts;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProyectoLogin.Models.Promociones
 {
@@ -15,6 +16,8 @@ namespace ProyectoLogin.Models.Promociones
 
         public int Cantidad { get; set; }           // cuántas unidades del producto en el kit
         public decimal PrecioUnitarioSnapshot { get; set; } // precio de venta usado al crear el kit
+        
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Subtotal => Cantidad * PrecioUnitarioSnapshot;
 
 

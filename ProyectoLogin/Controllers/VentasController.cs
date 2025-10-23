@@ -81,48 +81,119 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 🔹 Validar existencia y stock antes de registrar venta
+                // ========================================================
+                // 🔹 1️⃣ Validar stock de productos y promociones (kits)
+                // ========================================================
                 foreach (var det in venta.Detalles)
                 {
-                    var inventario = await _context.Inventarios
-                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
-
-                    if (inventario == null)
+                    // 🟢 Producto normal
+                    if (det.IdProducto > 0)
                     {
-                        await transaction.RollbackAsync();
-                        return BadRequest(new
+                        var inventario = await _context.Inventarios
+                            .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
+
+                        if (inventario == null)
                         {
-                            success = false,
-                            message = $"El producto con ID {det.IdProducto} no tiene inventario asociado."
-                        });
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = $"El producto con ID {det.IdProducto} no tiene inventario asociado."
+                            });
+                        }
+
+                        if (inventario.StockActual < det.Cantidad)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = $"Stock insuficiente para el producto '{det.IdProducto}'. " +
+                                          $"Disponible: {inventario.StockActual}, solicitado: {det.Cantidad}."
+                            });
+                        }
                     }
 
-                    if (inventario.StockActual < det.Cantidad)
+                    // 🟣 Promoción (Kit)
+                    else if (det.IdKit != null && det.IdKit > 0)
                     {
-                        await transaction.RollbackAsync();
-                        return BadRequest(new
+                        var kit = await _context.Kits
+                            .Include(k => k.Detalles!)
+                                .ThenInclude(d => d.Producto)
+                            .FirstOrDefaultAsync(k => k.IdKit == det.IdKit);
+
+                        if (kit == null)
                         {
-                            success = false,
-                            message = $"Stock insuficiente para el producto '{det.IdProducto}'. " +
-                                      $"Disponible: {inventario.StockActual}, solicitado: {det.Cantidad}."
-                        });
+                            await transaction.RollbackAsync();
+                            return BadRequest(new { success = false, message = "Promoción no encontrada." });
+                        }
+
+                        // Verificar stock de cada producto dentro del kit
+                        foreach (var kd in kit.Detalles)
+                        {
+                            var inventario = await _context.Inventarios
+                                .FirstOrDefaultAsync(i => i.IdProducto == kd.IdProducto);
+
+                            if (inventario == null || inventario.StockActual < kd.Cantidad)
+                            {
+                                await transaction.RollbackAsync();
+                                return BadRequest(new
+                                {
+                                    success = false,
+                                    message = $"Stock insuficiente para '{kd.Producto?.Nombre ?? "producto"}' en promoción '{kit.Nombre}'."
+                                });
+                            }
+                        }
                     }
                 }
 
-                // 🔹 Registrar venta
+                // ========================================================
+                // 🔹 2️⃣ Registrar venta
+                // ========================================================
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // 🔹 Descontar stock de cada producto
+                // ========================================================
+                // 🔹 3️⃣ Descontar inventario
+                // ========================================================
                 foreach (var det in venta.Detalles)
                 {
-                    var inventario = await _context.Inventarios
-                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
-
-                    if (inventario != null)
+                    // Producto normal
+                    if (det.IdProducto > 0)
                     {
-                        inventario.StockActual -= det.Cantidad;
-                        inventario.FechaUltimaActualizacion = DateTime.Now;
+                        var inventario = await _context.Inventarios
+                            .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
+
+                        if (inventario != null)
+                        {
+                            inventario.StockActual -= det.Cantidad;
+                            inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
+                            _context.Inventarios.Update(inventario);
+                        }
+                    }
+
+                    // Promoción (Kit)
+                    else if (det.IdKit != null && det.IdKit > 0)
+                    {
+                        var kit = await _context.Kits
+                            .Include(k => k.Detalles!)
+                            .FirstOrDefaultAsync(k => k.IdKit == det.IdKit);
+
+                        if (kit != null)
+                        {
+                            foreach (var kd in kit.Detalles)
+                            {
+                                var inventario = await _context.Inventarios
+                                    .FirstOrDefaultAsync(i => i.IdProducto == kd.IdProducto);
+
+                                if (inventario != null)
+                                {
+                                    inventario.StockActual -= kd.Cantidad; // 👈 resta por producto del kit
+                                    inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
+                                    _context.Inventarios.Update(inventario);
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -147,6 +218,40 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> BuscarPromocion(string term)
+        {
+            if (string.IsNullOrEmpty(term))
+                return Json(new { results = new List<object>() });
+
+            var kits = await _context.Kits
+                .Include(k => k.Detalles!)
+                    .ThenInclude(d => d.Producto)
+                .Where(k => k.Activo &&
+                            (k.Nombre.Contains(term) || (k.Descripcion ?? "").Contains(term)))
+                .Select(k => new
+                {
+                    id = k.IdKit,
+                    text = k.Nombre,
+                    total = k.Total,
+                    descuento = k.DescuentoPct,
+                    productos = k.Detalles.Select(d => new
+                    {
+                        idProducto = d.IdProducto,
+                        cantidad = d.Cantidad,
+                        precio = d.PrecioUnitarioSnapshot
+                    })
+                })
+                .Take(10)
+                .ToListAsync();
+
+            return Json(new { results = kits });
+        }
 
 
 
