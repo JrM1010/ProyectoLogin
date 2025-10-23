@@ -1,0 +1,85 @@
+﻿@model ProyectoLogin.Models.Promociones.Kit
+
+@{
+    ViewData["Title"] = "Detalles del Kit";
+    var gt = new System.Globalization.CultureInfo("es-GT");
+}
+
+<h2 class="mb-3">Detalles del Kit / Promoción</h2>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title">@Model.Nombre</h4>
+        <p class="text-muted mb-2">@Model.Descripcion</p>
+
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Subtotal:</span>
+                <strong>@Model.Subtotal.ToString("C2", gt)</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Descuento:</span>
+                <strong>@(Model.DescuentoPct * 100)%</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Total:</span>
+                <strong class="text-success fs-5">@Model.Total.ToString("C2", gt)</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between text-muted">
+                <span>Fecha de creación:</span>
+                <span>@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</span>
+            </li>
+        </ul>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la lista
+        </a>
+    </div>
+</div>
+
+@if (Model.Detalles != null && Model.Detalles.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <strong>Productos incluidos en este kit</strong>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Unitario</th>
+                            <th class="text-center">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Detalles)
+                        {
+                            var nombreProducto = d.Producto?.Nombre ?? "(Sin nombre)";
+                            <tr>
+                                <td>@nombreProducto</td>
+                                <td class="text-center">@d.Cantidad</td>
+                                <td class="text-center">@d.PrecioUnitarioSnapshot.ToString("C2", gt)</td>
+                                <td class="text-center">@((d.PrecioUnitarioSnapshot * d.Cantidad).ToString("C2", gt))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="fw-bold">
+                        <tr>
+                            <td colspan="3" class="text-end">Total:</td>
+                            <td class="text-center text-success">@Model.Total.ToString("C2", gt)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        No hay productos registrados en este kit.
+    </div>
+}

@@ -157,16 +157,12 @@
         const alertArea = document.getElementById('alertArea');
         const buscarUrl = '@Url.Action("BuscarProducto", "Ventas")';
 
-        // helpers
-        function debounce(fn, ms) {
-            let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-        }
+        function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
         function mostrarAlerta(msg, tipo = 'info', timeout = 4000) {
             alertArea.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
             if (timeout) setTimeout(() => alertArea.innerHTML = '', timeout);
         }
 
-        // Render tabla y totales
         function renderItems() {
             tablaBody.innerHTML = '';
             items.forEach((it, idx) => {
@@ -202,13 +198,13 @@
 
         function actualizarUI() { renderItems(); calcularLocales(); }
 
-        // Buscador predictivo
         async function fetchSuggestions(term) {
             if (!term.trim()) return hideSuggestions();
             const prov = filterProveedor ? filterProveedor.value : '';
             try {
                 const url = buscarUrl + '?term=' + encodeURIComponent(prov ? term + ' provider:' + prov : term);
-                const res = await fetch(url); if (!res.ok) return hideSuggestions();
+                const res = await fetch(url);
+                if (!res.ok) return hideSuggestions();
                 const data = await res.json();
                 renderSuggestions(Array.isArray(data) ? data : (data.results || []));
             } catch { hideSuggestions(); }
@@ -235,7 +231,6 @@
         }
         function hideSuggestions() { suggestionsBox.style.display = 'none'; suggestionsBox.innerHTML = ''; }
 
-        // eventos
         const debouncedFetch = debounce(fetchSuggestions, 150);
         searchInput.oninput = e => debouncedFetch(e.target.value);
         btnBuscarNow.onclick = () => fetchSuggestions(searchInput.value);
@@ -244,7 +239,67 @@
         limpiarBtn.onclick = e => { e.preventDefault(); items.length = 0; actualizarUI(); };
         descuentoInput.oninput = calcularLocales;
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', actualizarUI);
+
+        // ✅ NUEVO BLOQUE: guardar kit correctamente
+        guardarBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const nombre = (document.getElementById('nombre')?.value || '').trim();
+            const descripcion = (document.getElementById('descripcion')?.value || '').trim();
+            const descuentoPct = parseFloat(descuentoInput.value) || 0;
+
+            if (!nombre) {
+                mostrarAlerta('Ingrese un nombre para el kit.', 'warning');
+                document.getElementById('nombre').focus();
+                return;
+            }
+            if (items.length === 0) {
+                mostrarAlerta('Agrega al menos un producto antes de guardar.', 'warning');
+                return;
+            }
+
+            const payload = {
+                Nombre: nombre,
+                Descripcion: descripcion,
+                DescuentoPct: descuentoPct,
+                Items: items.map(i => ({ IdProducto: i.idProducto, Cantidad: i.cantidad }))
+            };
+
+            guardarBtn.disabled = true;
+            const prev = guardarBtn.innerHTML;
+            guardarBtn.innerHTML = 'Guardando...';
+
+            try {
+                const res = await fetch('@Url.Action("Create", "Kits")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': antiToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json().catch(() => null);
+                if (!res.ok || !data) {
+                    mostrarAlerta(data?.message || 'Error al guardar el kit.', 'danger');
+                    console.error('Error servidor:', data);
+                } else if (data.success) {
+                    mostrarAlerta('Kit guardado correctamente.', 'success');
+                    setTimeout(() => {
+                        if (data.idKit) window.location.href = `/Kits/Details/${data.idKit}`;
+                        else location.reload();
+                    }, 1000);
+                } else {
+                    mostrarAlerta(data.message || 'No se pudo guardar el kit.', 'warning');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarAlerta('Error al conectar con el servidor.', 'danger');
+            } finally {
+                guardarBtn.disabled = false;
+                guardarBtn.innerHTML = prev;
+            }
+        });
     </script>
 }

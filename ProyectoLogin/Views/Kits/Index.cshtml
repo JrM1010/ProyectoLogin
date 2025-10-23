@@ -1,0 +1,106 @@
+﻿@model IEnumerable<ProyectoLogin.Models.Promociones.Kit>
+
+@{
+    ViewData["Title"] = "Lista de Kits / Promociones";
+    var gt = new System.Globalization.CultureInfo("es-GT");
+}
+
+<h2 class="mb-4">Kits / Promociones creados</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nuevo Kit / Promoción
+    </a>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th class="text-center">Descuento</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Fecha de creación</th>
+                            <th class="text-center" style="width:160px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var kit in Model)
+                        {
+                            <tr>
+                                <td>@kit.IdKit</td>
+                                <td>@kit.Nombre</td>
+                                <td>@kit.Descripcion</td>
+                                <td class="text-center">@((kit.DescuentoPct * 100).ToString("0.##"))%</td>
+                                <td class="text-center">@kit.Total.ToString("C2", gt)</td>
+                                <td class="text-center">@kit.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@kit.IdKit" class="btn btn-sm btn-outline-info me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger eliminar-btn" data-id="@kit.IdKit">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        No hay kits registrados todavía.
+    </div>
+}
+
+@section Scripts {
+    @Html.AntiForgeryToken() <!-- agrega esta línea para que Razor genere el token -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            document.querySelectorAll(".eliminar-btn").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    const id = e.currentTarget.dataset.id;
+                    if (!id) return;
+
+                    if (!confirm("¿Seguro que deseas eliminar este kit?")) return;
+
+                    const formData = new FormData();
+                    formData.append("__RequestVerificationToken", token);
+                    formData.append("id", id);
+
+                    try {
+                        const res = await fetch(`/Kits/Delete`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (res.ok) {
+                            location.reload();
+                        } else {
+                            const msg = await res.text();
+                            alert("No se pudo eliminar el kit. Revisa la consola.");
+                            console.error(msg);
+                        }
+                    } catch (err) {
+                        alert("Error al conectar con el servidor.");
+                        console.error(err);
+                    }
+                });
+            });
+        });
+    </script>
+}
+

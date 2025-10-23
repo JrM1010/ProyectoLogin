@@ -225,6 +225,29 @@ namespace ProyectoLogin.Controllers
             return View(kit);
         }
 
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var kit = await _context.Kits
+                .Include(k => k.Detalles)
+                .FirstOrDefaultAsync(k => k.IdKit == id);
+
+            if (kit == null)
+                return NotFound();
+
+            _context.KitDetalles.RemoveRange(kit.Detalles);
+            _context.Kits.Remove(kit);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+
+
+
         #region DTOs
 
         // Request para calcular precio (preview)
