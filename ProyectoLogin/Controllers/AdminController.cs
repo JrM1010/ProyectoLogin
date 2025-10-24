@@ -13,7 +13,7 @@ public class AdminController : Controller
         _context = context;
     }
 
-    // ✅ LISTAR USUARIOS (activos e inactivos)
+    // Listar usuarios (activos e inactivos)
     public async Task<IActionResult> Usuarios()
     {
         var usuariosActivos = await _context.Usuarios
@@ -30,7 +30,7 @@ public class AdminController : Controller
         return View(usuariosActivos);
     }
 
-    // ✅ DESACTIVAR USUARIO (soft delete)
+    // Desactivar usuarios (soft delete)
     [HttpPost]
     public async Task<IActionResult> Desactivar(int id)
     {
@@ -44,7 +44,7 @@ public class AdminController : Controller
         return RedirectToAction("Usuarios");
     }
 
-    // ✅ REACTIVAR USUARIO
+    // Reactivar usuarios
     [HttpPost]
     public async Task<IActionResult> Activar(int id)
     {
@@ -58,7 +58,7 @@ public class AdminController : Controller
         return RedirectToAction("Usuarios");
     }
 
-    // 🔧 Editar usuario (sin cambios)
+    // Editar usuario (sin cambios)
     [HttpGet]
     public async Task<IActionResult> Editar(int id)
     {
@@ -69,6 +69,8 @@ public class AdminController : Controller
         return View(usuario);
     }
 
+
+    // Editar usuario (cambios en rol)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(Usuario model)

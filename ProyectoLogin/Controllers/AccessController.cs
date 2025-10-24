@@ -8,7 +8,6 @@ namespace ProyectoLogin.Controllers
 {
     public class AccessController : Controller
     {
-        // Contexto de base de datos para acceder a la tabla Usuarios
         private readonly DbPruebaContext _context;
 
         public AccessController(DbPruebaContext context)
@@ -16,40 +15,31 @@ namespace ProyectoLogin.Controllers
             _context = context;
         }
 
-        // Vista principal
         public IActionResult Index()
         {
             return View();
         }
 
-        // GET: muestra el formulario para iniciar la recuperación de contraseña
         [HttpGet]
         public ActionResult StartRecovery()
         {
-            // Limpiar mensajes temporales al cargar la vista
             TempData.Remove("SuccessMessage");
             TempData.Remove("ErrorMessage");
             return View(new Models.ViewModel.RecoveryViewModel());
         }
 
-
-
-        // POST: procesa el formulario de recuperación de contraseña
         [HttpPost]
         public ActionResult StartRecovery(Models.ViewModel.RecoveryViewModel model, [FromServices] EmailService emailService)
         {
-            // Si el modelo no es válido, se devuelve la vista con los errores
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Busca al usuario por su correo
             var usuario = _context.Usuarios.FirstOrDefault(u => u.Correo == model.Email);
 
             if (usuario != null)
             {
                 var resetToken = Utilidades.EncriptarClave(Guid.NewGuid().ToString());
 
-                // Crear registro en la tabla RecuperacionPassword
                 var recuperacion = new RecuperacionPassword
                 {
                     IdUsuario = usuario.IdUsuario,
@@ -62,11 +52,9 @@ namespace ProyectoLogin.Controllers
                 _context.Recuperaciones.Add(recuperacion);
                 _context.SaveChanges();
 
-                // Genera el enlace para restablecer contraseña
                 string link = Url.Action("Recovery", "Access",
                             new { resetToken = resetToken, email = usuario.Correo }, Request.Scheme);
 
-                // Asunto y cuerpo del correo con el enlace
                 string subject = "Recuperación de Contraseña";
                 string body = $@"
             <h3>Hola {usuario.NombreUsuario},</h3>
@@ -76,38 +64,27 @@ namespace ProyectoLogin.Controllers
 
                 try
                 {
-                    // Envía el correo al usuario
                     emailService.SendEmail(usuario.Correo, subject, body);
-
-                    // Mensaje de éxito
                     TempData["SuccessMessage"] = "Se ha enviado un enlace de recuperación a tu correo electrónico.";
                 }
                 catch (Exception ex)
                 {
-                    // Error al enviar el correo
                     TempData["ErrorMessage"] = "Error al enviar el correo. Por favor, intenta nuevamente.";
                 }
             }
             else
             {
-                // Si no existe el correo, muestra error
                 TempData["ErrorMessage"] = "No se encontró un usuario con ese correo electrónico.";
             }
 
             return View(model);
         }
 
-
-
-
-
-        // GET: muestra la vista para ingresar nueva contraseña
         [HttpGet]
         public ActionResult Recovery(string resetToken, string email)
         {
-            // Busca al usuario con correo y token válidos
             var recuperacion = _context.Recuperaciones
-                .Include(r => r.Usuario) //Incluye el usuario relacionado
+                .Include(r => r.Usuario)
                 .FirstOrDefault(r => r.Token == resetToken && r.Usuario.Correo == email);
 
             if (recuperacion == null || recuperacion.FechaExpiracion < FechaLocal.Ahora() || recuperacion.Usado)
@@ -115,7 +92,6 @@ namespace ProyectoLogin.Controllers
                 return BadRequest("El token es inválido o ha expirado.");
             }
 
-            // Devuelve el modelo a la vista con email y token
             return View(new Models.ViewModel.ResetPasswordViewModel
             {
                 Email = email,
@@ -123,15 +99,12 @@ namespace ProyectoLogin.Controllers
             });
         }
 
-        // POST: procesa el formulario para cambiar la contraseña
         [HttpPost]
         public IActionResult Recovery(Models.ViewModel.ResetPasswordViewModel model)
         {
-            // Valida el modelo
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Busca al usuario con correo y token
             var recuperacion = _context.Recuperaciones
                     .Include(r => r.Usuario)
                     .FirstOrDefault(r => r.Token == model.resetToken && r.Usuario.Correo == model.Email);
@@ -144,13 +117,8 @@ namespace ProyectoLogin.Controllers
 
             try
             {
-                // Encripta y guarda la nueva contraseña
                 recuperacion.Usuario.Clave = Utilidades.EncriptarClave(model.NewPassword);
-
-                // Limpia el token para que no pueda usarse otra vez
                 recuperacion.Usado = true;
-
-                // Actualiza cambios en la BD
                 _context.SaveChanges();
 
                 TempData["SuccessMessage"] = "Contraseña restablecida correctamente. Ya puedes iniciar sesión.";

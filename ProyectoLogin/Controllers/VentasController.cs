@@ -19,24 +19,20 @@ namespace ProyectoLogin.Controllers
             _context = context;
         }
 
-        // =============================
-        // 1️⃣  Vista principal del POS
-        // =============================
+        // Vista principal del POS
         public IActionResult Index()
         {
             return View("~/Views/Ventas/Index.cshtml");
         }
 
-        // ============================================
-        // 2️⃣  Búsqueda rápida de producto (AJAX)
-        // ============================================
+        // Búsqueda rápida de producto (AJAX)
         [HttpGet]
         public async Task<IActionResult> BuscarProducto(string term)
         {
             if (string.IsNullOrEmpty(term))
                 return Json(new { results = new List<object>() });
 
-            // 🟢 Productos normales
+            // Productos normales
             var productos = await _context.Productos
                 .Include(p => p.Inventario)
                 .Where(p => p.Activo &&
@@ -51,12 +47,12 @@ namespace ProyectoLogin.Controllers
                         .Select(pr => pr.PrecioVenta)
                         .FirstOrDefault(),
                     stock = p.Inventario != null ? p.Inventario.StockActual : 0,
-                    tipo = "producto"  // ⚡️ nuevo campo
+                    tipo = "producto"  // nuevo campo
                 })
                 .Take(15)
                 .ToListAsync();
 
-            // 🟣 Promociones (Kits)
+            // Promociones (Kits)
             var kits = await _context.Kits
                 .Where(k => k.Activo && k.Nombre.Contains(term))
                 .Select(k => new
@@ -65,7 +61,7 @@ namespace ProyectoLogin.Controllers
                     text = "(KIT) " + k.Nombre,
                     precio = k.Total,
                     stock = -1, // sin stock propio, se calcula por componentes
-                    tipo = "kit"  // ⚡️ nuevo campo
+                    tipo = "kit"  // nuevo campo
                 })
                 .Take(10)
                 .ToListAsync();
@@ -76,9 +72,7 @@ namespace ProyectoLogin.Controllers
         }
 
 
-        // ==================================================
-        // 3️⃣  Guardar venta (POST principal del formulario)
-        // ==================================================
+        // Guardar venta
         [HttpPost]
         public async Task<IActionResult> GuardarVenta([FromBody] Venta venta)
         {
@@ -104,12 +98,10 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // ========================================================
-                // 🔹 1️⃣ Validar stock de productos y promociones (kits)
-                // ========================================================
+                // Validar stock de productos y promociones 
                 foreach (var det in venta.Detalles)
                 {
-                    // 🟢 Producto normal
+                    // Producto normal
                     if (det.IdProducto > 0)
                     {
                         var inventario = await _context.Inventarios
@@ -137,7 +129,7 @@ namespace ProyectoLogin.Controllers
                         }
                     }
 
-                    // 🟣 Promoción (Kit)
+                    // Promoción
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
@@ -170,15 +162,11 @@ namespace ProyectoLogin.Controllers
                     }
                 }
 
-                // ========================================================
-                // 🔹 2️⃣ Registrar venta
-                // ========================================================
+                // Registrar venta
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // ========================================================
-                // 🔹 3️⃣ Descontar inventario
-                // ========================================================
+                // Descontar inventario
                 foreach (var det in venta.Detalles)
                 {
                     // Producto normal
@@ -195,7 +183,7 @@ namespace ProyectoLogin.Controllers
                         }
                     }
 
-                    // Promoción (Kit)
+                    // Promoción 
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
@@ -211,7 +199,7 @@ namespace ProyectoLogin.Controllers
 
                                 if (inventario != null)
                                 {
-                                    inventario.StockActual -= kd.Cantidad; // 👈 resta por producto del kit
+                                    inventario.StockActual -= kd.Cantidad; // Resta por producto del kit
                                     inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
                                     _context.Inventarios.Update(inventario);
                                 }
@@ -278,9 +266,7 @@ namespace ProyectoLogin.Controllers
 
 
 
-        // =====================================
-        // 4️⃣  Detalle de venta (vista simple)
-        // =====================================
+        // Detalle de venta 
         public async Task<IActionResult> Detalle(int id)
         {
             var venta = await _context.Ventas
@@ -298,9 +284,7 @@ namespace ProyectoLogin.Controllers
 
         
 
-        // =============================================
-        // 6️⃣  Listado de ventas (para reporte/corte)
-        // =============================================
+        // Listado de ventas 
         public async Task<IActionResult> Lista()
         {
             var ventas = await _context.Ventas
@@ -315,7 +299,7 @@ namespace ProyectoLogin.Controllers
 
 
 
-        // 🔍 Buscar cliente por NIT (AJAX)
+        // Buscar cliente por NIT 
         [HttpGet]
         public async Task<IActionResult> BuscarClientePorNit(string nit)
         {
@@ -343,24 +327,24 @@ namespace ProyectoLogin.Controllers
             return Json(new { encontrado = true, cliente });
         }
 
-        // ➕ Registrar cliente rápido desde la venta
+        // Registrar cliente rápido desde la venta
         [HttpPost]
         public async Task<IActionResult> RegistrarClienteRapido([FromBody] Cliente nuevo)
         {
             if (nuevo == null || string.IsNullOrWhiteSpace(nuevo.Nit))
                 return BadRequest("Datos de cliente inválidos.");
 
-            // 🔹 Limpiar el NIT (elimina guiones, espacios y caracteres especiales)
+            // Limpiar el NIT
             nuevo.Nit = new string(nuevo.Nit.Where(char.IsLetterOrDigit).ToArray());
 
-            // 🔹 Evitar duplicados (comparando sin guiones)
+            // Evitar duplicados (comparando sin guiones)
             bool existe = await _context.Clientes
                 .AnyAsync(c => c.Nit.Replace("-", "") == nuevo.Nit);
 
             if (existe)
                 return BadRequest("Ya existe un cliente con este NIT.");
 
-            // 🔹 Completar datos del nuevo cliente
+            // Completar datos del nuevo cliente
             nuevo.FechaCreacion = FechaLocal.Ahora();
             nuevo.Activo = true;
 

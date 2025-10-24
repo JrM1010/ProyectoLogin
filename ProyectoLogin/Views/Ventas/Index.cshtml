@@ -5,9 +5,7 @@
 <div class="container-fluid mt-4">
     <div class="row g-3">
 
-        <!-- =========================== -->
-        <!-- 🧾 PANEL IZQUIERDO: PRODUCTOS -->
-        <!-- =========================== -->
+        <!-- PANEL IZQUIERDO: PRODUCTOS -->
         <div class="col-lg-8 col-md-7">
             <div class="card shadow border-0">
                 <div class="card-header bg-gradient-primary text-white d-flex align-items-center justify-content-between">
@@ -15,7 +13,8 @@
                 </div>
 
                 <div class="card-body pt-3">
-                    <!-- 🔹 Buscadores -->
+                    
+                    <!-- Buscadores -->
                     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
                         <div class="search-container flex-grow-1">
                             <input type="text" id="busqueda" class="form-control form-control-sm"
@@ -23,7 +22,7 @@
                         </div>
                     </div>
 
-                    <!-- 🔹 Tabla de productos -->
+                    <!-- Tabla de productos -->
                     <div class="table-responsive border rounded">
                         <table class="table table-hover table-sm align-middle text-center mb-0" id="tablaProductos">
                             <thead class="table-light">
@@ -43,9 +42,7 @@
             </div>
         </div>
 
-        <!-- =========================== -->
-        <!-- 💳 PANEL DERECHO: CLIENTE + TOTALES -->
-        <!-- =========================== -->
+        <!-- PANEL DERECHO: CLIENTE + TOTALES -->
         <div class="col-lg-4 col-md-5">
             <div class="card shadow border-0 sticky-top" style="top: 1rem;">
                 <div class="card-body">
@@ -53,7 +50,7 @@
                         <i class="bi bi-person-vcard me-1"></i> Datos del Cliente
                     </h5>
 
-                    <!-- 🔸 Tipo de cliente -->
+                    <!-- Tipo de cliente -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Seleccionar tipo de cliente</label>
                         <div class="d-flex gap-3">
@@ -68,7 +65,7 @@
                         </div>
                     </div>
 
-                    <!-- 🔹 Buscar cliente -->
+                    <!-- Buscar cliente -->
                     <div id="seccionNit" class="mb-3">
                         <div class="input-group">
                             <input type="text" id="nitCliente" class="form-control form-control-sm"
@@ -98,14 +95,14 @@
                         </div>
                     </div>
 
-                    <!-- 🔹 Consumidor final -->
+                    <!-- Consumidor final -->
                     <div id="seccionCF" class="border rounded p-2 mt-3 d-none bg-light">
                         <p class="mb-0"><strong>Nombre:</strong> Consumidor Final (CF)</p>
                     </div>
 
                     <hr class="my-3">
 
-                    <!-- 🔸 Totales -->
+                    <!-- Totales -->
                     <h6 class="fw-bold text-center text-primary mb-3">
                         <i class="bi bi-receipt-cutoff me-1"></i> Resumen de Venta
                     </h6>
@@ -125,7 +122,7 @@
 
                     <hr />
 
-                    <!-- 🔸 Botones de acción -->
+                    <!-- Botones de acción -->
                     <div class="d-grid gap-2">
                         <button class="btn btn-success btn-lg" id="btnCobrar">
                             <i class="bi bi-cash-coin me-1"></i> Cobrar / Pagar
@@ -140,12 +137,7 @@
     </div>
 </div>
 
-
-
-
-<!-- =========================== -->
-<!-- 🔹 MODAL DE PAGO -->
-<!-- =========================== -->
+<!-- MODAL DE PAGO -->
 <div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
@@ -159,7 +151,7 @@
                     <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
                     <hr>
 
-                    <!-- 🔹 Selección de método de pago -->
+                    <!-- Selección de método de pago -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Método de Pago</label>
                         <select id="metodoPago" class="form-select">
@@ -170,7 +162,7 @@
                         </select>
                     </div>
 
-                    <!-- 🔹 EFECTIVO -->
+                    <!-- EFECTIVO -->
                     <div id="pagoEfectivo" class="metodoPago">
                         <label class="form-label">Monto recibido:</label>
                         <input type="number" id="montoRecibido" class="form-control" min="0" step="0.01" />
@@ -178,20 +170,20 @@
                         <input type="text" id="cambio" class="form-control" readonly />
                     </div>
 
-                    <!-- 🔹 TARJETA -->
+                    <!-- TARJETA -->
                     <div id="pagoTarjeta" class="metodoPago d-none">
                         <label class="form-label">Monto con tarjeta:</label>
                         <input type="number" id="montoTarjeta" class="form-control" min="0" step="0.01" />
                     </div>
 
-                    <!-- 🔹 TRANSFERENCIA -->
+                    <!-- TRANSFERENCIA -->
                     <div id="pagoTransferencia" class="metodoPago d-none">
                         <label class="form-label">Monto por transferencia:</label>
                         <input type="number" id="montoTransferencia" class="form-control" min="0" step="0.01" />
                         <small class="text-muted">Ingrese el monto transferido.</small>
                     </div>
 
-                    <!-- 🔹 MIXTO -->
+                    <!-- MIXTO -->
                     <div id="pagoMixto" class="metodoPago d-none">
                         <label class="form-label">Monto en efectivo:</label>
                         <input type="number" id="montoMixtoEfectivo" class="form-control mb-2" min="0" step="0.01" />
@@ -202,7 +194,7 @@
                     </div>
                 </div>
 
-                <!-- 🔹 MENSAJE DESPUÉS DE GUARDAR LA VENTA -->
+                <!-- MENSAJE DESPUÉS DE GUARDAR LA VENTA -->
                 <div id="contenidoVentaFinalizada" class="text-center d-none">
                     <h4 class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Venta Completada</h4>
                     <p class="text-muted mb-4">La información de pago ha sido guardada. Descargue Factura.</p>
@@ -221,11 +213,6 @@
     </div>
 </div>
 
-
-
-<!-- =========================== -->
-<!-- 🔸 ESTILOS SIMPLES -->
-<!-- =========================== -->
 <style>
     body {
         background-color: #f8f9fa;
@@ -291,10 +278,6 @@
     }
 </style>
 
-
-<!-- =========================== -->
-<!-- 🔸 SCRIPT PRINCIPAL -->
-<!-- =========================== -->
 @section Scripts {
     <script>
         const tablaBody = document.querySelector("#tablaProductos tbody");
@@ -304,18 +287,13 @@
 
         let productosSeleccionados = [];
         let ultimosResultados = [];
-        let clienteSeleccionado = null; // guarda id del cliente si se encontró/registró
+        let clienteSeleccionado = null; 
 
-        // helper para asignar value de forma segura (evita usar ?. en el LHS)
         function setValueIfExists(selector, value) {
             const el = document.querySelector(selector);
             if (el) el.value = value;
         }
 
-
-         // ==========================================================
-         // 🧱 CENTRO DE ALERTAS FLOTANTES (en esquina inferior izquierda)
-         // ==========================================================
          function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
              let contenedor = document.getElementById("centroAlertas");
              if (!contenedor) {
@@ -349,10 +327,6 @@
              }
          }
 
-
-       // ==========================================================
-        // 🔍 BUSQUEDA DE PRODUCTOS + ALERTA DE STOCK
-        // ==========================================================
         inputBusqueda.addEventListener("keyup", async (e) => {
             const term = e.target.value.trim();
             const contenedor = inputBusqueda.closest(".search-container");
@@ -389,11 +363,9 @@
              const div = document.createElement("div");
              div.classList.add("suggestions-box");
 
-
-
             lista.forEach(p => {
                 const stock = p.stock ?? 0;
-                const esKit = p.tipo === "kit"; // ✅ detecta si es kit o producto
+                const esKit = p.tipo === "kit";
                     let colorStock = "text-success";
                     let estado = "Disponible";
 
@@ -427,13 +399,9 @@
              }, { once: true });
          }
 
-          // ==========================================================
-         // 🧾 GESTIÓN DE PRODUCTOS Y PROMOCIONES CON VALIDACIÓN DE STOCK 
-         // ==========================================================
-                 function seleccionarProducto(prod) {
+         function seleccionarProducto(prod) {
             const esKit = prod.tipo === "kit";
 
-            // 🟣 Si es KIT, lo tratamos diferente
             if (esKit) {
                 const existente = productosSeleccionados.find(p => p.idKit === prod.id);
                 if (existente) {
@@ -453,8 +421,6 @@
                 mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
             }
             else {
-
-                // 🟢 Producto normal
                 const stock = prod.stock ?? 0;
 
                 if (stock <= 0) {
@@ -490,10 +456,6 @@
             renderTabla();
         }
 
-
-          // ==========================================================
-         // 🧮 TABLA Y TOTALES
-         // ==========================================================
          function renderTabla() {
              tablaBody.innerHTML = "";
              productosSeleccionados.forEach((p, i) => {
@@ -554,7 +516,6 @@
            function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
            function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "info"); }
 
-
         function recalcularTotales() {
             let subtotal = 0;
 
@@ -575,8 +536,6 @@
             if (totEl) totEl.value = total.toFixed(2);
         }
 
-
-        // BUSCAR CLIENTE POR NIT
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
             const nit = document.getElementById("nitCliente").value.trim();
             const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
@@ -591,10 +550,8 @@
             console.log("Respuesta BuscarClientePorNit:", data);
 
             if (data.encontrado) {
-                // tolerancia a múltiples nombres de propiedad que el servidor pueda devolver
                 clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.cliente?.id ?? data?.cliente?.Id ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
 
-                // mostrar datos con tolerancia a nombres
                 const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
                 const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
                 const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
@@ -633,7 +590,6 @@
             }
         });
 
-        // REGISTRAR CLIENTE RAPIDO
         document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
             const nuevo = {
                 nit: document.getElementById("nitCliente").value.trim(),
@@ -658,7 +614,6 @@
 
                 clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
 
-                // mostrar datos
                 const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
                 const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
                 const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
@@ -679,7 +634,6 @@
             }
         });
 
-        // PROCESO DE PAGO Y COBRO
         const metodoPago = document.getElementById("metodoPago");
         const seccionesPago = document.querySelectorAll(".metodoPago");
         const totalInput = document.querySelector("#total");
@@ -692,9 +646,7 @@
             if (el) el.classList.remove("d-none");
         });
 
-
             btnCobrar.addEventListener("click", async () => {
-        // 1) Validar que hay productos
         if (!productosSeleccionados.length) {
             mostrarMensaje("No hay productos en la venta. Agrega al menos uno antes de cobrar.", "warning");
             const tabla = document.getElementById("tablaProductos");
@@ -702,17 +654,14 @@
             return;
         }
 
-        // referencias
         const opcionNit = document.getElementById("opcionNit");
         const nitInput = document.getElementById("nitCliente");
 
-        // helper: intenta buscar cliente por nit usando el endpoint ya existente
         async function buscarClientePorNitAuto(nitRaw) {
             try {
                 const nitLimpio = (nitRaw || "").replace(/[^0-9a-zA-Z]/g, "");
                 const resp = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
                 if (!resp.ok) {
-                    // si el endpoint devuelve 4xx/5xx, tratamos como "no encontrado"
                     return { encontrado: false };
                 }
                 const data = await resp.json();
@@ -723,28 +672,23 @@
             }
         }
 
-        // 2) Validar NIT/CF: si está NIT, asegurarnos de que exista el nit y esté verificado
         if (opcionNit?.checked) {
             const nit = nitInput?.value.trim();
 
-            // 2.a) Si no hay nit escrito, avisar y detener
             if (!nit) {
                 mostrarMensaje("Por favor ingresa un NIT antes de continuar con el cobro.", "warning");
                 nitInput?.focus();
                 return;
             }
 
-            // 2.b) Si hay nit escrito pero clienteSeleccionado es null -> intentar buscar automáticamente
             if (clienteSeleccionado == null) {
                 mostrarMensaje("Buscando cliente por NIT...", "info", 1500);
                 const resultado = await buscarClientePorNitAuto(nit);
 
                 if (resultado.encontrado) {
-                    // Toleramos distintos nombres de propiedad devueltos por el backend
                     const cli = resultado.cliente ?? resultado;
                     clienteSeleccionado = cli?.idCliente ?? cli?.IdCliente ?? cli?.id ?? cli?.Id ?? resultado?.idCliente ?? resultado?.IdCliente ?? null;
 
-                    // mostrar datos en UI si vienen
                     const nombres = cli?.nombres ?? cli?.Nombres ?? resultado?.nombres ?? "";
                     const apellidos = cli?.apellidos ?? cli?.Apellidos ?? resultado?.apellidos ?? "";
                     const correo = cli?.correo ?? cli?.Correo ?? resultado?.correo ?? "";
@@ -757,11 +701,8 @@
                     document.getElementById("formNuevoCliente")?.classList.add("d-none");
 
                     mostrarMensaje("Cliente encontrado automáticamente.", "success", 2000);
-                    // continúa el flujo: clienteSeleccionado ahora tiene valor
                 } else {
-                    // No se encontró cliente: avisar y detener, el usuario puede registrar o corregir
                     mostrarMensaje("No se encontró un cliente con ese NIT. Registra el cliente o corrige el NIT.", "warning");
-                    // mostrar formulario de registro para que el usuario pueda crearlo rápidamente
                     document.getElementById("formNuevoCliente")?.classList.remove("d-none");
                     document.getElementById("datosCliente")?.classList.add("d-none");
                     nitInput?.focus();
@@ -777,7 +718,6 @@
             const el = document.querySelector("#pagoEfectivo");
             if (el) el.classList.remove("d-none");
 
-            // limpiar montos cada vez que se abre el modal (evita valores residuales)
             setValueIfExists("#montoRecibido", "");
             setValueIfExists("#cambio", "");
             setValueIfExists("#montoTarjeta", "");
@@ -796,8 +736,6 @@
             document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
         });
 
-        // Confirmar cobro -> enviar venta
-                // Confirmar cobro -> enviar venta
         document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
             try {
                 const total = parseFloat(document.querySelector("#total").value || 0);
@@ -822,7 +760,6 @@
             };
         });
 
-
                 const payload = {
                     IdCliente: clienteSeleccionado ?? null,
                     MetodoPago: metodo,
@@ -832,7 +769,6 @@
                     Total: total,
                     Detalles: detalles
                 };
-
 
                 console.log("Venta enviada:", payload);
                  console.table(detalles);
@@ -851,44 +787,34 @@
 
                 mostrarMensaje(`✅ ${data.message || "Venta registrada correctamente."}`, "success");
 
-
-                 // Ocultar el cuadro de datos del cliente (ya no corresponde mostrar info del cliente anterior)
                 document.getElementById("datosCliente")?.classList.add("d-none");
                 document.getElementById("formNuevoCliente")?.classList.add("d-none");
 
-                 // Mostrar la sección finalizada (descarga) y ocultar la parte activa del modal
                 document.querySelector("#contenidoVentaActiva")?.classList.add("d-none");
                 document.querySelector("#contenidoVentaFinalizada")?.classList.remove("d-none");
 
-                // Asegurar que el botón confirmar queda desactivado y oculto
                 const btnConfirmar = document.getElementById("btnConfirmarCobro");
                 if (btnConfirmar) {
                     btnConfirmar.disabled = true;
                     btnConfirmar.classList.add("d-none");
                 }
 
-
-                // Vaciar productos y refrescar tabla
                 productosSeleccionados = [];
                 renderTabla();
 
-
                  limpiarCamposDespuesVenta();
 
-                        // Preparar el botón de descarga y hacerlo visible
         const idVenta = data.idVenta;
         const btnDescargar = document.getElementById("btnDescargarFactura");
         if (btnDescargar) {
             btnDescargar.classList.remove("d-none");
             btnDescargar.onclick = () => {
                 if (idVenta) {
-                    // abre la ruta de descarga en la misma ventana
                     window.location.href = `/Ventas/DescargarFactura/${idVenta}`;
                 } else {
                     mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
                 }
             };
-            // llevar foco y hacer scroll al apartado de descarga dentro del modal
             btnDescargar.focus();
             setTimeout(() => {
                 btnDescargar.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -902,12 +828,10 @@
         });
 
                     function limpiarCamposDespuesVenta() {
-            // Limpiar cliente (estado)
             clienteSeleccionado = null;
             const nitInput = document.querySelector("#nitCliente");
             if (nitInput) nitInput.value = "";
 
-            // Limpiar campos de etiqueta del cliente por si quedaron visibles en otro lugar
             const nombreSpan = document.querySelector("#nombreCliente");
             const correoSpan = document.querySelector("#correoCliente");
             const direccionSpan = document.querySelector("#direccionCliente");
@@ -915,7 +839,6 @@
             if (correoSpan) correoSpan.innerText = "";
             if (direccionSpan) direccionSpan.innerText = "";
 
-            // Reset totales (aunque la vista finalizada muestra info guardada, dejar inputs listos)
             const subtotalEl = document.querySelector("#subtotal");
             const ivaEl = document.querySelector("#iva");
             const totalEl = document.querySelector("#total");
@@ -923,14 +846,11 @@
             if (ivaEl) ivaEl.value = "0.00";
             if (totalEl) totalEl.value = "0.00";
 
-            // Limpiar búsqueda de producto
             const busquedaInput = document.querySelector("#busqueda");
             if (busquedaInput) busquedaInput.value = "";
 
-            // eliminar alertaStock si quedó
             document.querySelector("#alertaStock")?.remove();
 
-            // ---- NUEVO: limpiar los campos del modal de pago ----
             const montoRecibido = document.querySelector("#montoRecibido");
             const cambio = document.querySelector("#cambio");
             const montoTarjeta = document.querySelector("#montoTarjeta");
@@ -947,9 +867,6 @@
             if (montoMixtoT) montoMixtoT.value = "";
             if (montoMixtoTr) montoMixtoTr.value = "";
         }
-
-
-
 
          btnCancelar.addEventListener("click", () => {
              productosSeleccionados = [];
@@ -970,7 +887,6 @@
             document.querySelector("#total").value = (subtotal * 1.12).toFixed(2);
         }
 
-        // SELECCION TIPO CLIENTE (NIT / CF)
         const opcionNit = document.getElementById("opcionNit");
         const opcionCF = document.getElementById("opcionCF");
         const seccionNit = document.getElementById("seccionNit");
@@ -988,38 +904,26 @@
             if (opcionCF.checked) {
                 seccionCF.classList.remove("d-none");
                 seccionNit.classList.add("d-none");
-                // consumidor final -> aseguramos que no se envíe id de cliente
                 clienteSeleccionado = null;
                 console.log("CF seleccionado. clienteSeleccionado set to null");
             }
         });
 
-
-
-
-
-
-        //Reseteo de datos en la vista
-                    function limpiarFormularioVenta() {
-            // Vaciar productos y refrescar tabla
+        function limpiarFormularioVenta() {
             productosSeleccionados = [];
             renderTabla();
 
-            // Limpiar estado de cliente
             clienteSeleccionado = null;
 
-            // Limpiar inputs principales
             const nitInput = document.querySelector("#nitCliente");
             if (nitInput) nitInput.value = "";
 
             const busquedaInput = document.querySelector("#busqueda");
             if (busquedaInput) busquedaInput.value = "";
 
-            // Ocultar cuadro y formulario de cliente (si estaban visibles)
             document.getElementById("datosCliente")?.classList.add("d-none");
             document.getElementById("formNuevoCliente")?.classList.add("d-none");
 
-            // Limpiar spans/labels de cliente
             const nombreSpan = document.querySelector("#nombreCliente");
             const correoSpan = document.querySelector("#correoCliente");
             const direccionSpan = document.querySelector("#direccionCliente");
@@ -1027,7 +931,6 @@
             if (correoSpan) correoSpan.innerText = "";
             if (direccionSpan) direccionSpan.innerText = "";
 
-            // Reset totales
             const subtotalEl = document.querySelector("#subtotal");
             const ivaEl = document.querySelector("#iva");
             const totalEl = document.querySelector("#total");
@@ -1035,12 +938,9 @@
             if (ivaEl) ivaEl.value = "0.00";
             if (totalEl) totalEl.value = "0.00";
 
-            // Reset modal: dejar contenido activo visible (pero no forzar ocultación de "finalizada" si la quieres mostrar)
-            // En caso de querer forzar volver al estado inicial completo:
             document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
             document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
 
-            // Restaurar método de pago inicial
             const metodoPago = document.querySelector("#metodoPago");
             if (metodoPago) {
                 metodoPago.value = "efectivo";
@@ -1048,28 +948,23 @@
                 document.querySelector("#pagoEfectivo")?.classList.remove("d-none");
             }
 
-            // Limpiar montos del modal
             ["#montoRecibido", "#cambio", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(sel => {
                 const el = document.querySelector(sel);
                 if (el) el.value = "";
             });
 
-            // Restaurar botón confirmar
             const btnConfirmar = document.getElementById("btnConfirmarCobro");
             if (btnConfirmar) {
                 btnConfirmar.disabled = false;
                 btnConfirmar.classList.remove("d-none");
             }
 
-            // Ocultar y limpiar botón descargar (no lo removemos si quieres mantener la sección finalizada visible,
-            // pero normalmente es mejor ocultarlo hasta que haya una nueva venta)
             const btnDescargar = document.querySelector("#btnDescargarFactura");
             if (btnDescargar) {
                 btnDescargar.classList.add("d-none");
                 btnDescargar.onclick = null;
             }
 
-            // Remover alertas temporales
             document.querySelector("#alertaStock")?.remove();
             const cont = document.querySelector(".search-container");
             if (cont) cont.querySelector(".suggestions-box")?.remove();
@@ -1078,11 +973,9 @@
         const modalEl = document.getElementById("modalCobro");
         if (modalEl) {
             modalEl.addEventListener('hidden.bs.modal', function () {
-                // limpiar todo cuando el modal se cierre para iniciar nueva venta
                 limpiarFormularioVenta();
             });
         }
-
 
     </script>
 

@@ -49,32 +49,33 @@ namespace ProyectoLogin.Controllers
         // GET: Create
         public async Task<IActionResult> Create()
         {
-            // Cargar categorías
+            // Categorias
             var categorias = await _context.Categorias
                 .OrderBy(c => c.Nombre)
                 .ToListAsync();
 
-            // Cargar marcas
+            // Marcas
             var marcas = await _context.Marcas
                 .Where(m => m.Activo)
                 .OrderBy(m => m.Nombre)
                 .ToListAsync();
 
-            // Cargar proveedores
+            // Proveedores
             var proveedores = await _context.Proveedores
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-            // Asignaciones a ViewBag para la vista
+            
             ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
             ViewBag.CategoriasLista = categorias;
 
             ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
             ViewBag.Proveedores = proveedores;
             ViewBag.MarcasLista = marcas;
+            
             // Código sugerido
-            ViewBag.CodigoGenerado = $"PROD-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{new Random().Next(0, 10000):D4}";
+            ViewBag.CodigoGenerado = $"PROD-{new Random().Next(0, 10000):D4}";
 
             return View();
         }
@@ -100,14 +101,14 @@ namespace ProyectoLogin.Controllers
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-            // ✅ Categorías (dos versiones)
+            // Categorías
             ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
             ViewBag.CategoriasLista = categorias;
 
-            // ✅ Marcas (convertida correctamente)
+            // Marcas 
             ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
 
-            // ✅ Proveedores (no usa asp-items, así que queda lista normal)
+            // Proveedores 
             ViewBag.Proveedores = proveedores;
 
             if (!ModelState.IsValid)
@@ -117,15 +118,17 @@ namespace ProyectoLogin.Controllers
 
             try
             {
-                // Si no trae código (o quieres siempre sobrescribir), generamos uno único
+                // Si no trae código, generamos uno único
                 if (string.IsNullOrWhiteSpace(producto.CodigoBarras))
                 {
                     producto.CodigoBarras = await GenerarCodigoProductoAsync();
                 }
 
+
                 producto.Activo = true;
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
+
 
                 var invExistente = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == producto.IdProducto);
                 if (invExistente == null)
@@ -147,7 +150,7 @@ namespace ProyectoLogin.Controllers
                     _context.Inventarios.Update(invExistente);
                 }
 
-                // Relacionar proveedor (si se eligió uno)
+                // Relacionar proveedor
                 if (idProveedor > 0)
                 {
                     var rel = new ProductoProveedor
@@ -182,7 +185,7 @@ namespace ProyectoLogin.Controllers
             do
             {
                 var sufijo = rnd.Next(0, 10000).ToString("D4"); // 0000..9999
-                codigo = $"PRO-{FechaLocal.Ahora:yyyyMMdd-HHmmss}-{sufijo}";
+                codigo = $"PRO-{sufijo}";
                 intentos++;
 
                 // Evita bucle infinito: si muchos choques (improbable), genera GUID como fallback
@@ -206,10 +209,6 @@ namespace ProyectoLogin.Controllers
             ViewBag.Marcas = _context.Marcas.Where(m => m.Activo).ToList();
             ViewBag.Inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == id);
             ViewBag.Precios = await _context.ProductoPrecio.Where(p => p.IdProducto == id).OrderByDescending(p => p.FechaInicio).ToListAsync();
-            
-
-
-
 
             return View(producto);
         }
@@ -396,9 +395,7 @@ namespace ProyectoLogin.Controllers
 
 
 
-        // =======================
         // CATEGORÍAS
-        // =======================
         [HttpPost]
         public async Task<IActionResult> CrearCategoria(string nombre, string descripcion)
         {
@@ -481,9 +478,7 @@ namespace ProyectoLogin.Controllers
         }
 
 
-        // =======================
         // MARCAS
-        // =======================
         [HttpPost]
         public async Task<IActionResult> CrearMarca(string nombre)
         {

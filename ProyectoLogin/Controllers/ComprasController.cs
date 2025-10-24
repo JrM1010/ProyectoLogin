@@ -20,9 +20,8 @@ namespace ProyectoLogin.Controllers
             _context = context;
         }
 
-        // =======================
+
         // LISTAR COMPRAS
-        // =======================
         public async Task<IActionResult> Index()
         {
             var compras = await _context.Compras
@@ -33,9 +32,8 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Compras/Index.cshtml", compras);
         }
 
-        // =======================
+
         // GET: CREAR COMPRA
-        // =======================
         public async Task<IActionResult> Create(int? idProveedor)
         {
             await CargarDatosVista(idProveedor);
@@ -79,14 +77,12 @@ namespace ProyectoLogin.Controllers
             return View(new Compra { IdProveedor = idProveedor.Value });
         }
 
-        // =======================
         // POST: CREAR COMPRA
-        // =======================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detalles)
         {
-            // 🧹 Filtrar filas vacías
+            // Filtrar filas vacías
             detalles = detalles
                 .Where(d => d.IdProducto > 0 && d.Cantidad > 0 && d.PrecioUnitario > 0)
                 .ToList();
@@ -98,7 +94,7 @@ namespace ProyectoLogin.Controllers
                 return View(compra);
             }
 
-            // ✅ Validar cantidades enteras (regla de negocio)
+            // Validar cantidades enteras (regla de negocio)
             foreach (var det in detalles)
             {
                 if (det.Cantidad % 1 != 0)
@@ -109,26 +105,22 @@ namespace ProyectoLogin.Controllers
                 }
             }
 
-            // ❌ Evitar detalles pegados al encabezado antes de insertarlo
+            // Evitar detalles pegados al encabezado antes de insertarlo
             compra.Detalles = null;
 
-            // 🔹 Calcular totales (solo calcula; no persiste la compra aún)
             await CalcularTotalesAsync(compra, detalles);
 
-            // ============================
-            // — Iniciamos transacción aquí —
-            // ============================
+            // Iniciamos transacción aquí 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Guardar encabezado (necesitamos el IdCompra generado para los detalles)
+                // Guardar encabezado
                 _context.Compras.Add(compra);
-                await _context.SaveChangesAsync(); // queda dentro de la transacción
+                await _context.SaveChangesAsync(); 
 
                 // Guardar detalles + actualizar inventario/precios (lanza si hay error)
                 await GuardarDetallesYActualizarPreciosAsync(compra, detalles);
 
-                // Si todo OK, commit
                 await transaction.CommitAsync();
 
                 TempData["Success"] = "Compra registrada correctamente.";
@@ -136,21 +128,17 @@ namespace ProyectoLogin.Controllers
             }
             catch (Exception ex)
             {
-                // Rollback explícito y mensaje
+                
                 await transaction.RollbackAsync();
 
-                // Loggear idealmente con ILogger (aquí usamos TempData para mostrar al usuario)
                 TempData["Error"] = "Error al registrar la compra: " + ex.Message;
 
-                // Recargar datos para la vista y devolver la vista de creación con el objeto compra (no persistido)
                 await CargarDatosVista(compra.IdProveedor);
                 return View(compra);
             }
         }
 
-        // =======================
         // DETALLES DE COMPRA
-        // =======================
         public async Task<IActionResult> Details(int id)
         {
             var compra = await _context.Compras
@@ -165,9 +153,7 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Compras/Details.cshtml", compra);
         }
 
-        // ============================================================
         // 🔹 MÉTODOS AUXILIARES PRIVADOS
-        // ============================================================
         private async Task CargarDatosVista(int? idProveedor)
         {
             ViewBag.Proveedores = await _context.Proveedores
@@ -204,12 +190,12 @@ namespace ProyectoLogin.Controllers
 
                 if (productoUnidad?.UnidadMedida?.Nombre?.ToLower() == "caja")
                 {
-                    descuento = 0.10m;
+                    descuento = 0.10m; // Se Coloca el 10% de descuento para cajas
                 }
 
                 if (productoUnidad?.UnidadMedida?.Nombre?.ToLower() == "paquete")
                 {
-                    descuento = 0.05m; // o el porcentaje que desees
+                    descuento = 0.05m; // Se Coloca el 5% de descuento para paquetes
                 }
 
                 det.Descuento = descuento;
@@ -238,11 +224,10 @@ namespace ProyectoLogin.Controllers
 
             foreach (var det in detalles)
             {
-                // asignar FK IdCompra (ya generado)
+                
                 det.IdCompra = compra.IdCompra;
                 _context.DetallesCompra.Add(det);
 
-                // Buscar factor de conversión
                 var prodUnidad = productosUnidades
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
 
@@ -257,11 +242,11 @@ namespace ProyectoLogin.Controllers
                             : 1;
                 }
 
-                // Validar que la multiplicación dé un entero exacto (porque manejamos stock en enteros)
+                //valida enteros
                 decimal totalUnidades = det.Cantidad * factor;
                 if (totalUnidades % 1 != 0)
                 {
-                    // Lanzar excepción para que la transacción haga rollback y se muestre mensaje
+                    
                     throw new InvalidOperationException(
                         $"El total de unidades ({totalUnidades}) para el producto {det.IdProducto} no es un número entero. Revisa el factor de conversión.");
                 }

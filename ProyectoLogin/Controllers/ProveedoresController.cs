@@ -21,7 +21,7 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> Index(bool ordenar = false)
         {
             var proveedores = _context.Proveedores
-                .WhereActivo() // ✅ solo activos
+                .WhereActivo() // solo activos
                 .AsQueryable();
 
             if (ordenar)
