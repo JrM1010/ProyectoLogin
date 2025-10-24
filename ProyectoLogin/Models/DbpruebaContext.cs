@@ -330,11 +330,47 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(e => e.IdUnidad);
         });
 
+        // ------------------ UNIDADES DE MEDIDA ------------------
+        modelBuilder.Entity<UnidadMedida>(entity =>
+        {
+            entity.ToTable("UnidadesMedida");
+            entity.HasKey(u => u.IdUnidad);
+
+            entity.Property(u => u.Nombre)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(u => u.EquivalenciaEnUnidades)
+                  .IsRequired();
+
+            // 👇 Insertar datos iniciales al crear la migración
+            entity.HasData(
+                new UnidadMedida { IdUnidad = 1, Nombre = "Unidad", EquivalenciaEnUnidades = 1 },
+                new UnidadMedida { IdUnidad = 2, Nombre = "Paquete", EquivalenciaEnUnidades = 6 },
+                new UnidadMedida { IdUnidad = 3, Nombre = "Caja", EquivalenciaEnUnidades = 12 }
+            );
+        });
+
+        // ------------------ PRODUCTO UNIDAD ------------------
+        modelBuilder.Entity<ProductoUnidad>(entity =>
+        {
+            entity.HasKey(pu => pu.IdProductoUnidad);
+
+            entity.HasOne(pu => pu.Producto)
+                  .WithMany(p => p.ProductosUnidades)
+                  .HasForeignKey(pu => pu.IdProducto)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pu => pu.UnidadMedida)
+                  .WithMany(um => um.ProductosUnidades)
+                  .HasForeignKey(pu => pu.IdUnidad)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+    
 
 
-
-        // ------------------ VENTAS Y DETALLES ------------------
-        modelBuilder.Entity<Venta>(entity =>
+    // ------------------ VENTAS Y DETALLES ------------------
+    modelBuilder.Entity<Venta>(entity =>
         {
             entity.ToTable("Ventas");
 

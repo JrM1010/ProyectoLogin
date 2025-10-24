@@ -12,8 +12,8 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251023035219_añadirpaquete")]
-    partial class añadirpaquete
+    [Migration("20251024025412_reinicio")]
+    partial class reinicio
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -133,9 +133,6 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<decimal>("Cantidad")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("CantidadEquivalente")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("Descuento")
                         .HasColumnType("decimal(18,2)");
@@ -413,6 +410,9 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<int?>("IdKit")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("int");
 
@@ -426,6 +426,8 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("IdDetalleVenta");
+
+                    b.HasIndex("IdKit");
 
                     b.HasIndex("IdProducto");
 
@@ -508,7 +510,7 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<decimal>("Total")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("IdKit");
 
@@ -832,6 +834,10 @@ namespace ProyectoLogin.Migrations
 
             modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.DetalleVenta", b =>
                 {
+                    b.HasOne("ProyectoLogin.Models.Promociones.Kit", "Kit")
+                        .WithMany()
+                        .HasForeignKey("IdKit");
+
                     b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
@@ -843,6 +849,8 @@ namespace ProyectoLogin.Migrations
                         .HasForeignKey("IdVenta")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Kit");
 
                     b.Navigation("Producto");
 

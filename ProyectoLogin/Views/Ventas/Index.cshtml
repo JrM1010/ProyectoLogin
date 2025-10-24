@@ -855,6 +855,8 @@
                     Detalles: detalles
                 };
 
+
+                console.log("Venta enviada:", payload);
                 const res = await fetch("/Ventas/GuardarVenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

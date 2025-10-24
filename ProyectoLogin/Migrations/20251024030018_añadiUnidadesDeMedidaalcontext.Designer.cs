@@ -12,8 +12,8 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251015194930_Correccion_Tabla_ProductoUnidad")]
-    partial class Correccion_Tabla_ProductoUnidad
+    [Migration("20251024030018_añadiUnidadesDeMedidaalcontext")]
+    partial class añadiUnidadesDeMedidaalcontext
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,12 +42,10 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Correo")
-                        .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Direccion")
-                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
@@ -65,7 +63,6 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Telefono")
-                        .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
@@ -397,6 +394,158 @@ namespace ProyectoLogin.Migrations
                     b.ToTable("ProductoProveedor", (string)null);
                 });
 
+            modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.DetalleVenta", b =>
+                {
+                    b.Property<int>("IdDetalleVenta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDetalleVenta"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Descuento")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<int?>("IdKit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdVenta")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdDetalleVenta");
+
+                    b.HasIndex("IdKit");
+
+                    b.HasIndex("IdProducto");
+
+                    b.HasIndex("IdVenta");
+
+                    b.ToTable("DetalleVenta", (string)null);
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.Venta", b =>
+                {
+                    b.Property<int>("IdVenta")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVenta"));
+
+                    b.Property<string>("Estado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(30)")
+                        .HasDefaultValue("Completada");
+
+                    b.Property<DateTime>("FechaVenta")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("IVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("IdCliente")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MetodoPago")
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdVenta");
+
+                    b.HasIndex("IdCliente");
+
+                    b.HasIndex("IdUsuario");
+
+                    b.ToTable("Ventas", (string)null);
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.Promociones.Kit", b =>
+                {
+                    b.Property<int>("IdKit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdKit"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("DescuentoPct")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdKit");
+
+                    b.ToTable("Kit", (string)null);
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.Promociones.KitDetalle", b =>
+                {
+                    b.Property<int>("IdKitDetalle")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdKitDetalle"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdKit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IdProducto")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrecioUnitarioSnapshot")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("IdKitDetalle");
+
+                    b.HasIndex("IdKit");
+
+                    b.HasIndex("IdProducto");
+
+                    b.ToTable("KitDetalle", (string)null);
+                });
+
             modelBuilder.Entity("ProyectoLogin.Models.Proveedor", b =>
                 {
                     b.Property<int>("IdProveedor")
@@ -537,11 +686,35 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdUnidad");
 
-                    b.ToTable("UnidadesMedida");
+                    b.ToTable("UnidadesMedida", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            IdUnidad = 1,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 1,
+                            Nombre = "Unidad"
+                        },
+                        new
+                        {
+                            IdUnidad = 2,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 6,
+                            Nombre = "Paquete"
+                        },
+                        new
+                        {
+                            IdUnidad = 3,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 12,
+                            Nombre = "Caja"
+                        });
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.Usuario", b =>
@@ -551,6 +724,11 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Clave")
                         .HasMaxLength(500)
@@ -678,6 +856,68 @@ namespace ProyectoLogin.Migrations
                     b.Navigation("Proveedor");
                 });
 
+            modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.DetalleVenta", b =>
+                {
+                    b.HasOne("ProyectoLogin.Models.Promociones.Kit", "Kit")
+                        .WithMany()
+                        .HasForeignKey("IdKit");
+
+                    b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
+                        .WithMany()
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProyectoLogin.Models.ModelosVentas.Venta", "Venta")
+                        .WithMany("Detalles")
+                        .HasForeignKey("IdVenta")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kit");
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Venta");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.Venta", b =>
+                {
+                    b.HasOne("ProyectoLogin.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("IdCliente")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ProyectoLogin.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.Promociones.KitDetalle", b =>
+                {
+                    b.HasOne("ProyectoLogin.Models.Promociones.Kit", "Kit")
+                        .WithMany("Detalles")
+                        .HasForeignKey("IdKit")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
+                        .WithMany()
+                        .HasForeignKey("IdProducto")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Kit");
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("ProyectoLogin.Models.RecuperacionPassword", b =>
                 {
                     b.HasOne("ProyectoLogin.Models.Usuario", "Usuario")
@@ -729,6 +969,16 @@ namespace ProyectoLogin.Migrations
                     b.Navigation("Inventario");
 
                     b.Navigation("ProductosUnidades");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.Venta", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
+            modelBuilder.Entity("ProyectoLogin.Models.Promociones.Kit", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.Rol", b =>

@@ -407,6 +407,9 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<int?>("IdKit")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("int");
 
@@ -420,6 +423,8 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("IdDetalleVenta");
+
+                    b.HasIndex("IdKit");
 
                     b.HasIndex("IdProducto");
 
@@ -502,7 +507,7 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<decimal>("Total")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("IdKit");
 
@@ -678,11 +683,35 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdUnidad");
 
-                    b.ToTable("UnidadesMedida");
+                    b.ToTable("UnidadesMedida", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            IdUnidad = 1,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 1,
+                            Nombre = "Unidad"
+                        },
+                        new
+                        {
+                            IdUnidad = 2,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 6,
+                            Nombre = "Paquete"
+                        },
+                        new
+                        {
+                            IdUnidad = 3,
+                            Activo = true,
+                            EquivalenciaEnUnidades = 12,
+                            Nombre = "Caja"
+                        });
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.Usuario", b =>
@@ -826,6 +855,10 @@ namespace ProyectoLogin.Migrations
 
             modelBuilder.Entity("ProyectoLogin.Models.ModelosVentas.DetalleVenta", b =>
                 {
+                    b.HasOne("ProyectoLogin.Models.Promociones.Kit", "Kit")
+                        .WithMany()
+                        .HasForeignKey("IdKit");
+
                     b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
@@ -837,6 +870,8 @@ namespace ProyectoLogin.Migrations
                         .HasForeignKey("IdVenta")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Kit");
 
                     b.Navigation("Producto");
 
