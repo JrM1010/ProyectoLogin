@@ -14,13 +14,10 @@ namespace ProyectoLogin.Models.ModelosVentas
 
         public DateTime FechaVenta { get; set; } = FechaLocal.Ahora();
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal Subtotal { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal IVA { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal Total { get; set; }
 
 
@@ -34,6 +31,6 @@ namespace ProyectoLogin.Models.ModelosVentas
         [ForeignKey("IdUsuario")]
         public Usuario? Usuario { get; set; }
 
-        public ICollection<DetalleVenta>? Detalles { get; set; }
+        public List<DetalleVenta> Detalles { get; set; } = new();
     }
 }

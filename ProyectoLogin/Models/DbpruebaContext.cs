@@ -96,7 +96,8 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(r => r.IdUsuario);
         });
 
-    
+
+
 
 
 
@@ -281,18 +282,25 @@ public partial class DbPruebaContext : DbContext
                   .HasPrincipalKey(p => p.IdProducto)
                   .OnDelete(DeleteBehavior.Cascade);
         });
-
-
+        
         // ------------------ COMPRAS Y DETALLES ------------------
         modelBuilder.Entity<Compra>(entity =>
         {
             entity.HasKey(e => e.IdCompra);
             entity.ToTable("Compras");
 
-            entity.Property(e => e.MetodoPago).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.NumeroDocumento).HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Observaciones).HasMaxLength(255).IsUnicode(false);
-            entity.Property(e => e.Estado).HasMaxLength(30).IsUnicode(false);
+            entity.Property(e => e.MetodoPago)
+                  .HasMaxLength(50)
+                  .IsUnicode(false);
+            entity.Property(e => e.NumeroDocumento)
+                  .HasMaxLength(50)
+                  .IsUnicode(false);
+            entity.Property(e => e.Observaciones)
+                  .HasMaxLength(255)
+                  .IsUnicode(false);
+            entity.Property(e => e.Estado)
+                  .HasMaxLength(30)
+                  .IsUnicode(false);
 
             entity.HasOne(e => e.Proveedor)
                   .WithMany()
@@ -312,7 +320,7 @@ public partial class DbPruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.IdProducto);
         });
-
+        
         // ------------------ UNIDADES DE MEDIDA ------------------
         modelBuilder.Entity<ProductoUnidad>(entity =>
         {
@@ -369,8 +377,8 @@ public partial class DbPruebaContext : DbContext
     
 
 
-    // ------------------ VENTAS Y DETALLES ------------------
-    modelBuilder.Entity<Venta>(entity =>
+        // ------------------ VENTAS Y DETALLES ------------------
+        modelBuilder.Entity<Venta>(entity =>
         {
             entity.ToTable("Ventas");
 
@@ -419,16 +427,27 @@ public partial class DbPruebaContext : DbContext
             entity.Property(d => d.Subtotal)
                   .HasColumnType("decimal(18,2)");
 
+            // 🔹 Relación con Venta (obligatoria)
             entity.HasOne(d => d.Venta)
                   .WithMany(v => v.Detalles)
                   .HasForeignKey(d => d.IdVenta)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            // 🔹 Relación con Producto (opcional)
             entity.HasOne(d => d.Producto)
                   .WithMany()
                   .HasForeignKey(d => d.IdProducto)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .IsRequired(false); // 👈 importante: permite null
+
+            // 🔹 Relación con Kit (opcional)
+            entity.HasOne(d => d.Kit)
+                  .WithMany()
+                  .HasForeignKey(d => d.IdKit)
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .IsRequired(false); // 👈 también opcional
         });
+
 
 
         // ------------------ KITS DE PRODUCTOS PARA PROMOCIONES ------------------
@@ -436,10 +455,16 @@ public partial class DbPruebaContext : DbContext
         {
             entity.ToTable("Kit");
             entity.HasKey(k => k.IdKit);
-            entity.Property(k => k.Nombre).IsRequired().HasMaxLength(150);
-            entity.Property(k => k.DescuentoPct).HasPrecision(5, 2);
-            entity.Property(k => k.Total).HasPrecision(10, 2);
+            entity.Property(k => k.Nombre)
+                  .IsRequired()
+                  .HasMaxLength(150);
+            entity.Property(k => k.DescuentoPct)
+                  .HasPrecision(5, 2);
+            entity.Property(k => k.Total)
+                  .HasPrecision(10, 2);
+            
         });
+
         modelBuilder.Entity<KitDetalle>(entity =>
         {
             entity.ToTable("KitDetalle");

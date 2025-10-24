@@ -19,15 +19,7 @@
                     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
                         <div class="search-container flex-grow-1">
                             <input type="text" id="busqueda" class="form-control form-control-sm"
-                                   placeholder="Buscar producto por nombre o código..." autocomplete="off" />
-                        </div>
-
-                        <div class="input-group input-group-sm flex-grow-1">
-                            <input type="text" id="busquedaPromocion" class="form-control form-control-sm"
-                                   placeholder="Buscar promoción o combo..." />
-                            <button class="btn btn-outline-success" id="btnBuscarPromocion">
-                                <i class="bi bi-gift-fill me-1"></i>Agregar
-                            </button>
+                                   placeholder="Buscar producto o Promocion..." autocomplete="off" />
                         </div>
                     </div>
 
@@ -370,7 +362,8 @@
                 return;
             }
 
-            const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
+             const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
+
             const data = await resp.json();
             ultimosResultados = data.results || [];
             mostrarSugerencias(ultimosResultados, contenedor);
@@ -396,27 +389,34 @@
              const div = document.createElement("div");
              div.classList.add("suggestions-box");
 
-             lista.forEach(p => {
-                 const stock = p.stock ?? 0;
-                 let colorStock = "text-success";
-                 let estado = "Disponible";
-                 if (stock <= 0) { colorStock = "text-danger"; estado = "Sin existencias"; }
-                 else if (stock <= 3) { colorStock = "text-warning"; estado = "Stock bajo"; }
 
-                 const item = document.createElement("button");
-                 item.type = "button";
-                 item.innerHTML = `
-                     <div class="d-flex justify-content-between align-items-center w-100">
-                         <div>
-                             <strong>${p.text}</strong><br>
-                             <small class="${colorStock}">${estado} — Stock: ${stock}</small>
-                         </div>
-                         <span class="text-muted">Q${p.precio.toFixed(2)}</span>
-                     </div>
-                 `;
-                 item.onclick = () => { seleccionarProducto(p); div.remove(); };
-                 div.appendChild(item);
-             });
+
+            lista.forEach(p => {
+                const stock = p.stock ?? 0;
+                const esKit = p.tipo === "kit"; // ✅ detecta si es kit o producto
+                    let colorStock = "text-success";
+                    let estado = "Disponible";
+
+            if (!esKit) {
+                if (stock <= 0) { colorStock = "text-danger"; estado = "Sin existencias"; }
+                else if (stock <= 3) { colorStock = "text-warning"; estado = "Stock bajo"; }
+            }
+
+            const item = document.createElement("button");
+            item.type = "button";
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
+                        <br>
+                        ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
+                    </div>
+                    <span class="text-muted">Q${p.precio.toFixed(2)}</span>
+                </div>
+            `;
+            item.onclick = () => { seleccionarProducto(p); div.remove(); };
+            div.appendChild(item);
+        });
 
               contenedor.appendChild(div);
              document.addEventListener("click", (ev) => {
@@ -428,89 +428,67 @@
          }
 
           // ==========================================================
-         // 🧾 GESTIÓN DE PRODUCTOS CON VALIDACIÓN DE STOCK
+         // 🧾 GESTIÓN DE PRODUCTOS Y PROMOCIONES CON VALIDACIÓN DE STOCK 
          // ==========================================================
-         function seleccionarProducto(prod) {
-             const stock = prod.stock ?? 0;
+                 function seleccionarProducto(prod) {
+            const esKit = prod.tipo === "kit";
 
-             if (stock <= 0) {
-                 mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
-                 return;
-             } else if (stock <= 3) {
-                 mostrarMensaje(`⚠️ Stock bajo: ${stock} unidades disponibles.`, "warning");
-             } else {
-                 mostrarMensaje(`✅ Stock disponible: ${stock} unidades.`, "success");
-             }
+            // 🟣 Si es KIT, lo tratamos diferente
+            if (esKit) {
+                const existente = productosSeleccionados.find(p => p.idKit === prod.id);
+                if (existente) {
+                    existente.cantidad++;
+                } else {
+                    productosSeleccionados.push({
+                        idKit: prod.id,
+                        id: null,
+                        nombre: prod.text + " (KIT)",
+                        precio: parseFloat(prod.precio),
+                        cantidad: 1,
+                        descuento: 0,
+                        stock: 9999,
+                        esKit: true
+                    });
+                }
+                mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
+            }
+            else {
 
-             const existente = productosSeleccionados.find(p => p.id === prod.id);
-             if (existente) {
-                 if (existente.cantidad + 1 > stock) {
-                     mostrarMensaje(`⚠️ No puedes agregar más unidades. Stock disponible: ${stock}`, "warning");
-                     return;
-                 }
-                 existente.cantidad++;
-             } else {
-                 productosSeleccionados.push({
-                     id: prod.id,
-                     nombre: prod.text,
-                     precio: parseFloat(prod.precio),
-                     cantidad: 1,
-                     descuento: 0,
-                     stock: stock
-                 });
-             }
+                // 🟢 Producto normal
+                const stock = prod.stock ?? 0;
 
-             inputBusqueda.value = "";
-             renderTabla();
-         }
+                if (stock <= 0) {
+                    mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
+                    return;
+                } else if (stock <= 3) {
+                    mostrarMensaje(`⚠️ Stock bajo: ${stock} unidades disponibles.`, "warning");
+                } else {
+                    mostrarMensaje(`✅ Stock disponible: ${stock} unidades.`, "success");
+                }
 
-        // =============================
-        // 🔍 Buscar y agregar promoción
-        // =============================
-        document.getElementById("btnBuscarPromocion").addEventListener("click", async () => {
-            const term = document.getElementById("busquedaPromocion").value.trim();
-            if (!term) return;
-
-            const res = await fetch(`/Ventas/BuscarPromocion?term=${encodeURIComponent(term)}`);
-            const data = await res.json();
-
-            if (!data.results.length) {
-                mostrarMensaje("No se encontró ninguna promoción.", "warning");
-                return;
+                const existente = productosSeleccionados.find(p => p.id === prod.id && !p.esKit);
+                if (existente) {
+                    if (existente.cantidad + 1 > stock) {
+                        mostrarMensaje(`⚠️ No puedes agregar más unidades. Stock disponible: ${stock}`, "warning");
+                        return;
+                    }
+                    existente.cantidad++;
+                } else {
+                    productosSeleccionados.push({
+                        id: prod.id,
+                        nombre: prod.text,
+                        precio: parseFloat(prod.precio),
+                        cantidad: 1,
+                        descuento: 0,
+                        stock: stock,
+                        esKit: false
+                    });
+                }
             }
 
-            const promo = data.results[0];
-            agregarPromocionAVenta(promo);
-        });
-
-        function agregarPromocionAVenta(promo) {
-            const existente = productosSeleccionados.find(p => p.idKit === promo.id);
-            if (existente) {
-                existente.cantidad += 1;
-                existente.subtotal = existente.precio * existente.cantidad;
-            } else {
-                productosSeleccionados.push({
-                    idKit: promo.id,
-                    id: null, // no tiene idProducto
-                    nombre: promo.text + " (Promoción)",
-                    cantidad: 1,
-                    precio: parseFloat(promo.total) || 0,
-                    descuento: 0, // compatibilidad con renderTabla
-                    stock: 9999, // no limitado (no se edita en tabla)
-                    subtotal: parseFloat(promo.total) || 0,
-                    esKit: true
-                });
-            }
-
+            inputBusqueda.value = "";
             renderTabla();
-            recalcularTotales();
-            mostrarMensaje(`✅ Promoción "${promo.text}" añadida a la venta.`, "success");
         }
-
-
-
-
-
 
 
           // ==========================================================
@@ -832,12 +810,12 @@
                     return;
                 }
 
-                        const detalles = productosSeleccionados.map(p => {
+            const detalles = productosSeleccionados.map(p => {
             const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
             return {
                 IdProducto: p.esKit ? null : Number(p.id),
-                IdKit: p.esKit ? p.idKit : null,
-                Cantidad: Number(p.cantidad),
+                 IdKit: p.esKit ? Number(p.idKit) : null,
+                 Cantidad: Number(p.cantidad),
                 PrecioUnitario: Number(p.precio),
                 Descuento: Number(p.descuento || 0),
                 Subtotal: sub
@@ -857,7 +835,10 @@
 
 
                 console.log("Venta enviada:", payload);
-                const res = await fetch("/Ventas/GuardarVenta", {
+                 console.table(detalles);
+
+                const res = await 
+                fetch("/Ventas/GuardarVenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)

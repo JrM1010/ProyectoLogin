@@ -8,7 +8,6 @@ namespace ProyectoLogin.Models.ModelosProducts
         public int IdMarca { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio")]
-        [StringLength(100)]
         public string Nombre { get; set; }
 
         public bool Activo { get; set; } = true;

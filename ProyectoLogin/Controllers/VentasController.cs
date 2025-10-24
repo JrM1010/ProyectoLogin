@@ -36,6 +36,7 @@ namespace ProyectoLogin.Controllers
             if (string.IsNullOrEmpty(term))
                 return Json(new { results = new List<object>() });
 
+            // 🟢 Productos normales
             var productos = await _context.Productos
                 .Include(p => p.Inventario)
                 .Where(p => p.Activo &&
@@ -49,13 +50,31 @@ namespace ProyectoLogin.Controllers
                         .OrderByDescending(pr => pr.FechaInicio)
                         .Select(pr => pr.PrecioVenta)
                         .FirstOrDefault(),
-                    stock = p.Inventario != null ? p.Inventario.StockActual : 0
+                    stock = p.Inventario != null ? p.Inventario.StockActual : 0,
+                    tipo = "producto"  // ⚡️ nuevo campo
                 })
                 .Take(15)
                 .ToListAsync();
 
-            return Json(new { results = productos });
+            // 🟣 Promociones (Kits)
+            var kits = await _context.Kits
+                .Where(k => k.Activo && k.Nombre.Contains(term))
+                .Select(k => new
+                {
+                    id = k.IdKit,
+                    text = "(KIT) " + k.Nombre,
+                    precio = k.Total,
+                    stock = -1, // sin stock propio, se calcula por componentes
+                    tipo = "kit"  // ⚡️ nuevo campo
+                })
+                .Take(10)
+                .ToListAsync();
+
+            var resultados = productos.Concat(kits).ToList();
+
+            return Json(new { results = resultados });
         }
+
 
         // ==================================================
         // 3️⃣  Guardar venta (POST principal del formulario)
@@ -63,8 +82,12 @@ namespace ProyectoLogin.Controllers
         [HttpPost]
         public async Task<IActionResult> GuardarVenta([FromBody] Venta venta)
         {
-            if (venta == null || venta.Detalles == null || !venta.Detalles.Any())
+            if (venta == null || venta.Detalles == null || !venta.Detalles.Any(d =>
+                    (d.IdProducto.HasValue || d.IdKit.HasValue) &&
+                     d.Cantidad > 0 && d.PrecioUnitario > 0))
+            {
                 return BadRequest(new { success = false, message = "Datos de venta incompletos." });
+            }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -273,64 +296,7 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Ventas/Detalle.cshtml", venta);
         }
 
-        // =============================================
-        // 5️⃣  Anular venta (solo administrador)
-        // =============================================
-        [Authorize(Roles = "Administrador")]
-        [HttpPost]
-        public async Task<IActionResult> Anular(int id)
-        {
-            var venta = await _context.Ventas
-                .Include(v => v.Detalles)
-                .FirstOrDefaultAsync(v => v.IdVenta == id);
-
-            if (venta == null)
-                return NotFound();
-
-            if (venta.Estado == "Anulada")
-                return BadRequest("La venta ya está anulada.");
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                venta.Estado = "Anulada";
-
-                // Revertir stock
-                foreach (var det in venta.Detalles)
-                {
-                    var inventario = await _context.Inventarios
-                        .FirstOrDefaultAsync(i => i.IdProducto == det.IdProducto);
-
-                    if (inventario != null)
-                    {
-                        inventario.StockActual += det.Cantidad;
-                        inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
-                        _context.Inventarios.Update(inventario);
-                    }
-
-                    // Registrar movimiento
-                    _context.MovInventarios.Add(new MovInventario
-                    {
-                        IdProducto = det.IdProducto,
-                        Cantidad = det.Cantidad,
-                        Fecha = FechaLocal.Ahora(),
-                        TipoMovimiento = "Anulación Venta",
-                        Referencia = $"Anulación #{venta.IdVenta}"
-                    });
-                }
-
-                _context.Update(venta);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return Ok(new { success = true, message = "Venta anulada correctamente." });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(new { success = false, message = "Error al anular venta: " + ex.Message });
-            }
-        }
+        
 
         // =============================================
         // 6️⃣  Listado de ventas (para reporte/corte)
