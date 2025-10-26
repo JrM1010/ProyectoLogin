@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Recursos;
 using ProyectoLogin.Servicios.Contrato;
@@ -12,17 +13,21 @@ namespace ProyectoLogin.Controllers
     public class InicioController : Controller
     {
         private readonly IUsuarioService _usuarioServicio;
+        private readonly DbPruebaContext _context;
 
-        public InicioController(IUsuarioService usuarioServicio)
+        public InicioController(IUsuarioService usuarioServicio, DbPruebaContext context)
         {
             _usuarioServicio = usuarioServicio;
+            _context = context;
         }
 
         [Authorize(Roles = "Administrador")]
-        public IActionResult Registrarse()
+        public async Task<IActionResult> RegistrarseAsync()
         {
+            ViewBag.Roles = await _context.Roles.OrderBy(r => r.IdRol).ToListAsync();
             return View();
         }
+        
 
         [Authorize(Roles = "Administrador")]
         [HttpPost]

@@ -20,8 +20,7 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> Index(string q)
         {
             var query = _context.Clientes
-                .WhereActivo() 
-                .AsQueryable();
+                .AsQueryable(); // <-- quitar WhereActivo()
 
             if (!string.IsNullOrEmpty(q))
                 query = query.Where(c =>

@@ -24,8 +24,7 @@ namespace ProyectoLogin.Controllers
                 .Include(p => p.Categoria)
                 .Include(p => p.Marca)
                 .Include(p => p.Inventario)
-                .WhereActivo() // ✅ ahora solo productos activos
-                .AsQueryable();
+                .AsQueryable(); // <-- quitar WhereActivo()
 
             if (!string.IsNullOrEmpty(q))
             {

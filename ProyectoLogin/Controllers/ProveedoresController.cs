@@ -20,9 +20,8 @@ namespace ProyectoLogin.Controllers
         // LISTAR con opción de ordenar
         public async Task<IActionResult> Index(bool ordenar = false)
         {
-            var proveedores = _context.Proveedores
-                .WhereActivo() // solo activos
-                .AsQueryable();
+            // Traer TODOS los proveedores; la vista separa activos/inactivos con Model.Where(...)
+            var proveedores = _context.Proveedores.AsQueryable();
 
             if (ordenar)
                 proveedores = proveedores.OrderBy(p => p.Nombre);
