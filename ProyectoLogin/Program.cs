@@ -34,6 +34,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
+//Factura
+builder.Services.AddScoped<FacturaService>();
 
 
 builder.Services.AddControllersWithViews(options =>

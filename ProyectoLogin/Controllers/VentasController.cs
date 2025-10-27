@@ -5,6 +5,7 @@ using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosProducts;
 using ProyectoLogin.Models.ModelosVentas;
 using ProyectoLogin.Recursos;
+using ProyectoLogin.Servicios.Implementacion;
 using System.Security.Claims;
 
 namespace ProyectoLogin.Controllers
@@ -13,11 +14,28 @@ namespace ProyectoLogin.Controllers
     public class VentasController : Controller
     {
         private readonly DbPruebaContext _context;
+        private readonly FacturaService _facturaService;
 
-        public VentasController(DbPruebaContext context)
+        public VentasController(DbPruebaContext context, FacturaService facturaService)
         {
             _context = context;
+            _facturaService = facturaService;
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> DescargarFactura(int idVenta)
+        {
+            var pdfBytes = await _facturaService.GenerarFacturaAsync(idVenta);
+            return File(pdfBytes, "application/pdf", $"Factura_{idVenta}.pdf");
+        }
+
+
+
+
+
+
+
 
         // Vista principal del POS
         public IActionResult Index()
@@ -307,7 +325,7 @@ namespace ProyectoLogin.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
+                
                 return Ok(new
                 {
                     success = true,

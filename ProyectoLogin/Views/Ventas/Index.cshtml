@@ -381,6 +381,16 @@
             return `Q${formatearNumeroGuatemala(monto)}`;
         }
 
+                // 🔧 Función para limpiar el formato de moneda "Q1,234.56" -> 1234.56
+        function limpiarFormatoMoneda(valor) {
+            if (!valor) return 0;
+            return parseFloat(
+                valor.toString()
+                    .replace(/[Q,\s]/g, '') // Q y comas
+                    .replace(/[^\d.-]/g, '') // cualquier otro símbolo no numérico
+            ) || 0;
+        }
+
 
          function mostrarSugerencias(lista, contenedor) {
              const prev = contenedor.querySelector(".suggestions-box");
@@ -1004,7 +1014,7 @@
                 });
 
                 let data;
-                try { data = await res.json(); } catch { data = { message: await res.text() }; }
+    try { data = await res.json(); } catch { data = { message: await res.text() }; }
 
                 if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
 
@@ -1027,27 +1037,28 @@
 
                  limpiarCamposDespuesVenta();
 
-                const idVenta = data.idVenta;
-                const btnDescargar = document.getElementById("btnDescargarFactura");
-        if (btnDescargar) {
-            btnDescargar.classList.remove("d-none");
-            btnDescargar.onclick = () => {
-                if (idVenta) {
-                    window.location.href = `/Ventas/DescargarFactura/${idVenta}`;
-                } else {
-                    mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
-                }
-            };
-            btnDescargar.focus();
-            setTimeout(() => {
-                btnDescargar.scrollIntoView({ behavior: "smooth", block: "center" });
-            }, 120);
-        }
+                        const idVenta = data.idVenta;
+        const btnDescargar = document.getElementById("btnDescargarFactura");
 
-            } catch (err) {
-                console.error("Error guardando venta:", err);
-                mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
+                    if (btnDescargar) {
+                btnDescargar.classList.remove("d-none"); // muestra el botón
+
+                btnDescargar.onclick = () => {
+                    if (idVenta) {
+                        
+                        window.open(`/Ventas/DescargarFactura?idVenta=${idVenta}`, '_blank');
+                    } else {
+                        mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
+                    }
+                };
+
+                btnDescargar.focus();
             }
+
+        }catch (err) {
+            console.error("Error guardando venta:", err);
+            mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
+        }
         });
 
                     function limpiarCamposDespuesVenta() {
