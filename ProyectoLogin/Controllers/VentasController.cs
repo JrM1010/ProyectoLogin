@@ -26,17 +26,28 @@ namespace ProyectoLogin.Controllers
         }
 
         // Búsqueda rápida de producto (AJAX)
+        // Dentro de VentasController
         [HttpGet]
         public async Task<IActionResult> BuscarProducto(string term)
         {
             if (string.IsNullOrEmpty(term))
                 return Json(new { results = new List<object>() });
 
-            // Productos normales
+            // Traer unidades globales (proyectadas a un shape común)
+            var unidadesGlobales = await _context.UnidadesMedida
+                .Where(u => u.Activo)
+                .Select(u => new
+                {
+                    IdUnidad = u.IdUnidad,
+                    Nombre = u.Nombre,
+                    FactorConversion = u.EquivalenciaEnUnidades
+                })
+                .ToListAsync();
+
+            // Cargar productos básicos (cada producto traerá su lista de unidades proyectada)
             var productos = await _context.Productos
                 .Include(p => p.Inventario)
-                .Where(p => p.Activo &&
-                            (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
+                .Where(p => p.Activo && (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
                 .Select(p => new
                 {
                     id = p.IdProducto,
@@ -47,12 +58,50 @@ namespace ProyectoLogin.Controllers
                         .Select(pr => pr.PrecioVenta)
                         .FirstOrDefault(),
                     stock = p.Inventario != null ? p.Inventario.StockActual : 0,
-                    tipo = "producto"  // nuevo campo
+                    tipo = "producto",
+                    // Proyectar unidades del producto al mismo shape que las globales
+                    unidades = _context.ProductosUnidades
+                        .Where(pu => pu.IdProducto == p.IdProducto)
+                        .Select(pu => new
+                        {
+                            IdUnidad = pu.IdUnidad,
+                            Nombre = pu.UnidadMedida.Nombre,
+                            FactorConversion = pu.FactorConversion
+                        })
+                        .ToList()
                 })
                 .Take(15)
                 .ToListAsync();
 
-            // Promociones (Kits)
+            // Normalizar productos: si no tiene unidades específicas, usar las globales.
+            var productosNormalized = productos.Select(p =>
+            {
+                // p.unidades es List<anon> (puede estar vacío). Queremos una List<object> con mismo shape.
+                var unidadesProd = (p.unidades as IEnumerable<object>)?.Cast<object>().ToList();
+
+                // Si no tiene unidades propias, usar las globales (convertidas a object)
+                List<object> unidadesFinal;
+                if (unidadesProd == null || !unidadesProd.Any())
+                {
+                    unidadesFinal = unidadesGlobales.Cast<object>().ToList();
+                }
+                else
+                {
+                    unidadesFinal = unidadesProd;
+                }
+
+                return new
+                {
+                    p.id,
+                    p.text,
+                    p.precio,
+                    p.stock,
+                    p.tipo,
+                    unidades = unidadesFinal
+                };
+            }).ToList();
+
+            // KITS (igual que antes)
             var kits = await _context.Kits
                 .Where(k => k.Activo && k.Nombre.Contains(term))
                 .Select(k => new
@@ -60,16 +109,19 @@ namespace ProyectoLogin.Controllers
                     id = k.IdKit,
                     text = "(KIT) " + k.Nombre,
                     precio = k.Total,
-                    stock = -1, // sin stock propio, se calcula por componentes
-                    tipo = "kit"  // nuevo campo
+                    stock = -1,
+                    tipo = "kit"
                 })
                 .Take(10)
                 .ToListAsync();
 
-            var resultados = productos.Concat(kits).ToList();
+            // Concatenar (ambos son listas de objetos anónimos; el serializador JSON los manejará)
+            var resultados = productosNormalized.Concat(kits.Cast<object>()).ToList();
 
             return Json(new { results = resultados });
         }
+
+
 
 
         // Guardar venta
@@ -78,7 +130,7 @@ namespace ProyectoLogin.Controllers
         {
             if (venta == null || venta.Detalles == null || !venta.Detalles.Any(d =>
                     (d.IdProducto.HasValue || d.IdKit.HasValue) &&
-                     d.Cantidad > 0 && d.PrecioUnitario > 0))
+                    d.Cantidad > 0 && d.PrecioUnitario > 0))
             {
                 return BadRequest(new { success = false, message = "Datos de venta incompletos." });
             }
@@ -96,12 +148,13 @@ namespace ProyectoLogin.Controllers
             venta.Total = venta.Subtotal + venta.IVA;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                // Validar stock de productos y promociones 
+                // === VALIDAR STOCK DE PRODUCTOS Y PROMOCIONES ===
                 foreach (var det in venta.Detalles)
                 {
-                    // Producto normal
+                    // 🧩 PRODUCTO NORMAL
                     if (det.IdProducto > 0)
                     {
                         var inventario = await _context.Inventarios
@@ -117,19 +170,41 @@ namespace ProyectoLogin.Controllers
                             });
                         }
 
-                        if (inventario.StockActual < det.Cantidad)
+                        // ✅ Obtener factor de conversión según unidad
+                        decimal factor = 1m;
+
+                        if (det.IdUnidad.HasValue)
+                        {
+                            var productoUnidad = await _context.ProductosUnidades
+                                .FirstOrDefaultAsync(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+
+                            if (productoUnidad != null)
+                                factor = productoUnidad.FactorConversion;
+                            else
+                            {
+                                var unidad = await _context.UnidadesMedida
+                                    .FirstOrDefaultAsync(u => u.IdUnidad == det.IdUnidad);
+                                if (unidad != null)
+                                    factor = unidad.EquivalenciaEnUnidades;
+                            }
+                        }
+
+                        // 🔹 Calcular cantidad real en unidades base
+                        var cantidadReal = det.Cantidad * factor;
+
+                        if (inventario.StockActual < cantidadReal)
                         {
                             await transaction.RollbackAsync();
                             return BadRequest(new
                             {
                                 success = false,
-                                message = $"Stock insuficiente para el producto '{det.IdProducto}'. " +
-                                          $"Disponible: {inventario.StockActual}, solicitado: {det.Cantidad}."
+                                message = $"Stock insuficiente para el producto con ID {det.IdProducto}. " +
+                                          $"Disponible: {inventario.StockActual}, solicitado: {cantidadReal} unidades base."
                             });
                         }
                     }
 
-                    // Promoción
+                    // 🧩 PROMOCIÓN (KIT)
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
@@ -143,7 +218,6 @@ namespace ProyectoLogin.Controllers
                             return BadRequest(new { success = false, message = "Promoción no encontrada." });
                         }
 
-                        // Verificar stock de cada producto dentro del kit
                         foreach (var kd in kit.Detalles)
                         {
                             var inventario = await _context.Inventarios
@@ -155,21 +229,22 @@ namespace ProyectoLogin.Controllers
                                 return BadRequest(new
                                 {
                                     success = false,
-                                    message = $"Stock insuficiente para '{kd.Producto?.Nombre ?? "producto"}' en promoción '{kit.Nombre}'."
+                                    message = $"Stock insuficiente para '{kd.Producto?.Nombre ?? "producto"}' en la promoción '{kit.Nombre}'."
                                 });
                             }
+
                         }
                     }
                 }
 
-                // Registrar venta
+                // === REGISTRAR VENTA ===
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // Descontar inventario
+                // === DESCONTAR INVENTARIO ===
                 foreach (var det in venta.Detalles)
                 {
-                    // Producto normal
+                    // 🧩 PRODUCTO NORMAL
                     if (det.IdProducto > 0)
                     {
                         var inventario = await _context.Inventarios
@@ -177,13 +252,34 @@ namespace ProyectoLogin.Controllers
 
                         if (inventario != null)
                         {
-                            inventario.StockActual -= det.Cantidad;
+                            int factor = 1;
+
+                            if (det.IdUnidad.HasValue)
+                            {
+                                var productoUnidad = await _context.ProductosUnidades
+                                    .FirstOrDefaultAsync(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+
+                                if (productoUnidad != null)
+                                    factor = productoUnidad.FactorConversion;
+                                else
+                                {
+                                    var unidad = await _context.UnidadesMedida
+                                        .FirstOrDefaultAsync(u => u.IdUnidad == det.IdUnidad);
+                                    if (unidad != null)
+                                        factor = unidad.EquivalenciaEnUnidades;
+                                }
+                            }
+
+                            // 🔹 Cantidad real en unidades base
+                            var cantidadReal = det.Cantidad * factor;
+
+                            inventario.StockActual -= cantidadReal;
                             inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
                             _context.Inventarios.Update(inventario);
                         }
                     }
 
-                    // Promoción 
+                    // 🧩 PROMOCIÓN (KIT)
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
@@ -199,7 +295,8 @@ namespace ProyectoLogin.Controllers
 
                                 if (inventario != null)
                                 {
-                                    inventario.StockActual -= kd.Cantidad; // Resta por producto del kit
+                                    // Cada kit descuenta sus productos base
+                                    inventario.StockActual -= kd.Cantidad;
                                     inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
                                     _context.Inventarios.Update(inventario);
                                 }
@@ -228,6 +325,8 @@ namespace ProyectoLogin.Controllers
                 });
             }
         }
+
+
 
 
 
