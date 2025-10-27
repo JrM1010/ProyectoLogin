@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProyectoLogin.Migrations
 {
     /// <inheritdoc />
-    public partial class reinicio : Migration
+    public partial class Reinicio : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

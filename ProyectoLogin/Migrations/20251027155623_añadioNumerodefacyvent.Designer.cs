@@ -12,15 +12,15 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251024055113_correccionesendbcontext")]
-    partial class Correccionesendbcontext
+    [Migration("20251027155623_añadioNumerodefacyvent")]
+    partial class añadioNumerodefacyvent
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -416,6 +416,9 @@ namespace ProyectoLogin.Migrations
                     b.Property<int?>("IdProducto")
                         .HasColumnType("int");
 
+                    b.Property<int?>("IdUnidad")
+                        .HasColumnType("int");
+
                     b.Property<int>("IdVenta")
                         .HasColumnType("int");
 
@@ -463,6 +466,12 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<string>("MetodoPago")
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("NumeroFactura")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroVenta")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");

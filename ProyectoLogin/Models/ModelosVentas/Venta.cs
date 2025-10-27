@@ -9,6 +9,9 @@ namespace ProyectoLogin.Models.ModelosVentas
         [Key]
         public int IdVenta { get; set; }
 
+        public string? NumeroVenta { get; set; }
+        public string? NumeroFactura { get; set; }
+
         public int? IdCliente { get; set; }
         public int IdUsuario { get; set; }  
 

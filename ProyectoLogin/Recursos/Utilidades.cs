@@ -7,9 +7,9 @@ namespace ProyectoLogin.Recursos
     {
         public static string EncriptarClave(string clave)
         {            
-            StringBuilder sb = new StringBuilder(); 
-   
-            using (SHA256 hash = SHA256Managed.Create()) 
+            StringBuilder sb = new StringBuilder();
+
+            using (SHA256 hash = SHA256Managed.Create())
             {
                 
                 Encoding enc = Encoding.UTF8; 

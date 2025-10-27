@@ -13,7 +13,7 @@ namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
     [Migration("20251024025412_reinicio")]
-    partial class reinicio
+    partial class Reinicio
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

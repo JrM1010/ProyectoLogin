@@ -5,7 +5,7 @@
 namespace ProyectoLogin.Migrations
 {
     /// <inheritdoc />
-    public partial class correccionesendbcontext : Migration
+    public partial class Correccionesendbcontext : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

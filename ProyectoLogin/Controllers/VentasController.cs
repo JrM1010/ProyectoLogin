@@ -160,7 +160,7 @@ namespace ProyectoLogin.Controllers
             venta.IdUsuario = int.Parse(userId);
             venta.FechaVenta = FechaLocal.Ahora();
 
-            // Calcular totales
+            // === Calcular totales ===
             venta.Subtotal = venta.Detalles.Sum(d => d.Subtotal);
             venta.IVA = venta.Subtotal * 0.12m;
             venta.Total = venta.Subtotal + venta.IVA;
@@ -188,7 +188,6 @@ namespace ProyectoLogin.Controllers
                             });
                         }
 
-                        // ✅ Obtener factor de conversión según unidad
                         decimal factor = 1m;
 
                         if (det.IdUnidad.HasValue)
@@ -207,7 +206,6 @@ namespace ProyectoLogin.Controllers
                             }
                         }
 
-                        // 🔹 Calcular cantidad real en unidades base
                         var cantidadReal = det.Cantidad * factor;
 
                         if (inventario.StockActual < cantidadReal)
@@ -221,13 +219,12 @@ namespace ProyectoLogin.Controllers
                             });
                         }
                     }
-
                     // 🧩 PROMOCIÓN (KIT)
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
                             .Include(k => k.Detalles!)
-                                .ThenInclude(d => d.Producto)
+                            .ThenInclude(d => d.Producto)
                             .FirstOrDefaultAsync(k => k.IdKit == det.IdKit);
 
                         if (kit == null)
@@ -250,10 +247,14 @@ namespace ProyectoLogin.Controllers
                                     message = $"Stock insuficiente para '{kd.Producto?.Nombre ?? "producto"}' en la promoción '{kit.Nombre}'."
                                 });
                             }
-
                         }
                     }
                 }
+
+                // === GENERAR NÚMEROS DE VENTA Y FACTURA ===
+                int totalVentas = await _context.Ventas.CountAsync();
+                venta.NumeroVenta = $"V-{(totalVentas + 1).ToString("D6")}";
+                venta.NumeroFactura = $"F-{DateTime.Now:yyyy}-{(totalVentas + 1).ToString("D6")}";
 
                 // === REGISTRAR VENTA ===
                 _context.Ventas.Add(venta);
@@ -262,7 +263,6 @@ namespace ProyectoLogin.Controllers
                 // === DESCONTAR INVENTARIO ===
                 foreach (var det in venta.Detalles)
                 {
-                    // 🧩 PRODUCTO NORMAL
                     if (det.IdProducto > 0)
                     {
                         var inventario = await _context.Inventarios
@@ -288,7 +288,6 @@ namespace ProyectoLogin.Controllers
                                 }
                             }
 
-                            // 🔹 Cantidad real en unidades base
                             var cantidadReal = det.Cantidad * factor;
 
                             inventario.StockActual -= cantidadReal;
@@ -296,8 +295,6 @@ namespace ProyectoLogin.Controllers
                             _context.Inventarios.Update(inventario);
                         }
                     }
-
-                    // 🧩 PROMOCIÓN (KIT)
                     else if (det.IdKit != null && det.IdKit > 0)
                     {
                         var kit = await _context.Kits
@@ -313,7 +310,6 @@ namespace ProyectoLogin.Controllers
 
                                 if (inventario != null)
                                 {
-                                    // Cada kit descuenta sus productos base
                                     inventario.StockActual -= kd.Cantidad;
                                     inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
                                     _context.Inventarios.Update(inventario);
@@ -325,12 +321,14 @@ namespace ProyectoLogin.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                
+
                 return Ok(new
                 {
                     success = true,
                     message = "✅ Venta registrada correctamente.",
-                    idVenta = venta.IdVenta
+                    idVenta = venta.IdVenta,
+                    numeroVenta = venta.NumeroVenta,
+                    numeroFactura = venta.NumeroFactura
                 });
             }
             catch (Exception ex)
@@ -343,6 +341,7 @@ namespace ProyectoLogin.Controllers
                 });
             }
         }
+
 
 
 
