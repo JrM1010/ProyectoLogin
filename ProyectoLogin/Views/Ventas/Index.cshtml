@@ -110,15 +110,15 @@
 
                     <div class="mb-2">
                         <label class="form-label fw-semibold">Subtotal</label>
-                        <input type="text" id="subtotal" class="form-control form-control-sm text-end" value="0.00" readonly />
+                        <input type="text" id="subtotal" class="form-control form-control-sm text-end" value="Q0.00" readonly />
                     </div>
                     <div class="mb-2">
                         <label class="form-label fw-semibold">IVA (12%)</label>
-                        <input type="text" id="iva" class="form-control form-control-sm text-end" value="0.00" readonly />
+                        <input type="text" id="iva" class="form-control form-control-sm text-end" value="Q0.00" readonly />
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Total</label>
-                        <input type="text" id="total" class="form-control form-control-sm text-end fs-5 fw-bold text-success" value="0.00" readonly />
+                        <input type="text" id="total" class="form-control form-control-sm text-end fs-5 fw-bold text-success" value="Q0.00" readonly />
                     </div>
 
                     <hr />
@@ -277,6 +277,11 @@
         background-color: #e9f7ef;
         font-size: 1.1rem;
     }
+
+    .form-control.text-end {
+        text-align: right !important;
+    }
+
 </style>
 
 @section Scripts {
@@ -356,7 +361,28 @@
             }
         });
 
-          function mostrarSugerencias(lista, contenedor) {
+                // FUNCIÓN PARA FORMATEAR NÚMEROS EN FORMATO GUATEMALTECO
+        function formatearNumeroGuatemala(numero) {
+            if (numero === null || numero === undefined || isNaN(numero)) {
+                return "0.00";
+            }
+
+            // Convertir a número si es string
+            const num = typeof numero === 'string' ? parseFloat(numero) : numero;
+
+            return num.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // FUNCIÓN PARA FORMATEAR MONEDA EN FORMATO GUATEMALTECO
+        function formatearMonedaGuatemala(monto) {
+            return `Q${formatearNumeroGuatemala(monto)}`;
+        }
+
+
+         function mostrarSugerencias(lista, contenedor) {
              const prev = contenedor.querySelector(".suggestions-box");
              if (prev) prev.remove();
              if (!lista.length) return;
@@ -378,18 +404,17 @@
             const item = document.createElement("button");
             item.type = "button";
             item.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div>
-                        <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
-                        <br>
-                        ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
-                    </div>
-                    <span class="text-muted">Q${p.precio.toFixed(2)}</span>
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
+                    <br>
+                    ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
                 </div>
-            `;
+                <span class="text-muted">${formatearMonedaGuatemala(p.precio)}</span>
+            </div>`;
             item.onclick = () => { seleccionarProducto(p); div.remove(); };
             div.appendChild(item);
-        });
+       });
 
               contenedor.appendChild(div);
              document.addEventListener("click", (ev) => {
@@ -476,14 +501,13 @@
             tablaBody.innerHTML = "";
 
             productosSeleccionados.forEach((p, i) => {
-                // 🔴 VALIDAR QUE LA UNIDAD SELECCIONADA SIGUE SIENDO VÁLIDA
+                // VALIDAR QUE LA UNIDAD SELECCIONADA SIGUE SIENDO VÁLIDA
                 let unidadActual = (p.unidades || []).find(u =>
                     (u.IdUnidad ?? u.idUnidad) == p.idUnidadSeleccionada
                 );
 
                 // Si la unidad actual no es válida o no tiene stock, buscar la primera disponible
                 if (!unidadActual) {
-                    // Buscar la primera unidad disponible
                     const primeraUnidadValida = (p.unidades || []).find(u => {
                         const factorU = parseFloat(u.FactorConversion) || 1;
                         const disponibles = Math.floor((p.stock || 0) / factorU);
@@ -506,7 +530,7 @@
 
                 const tr = document.createElement("tr");
 
-                // 🔴 MEJORAR OPCIONES CON VALIDACIÓN DE STOCK
+                // MEJORAR OPCIONES CON VALIDACIÓN DE STOCK
                 const opcionesUnidades = (p.unidades || []).map(u => {
                     const id = u.IdUnidad ?? u.idUnidad;
                     const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
@@ -522,21 +546,20 @@
                             </option>`;
                 }).join("");
 
-                // ... el resto de tu código de renderTabla permanece igual
-                // Etiquetas de stock
                 let badgeStock = "";
                 if (p.stock <= 3 && p.stock > 0)
                     badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
                 else if (p.stock <= 0)
                     badgeStock = `<span class="badge bg-danger ms-2">Sin stock</span>`;
 
+                
                 tr.innerHTML = `
                     <td class="text-start">
                         ${p.nombre} ${badgeStock}
-                        <div class="small text-muted">Unidades en sotck: ${p.stock}</div>
+                        <div class="small text-muted">Unidades Disponibles: ${formatearNumeroGuatemala(p.stock)}</div>
                     </td>
 
-                    <td>Q${p.precio ? p.precio.toFixed(2) : "0.00"}</td>
+                    <td>${formatearMonedaGuatemala(p.precio)}</td> 
 
                     <td>
                         <select class="form-select form-select-sm text-center unidadSelect"
@@ -549,7 +572,7 @@
                     <td>
                         <div class="input-group input-group-sm justify-content-center">
                             <button class="btn btn-outline-secondary btn-sm"
-                                    onclick="cambiarCantidad(${i}, -1)"
+                                    onclick="cambiarCantidadProducto(${i}, -1)"
                                     ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>-</button>
                             <input type="number"
                                    min="1"
@@ -557,10 +580,10 @@
                                    class="form-control text-center"
                                    style="max-width:60px;"
                                    value="${p.cantidad}"
-                                   onchange="actualizarCantidad(${i}, this.value)"
+                                   onchange="actualizarCantidadProducto(${i}, this.value)"
                                    ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
                             <button class="btn btn-outline-secondary btn-sm"
-                                    onclick="cambiarCantidad(${i}, 1)"
+                                    onclick="cambiarCantidadProducto(${i}, 1)"
                                     ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
                         </div>
                         ${disponiblesEnUnidad < 1 ?
@@ -576,7 +599,7 @@
                                ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
                     </td>
 
-                    <td>Q${isNaN(subtotal) ? "0.00" : subtotal.toFixed(2)}</td>
+                    <td>${formatearMonedaGuatemala(subtotal)}</td>  <!-- 🔴 CAMBIADO -->
 
                     <td>
                         <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
@@ -595,9 +618,8 @@
         function cambiarUnidad(index, idUnidadSeleccionada) {
             const producto = productosSeleccionados[index];
 
-            // Guardar el valor actual ANTES de cualquier cambio
             const unidadAnterior = producto.idUnidadSeleccionada;
-
+         
             // Encontrar la unidad seleccionada
             const unidadSeleccionada = producto.unidades.find(u =>
                 (u.IdUnidad ?? u.idUnidad) == idUnidadSeleccionada
@@ -612,14 +634,14 @@
             const factor = parseFloat(unidadSeleccionada.FactorConversion ?? unidadSeleccionada.factorConversion ?? 1);
             const precioBase = producto.precioBase ?? producto.precio;
 
-            // 🔴 VALIDAR STOCK ANTES DE CAMBIAR
+            // VALIDAR STOCK ANTES DE CAMBIAR
             const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
 
             if (disponiblesEnUnidad < 1) {
                 const nombreUnidad = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? "esta presentación";
                 mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}.`, "danger");
 
-                // 🔴 RESTAURAR INMEDIATAMENTE el valor anterior
+                // RESTAURAR INMEDIATAMENTE el valor anterior
                 restaurarSelectUnidad(index, unidadAnterior);
                 return;
             }
@@ -639,9 +661,9 @@
             renderTabla();
         }
 
-        // 🔴 NUEVA FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
+        // FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
         function restaurarSelectUnidad(index, valorAnterior) {
-            // Usar setTimeout para asegurar que el DOM esté actualizado
+            
             setTimeout(() => {
                 const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
                 if (select) {
@@ -650,55 +672,63 @@
             }, 0);
         }
 
+        // FUNCIÓN CENTRALIZADA PARA CAMBIAR CANTIDAD
+        function cambiarCantidadProducto(index, delta) {
+            const producto = productosSeleccionados[index];
+            if (!producto) return;
 
-        function onChangeUnidad(e) {
-            const idx = parseInt(e.target.dataset.index);
-            const idUnidad = e.target.value ? parseInt(e.target.value) : null;
-            productosSeleccionados[idx].idUnidadSeleccionada = idUnidad;
+            // Obtener información de la unidad seleccionada
+            const unidadSel = (producto.unidades || []).find(u =>
+                (u.IdUnidad ?? u.idUnidad) == producto.idUnidadSeleccionada
+            );
 
-            // ajuste de cantidad si supera el disponible en la nueva unidad
-            const p = productosSeleccionados[idx];
-            const unidadSel = (p.unidades || []).find(u => u.IdUnidad == p.idUnidadSeleccionada);
             const factor = unidadSel ? (parseFloat(unidadSel.FactorConversion) || 1) : 1;
-            const disponiblesEnUnidad = Math.floor((p.stock || 0) / factor);
-            if (p.cantidad > disponiblesEnUnidad) {
-                mostrarMensaje(`⚠️ La cantidad actual supera la disponibilidad en la unidad seleccionada. Se ajustó a ${disponiblesEnUnidad}.`, "warning");
-                p.cantidad = Math.max(1, disponiblesEnUnidad);
+            const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
+
+            // Calcular nueva cantidad
+            let nuevaCantidad = producto.cantidad + delta;
+
+            // VALIDACIONES CENTRALIZADAS
+            if (nuevaCantidad < 1) {
+                nuevaCantidad = 1;
+                mostrarMensaje("❌ La cantidad mínima es 1", "warning");
+            } else if (nuevaCantidad > disponiblesEnUnidad) {
+                nuevaCantidad = disponiblesEnUnidad;
+                mostrarMensaje(`⚠️ No hay suficiente stock. Máximo disponible: ${disponiblesEnUnidad}`, "warning");
             }
 
+            // Aplicar cambio
+            producto.cantidad = nuevaCantidad;
             renderTabla();
         }
 
+        // 🔴 FUNCIÓN CENTRALIZADA PARA ACTUALIZAR CANTIDAD DESDE INPUT
+        function actualizarCantidadProducto(index, nuevaCantidadStr) {
+            const producto = productosSeleccionados[index];
+            if (!producto) return;
 
-        function actualizarCantidad(i, v) {
-            const p = productosSeleccionados[i];
-            if (!p) return;
+            // Obtener información de la unidad seleccionada
+            const unidadSel = (producto.unidades || []).find(u =>
+                (u.IdUnidad ?? u.idUnidad) == producto.idUnidadSeleccionada
+            );
 
-            // parseo y validación
-            let val = parseInt(v);
-            if (isNaN(val) || val < 1) val = 1;
+            const factor = unidadSel ? (parseFloat(unidadSel.FactorConversion) || 1) : 1;
+            const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
 
-                    if (!p.esKit) {
-            unidadHtml += `<select class="form-select form-select-sm unidadSelect" data-index="${i}">`;
-            if (p.unidades && p.unidades.length) {
-
-                p.unidades.forEach(u => {
-                    const sel = (u.IdUnidad == p.idUnidadSeleccionada) ? 'selected' : '';
-                    const factor = parseInt(u.FactorConversion) || 1;
-                    const disponiblesEnUnidad = Math.floor((p.stock || 0) / factor);
-
-                    // Si no hay stock suficiente ni para 1 unidad de esta presentación
-                    const disabled = disponiblesEnUnidad < 1 ? 'disabled' : '';
-                    const alerta = disponiblesEnUnidad < 1 ? ' ⚠️' : '';
-
-                    unidadHtml += `<option value="${u.IdUnidad}" data-factor="${factor}" ${sel} ${disabled}>${u.Nombre}${alerta}</option>`;
-                });
-            } else {
-                unidadHtml += `<option value="">Unidad</option>`;
+            // Convertir y validar
+            let nuevaCantidad = parseInt(nuevaCantidadStr);
+            if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+                nuevaCantidad = 1;
             }
-            unidadHtml += `</select>`;
-        }
-            p.cantidad = val;
+
+            // 🔴 VALIDACIONES CENTRALIZADAS
+            if (nuevaCantidad > disponiblesEnUnidad) {
+                nuevaCantidad = disponiblesEnUnidad;
+                mostrarMensaje(`⚠️ No hay suficiente stock. Máximo disponible: ${disponiblesEnUnidad}`, "warning");
+            }
+
+            // Aplicar cambio
+            producto.cantidad = nuevaCantidad;
             renderTabla();
         }
 
@@ -721,9 +751,9 @@
             const ivaEl = document.querySelector("#iva");
             const totEl = document.querySelector("#total");
 
-            if (subEl) subEl.value = subtotal.toFixed(2);
-            if (ivaEl) ivaEl.value = iva.toFixed(2);
-            if (totEl) totEl.value = total.toFixed(2);
+                if (subEl) subEl.value = formatearNumeroGuatemala(subtotal);
+                if (ivaEl) ivaEl.value = formatearNumeroGuatemala(iva);
+                if (totEl) totEl.value = formatearNumeroGuatemala(total);
         }
 
         document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
@@ -901,8 +931,8 @@
             }
         }
 
-            const total = parseFloat(totalInput.value || 0);
-            totalCobro.textContent = `Q${total.toFixed(2)}`;
+            const total = parseFloat(totalInput.value.replace(/[Q,]/g, '') || 0); 
+                  totalCobro.textContent = formatearMonedaGuatemala(total);
             metodoPago.value = "efectivo";
             seccionesPago.forEach(div => div.classList.add("d-none"));
             const el = document.querySelector("#pagoEfectivo");
@@ -920,17 +950,18 @@
         });
 
         document.querySelector("#montoRecibido")?.addEventListener("input", () => {
-            const total = parseFloat(totalInput.value || 0);
+            const total = parseFloat(document.querySelector("#total").value.replace(/[Q,]/g, '') || 0); 
             const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
             const cambio = recibido - total;
-            document.querySelector("#cambio").value = cambio >= 0 ? `Q${cambio.toFixed(2)}` : "—";
+        document.querySelector("#cambio").value = cambio >= 0 ? formatearMonedaGuatemala(cambio) : "—";
         });
 
         document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
             try {
-                const total = parseFloat(document.querySelector("#total").value || 0);
-                const subtotal = parseFloat(document.querySelector("#subtotal").value || 0);
-                const iva = parseFloat(document.querySelector("#iva").value || 0);
+                
+                const total = limpiarFormatoMoneda(document.querySelector("#total").value);
+                const subtotal = limpiarFormatoMoneda(document.querySelector("#subtotal").value);
+                const iva = limpiarFormatoMoneda(document.querySelector("#iva").value);
                 const metodo = document.getElementById("metodoPago").value || "efectivo";
 
                 if (!productosSeleccionados.length) {
@@ -938,17 +969,17 @@
                     return;
                 }
 
-        const detalles = productosSeleccionados.map(p => {
-          const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
-          return {
-            IdProducto: p.esKit ? null : Number(p.id),
-            IdKit: p.esKit ? Number(p.idKit) : null,
-            IdUnidad: p.esKit ? null : Number(p.idUnidadSeleccionada || 0), // 👈 NUEVO
-            Cantidad: Number(p.cantidad),
-            PrecioUnitario: Number(p.precio),
-            Descuento: Number(p.descuento || 0),
-            Subtotal: sub
-          };
+                const detalles = productosSeleccionados.map(p => {
+                const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
+                return {
+                    IdProducto: p.esKit ? null : Number(p.id),
+                    IdKit: p.esKit ? Number(p.idKit) : null,
+                    IdUnidad: p.esKit ? null : Number(p.idUnidadSeleccionada || 0), // 👈 NUEVO
+                    Cantidad: Number(p.cantidad),
+                    PrecioUnitario: Number(p.precio),
+                    Descuento: Number(p.descuento || 0),
+                    Subtotal: sub
+                };
         });
 
 
@@ -996,8 +1027,8 @@
 
                  limpiarCamposDespuesVenta();
 
-        const idVenta = data.idVenta;
-        const btnDescargar = document.getElementById("btnDescargarFactura");
+                const idVenta = data.idVenta;
+                const btnDescargar = document.getElementById("btnDescargarFactura");
         if (btnDescargar) {
             btnDescargar.classList.remove("d-none");
             btnDescargar.onclick = () => {
@@ -1126,9 +1157,10 @@
             const subtotalEl = document.querySelector("#subtotal");
             const ivaEl = document.querySelector("#iva");
             const totalEl = document.querySelector("#total");
-            if (subtotalEl) subtotalEl.value = "0.00";
-            if (ivaEl) ivaEl.value = "0.00";
-            if (totalEl) totalEl.value = "0.00";
+
+            if (subtotalEl) subtotalEl.value = "Q0.00";
+            if (ivaEl) ivaEl.value = "Q0.00";
+            if (totalEl) totalEl.value = "Q0.00";
 
             document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
             document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
