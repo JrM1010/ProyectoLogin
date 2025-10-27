@@ -400,7 +400,6 @@
              }, { once: true });
          }
 
-                 // Asumo que ya tienes: productosSeleccionados = [], inputBusqueda, tablaBody y mostrarMensaje()
 
         function seleccionarProducto(prod) {
             const esKit = prod.tipo === "kit";
@@ -473,21 +472,41 @@
 
 
         //Renderiza la tabla para el listado
-                        function renderTabla() {
+        function renderTabla() {
             tablaBody.innerHTML = "";
 
             productosSeleccionados.forEach((p, i) => {
-                const unidadSel = (p.unidades || []).find(u =>
+                // 🔴 VALIDAR QUE LA UNIDAD SELECCIONADA SIGUE SIENDO VÁLIDA
+                let unidadActual = (p.unidades || []).find(u =>
                     (u.IdUnidad ?? u.idUnidad) == p.idUnidadSeleccionada
                 );
 
-                const factor = unidadSel ? (parseFloat(unidadSel.FactorConversion) || 1) : 1;
+                // Si la unidad actual no es válida o no tiene stock, buscar la primera disponible
+                if (!unidadActual) {
+                    // Buscar la primera unidad disponible
+                    const primeraUnidadValida = (p.unidades || []).find(u => {
+                        const factorU = parseFloat(u.FactorConversion) || 1;
+                        const disponibles = Math.floor((p.stock || 0) / factorU);
+                        return disponibles >= 1;
+                    });
+
+                    if (primeraUnidadValida) {
+                        p.idUnidadSeleccionada = primeraUnidadValida.IdUnidad ?? primeraUnidadValida.idUnidad;
+                        unidadActual = primeraUnidadValida;
+                    } else {
+                        // Si no hay ninguna unidad disponible, usar la primera
+                        p.idUnidadSeleccionada = (p.unidades[0]?.IdUnidad ?? p.unidades[0]?.idUnidad) || null;
+                        unidadActual = p.unidades[0] || null;
+                    }
+                }
+
+                const factor = unidadActual ? (parseFloat(unidadActual.FactorConversion) || 1) : 1;
                 const disponiblesEnUnidad = Math.floor((p.stock || 0) / factor);
                 const subtotal = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
 
                 const tr = document.createElement("tr");
 
-                // 🔹 Opciones del select con bloqueo visual y alerta
+                // 🔴 MEJORAR OPCIONES CON VALIDACIÓN DE STOCK
                 const opcionesUnidades = (p.unidades || []).map(u => {
                     const id = u.IdUnidad ?? u.idUnidad;
                     const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
@@ -495,25 +514,26 @@
                     const disponibles = Math.floor((p.stock || 0) / factorU);
 
                     const disabled = disponibles < 1 ? "disabled" : "";
-                    const alerta = disponibles < 1 ? " ⚠️" : "";
+                    const selected = id === p.idUnidadSeleccionada ? "selected" : "";
+                    const alertaStock = disponibles < 1 ? " (Sin stock)" : "";
 
-                    return `<option value="${id}" ${disabled} ${id === p.idUnidadSeleccionada ? "selected" : ""}>
-                                ${nombre}${alerta}
+                    return `<option value="${id}" ${selected} ${disabled}>
+                                ${nombre}${alertaStock}
                             </option>`;
                 }).join("");
 
-                // 🔹 Etiquetas de stock
+                // ... el resto de tu código de renderTabla permanece igual
+                // Etiquetas de stock
                 let badgeStock = "";
                 if (p.stock <= 3 && p.stock > 0)
                     badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
                 else if (p.stock <= 0)
                     badgeStock = `<span class="badge bg-danger ms-2">Sin stock</span>`;
 
-                // 🔹 Fila completa
                 tr.innerHTML = `
                     <td class="text-start">
                         ${p.nombre} ${badgeStock}
-                        <div class="small text-muted">Disp: ${disponiblesEnUnidad}</div>
+                        <div class="small text-muted">Unidades en sotck: ${p.stock}</div>
                     </td>
 
                     <td>Q${p.precio ? p.precio.toFixed(2) : "0.00"}</td>
@@ -528,18 +548,32 @@
 
                     <td>
                         <div class="input-group input-group-sm justify-content-center">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, -1)">-</button>
-                            <input type="number" min="1" max="${disponiblesEnUnidad}"
-                                   class="form-control text-center" style="max-width:60px;"
-                                   value="${p.cantidad}" onchange="actualizarCantidad(${i}, this.value)">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidad(${i}, 1)">+</button>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    onclick="cambiarCantidad(${i}, -1)"
+                                    ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>-</button>
+                            <input type="number"
+                                   min="1"
+                                   max="${disponiblesEnUnidad}"
+                                   class="form-control text-center"
+                                   style="max-width:60px;"
+                                   value="${p.cantidad}"
+                                   onchange="actualizarCantidad(${i}, this.value)"
+                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    onclick="cambiarCantidad(${i}, 1)"
+                                    ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
                         </div>
+                        ${disponiblesEnUnidad < 1 ?
+                          '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' : ''}
                     </td>
 
                     <td>
-                        <input type="number" class="form-control form-control-sm text-center"
-                               min="0" max="100" value="${p.descuento}"
-                               onchange="actualizarDescuento(${i}, this.value)">
+                        <input type="number"
+                               class="form-control form-control-sm text-center"
+                               min="0" max="100"
+                               value="${p.descuento}"
+                               onchange="actualizarDescuento(${i}, this.value)"
+                               ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
                     </td>
 
                     <td>Q${isNaN(subtotal) ? "0.00" : subtotal.toFixed(2)}</td>
@@ -558,24 +592,62 @@
         }
 
 
-                function cambiarUnidad(index, idUnidadSeleccionada) {
+        function cambiarUnidad(index, idUnidadSeleccionada) {
             const producto = productosSeleccionados[index];
-            producto.idUnidadSeleccionada = parseInt(idUnidadSeleccionada);
 
+            // Guardar el valor actual ANTES de cualquier cambio
+            const unidadAnterior = producto.idUnidadSeleccionada;
+
+            // Encontrar la unidad seleccionada
             const unidadSeleccionada = producto.unidades.find(u =>
                 (u.IdUnidad ?? u.idUnidad) == idUnidadSeleccionada
             );
 
-            if (unidadSeleccionada) {
-                const factor = unidadSeleccionada.FactorConversion ?? unidadSeleccionada.factorConversion ?? 1;
-                const precioBase = producto.precioBase ?? producto.precio;
-                producto.precioBase = precioBase;
-                producto.precio = precioBase * factor;
-
-                mostrarMensaje(`🔁 Precio actualizado según unidad: ${unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre}`, "info");
+            if (!unidadSeleccionada) {
+                // Si no encuentra la unidad, restaurar inmediatamente
+                restaurarSelectUnidad(index, unidadAnterior);
+                return;
             }
 
+            const factor = parseFloat(unidadSeleccionada.FactorConversion ?? unidadSeleccionada.factorConversion ?? 1);
+            const precioBase = producto.precioBase ?? producto.precio;
+
+            // 🔴 VALIDAR STOCK ANTES DE CAMBIAR
+            const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
+
+            if (disponiblesEnUnidad < 1) {
+                const nombreUnidad = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? "esta presentación";
+                mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}.`, "danger");
+
+                // 🔴 RESTAURAR INMEDIATAMENTE el valor anterior
+                restaurarSelectUnidad(index, unidadAnterior);
+                return;
+            }
+
+            // Si la cantidad actual supera el nuevo disponible, ajustarla
+            if (producto.cantidad > disponiblesEnUnidad) {
+                producto.cantidad = disponiblesEnUnidad;
+                mostrarMensaje(`⚠️ La cantidad se ajustó al máximo disponible: ${disponiblesEnUnidad}`, "warning");
+            }
+
+            // Aplicar cambios solo si pasa todas las validaciones
+            producto.idUnidadSeleccionada = parseInt(idUnidadSeleccionada);
+            producto.precioBase = precioBase;
+            producto.precio = precioBase * factor;
+
+            mostrarMensaje(`🔁 Presentación cambiada a: ${unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre}`, "info");
             renderTabla();
+        }
+
+        // 🔴 NUEVA FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
+        function restaurarSelectUnidad(index, valorAnterior) {
+            // Usar setTimeout para asegurar que el DOM esté actualizado
+            setTimeout(() => {
+                const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
+                if (select) {
+                    select.value = valorAnterior;
+                }
+            }, 0);
         }
 
 
@@ -764,7 +836,7 @@
             if (el) el.classList.remove("d-none");
         });
 
-            btnCobrar.addEventListener("click", async () => {
+        btnCobrar.addEventListener("click", async () => {
         if (!productosSeleccionados.length) {
             mostrarMensaje("No hay productos en la venta. Agrega al menos uno antes de cobrar.", "warning");
             const tabla = document.getElementById("tablaProductos");
