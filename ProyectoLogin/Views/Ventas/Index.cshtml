@@ -32,8 +32,7 @@
                                     <th>Presentacion</th>
                                     <th>Cantidad</th>
                                     <th>Desc. %</th>
-                                    <th>Subtotal</th>
-                                    <th></th>
+                                    <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -562,61 +561,59 @@
                 else if (p.stock <= 0)
                     badgeStock = `<span class="badge bg-danger ms-2">Sin stock</span>`;
 
-                
-                tr.innerHTML = `
-                    <td class="text-start">
-                        ${p.nombre} ${badgeStock}
-                        <div class="small text-muted">Unidades Disponibles: ${formatearNumeroGuatemala(p.stock)}</div>
-                    </td>
 
-                    <td>${formatearMonedaGuatemala(p.precio)}</td> 
+                        tr.innerHTML = `
+            <td class="text-start">
+                ${p.nombre} ${badgeStock}
+                <div class="small text-muted">Unidades Disponibles: ${formatearNumeroGuatemala(p.stock)}</div>
+            </td>
 
-                    <td>
-                        <select class="form-select form-select-sm text-center unidadSelect"
-                                data-index="${i}"
-                                onchange="cambiarUnidad(${i}, this.value)">
-                            ${opcionesUnidades}
-                        </select>
-                    </td>
+            <td>${formatearMonedaGuatemala(p.precio)}</td>
 
-                    <td>
-                        <div class="input-group input-group-sm justify-content-center">
-                            <button class="btn btn-outline-secondary btn-sm"
-                                    onclick="cambiarCantidadProducto(${i}, -1)"
-                                    ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>-</button>
-                            <input type="number"
-                                   min="1"
-                                   max="${disponiblesEnUnidad}"
-                                   class="form-control text-center"
-                                   style="max-width:60px;"
-                                   value="${p.cantidad}"
-                                   onchange="actualizarCantidadProducto(${i}, this.value)"
-                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
-                            <button class="btn btn-outline-secondary btn-sm"
-                                    onclick="cambiarCantidadProducto(${i}, 1)"
-                                    ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
-                        </div>
-                        ${disponiblesEnUnidad < 1 ?
-                          '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' : ''}
-                    </td>
+            <td>
+                <select class="form-select form-select-sm text-center unidadSelect"
+                        data-index="${i}"
+                        onchange="cambiarUnidad(${i}, this.value)">
+                    ${opcionesUnidades}
+                </select>
+            </td>
 
-                    <td>
-                        <input type="number"
-                               class="form-control form-control-sm text-center"
-                               min="0" max="100"
-                               value="${p.descuento}"
-                               onchange="actualizarDescuento(${i}, this.value)"
-                               ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
-                    </td>
+            <td>
+                <div class="input-group input-group-sm justify-content-center">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            onclick="cambiarCantidadProducto(${i}, -1)"
+                            ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>-</button>
+                    <input type="number"
+                           min="1"
+                           max="${disponiblesEnUnidad}"
+                           class="form-control text-center"
+                           style="max-width:60px;"
+                           value="${p.cantidad}"
+                           onchange="actualizarCantidadProducto(${i}, this.value)"
+                           ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
+                    <button class="btn btn-outline-secondary btn-sm"
+                            onclick="cambiarCantidadProducto(${i}, 1)"
+                            ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
+                </div>
+                ${disponiblesEnUnidad < 1 ?
+                  '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' : ''}
+            </td>
 
-                    <td>${formatearMonedaGuatemala(subtotal)}</td>  <!-- 🔴 CAMBIADO -->
+            <td>
+                <input type="number"
+                       class="form-control form-control-sm text-center"
+                       min="0" max="100"
+                       value="${p.descuento}"
+                       onchange="actualizarDescuento(${i}, this.value)"
+                       ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
+            </td>
 
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                `;
+            <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
 
                 tablaBody.appendChild(tr);
             });
