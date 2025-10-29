@@ -59,6 +59,14 @@
                 </a>
             }
 
+            @if (User.IsInRole("Administrador"))
+            {
+            
+                <a asp-controller="AjustesInventario" asp-action="Index" class="btn btn-success btn-lg">
+                    <i class="fas fa-clipboard-list"></i> Ajuste Inventario
+                </a>
+            }
+
 
         </div>
     </div>

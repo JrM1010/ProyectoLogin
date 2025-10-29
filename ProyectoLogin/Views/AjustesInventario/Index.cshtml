@@ -1,0 +1,288 @@
+﻿@{
+    ViewData["Title"] = "Ajuste de Inventario";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Ajuste Manual de Inventario</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Búsqueda de Producto -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="buscarProducto">Buscar Producto (Código de Barras o Nombre):</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="buscarProducto"
+                                           placeholder="Ingrese código o nombre del producto...">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Producto -->
+                    <div id="productoInfo" class="alert alert-info" style="display: none;">
+                        <h5>Información del Producto</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Nombre:</strong> <span id="infoNombre"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Código:</strong> <span id="infoCodigo"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Categoría:</strong> <span id="infoCategoria"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Marca:</strong> <span id="infoMarca"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Stock Actual:</strong> <span id="infoStock"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Ajuste -->
+                    <div id="formAjuste" style="display: none;">
+                        <form id="formAjusteStock">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="idProducto" name="IdProducto" />
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="tipoAjuste">Tipo de Ajuste:</label>
+                                        <select class="form-control" id="tipoAjuste" name="TipoAjuste" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="entrada">Entrada (+)</option>
+                                            <option value="salida">Salida (-)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="cantidad">Cantidad:</label>
+                                        <input type="number" class="form-control" id="cantidad"
+                                               name="Cantidad" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="motivo">Motivo del Ajuste:</label>
+                                        <input type="text" class="form-control" id="motivo"
+                                               name="Motivo" placeholder="Ej: Ajuste por conteo físico, Devolución, etc." required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Aplicar Ajuste
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="btnLimpiar">
+                                        <i class="fas fa-broom"></i> Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div id="resultadoAjuste" class="mt-3" style="display: none;"></div>
+
+                    <!-- Historial de Ajustes -->
+                    <div id="historialAjustes" class="mt-4" style="display: none;">
+                        <h5>Últimos Ajustes</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Cantidad</th>
+                                        <th>Tipo</th>
+                                        <th>Referencia</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyHistorial">
+                                    <!-- Los registros se cargan via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let productoActual = null;
+
+            // Buscar producto
+            $('#btnBuscar').click(buscarProducto);
+            $('#buscarProducto').keypress(function (e) {
+                if (e.which === 13) {
+                    buscarProducto();
+                }
+            });
+
+            // Enviar formulario de ajuste
+            $('#formAjusteStock').submit(aplicarAjuste);
+
+            // Limpiar formulario
+            $('#btnLimpiar').click(limpiarFormulario);
+
+            function buscarProducto() {
+                const term = $('#buscarProducto').val().trim();
+                if (!term) {
+                    mostrarAlerta('Por favor ingrese un término de búsqueda', 'warning');
+                    return;
+                }
+
+                $.get('/AjustesInventario/BuscarProducto', { term: term })
+                    .done(function (response) {
+                        if (response.success) {
+                            mostrarProducto(response.producto);
+                            productoActual = response.producto;
+                        } else {
+                            mostrarAlerta(response.message, 'error');
+                            ocultarProducto();
+                        }
+                    })
+                    .fail(function () {
+                        mostrarAlerta('Error al buscar el producto', 'error');
+                    });
+            }
+
+            function mostrarProducto(producto) {
+                $('#infoNombre').text(producto.nombre);
+                $('#infoCodigo').text(producto.codigoBarras);
+                $('#infoCategoria').text(producto.categoria);
+                $('#infoMarca').text(producto.marca);
+                $('#infoStock').text(producto.stockActual);
+                $('#idProducto').val(producto.id);
+
+                $('#productoInfo').show();
+                $('#formAjuste').show();
+
+                // Cargar historial
+                cargarHistorial(producto.id);
+            }
+
+            function ocultarProducto() {
+                $('#productoInfo').hide();
+                $('#formAjuste').hide();
+                $('#historialAjustes').hide();
+                productoActual = null;
+            }
+
+            function cargarHistorial(idProducto) {
+                $.get('/AjustesInventario/ObtenerHistorial', { idProducto: idProducto })
+                    .done(function (response) {
+                        if (response.success && response.movimientos.length > 0) {
+                            const tbody = $('#tbodyHistorial');
+                            tbody.empty();
+
+                            response.movimientos.forEach(function (mov) {
+                                const tipoClass = mov.tipo === 'Entrada' ? 'success' : 'danger';
+                                const row = `
+                                    <tr>
+                                        <td>${mov.fecha}</td>
+                                        <td><span class="badge badge-${tipoClass}">${mov.cantidad}</span></td>
+                                        <td>${mov.tipo}</td>
+                                        <td>${mov.referencia}</td>
+                                        <td>${mov.observacion}</td>
+                                    </tr>
+                                `;
+                                tbody.append(row);
+                            });
+
+                            $('#historialAjustes').show();
+                        } else {
+                            $('#historialAjustes').hide();
+                        }
+                    });
+            }
+
+            function aplicarAjuste(e) {
+                e.preventDefault();
+
+                if (!productoActual) {
+                    mostrarAlerta('Primero debe buscar un producto', 'warning');
+                    return;
+                }
+
+                const formData = {
+                    IdProducto: $('#idProducto').val(),
+                    Cantidad: parseInt($('#cantidad').val()),
+                    TipoAjuste: $('#tipoAjuste').val(),
+                    Motivo: $('#motivo').val()
+                };
+
+                // Validación adicional
+                if (formData.TipoAjuste === 'salida' && formData.Cantidad > productoActual.stockActual) {
+                    mostrarAlerta(`No puede retirar ${formData.Cantidad} unidades. Stock disponible: ${productoActual.stockActual}`, 'error');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/AjustesInventario/AjustarStock',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            mostrarAlerta(response.message, 'success');
+                            // Actualizar información del producto
+                            productoActual.stockActual = response.nuevoStock;
+                            $('#infoStock').text(response.nuevoStock);
+                            limpiarFormulario();
+                            cargarHistorial(formData.IdProducto);
+                        } else {
+                            mostrarAlerta(response.message, 'error');
+                        }
+                    },
+                    error: function () {
+                        mostrarAlerta('Error al procesar el ajuste', 'error');
+                    }
+                });
+            }
+
+            function limpiarFormulario() {
+                $('#cantidad').val('');
+                $('#motivo').val('');
+                $('#tipoAjuste').val('');
+                $('#resultadoAjuste').hide();
+            }
+
+            function mostrarAlerta(mensaje, tipo) {
+                const alertClass = tipo === 'success' ? 'alert-success' :
+                                 tipo === 'warning' ? 'alert-warning' : 'alert-danger';
+
+                $('#resultadoAjuste').html(`
+                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                        ${mensaje}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `).show();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,188 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProyectoLogin.Models;
+using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Recursos;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace ProyectoLogin.Controllers
+{
+    [Authorize(Roles = "Administrador,Gerente")]
+    public class AjustesInventarioController : Controller
+    {
+        private readonly DbPruebaContext _context;
+
+        public AjustesInventarioController(DbPruebaContext context)
+        {
+            _context = context;
+        }
+
+        // GET: Vista principal del ajuste de inventario
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        // GET: Buscar producto por código o nombre (AJAX)
+        [HttpGet]
+        public async Task<IActionResult> BuscarProducto(string term)
+        {
+            if (string.IsNullOrEmpty(term))
+                return Json(new { success = false, message = "Término de búsqueda vacío" });
+
+            var producto = await _context.Productos
+                .Include(p => p.Inventario)
+                .Include(p => p.Categoria)
+                .Include(p => p.Marca)
+                .Where(p => p.Activo &&
+                           (p.CodigoBarras.Contains(term) || p.Nombre.Contains(term)))
+                .Select(p => new
+                {
+                    id = p.IdProducto,
+                    nombre = p.Nombre,
+                    codigoBarras = p.CodigoBarras,
+                    categoria = p.Categoria.Nombre,
+                    marca = p.Marca.Nombre,
+                    stockActual = p.Inventario != null ? p.Inventario.StockActual : 0,
+                    stockMinimo = p.Inventario != null ? p.Inventario.StockMinimo : 0
+                })
+                .FirstOrDefaultAsync();
+
+            if (producto == null)
+                return Json(new { success = false, message = "Producto no encontrado" });
+
+            return Json(new { success = true, producto });
+        }
+
+        // POST: Realizar ajuste de inventario
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AjustarStock([FromBody] AjusteStockRequest request)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Datos inválidos" });
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Verificar que el producto existe
+                var producto = await _context.Productos
+                    .Include(p => p.Inventario)
+                    .FirstOrDefaultAsync(p => p.IdProducto == request.IdProducto && p.Activo);
+
+                if (producto == null)
+                    return Json(new { success = false, message = "Producto no encontrado" });
+
+                var inventario = producto.Inventario;
+
+                // Crear inventario si no existe
+                if (inventario == null)
+                {
+                    inventario = new Inventario
+                    {
+                        IdProducto = request.IdProducto,
+                        StockActual = 0,
+                        StockMinimo = 0,
+                        FechaUltimaActualizacion = FechaLocal.Ahora()
+                    };
+                    _context.Inventarios.Add(inventario);
+                    await _context.SaveChangesAsync();
+                }
+
+                int stockAnterior = inventario.StockActual;
+                int nuevoStock;
+
+                // Aplicar ajuste según el tipo
+                if (request.TipoAjuste == "entrada")
+                {
+                    inventario.StockActual += request.Cantidad;
+                    nuevoStock = stockAnterior + request.Cantidad;
+                }
+                else if (request.TipoAjuste == "salida")
+                {
+                    // Validar stock suficiente para salidas
+                    if (inventario.StockActual < request.Cantidad)
+                    {
+                        await transaction.RollbackAsync();
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"Stock insuficiente. Stock actual: {inventario.StockActual}, solicitado: {request.Cantidad}"
+                        });
+                    }
+                    inventario.StockActual -= request.Cantidad;
+                    nuevoStock = stockAnterior - request.Cantidad;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    return Json(new { success = false, message = "Tipo de ajuste no válido" });
+                }
+
+                inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
+
+                // Registrar movimiento en el inventario
+                var movimiento = new MovInventario
+                {
+                    IdProducto = request.IdProducto,
+                    Cantidad = request.Cantidad,
+                    Fecha = FechaLocal.Ahora(),
+                    TipoMovimiento = "Ajuste Manual",
+                    Referencia = $"Ajuste {request.TipoAjuste} - {request.Motivo}",
+                    Observacion = $"Stock anterior: {stockAnterior}, Nuevo stock: {nuevoStock}. {request.Motivo}"
+                };
+
+                _context.MovInventarios.Add(movimiento);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Ajuste realizado correctamente. Nuevo stock: {nuevoStock}",
+                    stockAnterior = stockAnterior,
+                    nuevoStock = nuevoStock
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = $"Error al realizar el ajuste: {ex.Message}" });
+            }
+        }
+
+        // GET: Historial de ajustes del producto
+        [HttpGet]
+        public async Task<IActionResult> ObtenerHistorial(int idProducto)
+        {
+            var movimientos = await _context.MovInventarios
+                .Where(m => m.IdProducto == idProducto && m.TipoMovimiento == "Ajuste Manual")
+                .OrderByDescending(m => m.Fecha)
+                .Take(10)
+                .Select(m => new
+                {
+                    fecha = m.Fecha.ToString("dd/MM/yyyy HH:mm"),
+                    cantidad = m.Cantidad,
+                    tipo = m.Cantidad > 0 ? "Entrada" : "Salida",
+                    referencia = m.Referencia,
+                    observacion = m.Observacion
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, movimientos });
+        }
+    }
+
+    // Clase para el request del ajuste
+    public class AjusteStockRequest
+    {
+        public int IdProducto { get; set; }
+        public int Cantidad { get; set; }
+        public string TipoAjuste { get; set; } // "entrada" o "salida"
+        public string Motivo { get; set; }
+    }
+}
