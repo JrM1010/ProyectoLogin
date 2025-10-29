@@ -17,7 +17,7 @@
             <form asp-action="Edit" id="compraForm">
                 <input type="hidden" asp-for="IdCompra" />
                 <input type="hidden" asp-for="NumeroDocumento" />
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Proveedor</label>
@@ -33,9 +33,38 @@
                 <!-- Detalles de la compra -->
                 <div class="mb-3">
                     <h5>Productos</h5>
-                    <div id="detalles-container">
-                        <!-- Los detalles se cargarán aquí via JavaScript -->
-                    </div>
+                    <table class="table table-bordered" id="tabla-detalles">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th width="120">Cantidad</th>
+                                <th width="120">Unidad</th>
+                                <th width="150">Precio Unitario</th>
+                                <th width="150">Subtotal</th>
+                                <th width="80">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalles-container">
+                            <!-- Los detalles se cargarán aquí via JavaScript -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                                <td><span id="subtotal-display">@Model.Subtotal.ToString("C2")</span></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end"><strong>IVA (12%):</strong></td>
+                                <td><span id="iva-display">@Model.IVA.ToString("C2")</span></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                <td><span id="total-display">@Model.Total.ToString("C2")</span></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarFila()">
                         <i class="fas fa-plus"></i> Agregar Producto
                     </button>
@@ -52,22 +81,6 @@
                     </div>
                 </div>
 
-                <!-- Totales -->
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Subtotal</label>
-                        <input type="text" class="form-control" id="subtotal" readonly value="@Model.Subtotal.ToString("C2")" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">IVA (12%)</label>
-                        <input type="text" class="form-control" id="iva" readonly value="@Model.IVA.ToString("C2")" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Total</label>
-                        <input type="text" class="form-control" id="total" readonly value="@Model.Total.ToString("C2")" />
-                    </div>
-                </div>
-
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     <a href="@Url.Action("Index", new { estado = "Pendiente" })" class="btn btn-secondary">Cancelar</a>
@@ -79,28 +92,205 @@
 
 @section Scripts {
     <script>
-        // JavaScript para manejar la edición de detalles
-        // Similar al de Create pero precargando los datos existentes
+        let productosDisponibles = @Html.Raw(Json.Serialize(ViewBag.Productos));
+        let contadorFilas = 0;
+
         $(document).ready(function() {
             cargarDetallesExistentes();
             calcularTotales();
         });
 
         function cargarDetallesExistentes() {
-            @foreach (var detalle in Model.Detalles)
+            @if (Model.Detalles != null)
             {
-                <text>
-                agregarFilaExistente(
-                    @detalle.IdProducto,
-                    '@detalle.Producto?.Nombre',
-                    @detalle.Cantidad,
-                    @detalle.IdUnidad,
-                    @detalle.PrecioUnitario
-                );
-                </text>
+                    foreach (var detalle in Model.Detalles)
+                    {
+                            <text>
+                            agregarFilaExistente(
+                                @detalle.IdProducto,
+                                '@Html.Raw(detalle.Producto?.Nombre?.Replace("'", "\\'"))',
+                                @detalle.Cantidad,
+                                @detalle.IdUnidad,
+                                @detalle.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                                @detalle.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                            );
+                            </text>
+                    }
             }
         }
 
-        // Resto del JavaScript similar al de Create...
+                function agregarFilaExistente(idProducto, nombreProducto, cantidad, idUnidad, precioUnitario, subtotal) {
+            contadorFilas++;
+            const filaId = `fila-${contadorFilas}`;
+
+            const filaHTML = `
+                <tr id="${filaId}">
+                    <td>
+                        <select name="Detalles[${contadorFilas}].IdProducto" class="form-control select-producto" required
+                                onchange="actualizarUnidades(this, ${contadorFilas})">
+                            <option value="">Seleccionar producto...</option>
+                            ${generarOpcionesProductos(idProducto)}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="Detalles[${contadorFilas}].Cantidad"
+                               class="form-control cantidad" value="${cantidad}" step="1" min="1"
+                               onchange="calcularSubtotal(${contadorFilas})" required />
+                    </td>
+                    <td>
+                        <select name="Detalles[${contadorFilas}].IdUnidad"
+                                class="form-control select-unidad" id="unidad-${contadorFilas}"
+                                onchange="calcularSubtotal(${contadorFilas})" required>
+                            <option value="">Seleccionar unidad...</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="Detalles[${contadorFilas}].PrecioUnitario"
+                               class="form-control precio" value="${precioUnitario}" step="0.01" min="0.01"
+                               onchange="calcularSubtotal(${contadorFilas})" required />
+                    </td>
+                    <td>
+                        <input type="text" class="form-control subtotal" value="${subtotal}" readonly />
+                        <input type="hidden" name="Detalles[${contadorFilas}].Subtotal" value="${subtotal}" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila('${filaId}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            $('#detalles-container').append(filaHTML);
+
+            // Configurar unidad seleccionada
+            setTimeout(() => {
+                $(`#${filaId} .select-producto`).val(idProducto);
+                actualizarUnidades($(`#${filaId} .select-producto`)[0], contadorFilas);
+                setTimeout(() => {
+                    $(`#unidad-${contadorFilas}`).val(idUnidad);
+                }, 100);
+            }, 100);
+        }
+
+        function agregarFila() {
+            contadorFilas++;
+            const filaId = `fila-${contadorFilas}`;
+
+            const filaHTML = `
+                <tr id="${filaId}">
+                    <td>
+                        <select name="Detalles[${contadorFilas}].IdProducto" class="form-control select-producto" required
+                                onchange="actualizarUnidades(this, ${contadorFilas})">
+                            <option value="">Seleccionar producto...</option>
+                            ${generarOpcionesProductos(0)}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="Detalles[${contadorFilas}].Cantidad"
+                               class="form-control cantidad" value="1" step="1" min="1"
+                               onchange="calcularSubtotal(${contadorFilas})" required />
+                    </td>
+                    <td>
+                        <select name="Detalles[${contadorFilas}].IdUnidad"
+                                class="form-control select-unidad" id="unidad-${contadorFilas}"
+                                onchange="calcularSubtotal(${contadorFilas})" required>
+                            <option value="">Seleccionar unidad...</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="Detalles[${contadorFilas}].PrecioUnitario"
+                               class="form-control precio" value="0.00" step="0.01" min="0.01"
+                               onchange="calcularSubtotal(${contadorFilas})" required />
+                    </td>
+                    <td>
+                        <input type="text" class="form-control subtotal" value="0.00" readonly />
+                        <input type="hidden" name="Detalles[${contadorFilas}].Subtotal" value="0" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila('${filaId}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            $('#detalles-container').append(filaHTML);
+        }
+
+        
+
+        function generarOpcionesProductos(productoSeleccionado) {
+            let opciones = '';
+            productosDisponibles.forEach(producto => {
+                const seleccionado = producto.idProducto === productoSeleccionado ? 'selected' : '';
+                opciones += `<option value="${producto.idProducto}" ${seleccionado}>${producto.nombre}</option>`;
+            });
+            return opciones;
+        }
+
+        function actualizarUnidades(selectElement, index) {
+            const productoId = parseInt(selectElement.value);
+            const unidadSelect = $(`#unidad-${index}`);
+
+            unidadSelect.empty().append('<option value="">Seleccionar unidad...</option>');
+
+            if (productoId) {
+                const producto = productosDisponibles.find(p => p.idProducto === productoId);
+                if (producto && producto.unidades) {
+                    producto.unidades.forEach(unidad => {
+                        unidadSelect.append(`<option value="${unidad.idUnidad}">${unidad.nombre}</option>`);
+                    });
+                }
+            }
+        }
+
+        function calcularSubtotal(index) {
+            const fila = $(`#fila-${index}`);
+            const cantidad = parseFloat(fila.find('.cantidad').val()) || 0;
+            const precio = parseFloat(fila.find('.precio').val()) || 0;
+
+            const subtotal = cantidad * precio;
+
+            fila.find('.subtotal').val(subtotal.toFixed(2));
+            fila.find('input[name*="Subtotal"]').val(subtotal);
+
+            calcularTotales();
+        }
+
+        function calcularTotales() {
+            let subtotal = 0;
+
+            $('.subtotal').each(function() {
+                subtotal += parseFloat($(this).val()) || 0;
+            });
+
+            const iva = subtotal * 0.12;
+            const total = subtotal + iva;
+
+            $('#subtotal-display').text(subtotal.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
+            $('#iva-display').text(iva.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
+            $('#total-display').text(total.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
+        }
+
+        function eliminarFila(filaId) {
+            $(`#${filaId}`).remove();
+            calcularTotales();
+        }
+
+        // Validación antes de enviar el formulario
+        $('#compraForm').on('submit', function(e) {
+            const filasValidas = $('.select-producto').filter(function() {
+                return $(this).val() !== '';
+            }).length;
+
+            if (filasValidas === 0) {
+                e.preventDefault();
+                alert('Debe agregar al menos un producto a la compra.');
+                return false;
+            }
+
+            return true;
+        });
     </script>
 }
