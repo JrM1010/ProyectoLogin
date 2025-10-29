@@ -1,0 +1,106 @@
+﻿@model ProyectoLogin.Models.ModelosCompras.Compra
+
+@{
+    ViewData["Title"] = "Editar Compra";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Editar Compra - @Model.NumeroDocumento</h1>
+        <a href="@Url.Action("Index", new { estado = "Pendiente" })" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Edit" id="compraForm">
+                <input type="hidden" asp-for="IdCompra" />
+                <input type="hidden" asp-for="NumeroDocumento" />
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Proveedor</label>
+                        <input type="text" class="form-control" value="@Model.Proveedor?.Nombre" readonly />
+                        <input type="hidden" asp-for="IdProveedor" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">N° Documento</label>
+                        <input type="text" class="form-control" value="@Model.NumeroDocumento" readonly />
+                    </div>
+                </div>
+
+                <!-- Detalles de la compra -->
+                <div class="mb-3">
+                    <h5>Productos</h5>
+                    <div id="detalles-container">
+                        <!-- Los detalles se cargarán aquí via JavaScript -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarFila()">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </button>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Observaciones" class="form-label"></label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="MetodoPago" class="form-label"></label>
+                        <input asp-for="MetodoPago" class="form-control" />
+                    </div>
+                </div>
+
+                <!-- Totales -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Subtotal</label>
+                        <input type="text" class="form-control" id="subtotal" readonly value="@Model.Subtotal.ToString("C2")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">IVA (12%)</label>
+                        <input type="text" class="form-control" id="iva" readonly value="@Model.IVA.ToString("C2")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Total</label>
+                        <input type="text" class="form-control" id="total" readonly value="@Model.Total.ToString("C2")" />
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="@Url.Action("Index", new { estado = "Pendiente" })" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // JavaScript para manejar la edición de detalles
+        // Similar al de Create pero precargando los datos existentes
+        $(document).ready(function() {
+            cargarDetallesExistentes();
+            calcularTotales();
+        });
+
+        function cargarDetallesExistentes() {
+            @foreach (var detalle in Model.Detalles)
+            {
+                <text>
+                agregarFilaExistente(
+                    @detalle.IdProducto,
+                    '@detalle.Producto?.Nombre',
+                    @detalle.Cantidad,
+                    @detalle.IdUnidad,
+                    @detalle.PrecioUnitario
+                );
+                </text>
+            }
+        }
+
+        // Resto del JavaScript similar al de Create...
+    </script>
+}

@@ -1,18 +1,123 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.ModelosCompras.Compra>
-<h2>Compras</h2>
-<p><a class="btn btn-primary" href="@Url.Action("Create")">Nueva Compra</a></p>
-<table class="table">
-    <thead><tr><th>Codigo de Compra</th><th>Proveedor</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@c.NumeroDocumento</td>
-                <td>@(c.Proveedor?.Nombre ?? "-")</td>
-                <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
-                <td>@c.Total.ToString("N2")</td>
-                
-            </tr>
-        }
-    </tbody>
-</table>
+
+@{
+    ViewData["Title"] = "Compras";
+    var estadoActual = ViewBag.EstadoActual as string ?? "Pendiente";
+    var estados = ViewBag.Estados as List<string> ?? new List<string>();
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Compras - @estadoActual</h1>
+        <a href="@Url.Action("Create")" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nueva Compra
+        </a>
+    </div>
+
+    <!-- Filtros por estado -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                @foreach (var estado in estados)
+                {
+                    <a href="@Url.Action("Index", new { estado = estado })"
+                       class="btn @(estado == estadoActual ? "btn-primary" : "btn-outline-primary")">
+                        @estado
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de compras -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>N° Documento</th>
+                                <th>Proveedor</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var compra in Model)
+                            {
+                                <tr>
+                                    <td>@compra.NumeroDocumento</td>
+                                    <td>@compra.Proveedor?.Nombre</td>
+                                    <td>@compra.FechaCompra.ToString("dd/MM/yyyy")</td>
+                                    <td>@compra.Total.ToString("C2")</td>
+                                    <td>
+                                        <span class="badge
+                                                    @(compra.Estado == "Pendiente" ? "bg-warning" :
+                                                                                            compra.Estado == "Confirmada" ? "bg-info" :
+                                                                                            compra.Estado == "Completada" ? "bg-success" : "bg-secondary")">
+                                    @compra.Estado
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="@Url.Action("Details", new { id = compra.IdCompra })"
+                                       class="btn btn-info" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    @if (compra.Estado == "Pendiente")
+                                            {
+                                                <a href="@Url.Action("Edit", new { id = compra.IdCompra })"
+                                                   class="btn btn-warning" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+
+                                                <form method="post" action="@Url.Action("Confirmar", new { id = compra.IdCompra })"
+                                                      class="d-inline" onsubmit="return confirm('¿Confirmar esta compra?')">
+                                                    <button type="submit" class="btn btn-success" title="Confirmar">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+
+                                                <form method="post" action="@Url.Action("Cancelar", new { id = compra.IdCompra })"
+                                                      class="d-inline" onsubmit="return confirm('¿Cancelar esta compra?')">
+                                                    <button type="submit" class="btn btn-danger" title="Cancelar">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            @if (compra.Estado == "Confirmada")
+                                            {
+                                                <form method="post" action="@Url.Action("Completar", new { id = compra.IdCompra })"
+                                                      class="d-inline" onsubmit="return confirm('¿Marcar como completada?')">
+                                                    <button type="submit" class="btn btn-primary" title="Completar">
+                                                        <i class="fas fa-flag-checkered"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No hay compras en estado <strong>@estadoActual</strong>.
+                    @if (estadoActual == "Pendiente")
+                    {
+                        <a href="@Url.Action("Create")" class="alert-link">Crear una nueva compra</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
