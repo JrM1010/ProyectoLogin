@@ -17,12 +17,15 @@
             <form asp-action="Edit" id="compraForm">
                 <input type="hidden" asp-for="IdCompra" />
                 <input type="hidden" asp-for="NumeroDocumento" />
+                <input type="hidden" asp-for="IdProveedor" />
+                <input type="hidden" asp-for="Subtotal" id="inputSubtotal" />
+                <input type="hidden" asp-for="IVA" id="inputIVA" />
+                <input type="hidden" asp-for="Total" id="inputTotal" />
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Proveedor</label>
                         <input type="text" class="form-control" value="@Model.Proveedor?.Nombre" readonly />
-                        <input type="hidden" asp-for="IdProveedor" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">N° Documento</label>
@@ -95,75 +98,116 @@
         let productosDisponibles = @Html.Raw(Json.Serialize(ViewBag.Productos));
         let contadorFilas = 0;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
+            console.log("JavaScript cargado para edición");
             cargarDetallesExistentes();
             calcularTotales();
+
+            // ✅ Validación antes de enviar el formulario
+            $('#compraForm').on('submit', function (e) {
+                console.log('Formulario enviándose...');
+
+                const filas = $('#detalles-container tr');
+                console.log('Filas detectadas:', filas.length);
+
+                if (filas.length === 0) {
+                    e.preventDefault();
+                    alert('Debe agregar al menos un producto antes de guardar.');
+                    return false;
+                }
+
+                // ✅ Reindexar los names correctamente
+                filas.each(function (i, fila) {
+                    $(fila).find('input, select').each(function () {
+                        const name = $(this).attr('name');
+                        if (name && name.startsWith('detalles')) {
+                            const nuevoName = name.replace(/\[\d+\]/, `[${i}]`);
+                            $(this).attr('name', nuevoName);
+                        }
+                    });
+                });
+
+                console.log('Formulario listo para enviar');
+                return true;
+            });
         });
 
+        // =========================================================
+        // FUNCIONES DE CARGA Y MANEJO DE FILAS
+        // =========================================================
         function cargarDetallesExistentes() {
             @if (Model.Detalles != null)
             {
-                    foreach (var detalle in Model.Detalles)
+                    foreach (var d in Model.Detalles)
                     {
                             <text>
-                            agregarFilaExistente(
-                                @detalle.IdProducto,
-                                '@Html.Raw(detalle.Producto?.Nombre?.Replace("'", "\\'"))',
-                                @detalle.Cantidad,
-                                @detalle.IdUnidad,
-                                @detalle.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                                @detalle.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
-                            );
+                                agregarFilaExistente(
+                                    @d.IdProducto,
+                                    '@Html.Raw(d.Producto?.Nombre?.Replace("'", "\\'"))',
+                                    @d.Cantidad,
+                                    @d.IdUnidad,
+                                    @d.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                                    @d.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                                );
                             </text>
                     }
             }
         }
 
-                function agregarFilaExistente(idProducto, nombreProducto, cantidad, idUnidad, precioUnitario, subtotal) {
+        function generarOpcionesProductos(idSeleccionado) {
+            let opciones = '<option value="">Seleccionar producto...</option>';
+            productosDisponibles.forEach(p => {
+                const seleccionado = p.idProducto === idSeleccionado ? 'selected' : '';
+                opciones += `<option value="${p.idProducto}" ${seleccionado}>${p.nombre}</option>`;
+            });
+            return opciones;
+        }
+
+        function agregarFilaExistente(idProducto, nombreProducto, cantidad, idUnidad, precioUnitario, subtotal) {
             contadorFilas++;
             const filaId = `fila-${contadorFilas}`;
 
             const filaHTML = `
                 <tr id="${filaId}">
                     <td>
-                        <select name="Detalles[${contadorFilas}].IdProducto" class="form-control select-producto" required
-                                onchange="actualizarUnidades(this, ${contadorFilas})">
-                            <option value="">Seleccionar producto...</option>
+                        <select name="detalles[${contadorFilas}].IdProducto"
+                                class="form-control select-producto"
+                                onchange="actualizarUnidades(this, ${contadorFilas})" required>
                             ${generarOpcionesProductos(idProducto)}
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="Detalles[${contadorFilas}].Cantidad"
-                               class="form-control cantidad" value="${cantidad}" step="1" min="1"
+                        <input type="number" name="detalles[${contadorFilas}].Cantidad"
+                               class="form-control cantidad" value="${cantidad}" min="1"
                                onchange="calcularSubtotal(${contadorFilas})" required />
                     </td>
                     <td>
-                        <select name="Detalles[${contadorFilas}].IdUnidad"
+                        <select name="detalles[${contadorFilas}].IdUnidad"
                                 class="form-control select-unidad" id="unidad-${contadorFilas}"
                                 onchange="calcularSubtotal(${contadorFilas})" required>
                             <option value="">Seleccionar unidad...</option>
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="Detalles[${contadorFilas}].PrecioUnitario"
-                               class="form-control precio" value="${precioUnitario}" step="0.01" min="0.01"
+                        <input type="number" name="detalles[${contadorFilas}].PrecioUnitario"
+                               class="form-control precio" value="${precioUnitario}"
+                               step="0.01" min="0.01"
                                onchange="calcularSubtotal(${contadorFilas})" required />
                     </td>
                     <td>
                         <input type="text" class="form-control subtotal" value="${subtotal}" readonly />
-                        <input type="hidden" name="Detalles[${contadorFilas}].Subtotal" value="${subtotal}" />
+                        <input type="hidden" name="detalles[${contadorFilas}].Subtotal" value="${subtotal}" />
                     </td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila('${filaId}')">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
 
             $('#detalles-container').append(filaHTML);
 
-            // Configurar unidad seleccionada
+            // Configurar unidades
             setTimeout(() => {
                 $(`#${filaId} .select-producto`).val(idProducto);
                 actualizarUnidades($(`#${filaId} .select-producto`)[0], contadorFilas);
@@ -176,81 +220,82 @@
         function agregarFila() {
             contadorFilas++;
             const filaId = `fila-${contadorFilas}`;
-
             const filaHTML = `
                 <tr id="${filaId}">
                     <td>
-                        <select name="Detalles[${contadorFilas}].IdProducto" class="form-control select-producto" required
-                                onchange="actualizarUnidades(this, ${contadorFilas})">
-                            <option value="">Seleccionar producto...</option>
+                        <select name="detalles[${contadorFilas}].IdProducto"
+                                class="form-control select-producto"
+                                onchange="actualizarUnidades(this, ${contadorFilas})" required>
                             ${generarOpcionesProductos(0)}
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="Detalles[${contadorFilas}].Cantidad"
-                               class="form-control cantidad" value="1" step="1" min="1"
+                        <input type="number" name="detalles[${contadorFilas}].Cantidad"
+                               class="form-control cantidad" value="1" min="1"
                                onchange="calcularSubtotal(${contadorFilas})" required />
                     </td>
                     <td>
-                        <select name="Detalles[${contadorFilas}].IdUnidad"
+                        <select name="detalles[${contadorFilas}].IdUnidad"
                                 class="form-control select-unidad" id="unidad-${contadorFilas}"
                                 onchange="calcularSubtotal(${contadorFilas})" required>
                             <option value="">Seleccionar unidad...</option>
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="Detalles[${contadorFilas}].PrecioUnitario"
-                               class="form-control precio" value="0.00" step="0.01" min="0.01"
+                        <input type="number" name="detalles[${contadorFilas}].PrecioUnitario"
+                               class="form-control precio" value="0.00"
+                               step="0.01" min="0.01"
                                onchange="calcularSubtotal(${contadorFilas})" required />
                     </td>
                     <td>
                         <input type="text" class="form-control subtotal" value="0.00" readonly />
-                        <input type="hidden" name="Detalles[${contadorFilas}].Subtotal" value="0" />
+                        <input type="hidden" name="detalles[${contadorFilas}].Subtotal" value="0" />
                     </td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila('${filaId}')">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
-                </tr>
-            `;
-
+                </tr>`;
             $('#detalles-container').append(filaHTML);
         }
 
-        
-
-        function generarOpcionesProductos(productoSeleccionado) {
-            let opciones = '';
-            productosDisponibles.forEach(producto => {
-                const seleccionado = producto.idProducto === productoSeleccionado ? 'selected' : '';
-                opciones += `<option value="${producto.idProducto}" ${seleccionado}>${producto.nombre}</option>`;
-            });
-            return opciones;
-        }
-
+        // =========================================================
+        // FUNCIONES DE CÁLCULO
+        // =========================================================
         function actualizarUnidades(selectElement, index) {
             const productoId = parseInt(selectElement.value);
             const unidadSelect = $(`#unidad-${index}`);
-
             unidadSelect.empty().append('<option value="">Seleccionar unidad...</option>');
 
             if (productoId) {
                 const producto = productosDisponibles.find(p => p.idProducto === productoId);
                 if (producto && producto.unidades) {
-                    producto.unidades.forEach(unidad => {
-                        unidadSelect.append(`<option value="${unidad.idUnidad}">${unidad.nombre}</option>`);
+                    producto.unidades.forEach(u => {
+                        unidadSelect.append(`<option value="${u.idUnidad}">${u.nombre}</option>`);
                     });
                 }
             }
+
+            calcularSubtotal(index);
         }
 
         function calcularSubtotal(index) {
             const fila = $(`#fila-${index}`);
             const cantidad = parseFloat(fila.find('.cantidad').val()) || 0;
             const precio = parseFloat(fila.find('.precio').val()) || 0;
+            const unidadTexto = fila.find('.select-unidad option:selected').text().toLowerCase();
 
-            const subtotal = cantidad * precio;
+            let factor = 1;
+            const match = unidadTexto.match(/\(x(\d+)\)/);
+            if (match) factor = parseFloat(match[1]);
+
+            let descuento = 0;
+            if (unidadTexto.includes('caja')) descuento = 0.10;
+            if (unidadTexto.includes('paquete')) descuento = 0.05;
+
+            const precioAjustado = precio * factor * (1 - descuento);
+            const subtotal = cantidad * precioAjustado;
 
             fila.find('.subtotal').val(subtotal.toFixed(2));
             fila.find('input[name*="Subtotal"]').val(subtotal);
@@ -260,8 +305,7 @@
 
         function calcularTotales() {
             let subtotal = 0;
-
-            $('.subtotal').each(function() {
+            $('.subtotal').each(function () {
                 subtotal += parseFloat($(this).val()) || 0;
             });
 
@@ -271,26 +315,15 @@
             $('#subtotal-display').text(subtotal.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
             $('#iva-display').text(iva.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
             $('#total-display').text(total.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
+
+            $('#inputSubtotal').val(subtotal.toFixed(2));
+            $('#inputIVA').val(iva.toFixed(2));
+            $('#inputTotal').val(total.toFixed(2));
         }
 
-        function eliminarFila(filaId) {
-            $(`#${filaId}`).remove();
+        function eliminarFila(id) {
+            $(`#${id}`).remove();
             calcularTotales();
         }
-
-        // Validación antes de enviar el formulario
-        $('#compraForm').on('submit', function(e) {
-            const filasValidas = $('.select-producto').filter(function() {
-                return $(this).val() !== '';
-            }).length;
-
-            if (filasValidas === 0) {
-                e.preventDefault();
-                alert('Debe agregar al menos un producto a la compra.');
-                return false;
-            }
-
-            return true;
-        });
     </script>
 }

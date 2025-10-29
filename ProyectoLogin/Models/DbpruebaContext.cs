@@ -56,9 +56,14 @@ public partial class DbPruebaContext : DbContext
     public DbSet<KitDetalle> KitDetalles { get; set; }
 
 
+
+
+
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+
         // ------------------ USUARIOS ------------------
         modelBuilder.Entity<Usuario>(entity =>
         {
@@ -319,6 +324,12 @@ public partial class DbPruebaContext : DbContext
             entity.HasOne(d => d.Producto)
                   .WithMany()
                   .HasForeignKey(d => d.IdProducto);
+
+            entity.Property(d => d.PrecioUnitario)
+                  .HasPrecision(18,2);
+
+            entity.Property(d => d.Cantidad)
+                  .HasPrecision(18,2);
         });
         
         // ------------------ UNIDADES DE MEDIDA ------------------
