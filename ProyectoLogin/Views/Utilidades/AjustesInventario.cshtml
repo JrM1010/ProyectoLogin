@@ -151,7 +151,7 @@
                     return;
                 }
 
-                $.get('/AjustesInventario/BuscarProducto', { term: term })
+                $.get('/Utilidades/BuscarProducto', { term: term })
                     .done(function (response) {
                         if (response.success) {
                             mostrarProducto(response.producto);
@@ -189,7 +189,7 @@
             }
 
             function cargarHistorial(idProducto) {
-                $.get('/AjustesInventario/ObtenerHistorial', { idProducto: idProducto })
+                $.get('/Utilidades/ObtenerHistorial', { idProducto: idProducto })
                     .done(function (response) {
                         if (response.success && response.movimientos.length > 0) {
                             const tbody = $('#tbodyHistorial');
@@ -238,7 +238,7 @@
                 }
 
                 $.ajax({
-                    url: '/AjustesInventario/AjustarStock',
+                    url: '/Utilidades/AjustarStock',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),

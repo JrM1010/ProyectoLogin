@@ -11,17 +11,23 @@ using System.Threading.Tasks;
 namespace ProyectoLogin.Controllers
 {
     [Authorize(Roles = "Administrador,Gerente")]
-    public class AjustesInventarioController : Controller
+    public class UtilidadesController : Controller  // ← Cambiado el nombre
     {
         private readonly DbPruebaContext _context;
 
-        public AjustesInventarioController(DbPruebaContext context)
+        public UtilidadesController(DbPruebaContext context)
         {
             _context = context;
         }
 
-        // GET: Vista principal del ajuste de inventario
+        // GET: Vista principal de Utilidades (menú de opciones)
         public IActionResult Index()
+        {
+            return View();
+        }
+
+        // GET: Vista de Ajustes de Inventario
+        public IActionResult AjustesInventario()  // ← Nueva acción
         {
             return View();
         }

@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Utilidades";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title"><i class="fas fa-tools"></i> Utilidades del Sistema</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Tarjeta de Ajustes de Inventario -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clipboard-list fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Ajustes de Inventario</h5>
+                                    <p class="card-text">Realice ajustes manuales de stock y consulte el historial de movimientos.</p>
+                                    <a asp-action="AjustesInventario" class="btn btn-primary">
+                                        <i class="fas fa-arrow-right"></i> Acceder
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Espacio para futuras utilidades -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-dashed">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Próximamente</h5>
+                                    <p class="card-text">Nuevas herramientas y utilidades estarán disponibles pronto.</p>
+                                    <button class="btn btn-outline-secondary" disabled>
+                                        <i class="fas fa-clock"></i> Próximamente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Otro espacio para futuras utilidades -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-dashed">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-3x text-secondary mb-3"></i>
+                                    <h5 class="card-title">Próximamente</h5>
+                                    <p class="card-text">Nuevas herramientas y utilidades estarán disponibles pronto.</p>
+                                    <button class="btn btn-outline-secondary" disabled>
+                                        <i class="fas fa-clock"></i> Próximamente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-dashed {
+        border: 2px dashed #dee2e6;
+    }
+</style>
