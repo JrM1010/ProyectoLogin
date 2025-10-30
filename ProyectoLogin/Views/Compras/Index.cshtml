@@ -1,66 +1,71 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.ModelosCompras.Compra>
 
 @{
-    ViewData["Title"] = "Compras";
+    ViewData["Title"] = "Gestión de Compras";
     var estadoActual = ViewBag.EstadoActual as string ?? "Pendiente";
     var estados = ViewBag.Estados as List<string> ?? new List<string>();
 }
 
-<div class="container-fluid">
+<div class="container-fluid py-4">
+    <!-- Encabezado principal -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Compras - @estadoActual</h1>
-        <a href="@Url.Action("Create")" class="btn btn-success">
-            <i class="fas fa-plus"></i> Nueva Compra
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-basket2"></i> Compras - <span class="text-dark">@estadoActual</span>
+        </h2>
+        <a href="@Url.Action("Create")" class="btn btn-success shadow-sm rounded-pill px-4">
+            <i class="bi bi-plus-circle"></i> Nueva Compra
         </a>
     </div>
 
-    <!-- Agrega esto al inicio de tu vista Index, después del título -->
+    <!-- Alertas -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["Success"]
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
-
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Filtros por estado -->
-    <div class="card mb-4">
+    <!-- Filtros de estado -->
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <div class="btn-group" role="group">
+            <div class="btn-group">
                 @foreach (var estado in estados)
                 {
                     <a href="@Url.Action("Index", new { estado = estado })"
-                       class="btn @(estado == estadoActual ? "btn-primary" : "btn-outline-primary")">
-                        @estado
-                    </a>
-                }
+                       class="btn @(estado == estadoActual ? "btn-primary text-white" : "btn-outline-primary") rounded-pill px-3">
+                        <i class="bi @(estado == "Pendiente" ? "bi-hourglass-split" :
+                                                                 estado == "Confirmada" ? "bi-check2-square" :
+                                                                 estado == "Completada" ? "bi-flag-fill" : "bi-circle") me-1"></i>
+                    @estado
+                </a>
+                                }
             </div>
         </div>
     </div>
 
     <!-- Tabla de compras -->
-    <div class="card">
+    <div class="card border-0 shadow-sm">
         <div class="card-body">
             @if (Model.Any())
             {
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
+                    <table class="table align-middle table-hover">
+                        <thead class="table-light">
                             <tr>
                                 <th>N° Documento</th>
                                 <th>Proveedor</th>
                                 <th>Fecha</th>
                                 <th>Total</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -72,48 +77,53 @@
                                     <td>@compra.FechaCompra.ToString("dd/MM/yyyy")</td>
                                     <td>@compra.Total.ToString("C2")</td>
                                     <td>
-                                        <span class="badge
-                                                    @(compra.Estado == "Pendiente" ? "bg-warning" :
-                                                                                            compra.Estado == "Confirmada" ? "bg-info" :
+                                        <span class="badge rounded-pill
+                                                    @(compra.Estado == "Pendiente" ? "bg-warning text-dark" :
+                                                                                            compra.Estado == "Confirmada" ? "bg-info text-dark" :
                                                                                             compra.Estado == "Completada" ? "bg-success" : "bg-secondary")">
                                     @compra.Estado
                                 </span>
                             </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
+                            <td class="text-center">
+                                <div class="d-inline-flex gap-2">
+                                    <!-- Ver detalles -->
                                     <a href="@Url.Action("Details", new { id = compra.IdCompra })"
-                                       class="btn btn-info" title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
+                                       class="btn btn-sm btn-outline-info rounded-circle" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
                                     </a>
 
                                     @if (compra.Estado == "Pendiente")
                                             {
+                                                <!-- Editar -->
                                                 <a href="@Url.Action("Edit", new { id = compra.IdCompra })"
-                                                   class="btn btn-warning" title="Editar">
-                                                    <i class="fas fa-edit"></i>
+                                                   class="btn btn-sm btn-outline-warning rounded-circle" title="Editar compra">
+                                                    <i class="bi bi-pencil-square"></i>
                                                 </a>
 
+                                                <!-- Confirmar -->
                                                 <form method="post" action="@Url.Action("Confirmar", new { id = compra.IdCompra })"
                                                       class="d-inline" onsubmit="return confirm('¿Confirmar esta compra?')">
-                                                    <button type="submit" class="btn btn-success" title="Confirmar">
-                                                        <i class="fas fa-check"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" title="Confirmar">
+                                                        <i class="bi bi-check2-circle"></i>
                                                     </button>
                                                 </form>
 
+                                                <!-- Cancelar -->
                                                 <form method="post" action="@Url.Action("Cancelar", new { id = compra.IdCompra })"
                                                       class="d-inline" onsubmit="return confirm('¿Cancelar esta compra?')">
-                                                    <button type="submit" class="btn btn-danger" title="Cancelar">
-                                                        <i class="fas fa-times"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Cancelar">
+                                                        <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 </form>
                                             }
 
                                             @if (compra.Estado == "Confirmada")
                                             {
+                                                <!-- Completar -->
                                                 <form method="post" action="@Url.Action("Completar", new { id = compra.IdCompra })"
                                                       class="d-inline" onsubmit="return confirm('¿Marcar como completada?')">
-                                                    <button type="submit" class="btn btn-primary" title="Completar">
-                                                        <i class="fas fa-flag-checkered"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary rounded-circle" title="Marcar como completada">
+                                                        <i class="bi bi-flag-fill"></i>
                                                     </button>
                                                 </form>
                                             }
@@ -127,7 +137,8 @@
             }
             else
             {
-                <div class="alert alert-info">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>
                     No hay compras en estado <strong>@estadoActual</strong>.
                     @if (estadoActual == "Pendiente")
                     {

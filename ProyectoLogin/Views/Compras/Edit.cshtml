@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Editar Compra";
+    var productos = ViewBag.Productos as IEnumerable<dynamic> ?? new List<dynamic>();
+    var unidades = ViewBag.Unidades as IEnumerable<dynamic> ?? new List<dynamic>();
 }
 
 <div class="container-fluid">
@@ -43,7 +45,9 @@
                                 <th width="120">Cantidad</th>
                                 <th width="120">Unidad</th>
                                 <th width="150">Precio Unitario</th>
-                                <th width="150">Subtotal</th>
+                                <th width="120">Descuento (%)</th>
+                                <th width="150">Precio Venta sin IVA</th>
+                                <th width="150">Precio Venta con IVA</th>
                                 <th width="80">Acciones</th>
                             </tr>
                         </thead>
@@ -52,18 +56,18 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                <td><span id="subtotal-display">@Model.Subtotal.ToString("C2")</span></td>
+                                <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
+                                <td colspan="2"><span id="subtotal-display">@Model.Subtotal.ToString("C2")</span></td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="4" class="text-end"><strong>IVA (12%):</strong></td>
-                                <td><span id="iva-display">@Model.IVA.ToString("C2")</span></td>
+                                <td colspan="5" class="text-end"><strong>IVA (12%):</strong></td>
+                                <td colspan="2"><span id="iva-display">@Model.IVA.ToString("C2")</span></td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                                <td><span id="total-display">@Model.Total.ToString("C2")</span></td>
+                                <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                <td colspan="2"><span id="total-display">@Model.Total.ToString("C2")</span></td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -97,9 +101,17 @@
     <script>
         let productosDisponibles = @Html.Raw(Json.Serialize(ViewBag.Productos));
         let contadorFilas = 0;
+        const margenGanancia = 0.25; // 25% de margen
+        let subtotalesFilas = {}; // Objeto para almacenar subtotales por fila
 
         $(document).ready(function () {
             console.log("JavaScript cargado para edición");
+
+            // ✅ LIMPIAR CONTENEDOR ANTES DE CARGAR DATOS
+            $('#detalles-container').empty();
+            subtotalesFilas = {};
+            contadorFilas = 0;
+
             cargarDetallesExistentes();
             calcularTotales();
 
@@ -136,6 +148,8 @@
         // FUNCIONES DE CARGA Y MANEJO DE FILAS
         // =========================================================
         function cargarDetallesExistentes() {
+            console.log('Cargando detalles existentes...');
+
             @if (Model.Detalles != null)
             {
                     foreach (var d in Model.Detalles)
@@ -147,6 +161,7 @@
                                     @d.Cantidad,
                                     @d.IdUnidad,
                                     @d.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                                    @(d.Descuento * 100), // Convertir a porcentaje para mostrar
                                     @d.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
                                 );
                             </text>
@@ -163,43 +178,54 @@
             return opciones;
         }
 
-        function agregarFilaExistente(idProducto, nombreProducto, cantidad, idUnidad, precioUnitario, subtotal) {
+        function agregarFilaExistente(idProducto, nombreProducto, cantidad, idUnidad, precioUnitario, descuento, subtotal) {
             contadorFilas++;
             const filaId = `fila-${contadorFilas}`;
+            const currentIndex = contadorFilas; // Guardar índice actual
+
+            console.log(`Agregando fila ${filaId} con producto ${idProducto}, unidad ${idUnidad}`);
 
             const filaHTML = `
                 <tr id="${filaId}">
                     <td>
-                        <select name="detalles[${contadorFilas}].IdProducto"
+                        <select name="detalles[${currentIndex}].IdProducto"
                                 class="form-control select-producto"
-                                onchange="actualizarUnidades(this, ${contadorFilas})" required>
+                                onchange="actualizarUnidades(this, ${currentIndex})" required>
                             ${generarOpcionesProductos(idProducto)}
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="detalles[${contadorFilas}].Cantidad"
+                        <input type="number" name="detalles[${currentIndex}].Cantidad"
                                class="form-control cantidad" value="${cantidad}" min="1"
-                               onchange="calcularSubtotal(${contadorFilas})" required />
+                               onchange="calcularSubtotal(${currentIndex})" required />
                     </td>
                     <td>
-                        <select name="detalles[${contadorFilas}].IdUnidad"
-                                class="form-control select-unidad" id="unidad-${contadorFilas}"
-                                onchange="calcularSubtotal(${contadorFilas})" required>
+                        <select name="detalles[${currentIndex}].IdUnidad"
+                                class="form-control select-unidad" id="unidad-${currentIndex}"
+                                onchange="calcularSubtotal(${currentIndex})" required>
                             <option value="">Seleccionar unidad...</option>
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="detalles[${contadorFilas}].PrecioUnitario"
+                        <input type="number" name="detalles[${currentIndex}].PrecioUnitario"
                                class="form-control precio" value="${precioUnitario}"
                                step="0.01" min="0.01"
-                               onchange="calcularSubtotal(${contadorFilas})" required />
+                               onchange="calcularSubtotal(${currentIndex})" required />
                     </td>
                     <td>
-                        <input type="text" class="form-control subtotal" value="${subtotal}" readonly />
-                        <input type="hidden" name="detalles[${contadorFilas}].Subtotal" value="${subtotal}" />
+                        <input type="number" name="detalles[${currentIndex}].Descuento"
+                               class="form-control descuento" value="${descuento}"
+                               step="1" min="0" max="100"
+                               onchange="calcularSubtotal(${currentIndex})" />
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}')">
+                        <input type="text" class="form-control precio-venta-sin-iva" value="0.00" readonly />
+                    </td>
+                    <td>
+                        <input type="text" class="form-control precio-venta-con-iva" value="0.00" readonly />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}', ${currentIndex})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -207,52 +233,79 @@
 
             $('#detalles-container').append(filaHTML);
 
-            // Configurar unidades
-            setTimeout(() => {
-                $(`#${filaId} .select-producto`).val(idProducto);
-                actualizarUnidades($(`#${filaId} .select-producto`)[0], contadorFilas);
-                setTimeout(() => {
-                    $(`#unidad-${contadorFilas}`).val(idUnidad);
-                }, 100);
-            }, 100);
+            // ✅ CONFIGURACIÓN ASÍNCRONA MEJORADA
+            const configurarFila = () => {
+                const productoSelect = $(`#${filaId} .select-producto`);
+                const unidadSelect = $(`#unidad-${currentIndex}`);
+
+                if (productoSelect.length && unidadSelect.length) {
+                    productoSelect.val(idProducto);
+                    actualizarUnidades(productoSelect[0], currentIndex);
+
+                    // Esperar a que se carguen las unidades antes de seleccionar
+                    setTimeout(() => {
+                        unidadSelect.val(idUnidad);
+
+                        // Calcular precios después de cargar todos los datos
+                        setTimeout(() => {
+                            calcularSubtotal(currentIndex);
+                        }, 200);
+                    }, 100);
+                } else {
+                    // Reintentar si los elementos no están listos
+                    setTimeout(configurarFila, 100);
+                }
+            };
+
+            configurarFila();
         }
 
         function agregarFila() {
             contadorFilas++;
             const filaId = `fila-${contadorFilas}`;
+            const currentIndex = contadorFilas;
+
             const filaHTML = `
                 <tr id="${filaId}">
                     <td>
-                        <select name="detalles[${contadorFilas}].IdProducto"
+                        <select name="detalles[${currentIndex}].IdProducto"
                                 class="form-control select-producto"
-                                onchange="actualizarUnidades(this, ${contadorFilas})" required>
+                                onchange="actualizarUnidades(this, ${currentIndex})" required>
                             ${generarOpcionesProductos(0)}
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="detalles[${contadorFilas}].Cantidad"
+                        <input type="number" name="detalles[${currentIndex}].Cantidad"
                                class="form-control cantidad" value="1" min="1"
-                               onchange="calcularSubtotal(${contadorFilas})" required />
+                               onchange="calcularSubtotal(${currentIndex})" required />
                     </td>
                     <td>
-                        <select name="detalles[${contadorFilas}].IdUnidad"
-                                class="form-control select-unidad" id="unidad-${contadorFilas}"
-                                onchange="calcularSubtotal(${contadorFilas})" required>
+                        <select name="detalles[${currentIndex}].IdUnidad"
+                                class="form-control select-unidad" id="unidad-${currentIndex}"
+                                onchange="calcularSubtotal(${currentIndex})" required>
                             <option value="">Seleccionar unidad...</option>
                         </select>
                     </td>
                     <td>
-                        <input type="number" name="detalles[${contadorFilas}].PrecioUnitario"
+                        <input type="number" name="detalles[${currentIndex}].PrecioUnitario"
                                class="form-control precio" value="0.00"
                                step="0.01" min="0.01"
-                               onchange="calcularSubtotal(${contadorFilas})" required />
+                               onchange="calcularSubtotal(${currentIndex})" required />
                     </td>
                     <td>
-                        <input type="text" class="form-control subtotal" value="0.00" readonly />
-                        <input type="hidden" name="detalles[${contadorFilas}].Subtotal" value="0" />
+                        <input type="number" name="detalles[${currentIndex}].Descuento"
+                               class="form-control descuento" value="0"
+                               step="1" min="0" max="100"
+                               onchange="calcularSubtotal(${currentIndex})" />
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}')">
+                        <input type="text" class="form-control precio-venta-sin-iva" value="0.00" readonly />
+                    </td>
+                    <td>
+                        <input type="text" class="form-control precio-venta-con-iva" value="0.00" readonly />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila('${filaId}', ${currentIndex})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -261,7 +314,7 @@
         }
 
         // =========================================================
-        // FUNCIONES DE CÁLCULO
+        // FUNCIONES DE CÁLCULO (COHERENTES CON EL CONTROLADOR)
         // =========================================================
         function actualizarUnidades(selectElement, index) {
             const productoId = parseInt(selectElement.value);
@@ -284,45 +337,88 @@
             const fila = $(`#fila-${index}`);
             const cantidad = parseFloat(fila.find('.cantidad').val()) || 0;
             const precio = parseFloat(fila.find('.precio').val()) || 0;
-            const unidadTexto = fila.find('.select-unidad option:selected').text().toLowerCase();
+            const descuentoPct = parseFloat(fila.find('.descuento').val()) || 0;
 
+            // Obtener factor de conversión de la unidad
+            const unidadId = fila.find('.select-unidad').val();
             let factor = 1;
-            const match = unidadTexto.match(/\(x(\d+)\)/);
-            if (match) factor = parseFloat(match[1]);
+            if (unidadId) {
+                const productoId = fila.find('.select-producto').val();
+                const producto = productosDisponibles.find(p => p.idProducto == productoId);
+                if (producto && producto.unidades) {
+                    const unidad = producto.unidades.find(u => u.idUnidad == unidadId);
+                    if (unidad) {
+                        factor = unidad.factorConversion || 1;
+                    }
+                }
+            }
 
-            let descuento = 0;
-            if (unidadTexto.includes('caja')) descuento = 0.10;
-            if (unidadTexto.includes('paquete')) descuento = 0.05;
+            // ✅ CÁLCULOS COHERENTES CON EL CONTROLADOR
+            // Convertir descuento a decimal si es mayor a 1 (como hace el controlador)
+            let descuentoDecimal = descuentoPct;
+            if (descuentoPct > 1) {
+                descuentoDecimal = descuentoPct / 100;
+            }
 
-            const precioAjustado = precio * factor * (1 - descuento);
-            const subtotal = cantidad * precioAjustado;
+            // Calcular precio con descuento (ya incluye IVA)
+            const precioConDescuento = precio * (1 - descuentoDecimal);
 
-            fila.find('.subtotal').val(subtotal.toFixed(2));
-            fila.find('input[name*="Subtotal"]').val(subtotal);
+            // Calcular precio base (sin IVA)
+            const precioBase = precioConDescuento / 1.12;
+
+            // Calcular subtotal de la fila (sin IVA) - COHERENTE CON CONTROLADOR
+            const subtotalFila = cantidad * precioBase * factor;
+
+            // ✅ GUARDAR SUBTOTAL EN EL OBJETO GLOBAL
+            subtotalesFilas[index] = subtotalFila;
+
+            // ✅ CALCULAR PRECIOS DE VENTA (COHERENTE CON ActualizarInventarioYPreciosAsync)
+            const precioVentaSinIVA = precioBase * (1 + margenGanancia);
+            const precioVentaConIVA = precioVentaSinIVA * 1.12;
+
+            // Actualizar campos de precios de venta
+            fila.find('.precio-venta-sin-iva').val(precioVentaSinIVA.toFixed(2));
+            fila.find('.precio-venta-con-iva').val(precioVentaConIVA.toFixed(2));
 
             calcularTotales();
         }
 
         function calcularTotales() {
             let subtotal = 0;
-            $('.subtotal').each(function () {
-                subtotal += parseFloat($(this).val()) || 0;
+
+            // ✅ SUMAR TODOS LOS SUBTOTALES DE LAS FILAS DESDE EL OBJETO
+            Object.values(subtotalesFilas).forEach(valor => {
+                subtotal += valor;
             });
 
+            console.log('Subtotal calculado:', subtotal);
+
+            // ✅ CÁLCULOS COHERENTES CON EL CONTROLADOR
             const iva = subtotal * 0.12;
             const total = subtotal + iva;
 
+            // Actualizar displays
             $('#subtotal-display').text(subtotal.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
             $('#iva-display').text(iva.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
             $('#total-display').text(total.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' }));
 
+            // Actualizar campos hidden para el formulario
             $('#inputSubtotal').val(subtotal.toFixed(2));
             $('#inputIVA').val(iva.toFixed(2));
             $('#inputTotal').val(total.toFixed(2));
+
+            console.log('Totales actualizados - Subtotal:', subtotal, 'IVA:', iva, 'Total:', total);
         }
 
-        function eliminarFila(id) {
+        function eliminarFila(id, index) {
+            console.log(`Eliminando fila ${id} con índice ${index}`);
+
+            // ✅ ELIMINAR EL SUBTOTAL DE ESA FILA DEL OBJETO
+            delete subtotalesFilas[index];
+
+            // ✅ ELIMINAR LA FILA DEL DOM
             $(`#${id}`).remove();
+
             calcularTotales();
         }
     </script>
