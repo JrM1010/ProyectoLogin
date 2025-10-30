@@ -32,11 +32,6 @@ namespace ProyectoLogin.Controllers
 
 
 
-
-
-
-
-
         // Vista principal del POS
         public IActionResult Index()
         {
@@ -140,8 +135,6 @@ namespace ProyectoLogin.Controllers
         }
 
 
-
-
         // Guardar venta
         [HttpPost]
         public async Task<IActionResult> GuardarVenta([FromBody] Venta venta)
@@ -160,10 +153,10 @@ namespace ProyectoLogin.Controllers
             venta.IdUsuario = int.Parse(userId);
             venta.FechaVenta = FechaLocal.Ahora();
 
-            // === Calcular totales ===
+            // === Calcular totales (sin IVA) ===
             venta.Subtotal = venta.Detalles.Sum(d => d.Subtotal);
-            venta.IVA = venta.Subtotal * 0.12m;
-            venta.Total = venta.Subtotal + venta.IVA;
+            venta.IVA = 0; // IVA siempre en 0
+            venta.Total = venta.Subtotal; // Total igual al subtotal (precios ya incluyen IVA)
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -254,7 +247,7 @@ namespace ProyectoLogin.Controllers
                 // === GENERAR NÚMEROS DE VENTA Y FACTURA ===
                 int totalVentas = await _context.Ventas.CountAsync();
                 venta.NumeroVenta = $"V-{(totalVentas + 1).ToString("D6")}";
-                venta.NumeroFactura = $"F-{DateTime.Now:yyyy}-{(totalVentas + 1).ToString("D6")}";
+                venta.NumeroFactura = $"F-{FechaLocal.Ahora():yyyy}-{(totalVentas + 1).ToString("D6")}";
 
                 // === REGISTRAR VENTA ===
                 _context.Ventas.Add(venta);
@@ -343,13 +336,6 @@ namespace ProyectoLogin.Controllers
         }
 
 
-
-
-
-
-
-
-
         [HttpGet]
         public async Task<IActionResult> BuscarPromocion(string term)
         {
@@ -398,7 +384,7 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Ventas/Detalle.cshtml", venta);
         }
 
-        
+
 
         // Listado de ventas 
         public async Task<IActionResult> Lista()
@@ -413,8 +399,6 @@ namespace ProyectoLogin.Controllers
         }
 
 
-
-
         // Buscar cliente por NIT 
         [HttpGet]
         public async Task<IActionResult> BuscarClientePorNit(string nit)
@@ -427,14 +411,14 @@ namespace ProyectoLogin.Controllers
             var cliente = await _context.Clientes
                 .Where(c => c.Nit.Replace("-", "") == nitLimpio && c.Activo)
                             .Select(c => new
-                {
-                    c.IdCliente,
-                    c.Nit,
-                    c.Nombres,
-                    c.Apellidos,
-                    c.Correo,
-                    c.Direccion
-                })
+                            {
+                                c.IdCliente,
+                                c.Nit,
+                                c.Nombres,
+                                c.Apellidos,
+                                c.Correo,
+                                c.Direccion
+                            })
                 .FirstOrDefaultAsync();
 
             if (cliente == null)

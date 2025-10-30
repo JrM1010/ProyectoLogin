@@ -28,7 +28,7 @@ namespace ProyectoLogin.Servicios.Implementacion
                 .Include(v => v.Cliente)
                 .Include(v => v.Detalles)
                     .ThenInclude(d => d.Producto)
-                .Include(v => v.Usuario) // opcional: para mostrar quién atendió (si tienes la relación)
+                .Include(v => v.Usuario)
                 .FirstOrDefaultAsync(v => v.IdVenta == idVenta);
 
             if (venta == null)
@@ -129,9 +129,7 @@ namespace ProyectoLogin.Servicios.Implementacion
                             });
                         });
 
-                        
-
-                        // Tabla de productos: # | Producto | Cant. | P.Unit con IVA | Subtotal (con IVA)
+                        // Tabla de productos: # | Producto | Cant. | P.Unit | Subtotal
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(c =>
@@ -139,8 +137,8 @@ namespace ProyectoLogin.Servicios.Implementacion
                                 c.ConstantColumn(30);           // #
                                 c.RelativeColumn(4);           // Producto
                                 c.ConstantColumn(50);          // Cant.
-                                c.ConstantColumn(90);          // P.Unit con IVA
-                                c.ConstantColumn(90);          // Subtotal (con IVA)
+                                c.ConstantColumn(90);          // P.Unit
+                                c.ConstantColumn(90);          // Subtotal
                             });
 
                             // Encabezado
@@ -149,8 +147,8 @@ namespace ProyectoLogin.Servicios.Implementacion
                                 header.Cell().Element(CellStyleHeader).Text("#");
                                 header.Cell().Element(CellStyleHeader).Text("Producto");
                                 header.Cell().Element(CellStyleHeader).AlignCenter().Text("Cant.");
-                                header.Cell().Element(CellStyleHeader).AlignRight().Text("P.Unit con IVA");
-                                header.Cell().Element(CellStyleHeader).AlignRight().Text("Subtotal (IVA)");
+                                header.Cell().Element(CellStyleHeader).AlignRight().Text("P.Unit");
+                                header.Cell().Element(CellStyleHeader).AlignRight().Text("Subtotal");
                             });
 
                             int index = 1;
@@ -161,15 +159,14 @@ namespace ProyectoLogin.Servicios.Implementacion
                                 decimal descuentoPct = det.Descuento;
                                 decimal factorDescuento = 1 - (descuentoPct / 100m);
 
-                                // P.Unit con IVA y subtotal con IVA (redondeados a 2 decimales)
-                                decimal pUnitConIva = Math.Round(precioUnitario * 1.12m, 2);
-                                decimal lineaSubtotalConIva = Math.Round(precioUnitario * factorDescuento * cantidad * 1.12m, 2);
+                                // Subtotal con descuento (precios ya incluyen IVA)
+                                decimal lineaSubtotal = Math.Round(precioUnitario * factorDescuento * cantidad, 2);
 
                                 table.Cell().Element(CellStyle).Text(index.ToString());
                                 table.Cell().Element(CellStyle).Text(det.Producto?.Nombre ?? "(KIT)");
                                 table.Cell().Element(CellStyle).AlignCenter().Text(cantidad.ToString("N0"));
-                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(pUnitConIva));
-                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(lineaSubtotalConIva));
+                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(precioUnitario));
+                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(lineaSubtotal));
 
                                 index++;
                             }
@@ -193,24 +190,18 @@ namespace ProyectoLogin.Servicios.Implementacion
 
                             rowTot.ConstantColumn(260).Column(tot =>
                             {
-                                tot.Item().Row(r =>
-                                {
-                                    r.RelativeColumn().Text("Subtotal (sin IVA):").FontSize(10);
-                                    r.ConstantColumn(120).AlignRight().Text(Moneda(venta.Subtotal)).FontSize(10);
-                                });
-
-                                tot.Item().Row(r =>
-                                {
-                                    r.RelativeColumn().Text("IVA (12%):").FontSize(10);
-                                    r.ConstantColumn(120).AlignRight().Text(Moneda(venta.IVA)).FontSize(10);
-                                });
-
-                                tot.Item().LineHorizontal(1f);
-
+                                // Mostrar solo el total (precios ya incluyen IVA)
                                 tot.Item().Row(r =>
                                 {
                                     r.RelativeColumn().Text("Total:").FontSize(12).SemiBold();
                                     r.ConstantColumn(120).AlignRight().Text(Moneda(venta.Total)).FontSize(12).SemiBold();
+                                });
+
+                                // Información sobre precios con IVA incluido
+                                tot.Item().PaddingTop(5f).Row(r =>
+                                {
+                                    r.RelativeColumn().Text(" ").FontSize(8);
+                                    r.ConstantColumn(120).AlignRight().Text("IVA incluido").FontSize(8).FontColor(Colors.Grey.Medium);
                                 });
                             });
                         });
@@ -220,6 +211,7 @@ namespace ProyectoLogin.Servicios.Implementacion
                         {
                             notes.Item().Text("Condiciones:").FontSize(9).SemiBold();
                             notes.Item().Text("Factura generada electrónicamente.").FontSize(9);
+                            notes.Item().Text("Todos los precios incluyen IVA.").FontSize(9);
                             notes.Item().Text("Si tiene dudas sobre la factura, contacte a soporte: smartcellcompany001@gmail.com / +502 1234-5678").FontSize(9);
                         });
                     });
