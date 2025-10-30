@@ -377,27 +377,34 @@ namespace ProyectoLogin.Controllers
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
 
                 decimal equivalencia = productoUnidad?.FactorConversion ?? 1;
-                decimal descuento = 0;
 
-                var nombreUnidad = productoUnidad?.UnidadMedida?.Nombre?.ToLower() ?? "";
-                if (nombreUnidad.Contains("caja")) descuento = 0.10m;
-                if (nombreUnidad.Contains("paquete")) descuento = 0.05m;
+                // ✅ Si el descuento viene en porcentaje (0–100), convertir a decimal (0–1)
+                if (det.Descuento > 1)
+                    det.Descuento /= 100;
 
-                det.Descuento = descuento;
-                decimal precioAjustado = det.PrecioUnitario * equivalencia * (1 - descuento);
-                det.Subtotal = det.Cantidad * precioAjustado;
+                // ✅ Calcular precio total con descuento (ya incluye IVA)
+                decimal precioConDescuento = det.PrecioUnitario * (1 - det.Descuento);
+
+                // ✅ Calcular precio base (sin IVA) y el IVA de ese producto
+                decimal precioBase = precioConDescuento / 1.12m;
+                decimal ivaItem = precioBase * 0.12m;
+
+                // ✅ Subtotal de la fila (sin IVA)
+                det.Subtotal = det.Cantidad * precioBase * equivalencia;
+
                 subtotal += det.Subtotal;
             }
 
             compra.Subtotal = subtotal;
             compra.IVA = subtotal * 0.12m;
-            compra.Total = subtotal + compra.IVA;
+            compra.Total = compra.Subtotal + compra.IVA;
             compra.FechaCompra = FechaLocal.Ahora();
         }
 
+
         private async Task ActualizarInventarioYPreciosAsync(Compra compra)
         {
-            const decimal margenGanancia = 0.25m;
+            const decimal margenGanancia = 0.25m; // ✅ Ganancia sobre el precio base sin IVA
 
             var productosProveedores = await _context.ProductosProveedores.ToListAsync();
             var productosUnidades = await _context.ProductosUnidades
@@ -408,6 +415,9 @@ namespace ProyectoLogin.Controllers
 
             foreach (var det in compra.Detalles)
             {
+                // ============================
+                // 🔹 ACTUALIZACIÓN DE INVENTARIO
+                // ============================
                 var prodUnidad = productosUnidades
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
 
@@ -437,11 +447,14 @@ namespace ProyectoLogin.Controllers
                     });
                 }
 
+                // ============================
+                // 🔹 ACTUALIZAR RELACIÓN PRODUCTO-PROVEEDOR
+                // ============================
                 var prodProv = productosProveedores
                     .FirstOrDefault(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
                 if (prodProv != null)
                 {
-                    prodProv.CostoCompra = det.PrecioUnitario;
+                    prodProv.CostoCompra = det.PrecioUnitario; // incluye IVA
                     prodProv.FechaUltimaCompra = FechaLocal.Ahora();
                 }
 
@@ -450,6 +463,18 @@ namespace ProyectoLogin.Controllers
                     prodUnidad.PrecioCompra = det.PrecioUnitario;
                 }
 
+                // ============================
+                // 🔹 CÁLCULO DE PRECIOS (COMPRAS Y VENTAS)
+                // ============================
+                decimal precioCompraConIVA = det.PrecioUnitario;            // precio que viene del proveedor
+                decimal precioBase = precioCompraConIVA / 1.12m;             // costo sin IVA
+                decimal ivaCompra = precioBase * 0.12m;                      // IVA de compra
+                decimal precioVentaSinIVA = precioBase * (1 + margenGanancia);
+                decimal precioVentaConIVA = precioVentaSinIVA * 1.12m;
+
+                // ============================
+                // 🔹 DESACTIVAR PRECIOS ANTIGUOS
+                // ============================
                 var preciosAntiguos = precios
                     .Where(p => p.IdProducto == det.IdProducto && p.Activo)
                     .ToList();
@@ -460,15 +485,25 @@ namespace ProyectoLogin.Controllers
                     p.FechaFin = FechaLocal.Ahora();
                 }
 
+                // ============================
+                // 🔹 CREAR NUEVO REGISTRO DE PRECIO (AUDITABLE)
+                // ============================
                 _context.ProductoPrecio.Add(new ProductoPrecio
                 {
                     IdProducto = det.IdProducto,
-                    PrecioCompra = det.PrecioUnitario,
-                    PrecioVenta = det.PrecioUnitario * (1 + margenGanancia),
+                    PrecioCompra = precioCompraConIVA,     // compra con IVA
+                    PrecioBase = precioBase,               // costo sin IVA
+                    IVACompra = ivaCompra,                 // iva calculado
+                    MargenGanancia = margenGanancia,       // margen aplicado
+                    PrecioVentaSinIVA = precioVentaSinIVA, // venta sin IVA
+                    PrecioVenta = precioVentaConIVA,       // venta con IVA
                     FechaInicio = FechaLocal.Ahora(),
-                    Activo = true
+                    Activo = true,
+                    UsuarioRegistro = User?.Identity?.Name ?? "Sistema",
+                    OrigenCambio = "Compra"
                 });
             }
         }
+
     }
 }
