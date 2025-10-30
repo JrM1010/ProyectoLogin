@@ -2,13 +2,22 @@
 
 @{
     ViewData["Title"] = "Productos";
-    var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio> ?? Enumerable.Empty<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>();
-    // Separar en listas activas / inactivas
+
+    var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>
+                  ?? Enumerable.Empty<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>();
+
+    // 🔹 Filtrar y agrupar por producto: dejar solo el precio activo más reciente
+    var precioDict = precios
+        .Where(x => x.Activo)
+        .GroupBy(x => x.IdProducto)
+        .ToDictionary(
+            g => g.Key,
+            g => g.OrderByDescending(p => p.FechaInicio).FirstOrDefault()
+        );
+
+    // Separar productos activos / inactivos
     var activos = Model?.Where(p => p.Activo).OrderBy(p => p.Nombre).ToList() ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>();
     var inactivos = Model?.Where(p => !p.Activo).OrderBy(p => p.Nombre).ToList() ?? new List<ProyectoLogin.Models.ModelosProducts.ProductoCore>();
-
-    // Convertir precios a diccionario para acceso rápido (si hay muchos registros)
-    var precioDict = precios.ToDictionary(x => x.IdProducto, x => x);
 }
 
 <h2>Productos</h2>
@@ -23,7 +32,7 @@
 </div>
 
 <!-- TABLA: PRODUCTOS ACTIVOS -->
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm">
     <div class="card-header d-flex align-items-center">
         <strong class="me-2">Productos activos</strong>
         <span class="badge bg-primary">@activos.Count()</span>
@@ -36,16 +45,16 @@
         else
         {
             <div class="table-responsive">
-                <table class="table table-striped mb-0">
-                    <thead>
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-dark">
                         <tr>
                             <th>Nombre</th>
                             <th>Código</th>
                             <th>Categoría</th>
                             <th>Marca</th>
                             <th class="text-end">Stock Actual</th>
-                            <th class="text-end">Stock Minimo</th>
-                            <th class="text-end">Precio venta</th>
+                            <th class="text-end">Stock Mínimo</th>
+                            <th class="text-end">Precio Venta (con Iva)</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -58,30 +67,35 @@
                             var stockMin = p.Inventario?.StockMinimo ?? 0;
                             var isLow = (p.Inventario != null) && (stockActual <= stockMin);
 
-                            <tr @(isLow ? "class=\"table-warning\"" : "")>
+                            <tr class="@(isLow ? "table-warning" : "")">
                                 <td>@p.Nombre</td>
                                 <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
                                 <td>@p.Categoria?.Nombre</td>
                                 <td>@p.Marca?.Nombre</td>
-                                
                                 <td class="text-end">
                                     @stockActual
                                     @if (isLow)
                                     {
-                                        <span class="badge bg-danger ms-2" title="Stock bajo: mínimo @stockMin" aria-label="Stock bajo">
-                                            Bajo
-                                        </span>
+                                        <span class="badge bg-danger ms-2" title="Stock bajo: mínimo @stockMin">Bajo</span>
+                                    }
+                                </td>
+                                <td class="text-end">@stockMin</td>
+
+                                <td class="text-end">
+                                    @if (precio != null)
+                                    {
+                                        <strong>Q @precio.PrecioVenta.ToString("N2")</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin precio</span>
                                     }
                                 </td>
 
-                                <td>@p.Inventario?.StockMinimo</td>
-
-                                <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
                                 <td>
                                     <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
                                     <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@p.IdProducto">Editar</a>
-
-                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Estás seguro que deseas desactivar este producto?');">
+                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Desactivar este producto?');">
                                         @Html.AntiForgeryToken()
                                         <button class="btn btn-sm btn-danger" type="submit">Desactivar</button>
                                     </form>
@@ -96,7 +110,7 @@
 </div>
 
 <!-- TABLA: PRODUCTOS DESACTIVADOS -->
-<div class="card mb-4">
+<div class="card mb-4 shadow-sm">
     <div class="card-header d-flex align-items-center">
         <strong class="me-2">Productos desactivados</strong>
         <span class="badge bg-secondary">@inactivos.Count()</span>
@@ -109,16 +123,16 @@
         else
         {
             <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0">
-                    <thead>
+                <table class="table table-sm table-striped align-middle mb-0">
+                    <thead class="table-dark">
                         <tr>
                             <th>Nombre</th>
                             <th>Código</th>
                             <th>Categoría</th>
                             <th>Marca</th>
                             <th class="text-end">Stock Actual</th>
-                            <th class="text-end">Stock Minimo</th>
-                            <th class="text-end">Precio venta</th>
+                            <th class="text-end">Stock Mínimo</th>
+                            <th class="text-end">Precio Venta</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -136,14 +150,21 @@
                                 <td>@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "-" : p.CodigoBarras)</td>
                                 <td>@p.Categoria?.Nombre</td>
                                 <td>@p.Marca?.Nombre</td>
-                                <td>@p.Inventario.StockActual</td>
-                                <td>@p.Inventario.StockMinimo</td>
-
-                                <td class="text-end">@((precio != null) ? precio.PrecioVenta.ToString("N2") : "-")</td>
+                                <td class="text-end">@stockActual</td>
+                                <td class="text-end">@stockMin</td>
+                                <td class="text-end">
+                                    @if (precio != null)
+                                    {
+                                        <strong>Q @precio.PrecioVenta.ToString("N2")</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin precio</span>
+                                    }
+                                </td>
                                 <td>
                                     <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
-
-                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Estás seguro que deseas activar este producto?');">
+                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Activar este producto?');">
                                         @Html.AntiForgeryToken()
                                         <button class="btn btn-sm btn-success" type="submit">Activar</button>
                                     </form>
@@ -159,9 +180,8 @@
 
 @section Scripts {
     <script>
-        // opcional: enfoque rápido en el campo búsqueda al cargar
-        document.addEventListener('DOMContentLoaded', function () {
-            var input = document.querySelector('input[name="q"]');
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
         });
     </script>
