@@ -67,6 +67,12 @@
                 </a>
             }
 
+            @if (User.IsInRole("Administrador"))
+            {
+                <a asp-controller="Reportes" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-clipboard-data"></i> Reportes
+                </a>
+            }
 
         </div>
     </div>

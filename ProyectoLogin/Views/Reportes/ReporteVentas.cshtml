@@ -1,0 +1,94 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Reporte de Ventas";
+}
+
+<div class="container mt-4">
+    <h3 class="text-primary"><i class="bi bi-receipt"></i> Reporte de Ventas</h3>
+
+    <form method="get" class="row g-3 my-3">
+        <div class="col-md-3">
+            <label>Desde</label>
+            <input type="date" name="desde" class="form-control" value="@Context.Request.Query["desde"]" />
+        </div>
+        <div class="col-md-3">
+            <label>Hasta</label>
+            <input type="date" name="hasta" class="form-control" value="@Context.Request.Query["hasta"]" />
+        </div>
+        <div class="col-md-3">
+            <label>Vendedor</label>
+            <input type="text" name="vendedor" class="form-control" placeholder="Nombre vendedor" value="@Context.Request.Query["vendedor"]" />
+        </div>
+        <div class="col-md-3">
+            <label>Forma de pago</label>
+            <select name="formaPago" class="form-select">
+                <option value="">Todas</option>
+                <option value="Efectivo" selected="@(Context.Request.Query["formaPago"] == "Efectivo")">Efectivo</option>
+                <option value="Tarjeta" selected="@(Context.Request.Query["formaPago"] == "Tarjeta")">Tarjeta</option>
+                <option value="Transferencia" selected="@(Context.Request.Query["formaPago"] == "Transferencia")">Transferencia</option>
+                <option value="Mixto" selected="@(Context.Request.Query["formaPago"] == "Mixto")">Mixto</option>
+            </select>
+        </div>
+        <div class="col-12 text-end mt-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrar</button>
+            
+            <!-- 🔹 BOTÓN ACTUALIZADO PARA PASAR LOS PARÁMETROS DE FILTRO -->
+            <a href="@Url.Action("DescargarPDF", new { 
+                desde = Context.Request.Query["desde"],
+                hasta = Context.Request.Query["hasta"], 
+                vendedor = Context.Request.Query["vendedor"],
+                formaPago = Context.Request.Query["formaPago"] 
+            })" class="btn btn-success">
+                <i class="bi bi-filetype-pdf"></i> Descargar PDF
+            </a>
+        </div>
+    </form>
+
+    @if (Model.Any())
+    {
+        <table class="table table-bordered table-hover mt-3 align-middle text-center">
+            <thead class="table-primary">
+                <tr>
+                    <th>Fecha</th>
+                    <th>No. Factura</th>
+                    <th>Cliente</th>
+                    <th>NIT</th>
+                    <th>Vendedor</th>
+                    <th>Subtotal</th>
+                    <th>IVA</th>
+                    <th>Total</th>
+                    <th>Forma de Pago</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <!-- 🔹 CAMBIO: Formato día/mes/año -->
+                        <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@v.NoFactura</td>
+                        <td>@v.Cliente</td>
+                        <td>@v.Nit</td>
+                        <td>@v.Vendedor</td>
+                        <td>@("Q" + String.Format("{0:N2}", v.TotalSinIva))</td>
+                        <td>@("Q" + String.Format("{0:N2}", v.ValorIva))</td>
+                        <td>@("Q" + String.Format("{0:N2}", v.TotalConIva))</td>
+                        <td>@v.FormaPago</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="mt-4 text-end">
+            <h6><strong>Subtotal general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.SubtotalGeneral))</h6>
+            <h6><strong>IVA general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.IvaGeneral))</h6>
+            <h5 class="text-success"><strong>Total general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.TotalGeneral))</h5>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i> No se encontraron ventas con los filtros aplicados.
+        </div>
+    }
+</div>

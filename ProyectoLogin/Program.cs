@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoLogin.Servicios;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using QuestPDF.Infrastructure;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,7 @@ CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
 CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
 
 
-
+QuestPDF.Settings.License = LicenseType.Community;
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
