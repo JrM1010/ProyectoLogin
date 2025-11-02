@@ -1,30 +1,171 @@
 ﻿@model ProyectoLogin.Models.Proveedor
 
-<h2>Agregar Proveedor</h2>
+@{
+    ViewData["Title"] = "Agregar Proveedor";
+}
 
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div class="form-group">
-        <label>Nombre</label>
-        <input asp-for="Nombre" class="form-control" required />
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 col-xl-6">
+            <!-- CARD PRINCIPAL -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-building-add fs-4 me-2"></i>
+                        <h4 class="mb-0">Agregar Nuevo Proveedor</h4>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- INFORMACIÓN BÁSICA -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>Información Básica
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-building me-1"></i>Nombre del Proveedor *
+                                </label>
+                                <input asp-for="Nombre" class="form-control" placeholder="Ingrese el nombre del proveedor" required />
+                                <span asp-validation-for="Nombre" class="text-danger small"></span>
+                                <div class="form-text text-muted">
+                                    <i class="bi bi-asterisk text-danger me-1"></i>Este campo es obligatorio
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- INFORMACIÓN DE CONTACTO -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-telephone me-2"></i>Información de Contacto
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-person me-1"></i>Persona de Contacto
+                                </label>
+                                <input asp-for="Contacto" class="form-control" placeholder="Nombre del contacto principal" />
+                                <span asp-validation-for="Contacto" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-phone me-1"></i>Teléfono
+                                </label>
+                                <input asp-for="Telefono" class="form-control" placeholder="Número de teléfono" />
+                                <span asp-validation-for="Telefono" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- INFORMACIÓN ADICIONAL -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-geo-alt me-2"></i>Información Adicional
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-envelope me-1"></i>Correo Electrónico
+                                </label>
+                                <input asp-for="Email" class="form-control" type="email" placeholder="correo@proveedor.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-primary">
+                                    <i class="bi bi-geo me-1"></i>Dirección
+                                </label>
+                                <input asp-for="Direccion" class="form-control" placeholder="Dirección completa" />
+                                <span asp-validation-for="Direccion" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- BOTONES DE ACCIÓN -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de proveedores">
+                                <i class="bi bi-arrow-left me-1"></i>Cancelar
+                            </a>
+
+                            <div class="d-flex gap-2">
+                                <button type="reset" class="btn btn-outline-warning rounded-pill" title="Limpiar formulario">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+
+                                <button type="submit" class="btn btn-success rounded-pill" title="Guardar nuevo proveedor">
+                                    <i class="bi bi-plus-circle me-1"></i>Agregar Proveedor
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TARJETA INFORMATIVA -->
+            <div class="card mt-4 border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title text-primary mb-3">
+                        <i class="bi bi-lightbulb me-2"></i>Recomendaciones para Proveedores
+                    </h6>
+                    <div class="row text-muted small">
+                        <div class="col-12">
+                            <p class="mb-2">
+                                <i class="bi bi-check-circle text-success me-1"></i>
+                                <strong>Información completa:</strong> Proporcionar todos los datos facilita la comunicación y gestión.
+                            </p>
+                            <p class="mb-2">
+                                <i class="bi bi-telephone text-primary me-1"></i>
+                                <strong>Contacto:</strong> Incluir al menos un método de contacto (teléfono o email) es recomendable.
+                            </p>
+                            <p class="mb-0">
+                                <i class="bi bi-shield-check text-info me-1"></i>
+                                <strong>Verificación:</strong> Asegúrese de que la información proporcionada sea correcta y actual.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Contacto</label>
-        <input asp-for="Contacto" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Teléfono</label>
-        <input asp-for="Telefono" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Email</label>
-        <input asp-for="Email" class="form-control" type="email" />
-    </div>
-    <div class="form-group">
-        <label>Dirección</label>
-        <input asp-for="Direccion" class="form-control" />
-    </div>
-    <br />
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus en el primer campo al cargar
+            const firstInput = document.querySelector('input[type="text"]');
+            if (firstInput) firstInput.focus();
+
+            // Validación en tiempo real para campos requeridos
+            const nombreInput = document.querySelector('#Nombre');
+            if (nombreInput) {
+                nombreInput.addEventListener('blur', function() {
+                    const errorSpan = this.nextElementSibling;
+                    if (!this.value.trim() && errorSpan && errorSpan.classList.contains('text-danger')) {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            }
+
+            // Confirmación antes de limpiar el formulario
+            const resetButton = document.querySelector('button[type="reset"]');
+            if (resetButton) {
+                resetButton.addEventListener('click', function(e) {
+                    if (!confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    </script>
+}

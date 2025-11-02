@@ -27,7 +27,14 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> DescargarFactura(int idVenta)
         {
             var pdfBytes = await _facturaService.GenerarFacturaAsync(idVenta);
-            return File(pdfBytes, "application/pdf", $"Factura_{idVenta}.pdf");
+
+            // Obtener la fecha actual en formato dd/MM/yyyy
+            var fechaActual = DateTime.Now.ToString("dd/MM/yyyy");
+
+            // Crear el nombre del archivo con el formato deseado
+            var nombreArchivo = $"FacturaSmartcell {fechaActual}.pdf";
+
+            return File(pdfBytes, "application/pdf", nombreArchivo);
         }
 
 

@@ -49,7 +49,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Nombre</th>
-                            <th>Código</th>
+                            <th>Código de Producto</th>
                             <th>Categoría</th>
                             <th>Marca</th>
                             <th class="text-end">Stock Actual</th>
@@ -93,12 +93,28 @@
                                 </td>
 
                                 <td>
-                                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
-                                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@p.IdProducto">Editar</a>
-                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Desactivar este producto?');">
-                                        @Html.AntiForgeryToken()
-                                        <button class="btn btn-sm btn-danger" type="submit">Desactivar</button>
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <!-- Detalles -->
+                                        <a href="@Url.Action("Details", new { id = p.IdProducto })"
+                                           class="btn btn-sm btn-outline-info rounded-circle" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <!-- Editar -->
+                                        <a href="@Url.Action("Edit", new { id = p.IdProducto })"
+                                           class="btn btn-sm btn-outline-warning rounded-circle" title="Editar producto">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+
+                                        <!-- Desactivar -->
+                                        <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post"
+                                              class="d-inline" onsubmit="return confirm('¿Desactivar este producto?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Desactivar">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -163,11 +179,22 @@
                                     }
                                 </td>
                                 <td>
-                                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@p.IdProducto">Detalles</a>
-                                    <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" style="display:inline" onsubmit="return confirm('¿Activar este producto?');">
-                                        @Html.AntiForgeryToken()
-                                        <button class="btn btn-sm btn-success" type="submit">Activar</button>
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <!-- Detalles -->
+                                        <a href="@Url.Action("Details", new { id = p.IdProducto })"
+                                           class="btn btn-sm btn-outline-info rounded-circle" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <!-- Activar -->
+                                        <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post"
+                                              class="d-inline" onsubmit="return confirm('¿Activar este producto?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" title="Activar">
+                                                <i class="bi bi-check2-circle"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }

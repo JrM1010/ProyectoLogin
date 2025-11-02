@@ -6,101 +6,110 @@
     var movimientos = ViewBag.Movimientos as IEnumerable<ProyectoLogin.Models.ModelosProducts.MovInventario>;
 }
 
-<h2>Detalles: @Model.Nombre</h2>
+<h2 class="mb-4">Detalles: @Model.Nombre</h2>
 
 <div class="row mb-4">
     <div class="col-md-6">
-        <dl class="row">
-            <dt class="col-sm-4">Nombre</dt>
-            <dd class="col-sm-8">@Model.Nombre</dd>
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Información del Producto</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Nombre</dt>
+                    <dd class="col-sm-8">@Model.Nombre</dd>
 
-            <dt class="col-sm-4">Código de barras</dt>
-            <dd class="col-sm-8">@Model.CodigoBarras</dd>
+                    <dt class="col-sm-4">Código de Producto</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.CodigoBarras) ? "-" : Model.CodigoBarras)</dd>
 
-            <dt class="col-sm-4">Categoría</dt>
-            <dd class="col-sm-8">@Model.Categoria?.Nombre</dd>
+                    <dt class="col-sm-4">Categoría</dt>
+                    <dd class="col-sm-8">@(Model.Categoria?.Nombre ?? "-")</dd>
 
-            <dt class="col-sm-4">Marca</dt>
-            <dd class="col-sm-8">@Model.Marca?.Nombre</dd>
+                    <dt class="col-sm-4">Marca</dt>
+                    <dd class="col-sm-8">@(Model.Marca?.Nombre ?? "-")</dd>
 
-            <dt class="col-sm-4">Descripción</dt>
-            <dd class="col-sm-8">@Model.Descripcion</dd>
+                    <dt class="col-sm-4">Descripción</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Descripcion) ? "-" : Model.Descripcion)</dd>
 
-            <dt class="col-sm-4">Activo</dt>
-            <dd class="col-sm-8">@(Model.Activo ? "Sí" : "No")</dd>
-        </dl>
+                    <dt class="col-sm-4">Estado</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Activo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactivo</span>
+                        }
+                    </dd>
+                </dl>
 
-        <p>
-            <a asp-action="Edit" asp-route-id="@Model.IdProducto" class="btn btn-warning">Editar datos</a>
-            <a asp-action="Index" class="btn btn-secondary">Volver</a>
-        </p>
+                <div class="d-flex gap-2 mt-4">
+                    <!-- Editar -->
+                    <a asp-action="Edit" asp-route-id="@Model.IdProducto"
+                       class="btn btn-outline-warning rounded-pill" title="Editar producto">
+                        <i class="bi bi-pencil-square me-1"></i>Editar
+                    </a>
 
+                    <!-- Volver -->
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado">
+                        <i class="bi bi-arrow-left me-1"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
 </div>
 
-<hr />
+<!-- PRECIOS HISTÓRICOS -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-tags me-2"></i>Precios Históricos
+        </h5>
+    </div>
+    <div class="card-body">
+        @if (precios != null && precios.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Precio Compra</th>
+                            <th>Precio Venta</th>
+                            <th>Fecha Inicio</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in precios)
+                        {
+                            <tr>
+                                <td>Q @p.PrecioCompra.ToString("N2")</td>
+                                <td><strong>Q @p.PrecioVenta.ToString("N2")</strong></td>
+                                <td>@p.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (p.Activo)
+                                    {
+                                        <span class="badge bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted text-center py-3">
+                <i class="bi bi-tags me-2"></i>No hay precios registrados.
+            </p>
+        }
+    </div>
+</div>
 
-<h4>Precios históricos</h4>
-@if (precios != null && precios.Any())
-{
-    <table class="table table-sm table-striped">
-        <thead>
-            <tr>
-                <th>Precio Compra</th>
-                <th>Precio Venta</th>
-                <th>Fecha inicio</th>
-                <th>Activo</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in precios)
-            {
-                <tr>
-                    <td>@p.PrecioCompra.ToString("N2")</td>
-                    <td>@p.PrecioVenta.ToString("N2")</td>
-                    <td>@p.FechaInicio.ToString("dd/MM/yyyy")</td>
-                    <td>@(p.Activo ? "Sí" : "No")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p class="text-muted">No hay precios registrados.</p>
-}
-
-<hr />
-
-<h4>Movimientos recientes (inventario)</h4>
-@if (movimientos != null && movimientos.Any())
-{
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Cantidad</th>
-                <th>Referencia</th>
-                <th>Observación</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var m in movimientos)
-            {
-                <tr>
-                    <td>@m.Fecha.ToString("dd/MM/yyyy")</td>
-                    <td>@m.TipoMovimiento</td>
-                    <td>@m.Cantidad</td>
-                    <td>@m.Referencia</td>
-                    <td>@m.Observacion</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p class="text-muted">No se han registrado movimientos recientes.</p>
-}

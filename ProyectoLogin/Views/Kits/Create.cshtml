@@ -1,131 +1,190 @@
 ﻿@{
     ViewData["Title"] = "Crear Kit / Promoción";
     var productos = ViewBag.Productos as IEnumerable<dynamic> ?? new List<dynamic>();
-    var proveedores = ViewBag.Proveedores as IEnumerable<dynamic> ?? null; // opcional
+    var proveedores = ViewBag.Proveedores as IEnumerable<dynamic> ?? null;
 }
 
-<h2 class="mb-3">Crear Kit / Promoción</h2>
-
-<div class="card mb-4 shadow-sm">
-    <div class="card-body">
-        <form id="formFake">
-            @Html.AntiForgeryToken()
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Nombre del kit</label>
-                    <input id="nombre" class="form-control" placeholder="Ej. Pack Auriculares + Cargador" />
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Descuento (%)</label>
-                    <div class="input-group">
-                        <input id="descuentoPct" class="form-control" type="number" min="0" max="100" step="0.01" value="2" />
-                        <span class="input-group-text">%</span>
-                    </div>
-                    <div class="form-text">Por defecto 2% — puedes cambiarlo (valor entre 0 y 100).</div>
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label">Descripción (opcional)</label>
-                    <textarea id="descripcion" class="form-control" rows="2" placeholder="Descripción breve o condiciones de la promoción"></textarea>
-                </div>
-            </div>
-        </form>
+<div class="container-fluid">
+    <!-- HEADER PRINCIPAL -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-plus-circle text-primary me-2"></i>Crear Kit / Promoción
+        </h2>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de kits">
+            <i class="bi bi-arrow-left me-1"></i>Volver a Kits
+        </a>
     </div>
-</div>
 
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card mb-3">
-            <div class="card-header">
-                <strong>Agregar productos al kit</strong>
+    <!-- INFORMACIÓN BÁSICA DEL KIT -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-tags fs-4 me-2"></i>
+                <h5 class="mb-0">Información Básica del Kit</h5>
             </div>
-            <div class="card-body position-relative">
-                <div class="mb-3">
-                    <label class="form-label">Buscar producto (nombre o código)</label>
-                    <div class="input-group">
-                        <input id="searchProducto" type="search" class="form-control" placeholder="Escribe nombre o código..." autocomplete="off" />
-                        <button id="btnBuscarNow" class="btn btn-outline-secondary" type="button">Buscar</button>
+        </div>
+        <div class="card-body">
+            <form id="formFake">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-primary">
+                            <i class="bi bi-tag me-1"></i>Nombre del Kit *
+                        </label>
+                        <input id="nombre" class="form-control" placeholder="Ej. Pack Auriculares + Cargador" required />
+                        <div class="form-text text-muted">Nombre descriptivo para identificar el kit o promoción</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-primary">
+                            <i class="bi bi-percent me-1"></i>Descuento (%)
+                        </label>
+                        <div class="input-group">
+                            <input id="descuentoPct" class="form-control" type="number" min="0" max="100" step="1" value="2" />
+                            <span class="input-group-text bg-light">%</span>
+                        </div>
+                        <div class="form-text text-muted">Porcentaje de descuento aplicado al total del kit (0-100%)</div>
                     </div>
 
-                    @if (proveedores != null)
-                    {
-                        <div class="mt-2">
-                            <label class="form-label small">Proveedor (opcional)</label>
-                            <select id="filterProveedor" class="form-select" style="max-width:320px;">
-                                <option value="">— Todos los proveedores —</option>
-                                @foreach (var pv in proveedores)
-                                {
-                                    <option value="@pv.IdProveedor">@pv.Nombre</option>
-                                }
-                            </select>
-                        </div>
-                    }
-
-                    <div id="suggestions" class="list-group position-absolute shadow-sm"
-                         style="z-index:1050; display:none; max-height:220px; overflow:auto; left:0; right:0;"></div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold text-primary">
+                            <i class="bi bi-chat-text me-1"></i>Descripción (opcional)
+                        </label>
+                        <textarea id="descripcion" class="form-control" rows="2" placeholder="Descripción breve o condiciones de la promoción"></textarea>
+                    </div>
                 </div>
-
-                <hr />
-
-                <div class="table-responsive">
-                    <table id="tablaItems" class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th style="width:100px">Cantidad</th>
-                                <th style="width:160px">Precio unitario (Q)</th>
-                                <th style="width:160px">Subtotal (Q)</th>
-                                <th style="width:80px">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                        <tfoot>
-                            <tr class="fw-bold">
-                                <td colspan="3" class="text-end">Subtotal:</td>
-                                <td id="subtotalCell">Q0.00</td>
-                                <td></td>
-                            </tr>
-                            <tr class="fw-bold">
-                                <td colspan="3" class="text-end">Descuento:</td>
-                                <td id="descuentoCell">Q0.00</td>
-                                <td></td>
-                            </tr>
-                            <tr class="table-success fw-bold">
-                                <td colspan="3" class="text-end">Total:</td>
-                                <td id="totalCell">Q0.00</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="mt-3 d-flex gap-2">
-                    <button id="calcularServer" class="btn btn-outline-secondary">Calcular con precios actuales</button>
-                    <button id="limpiarItems" class="btn btn-outline-warning">Limpiar</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <div class="col-lg-5">
-        <div class="card sticky-top" style="top:20px">
-            <div class="card-body">
-                <h5 class="card-title">Resumen</h5>
-                <p class="mb-1"><strong>Items agregados:</strong> <span id="countItems">0</span></p>
-                <hr />
-                <p class="mb-1">Subtotal: <strong id="resSubtotal">Q0.00</strong></p>
-                <p class="mb-1">Descuento (<span id="resDescuentoPct">2%</span>): <strong id="resDescuento">Q0.00</strong></p>
-                <p class="mb-3">Total: <strong id="resTotal">Q0.00</strong></p>
-
-                <div class="d-grid">
-                    <button id="guardarKit" class="btn btn-success btn-lg">Guardar Kit / Promoción</button>
+    <div class="row g-4">
+        <!-- PANEL IZQUIERDO: PRODUCTOS -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light d-flex align-items-center">
+                    <i class="bi bi-search text-primary me-2"></i>
+                    <h6 class="mb-0">Buscar y Agregar Productos</h6>
                 </div>
+                <div class="card-body position-relative">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-primary">Buscar producto</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input id="searchProducto" type="search" class="form-control" placeholder="Escribe nombre o código del producto..." autocomplete="off" />
+                            <button id="btnBuscarNow" class="btn btn-outline-primary rounded-end" type="button" title="Buscar productos">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                        </div>
 
-                <small class="form-text text-muted mt-2">
-                    Al guardar, se almacenan los precios actuales de cada producto (snapshot). El cálculo final será verificado en el servidor.
-                </small>
+                        @if (proveedores != null)
+                        {
+                            <div class="mt-3">
+                                <label class="form-label small fw-semibold">Filtrar por Proveedor</label>
+                                <select id="filterProveedor" class="form-select" style="max-width:320px;">
+                                    <option value="">— Todos los proveedores —</option>
+                                    @foreach (var pv in proveedores)
+                                    {
+                                        <option value="@pv.IdProveedor">@pv.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                        }
 
-                <div id="alertArea" class="mt-3"></div>
+                        <div id="suggestions" class="list-group position-absolute shadow-sm"
+                             style="z-index:1050; display:none; max-height:220px; overflow:auto; left:0; right:0;"></div>
+                    </div>
+
+                    <hr />
+
+                    <!-- TABLA DE PRODUCTOS AGREGADOS -->
+                    <div class="table-responsive">
+                        <table id="tablaItems" class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="width:100px">Cantidad</th>
+                                    <th style="width:140px">Precio Unitario</th>
+                                    <th style="width:140px">Subtotal</th>
+                                    <th style="width:80px" class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                            <tfoot class="table-group-divider">
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Subtotal:</td>
+                                    <td id="subtotalCell" class="text-primary">Q0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Descuento:</td>
+                                    <td id="descuentoCell" class="text-warning">Q0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="table-success fw-bold">
+                                    <td colspan="3" class="text-end">Total:</td>
+                                    <td id="totalCell" class="text-success">Q0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="d-flex gap-2 mt-3">
+                        <button id="calcularServer" class="btn btn-outline-primary rounded-pill" title="Recalcular con precios actuales">
+                            <i class="bi bi-calculator me-1"></i>Recalcular Precios
+                        </button>
+                        <button id="limpiarItems" class="btn btn-outline-warning rounded-pill" title="Limpiar todos los productos">
+                            <i class="bi bi-trash me-1"></i>Limpiar Todo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL DERECHO: RESUMEN -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm sticky-top" style="top:20px">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-receipt me-2"></i>Resumen del Kit
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-semibold">Productos agregados:</span>
+                        <span class="badge bg-primary rounded-pill fs-6" id="countItems">0</span>
+                    </div>
+
+                    <hr />
+
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <strong id="resSubtotal" class="text-primary">Q0.00</strong>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span>Descuento (<span id="resDescuentoPct">2%</span>):</span>
+                        <strong id="resDescuento" class="text-warning">Q0.00</strong>
+                    </div>
+                    <div class="mb-3 d-flex justify-content-between fs-5">
+                        <span class="fw-bold">Total:</span>
+                        <strong id="resTotal" class="text-success">Q0.00</strong>
+                    </div>
+
+                    <div class="d-grid">
+                        <button id="guardarKit" class="btn btn-success rounded-pill btn-lg" title="Guardar kit/promoción">
+                            <i class="bi bi-check2-circle me-1"></i>Guardar Kit / Promoción
+                        </button>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Al guardar, se almacenan los precios actuales de cada producto. El cálculo final será verificado en el servidor.</small>
+                    </div>
+
+                    <div id="alertArea" class="mt-3"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -158,8 +217,13 @@
         const buscarUrl = '@Url.Action("BuscarProducto", "Ventas")';
 
         function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
         function mostrarAlerta(msg, tipo = 'info', timeout = 4000) {
-            alertArea.innerHTML = `<div class="alert alert-${tipo}">${msg}</div>`;
+            const icon = tipo === 'success' ? 'check-circle' : tipo === 'warning' ? 'exclamation-triangle' : tipo === 'danger' ? 'x-circle' : 'info-circle';
+            alertArea.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show">
+                <i class="bi bi-${icon} me-2"></i>${msg}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
             if (timeout) setTimeout(() => alertArea.innerHTML = '', timeout);
         }
 
@@ -168,15 +232,33 @@
             items.forEach((it, idx) => {
                 tablaBody.insertAdjacentHTML('beforeend', `
                 <tr>
-                    <td>${it.nombre}</td>
-                    <td><input data-idx="${idx}" class="form-control form-control-sm qtyInput" type="number" min="1" value="${it.cantidad}" style="width:80px" /></td>
-                    <td>${formatMoney(it.precio)}</td>
-                    <td>${formatMoney(it.precio * it.cantidad)}</td>
-                    <td><button data-idx="${idx}" class="btn btn-sm btn-outline-danger del">Eliminar</button></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box text-muted me-2"></i>
+                            ${it.nombre}
+                        </div>
+                    </td>
+                    <td>
+                        <input data-idx="${idx}" class="form-control form-control-sm qtyInput" type="number" min="1" value="${it.cantidad}" style="width:80px" />
+                    </td>
+                    <td class="fw-semibold">${formatMoney(it.precio)}</td>
+                    <td class="fw-bold text-primary">${formatMoney(it.precio * it.cantidad)}</td>
+                    <td class="text-center">
+                        <button data-idx="${idx}" class="btn btn-sm btn-outline-danger rounded-circle del" title="Eliminar producto">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
                 </tr>`);
             });
-            document.querySelectorAll('.del').forEach(btn => btn.onclick = e => { items.splice(e.target.dataset.idx, 1); actualizarUI(); });
-            document.querySelectorAll('.qtyInput').forEach(inp => inp.onchange = e => { const i = items[e.target.dataset.idx]; i.cantidad = Math.max(1, +e.target.value); actualizarUI(); });
+            document.querySelectorAll('.del').forEach(btn => btn.onclick = e => {
+                items.splice(e.target.closest('button').dataset.idx, 1);
+                actualizarUI();
+            });
+            document.querySelectorAll('.qtyInput').forEach(inp => inp.onchange = e => {
+                const i = items[e.target.dataset.idx];
+                i.cantidad = Math.max(1, +e.target.value);
+                actualizarUI();
+            });
         }
 
         function calcularLocales() {
@@ -185,6 +267,7 @@
             if (pct > 1 && pct <= 100) pct /= 100;
             pct = Math.min(Math.max(pct, 0), 1);
             const desc = subtotal * pct, total = subtotal - desc;
+
             subtotalCell.textContent = formatMoney(subtotal);
             descuentoCell.textContent = formatMoney(desc);
             totalCell.textContent = formatMoney(total);
@@ -209,6 +292,7 @@
                 renderSuggestions(Array.isArray(data) ? data : (data.results || []));
             } catch { hideSuggestions(); }
         }
+
         function renderSuggestions(list) {
             const shown = list.slice(0, 5);
             if (!shown.length) return hideSuggestions();
@@ -216,19 +300,39 @@
             shown.forEach(it => {
                 const precio = formatMoney(it.precio || 0), stock = it.stock ?? 'N/A';
                 const btn = document.createElement('button');
-                btn.className = 'list-group-item list-group-item-action d-flex justify-content-between';
-                btn.innerHTML = `<div><div class="fw-semibold">${it.text}</div><div class="small text-muted">Stock: ${stock}</div></div><div>${precio}</div>`;
+                btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                btn.innerHTML = `
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${it.text}</div>
+                        <div class="small text-muted">
+                            <i class="bi bi-box me-1"></i>Stock: ${stock}
+                            ${it.tipo === 'kit' ? '<span class="badge bg-info ms-2">KIT</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">${precio}</div>
+                        <div class="small text-muted">Agregar</div>
+                    </div>`;
                 btn.onclick = () => {
                     const precioNum = parseFloat(it.precio) || 0;
                     if (precioNum <= 0) return mostrarAlerta('El producto no tiene precio válido.', 'warning');
                     const ex = items.find(x => x.idProducto == it.id);
-                    if (ex) ex.cantidad += 1; else items.push({ idProducto: it.id, nombre: it.text, cantidad: 1, precio: precioNum });
-                    actualizarUI(); hideSuggestions(); searchInput.value = '';
+                    if (ex) {
+                        ex.cantidad += 1;
+                        mostrarAlerta(`Cantidad aumentada para "${it.text}"`, 'info', 2000);
+                    } else {
+                        items.push({ idProducto: it.id, nombre: it.text, cantidad: 1, precio: precioNum });
+                        mostrarAlerta(`"${it.text}" agregado al kit`, 'success', 2000);
+                    }
+                    actualizarUI();
+                    hideSuggestions();
+                    searchInput.value = '';
                 };
                 suggestionsBox.appendChild(btn);
             });
             suggestionsBox.style.display = 'block';
         }
+
         function hideSuggestions() { suggestionsBox.style.display = 'none'; suggestionsBox.innerHTML = ''; }
 
         const debouncedFetch = debounce(fetchSuggestions, 150);
@@ -236,12 +340,21 @@
         btnBuscarNow.onclick = () => fetchSuggestions(searchInput.value);
         if (filterProveedor) filterProveedor.onchange = () => { if (searchInput.value.trim()) fetchSuggestions(searchInput.value); };
         document.addEventListener('click', e => { if (!suggestionsBox.contains(e.target) && e.target !== searchInput) hideSuggestions(); });
-        limpiarBtn.onclick = e => { e.preventDefault(); items.length = 0; actualizarUI(); };
+
+        limpiarBtn.onclick = e => {
+            e.preventDefault();
+            if (items.length > 0 && confirm('¿Estás seguro de que deseas eliminar todos los productos del kit?')) {
+                items.length = 0;
+                actualizarUI();
+                mostrarAlerta('Todos los productos han sido eliminados', 'info');
+            }
+        };
+
         descuentoInput.oninput = calcularLocales;
 
         document.addEventListener('DOMContentLoaded', actualizarUI);
 
-        // ✅ NUEVO BLOQUE: guardar kit correctamente
+        // GUARDAR KIT
         guardarBtn.addEventListener('click', async (e) => {
             e.preventDefault();
 
@@ -268,7 +381,7 @@
 
             guardarBtn.disabled = true;
             const prev = guardarBtn.innerHTML;
-            guardarBtn.innerHTML = 'Guardando...';
+            guardarBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
 
             try {
                 const res = await fetch('@Url.Action("Create", "Kits")', {
@@ -285,11 +398,11 @@
                     mostrarAlerta(data?.message || 'Error al guardar el kit.', 'danger');
                     console.error('Error servidor:', data);
                 } else if (data.success) {
-                    mostrarAlerta('Kit guardado correctamente.', 'success');
+                    mostrarAlerta('<strong>¡Kit guardado correctamente!</strong> Redirigiendo...', 'success');
                     setTimeout(() => {
                         if (data.idKit) window.location.href = `/Kits/Details/${data.idKit}`;
-                        else location.reload();
-                    }, 1000);
+                        else window.location.href = '/Kits';
+                    }, 1500);
                 } else {
                     mostrarAlerta(data.message || 'No se pudo guardar el kit.', 'warning');
                 }
@@ -302,4 +415,23 @@
             }
         });
     </script>
+
+    <style>
+        .table td {
+            vertical-align: middle;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.5rem;
+        }
+
+        .sticky-top {
+            z-index: 1020;
+        }
+
+        #suggestions {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+        }
+    </style>
 }

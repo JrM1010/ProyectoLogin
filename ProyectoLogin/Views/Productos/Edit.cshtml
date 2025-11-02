@@ -6,87 +6,118 @@
 
 <div class="container mt-4">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Editar Producto</h4>
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-pencil-square fs-4 me-2"></i>
+                <h4 class="mb-0">Editar Producto</h4>
+            </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-4">
             <form asp-action="Edit" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="IdProducto" />
 
                 <!-- DATOS BÁSICOS -->
-                <div class="row mb-3">
+                <div class="row mb-4">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Nombre del producto</label>
-                        <input asp-for="Nombre" class="form-control" placeholder="Ej. Detergente líquido" />
-                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                        <label class="form-label fw-bold text-primary">Nombre del producto</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej. Iphone 7" />
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Código</label>
+                        <label class="form-label fw-bold text-primary">Código de Producto</label>
                         <input asp-for="CodigoBarras" class="form-control" placeholder="Ej. 1234567890" />
-                        <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+                        <span asp-validation-for="CodigoBarras" class="text-danger small"></span>
                     </div>
                 </div>
 
                 <!-- DETALLES -->
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label fw-bold">Descripción</label>
-                        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describe brevemente el producto..."></textarea>
-                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-primary">Especificaciones</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"
+                                  placeholder="Describe las especificaciones del producto..."></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
                     </div>
                 </div>
 
-
                 <!-- CATEGORÍA Y MARCA -->
-                <div class="row mb-3">
+                <div class="row mb-4">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Categoría</label>
+                        <label class="form-label fw-bold text-primary">Categoría</label>
                         <select asp-for="IdCategoria" class="form-select"
                                 asp-items="@(new SelectList(ViewBag.Categorias, "IdCategoria", "Nombre"))">
                             <option value="">Seleccione una categoría</option>
                         </select>
-                        <span asp-validation-for="IdCategoria" class="text-danger"></span>
+                        <span asp-validation-for="IdCategoria" class="text-danger small"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Marca</label>
+                        <label class="form-label fw-bold text-primary">Marca</label>
                         <select asp-for="IdMarca" class="form-select"
                                 asp-items="@(new SelectList(ViewBag.Marcas, "IdMarca", "Nombre"))">
                             <option value="">Seleccione una marca</option>
                         </select>
-                        <span asp-validation-for="IdMarca" class="text-danger"></span>
+                        <span asp-validation-for="IdMarca" class="text-danger small"></span>
                     </div>
                 </div>
 
-
-                <!--Stock minimo-->
-                <div class="mb-3">
-                    <label>Stock mínimo</label>
-                    <input name="stockMinimo" type="number" class="form-control"
-                           value="@(ViewBag.Inventario?.StockMinimo ?? 0)" min="0" />
-                </div>
-
-                <!-- ESTADO -->
+                <!-- STOCK MÍNIMO -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="form-check form-switch mt-4">
-                            <input class="form-check-input" asp-for="Activo" />
-                            <label class="form-check-label fw-bold">Producto activo</label>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-primary">Stock mínimo</label>
+                        <input name="stockMinimo" type="number" class="form-control"
+                               value="@(ViewBag.Inventario?.StockMinimo ?? 0)" min="0" />
+                        <div class="form-text text-muted">
+                            <i class="bi bi-info-circle me-1"></i>El sistema alertará cuando el stock llegue a este nivel
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Volver al listado
+                <!-- ESTADO -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" asp-for="Activo" />
+                            <label class="form-check-label fw-bold text-primary">
+                                <i class="bi bi-power me-1"></i>Producto activo
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            @if (Model.Activo)
+                            {
+                                <span class="text-success">
+                                    <i class="bi bi-check-circle me-1"></i>El producto está visible en el sistema
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-warning">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto en el sistema
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de productos">
+                        <i class="bi bi-arrow-left me-1"></i>Volver al listado
                     </a>
 
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Guardar cambios
-                    </button>
+                    <div class="d-flex gap-2">
+                        <a asp-action="Details" asp-route-id="@Model.IdProducto"
+                           class="btn btn-outline-info rounded-pill" title="Ver detalles del producto">
+                            <i class="bi bi-eye me-1"></i>Ver Detalles
+                        </a>
+
+                        <button type="submit" class="btn btn-primary rounded-pill" title="Guardar cambios">
+                            <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -95,4 +126,28 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus en el primer campo al cargar
+            const firstInput = document.querySelector('input[type="text"]');
+            if (firstInput) firstInput.focus();
+
+            // Actualizar mensaje de estado en tiempo real
+            const activoSwitch = document.querySelector('#Activo');
+            const estadoMensaje = document.querySelector('.form-text.text-muted span');
+
+            if (activoSwitch && estadoMensaje) {
+                activoSwitch.addEventListener('change', function() {
+                    if (this.checked) {
+                        estadoMensaje.innerHTML = '<i class="bi bi-check-circle me-1"></i>El producto está visible en el sistema';
+                        estadoMensaje.className = 'text-success';
+                    } else {
+                        estadoMensaje.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto en el sistema';
+                        estadoMensaje.className = 'text-warning';
+                    }
+                });
+            }
+        });
+    </script>
 }

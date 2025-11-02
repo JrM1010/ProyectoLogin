@@ -37,7 +37,9 @@
             <select asp-for="IdCategoria" asp-items="ViewBag.CategoriasSelect" class="form-select">
                 <option value="">--Seleccione--</option>
             </select>
-            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCategoria">+</button>
+            <button type="button" class="btn btn-outline-success rounded-circle" data-bs-toggle="modal" data-bs-target="#modalCategoria" title="Agregar categoría">
+                <i class="bi bi-plus-lg"></i>
+            </button>
         </div>
     </div>
 
@@ -47,7 +49,9 @@
             <select asp-for="IdMarca" asp-items="ViewBag.MarcasSelect" class="form-select">
                 <option value="">--Seleccione--</option>
             </select>
-            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalMarca">+</button>
+            <button type="button" class="btn btn-outline-success rounded-circle" data-bs-toggle="modal" data-bs-target="#modalMarca" title="Agregar marca">
+                <i class="bi bi-plus-lg"></i>
+            </button>
         </div>
     </div>
 
@@ -76,7 +80,7 @@
     @if (ViewBag.CodigoGenerado != null)
     {
         <div class="mb-3">
-            <label class="form-label">Código sugerido</label>
+            <label class="form-label">Código de Producto</label>
             <input type="text" class="form-control" value="@ViewBag.CodigoGenerado" readonly />
         </div>
     }
@@ -84,8 +88,12 @@
     <input type="hidden" asp-for="Activo" value="true" />
 
     <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado">
+            <i class="bi bi-arrow-left me-1"></i>Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary rounded-pill" title="Guardar producto">
+            <i class="bi bi-check2-circle me-1"></i>Guardar
+        </button>
     </div>
 </form>
 
@@ -95,7 +103,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Administrar Categorías</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
 
@@ -128,8 +136,12 @@
                             <input id="descripcionCategoria" name="descripcion" placeholder="Descripción" class="form-control" />
                         </div>
                         <div class="col-md-2 d-flex gap-2">
-                            <button type="submit" id="btnGuardarCategoria" class="btn btn-success flex-grow-1">Guardar</button>
-                            <button type="button" id="btnCancelarEdicion" class="btn btn-secondary flex-grow-1" style="display:none;">Cancelar</button>
+                            <button type="submit" id="btnGuardarCategoria" class="btn btn-success rounded-pill flex-grow-1" title="Guardar categoría">
+                                <i class="bi bi-check2-circle me-1"></i>Guardar
+                            </button>
+                            <button type="button" id="btnCancelarEdicion" class="btn btn-secondary rounded-pill flex-grow-1" style="display:none;" title="Cancelar edición">
+                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -152,14 +164,22 @@
                                 <td>@c.Nombre</td>
                                 <td>@(string.IsNullOrWhiteSpace(c.Descripcion) ? "-" : c.Descripcion)</td>
                                 <td>
-                                    <button type="button" class="btn btn-warning btn-sm"
-                                            onclick="editarCategoria('@c.IdCategoria', '@c.Nombre', '@(c.Descripcion ?? "")')">
-                                        Editar
-                                    </button>
-                                    <form method="post" asp-action="EliminarCategoria" style="display:inline;">
-                                        <input type="hidden" name="id" value="@c.IdCategoria" />
-                                        <button class="btn btn-danger btn-sm">Eliminar</button>
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <!-- Editar categoría -->
+                                        <button type="button" class="btn btn-outline-warning rounded-circle btn-sm"
+                                                onclick="editarCategoria('@c.IdCategoria', '@c.Nombre', '@(c.Descripcion ?? "")')"
+                                                title="Editar categoría">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+
+                                        <!-- Eliminar categoría -->
+                                        <form method="post" asp-action="EliminarCategoria" class="d-inline">
+                                            <input type="hidden" name="id" value="@c.IdCategoria" />
+                                            <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm" title="Eliminar categoría">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -170,14 +190,13 @@
     </div>
 </div>
 
-
 <!-- MODAL MARCAS -->
 <div class="modal fade" id="modalMarca" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Administrar Marcas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
 
@@ -203,8 +222,12 @@
                     <input type="hidden" id="idMarca" name="id" />
                     <div class="input-group">
                         <input id="nombreMarca" name="nombre" placeholder="Nombre de marca" class="form-control" required />
-                        <button type="submit" id="btnGuardarMarca" class="btn btn-success">Guardar</button>
-                        <button type="button" id="btnCancelarEdicionMarca" class="btn btn-secondary" style="display:none;">Cancelar</button>
+                        <button type="submit" id="btnGuardarMarca" class="btn btn-success rounded-pill" title="Guardar marca">
+                            <i class="bi bi-check2-circle me-1"></i>Guardar
+                        </button>
+                        <button type="button" id="btnCancelarEdicionMarca" class="btn btn-secondary rounded-pill" style="display:none;" title="Cancelar edición">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
                     </div>
                 </form>
 
@@ -224,14 +247,22 @@
                             <tr>
                                 <td>@m.Nombre</td>
                                 <td>
-                                    <button type="button" class="btn btn-warning btn-sm me-1"
-                                            onclick="editarMarca('@m.IdMarca', '@m.Nombre')">
-                                        Editar
-                                    </button>
-                                    <form method="post" asp-action="EliminarMarca" style="display:inline;">
-                                        <input type="hidden" name="id" value="@m.IdMarca" />
-                                        <button class="btn btn-danger btn-sm">Eliminar</button>
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <!-- Editar marca -->
+                                        <button type="button" class="btn btn-outline-warning rounded-circle btn-sm"
+                                                onclick="editarMarca('@m.IdMarca', '@m.Nombre')"
+                                                title="Editar marca">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+
+                                        <!-- Eliminar marca -->
+                                        <form method="post" asp-action="EliminarMarca" class="d-inline">
+                                            <input type="hidden" name="id" value="@m.IdMarca" />
+                                            <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm" title="Eliminar marca">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -247,7 +278,6 @@
 
     <script>
         // Auto ocultar alertas
-                // Cierra automáticamente las alertas en los modales
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(a => {
                 const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
@@ -262,7 +292,7 @@
             document.getElementById('descripcionCategoria').value = descripcion;
             const form = document.getElementById('formCategoria');
             form.action = '/Productos/EditarCategoria';
-            document.getElementById('btnGuardarCategoria').textContent = 'Actualizar';
+            document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
             document.getElementById('btnGuardarCategoria').classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicion').style.display = 'inline-block';
         }
@@ -271,7 +301,7 @@
             const form = document.getElementById('formCategoria');
             form.reset();
             form.action = '/Productos/CrearCategoria';
-            document.getElementById('btnGuardarCategoria').textContent = 'Guardar';
+            document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-check2-circle me-1"></i>Guardar';
             document.getElementById('btnGuardarCategoria').classList.replace('btn-warning', 'btn-success');
             document.getElementById('btnCancelarEdicion').style.display = 'none';
         });
@@ -282,7 +312,7 @@
             document.getElementById('nombreMarca').value = nombre;
             const form = document.getElementById('formMarca');
             form.action = '/Productos/EditarMarca';
-            document.getElementById('btnGuardarMarca').textContent = 'Actualizar';
+            document.getElementById('btnGuardarMarca').innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
             document.getElementById('btnGuardarMarca').classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicionMarca').style.display = 'inline-block';
         }
@@ -291,7 +321,7 @@
             const form = document.getElementById('formMarca');
             form.reset();
             form.action = '/Productos/CrearMarca';
-            document.getElementById('btnGuardarMarca').textContent = 'Guardar';
+            document.getElementById('btnGuardarMarca').innerHTML = '<i class="bi bi-check2-circle me-1"></i>Guardar';
             document.getElementById('btnGuardarMarca').classList.replace('btn-warning', 'btn-success');
             document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
         });
