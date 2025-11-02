@@ -1,0 +1,74 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Reporte de Ajustes de Inventario";
+}
+
+<div class="container mt-4">
+    <h3 class="text-primary mb-3"><i class="bi bi-box-arrow-up-right"></i> Reporte de Ajustes de Inventario</h3>
+
+    <form method="get" class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Desde</label>
+            <input type="date" name="desde" class="form-control" value="@Context.Request.Query["desde"]" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Hasta</label>
+            <input type="date" name="hasta" class="form-control" value="@Context.Request.Query["hasta"]" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Usuario</label>
+            <input type="text" name="nombreUsuario" class="form-control" placeholder="Nombre del usuario" value="@Context.Request.Query["nombreUsuario"]" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Tipo de Ajuste</label>
+            <select name="tipo" class="form-select">
+                <option value="">Todos</option>
+                <option value="entrada" selected="@(Context.Request.Query["tipo"] == "entrada")">Entrada</option>
+                <option value="salida" selected="@(Context.Request.Query["tipo"] == "salida")">Salida</option>
+            </select>
+        </div>
+
+        <div class="col-12 text-end mt-3">
+            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Filtrar</button>
+            <a asp-action="ReporteAjustesInventario" asp-route-pdf="true" class="btn btn-success me-2"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</a>
+            <a asp-action="ReporteAjustesInventario" class="btn btn-warning"><i class="bi bi-eraser"></i> Limpiar</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark text-center align-middle">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Tipo</th>
+                    <th>Motivo</th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.Producto</td>
+                            <td>@item.Cantidad</td>
+                            <td class="@(item.Tipo == "Entrada" ? "text-success" : "text-danger") fw-bold">@item.Tipo</td>
+                            <td>@item.Motivo</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" class="text-muted text-center">No se encontraron ajustes</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3 text-end">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Volver a Reportes</a>
+    </div>
+</div>

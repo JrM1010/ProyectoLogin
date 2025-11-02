@@ -12,15 +12,15 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251024030018_añadiUnidadesDeMedidaalcontext")]
-    partial class añadiUnidadesDeMedidaalcontext
+    [Migration("20251102223756_resetdeBD")]
+    partial class resetdeBD
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -132,6 +132,7 @@ namespace ProyectoLogin.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdDetalle"));
 
                     b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Descuento")
@@ -147,6 +148,7 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Subtotal")
@@ -349,14 +351,34 @@ namespace ProyectoLogin.Migrations
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<decimal>("IVACompra")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("IdProducto")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MargenGanancia")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("OrigenCambio")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("PrecioBase")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PrecioCompra")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioVentaSinIVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UsuarioRegistro")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdPrecio");
 
@@ -413,7 +435,10 @@ namespace ProyectoLogin.Migrations
                     b.Property<int?>("IdKit")
                         .HasColumnType("int");
 
-                    b.Property<int>("IdProducto")
+                    b.Property<int?>("IdProducto")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IdUnidad")
                         .HasColumnType("int");
 
                     b.Property<int>("IdVenta")
@@ -464,6 +489,12 @@ namespace ProyectoLogin.Migrations
                     b.Property<string>("MetodoPago")
                         .HasColumnType("varchar(50)");
 
+                    b.Property<string>("NumeroFactura")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroVenta")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -510,7 +541,7 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<decimal>("Total")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("IdKit");
 
@@ -860,13 +891,13 @@ namespace ProyectoLogin.Migrations
                 {
                     b.HasOne("ProyectoLogin.Models.Promociones.Kit", "Kit")
                         .WithMany()
-                        .HasForeignKey("IdKit");
+                        .HasForeignKey("IdKit")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ProyectoLogin.Models.ModelosProducts.ProductoCore", "Producto")
                         .WithMany()
                         .HasForeignKey("IdProducto")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ProyectoLogin.Models.ModelosVentas.Venta", "Venta")
                         .WithMany("Detalles")

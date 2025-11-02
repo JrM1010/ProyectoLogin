@@ -34,5 +34,6 @@ namespace ProyectoLogin.Models.ModelosProducts
         public virtual ProductoCore? Producto { get; set; }
 
 
+
     }
 }

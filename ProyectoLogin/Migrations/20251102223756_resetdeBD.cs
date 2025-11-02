@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace ProyectoLogin.Migrations
 {
     /// <inheritdoc />
-    public partial class Reinicio : Migration
+    public partial class resetdeBD : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,7 +58,7 @@ namespace ProyectoLogin.Migrations
                     Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DescuentoPct = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
-                    Total = table.Column<decimal>(type: "decimal(18,2)", precision: 10, scale: 2, nullable: false),
+                    Total = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
                     Activo = table.Column<bool>(type: "bit", nullable: false),
                     FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -116,7 +118,7 @@ namespace ProyectoLogin.Migrations
                 {
                     IdUnidad = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     EquivalenciaEnUnidades = table.Column<int>(type: "int", nullable: false),
                     Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -288,10 +290,16 @@ namespace ProyectoLogin.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IdProducto = table.Column<int>(type: "int", nullable: false),
                     PrecioCompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecioBase = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    IVACompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MargenGanancia = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    PrecioVentaSinIVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PrecioVenta = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     FechaInicio = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "GETDATE()"),
                     FechaFin = table.Column<DateTime>(type: "datetime", nullable: true),
-                    Activo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                    Activo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    UsuarioRegistro = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    OrigenCambio = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -368,9 +376,9 @@ namespace ProyectoLogin.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IdCompra = table.Column<int>(type: "int", nullable: false),
                     IdProducto = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Cantidad = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     IdUnidad = table.Column<int>(type: "int", nullable: false),
-                    PrecioUnitario = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecioUnitario = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Descuento = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
@@ -420,6 +428,8 @@ namespace ProyectoLogin.Migrations
                 {
                     IdVenta = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    NumeroVenta = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumeroFactura = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IdCliente = table.Column<int>(type: "int", nullable: true),
                     IdUsuario = table.Column<int>(type: "int", nullable: false),
                     FechaVenta = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -453,12 +463,13 @@ namespace ProyectoLogin.Migrations
                     IdDetalleVenta = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IdVenta = table.Column<int>(type: "int", nullable: false),
-                    IdProducto = table.Column<int>(type: "int", nullable: false),
+                    IdProducto = table.Column<int>(type: "int", nullable: true),
+                    IdKit = table.Column<int>(type: "int", nullable: true),
                     Cantidad = table.Column<int>(type: "int", nullable: false),
                     PrecioUnitario = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Descuento = table.Column<decimal>(type: "decimal(18,2)", nullable: false, defaultValue: 0m),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    IdKit = table.Column<int>(type: "int", nullable: true)
+                    IdUnidad = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -467,7 +478,8 @@ namespace ProyectoLogin.Migrations
                         name: "FK_DetalleVenta_Kit_IdKit",
                         column: x => x.IdKit,
                         principalTable: "Kit",
-                        principalColumn: "IdKit");
+                        principalColumn: "IdKit",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_DetalleVenta_ProductoCore_IdProducto",
                         column: x => x.IdProducto,
@@ -480,6 +492,16 @@ namespace ProyectoLogin.Migrations
                         principalTable: "Ventas",
                         principalColumn: "IdVenta",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "UnidadesMedida",
+                columns: new[] { "IdUnidad", "Activo", "EquivalenciaEnUnidades", "Nombre" },
+                values: new object[,]
+                {
+                    { 1, true, 1, "Unidad" },
+                    { 2, true, 6, "Paquete" },
+                    { 3, true, 12, "Caja" }
                 });
 
             migrationBuilder.CreateIndex(

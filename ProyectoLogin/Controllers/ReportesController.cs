@@ -654,6 +654,101 @@ namespace ProyectoLogin.Controllers
 
 
 
+        [Authorize(Roles = "Administrador,Gerente")]
+        public async Task<IActionResult> ReporteAjustesInventario(DateTime? desde, DateTime? hasta, string nombreUsuario, string tipo, bool pdf = false)
+        {
+            var query = _context.MovInventarios
+                .Include(m => m.Producto)
+                .Include(m => m.Producto.Categoria)
+                .Include(m => m.Producto.Marca)
+                .Where(m => m.TipoMovimiento == "Ajuste Manual")
+                .AsQueryable();
+
+            // 🔹 Filtros
+            if (desde.HasValue)
+                query = query.Where(m => m.Fecha >= desde.Value);
+
+            if (hasta.HasValue)
+                query = query.Where(m => m.Fecha <= hasta.Value.AddDays(1));
+
+            if (!string.IsNullOrEmpty(nombreUsuario))
+                query = query.Where(m => m.Referencia.Contains(nombreUsuario));
+
+            if (!string.IsNullOrEmpty(tipo))
+            {
+                if (tipo == "entrada")
+                    query = query.Where(m => m.Cantidad > 0);
+                else if (tipo == "salida")
+                    query = query.Where(m => m.Cantidad < 0);
+            }
+
+            var data = await query
+                .OrderByDescending(m => m.Fecha)
+                .Select(m => new
+                {
+                    Fecha = m.Fecha,
+                    Producto = m.Producto.Nombre,
+                    Cantidad = m.Cantidad,
+                    Tipo = m.Cantidad > 0 ? "Entrada" : "Salida",
+                    Motivo = m.Referencia
+                })
+                .ToListAsync();
+
+            // 🔹 Generar PDF
+            if (pdf)
+            {
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(25);
+                        page.Size(PageSizes.A4);
+                        page.Header().AlignCenter().Text("Reporte de Ajustes de Inventario").Bold().FontSize(16);
+
+                        page.Content().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.ConstantColumn(80);   // Fecha
+                                cols.RelativeColumn(2);    // Producto
+                                cols.ConstantColumn(60);   // Cantidad
+                                cols.ConstantColumn(70);   // Tipo
+                                cols.RelativeColumn(2);    // Motivo
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Fecha").Bold();
+                                header.Cell().Text("Producto").Bold();
+                                header.Cell().AlignCenter().Text("Cantidad").Bold();
+                                header.Cell().AlignCenter().Text("Tipo").Bold();
+                                header.Cell().Text("Motivo").Bold();
+                            });
+
+                            foreach (var item in data)
+                            {
+                                table.Cell().Text(item.Fecha.ToString("dd/MM/yyyy HH:mm"));
+                                table.Cell().Text(item.Producto);
+                                table.Cell().AlignCenter().Text(item.Cantidad.ToString());
+                                table.Cell().AlignCenter().Text(item.Tipo);
+                                table.Cell().Text(item.Motivo);
+                            }
+                        });
+
+                        page.Footer().AlignCenter().Text($"Generado: {FechaLocal.Ahora():dd/MM/yyyy HH:mm}");
+                    });
+                });
+
+                var pdfBytes = doc.GeneratePdf();
+                return File(pdfBytes, "application/pdf", $"ReporteAjustesInventario_{FechaLocal.Ahora():dd/MM/yyyy_HHmm}.pdf");
+            }
+
+            return View("~/Views/Reportes/ReporteAjustesInventario.cshtml", data);
+        }
+
+
+
+
 
 
     }
