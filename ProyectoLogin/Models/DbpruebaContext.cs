@@ -54,6 +54,7 @@ public partial class DbPruebaContext : DbContext
     //Promociones de Productos (kits)
     public DbSet<Kit> Kits { get; set; }
     public DbSet<KitDetalle> KitDetalles { get; set; }
+    public IEnumerable<object> DetalleVenta { get; internal set; }
 
 
 

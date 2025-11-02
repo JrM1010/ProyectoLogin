@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
+using ProyectoLogin.Models.ModelosVentas;
 using ProyectoLogin.Recursos;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using QuestPDF.Drawing;
+using QuestPDF.Previewer;
 
 namespace ProyectoLogin.Controllers
 {
@@ -29,6 +32,10 @@ namespace ProyectoLogin.Controllers
             var query = _context.Ventas
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Kit)
                 .AsQueryable();
 
             // 🔹 CONVERTIR FECHAS A UTC PARA COMPARACIÓN CORRECTA
@@ -52,24 +59,41 @@ namespace ProyectoLogin.Controllers
                 query = query.Where(v => v.MetodoPago == formaPago);
 
             var ventas = await query
-    .OrderByDescending(v => v.FechaVenta)
-    .Select(v => new
-    {
-        Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
-        NoFactura = v.NumeroFactura,
-        // 🔹 Si no tiene nombre ni apellido, mostrar "CF"
-        Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
-                    ? "CF"
-                    : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
-        // 🔹 Si el NIT está vacío, mostrar "CF"
-        Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
-        Vendedor = v.Usuario.NombreUsuario,
-        TotalSinIva = v.Total / 1.12m,
-        ValorIva = v.Total - (v.Total / 1.12m),
-        TotalConIva = v.Total,
-        FormaPago = v.MetodoPago
-    })
-    .ToListAsync();
+                .OrderByDescending(v => v.FechaVenta)
+                .Select(v => new
+                {
+                    IdVenta = v.IdVenta,
+                    Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
+                    NoFactura = v.NumeroFactura,
+                    // 🔹 Si no tiene nombre ni apellido, mostrar "CF"
+                    Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
+                                ? "CF"
+                                : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
+                    // 🔹 Si el NIT está vacío, mostrar "CF"
+                    Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
+                    Vendedor = v.Usuario.NombreUsuario,
+                    TotalSinIva = v.Total / 1.12m,
+                    ValorIva = v.Total - (v.Total / 1.12m),
+                    TotalConIva = v.Total,
+                    FormaPago = v.MetodoPago,
+                    // 🔹 INCLUIR DETALLES DE LA VENTA
+                    Detalles = v.Detalles.Select(d => new
+                    {
+                        IdDetalle = d.IdDetalleVenta,
+                        IdProducto = d.IdProducto,
+                        IdKit = d.IdKit,
+                        NombreProducto = d.Producto != null ? d.Producto.Nombre :
+                                        d.Kit != null ? "(KIT) " + d.Kit.Nombre : "Producto no disponible",
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.PrecioUnitario,
+                        Subtotal = d.Subtotal,
+                        PrecioSinIva = d.PrecioUnitario / 1.12m,
+                        SubtotalSinIva = d.Subtotal / 1.12m,
+                        Iva = d.Subtotal - (d.Subtotal / 1.12m),
+                        EsKit = d.IdKit.HasValue
+                    }).ToList()
+                })
+                .ToListAsync();
 
             // Calcular totales
             ViewBag.SubtotalGeneral = ventas.Sum(v => v.TotalSinIva);
@@ -79,7 +103,7 @@ namespace ProyectoLogin.Controllers
             return View("ReporteVentas", ventas);
         }
 
-        // 🔹 Generar PDF del reporte de ventas
+        [HttpGet]
         public async Task<IActionResult> DescargarPDF(DateTime? desde, DateTime? hasta, string vendedor, string formaPago)
         {
             var query = _context.Ventas
@@ -87,7 +111,6 @@ namespace ProyectoLogin.Controllers
                 .Include(v => v.Usuario)
                 .AsQueryable();
 
-            // 🔹 APLICAR MISMA CONVERSIÓN DE FECHAS QUE EN EL MÉTODO Ventas
             if (desde.HasValue)
             {
                 var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
@@ -107,145 +130,186 @@ namespace ProyectoLogin.Controllers
                 query = query.Where(v => v.MetodoPago == formaPago);
 
             var ventas = await query
-                .OrderBy(v => v.FechaVenta)
+                .OrderByDescending(v => v.FechaVenta)
+                .Select(v => new
+                {
+                    Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
+                    NoFactura = v.NumeroFactura,
+                    Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
+                                ? "CF"
+                                : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
+                    Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
+                    Vendedor = v.Usuario.NombreUsuario,
+                    TotalSinIva = v.Total / 1.12m,
+                    ValorIva = v.Total - (v.Total / 1.12m),
+                    TotalConIva = v.Total,
+                    FormaPago = v.MetodoPago
+                })
                 .ToListAsync();
 
-            var subtotal = ventas.Sum(v => v.Total / 1.12m);
-            var iva = ventas.Sum(v => v.Total - (v.Total / 1.12m));
-            var total = ventas.Sum(v => v.Total);
+            decimal subtotalGeneral = ventas.Sum(v => v.TotalSinIva);
+            decimal ivaGeneral = ventas.Sum(v => v.ValorIva);
+            decimal totalGeneral = ventas.Sum(v => v.TotalConIva);
 
-            var doc = Document.Create(container =>
+            // Generar PDF mejorado
+            var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4);
-                    page.Margin(40);
+                    page.Margin(30);
+                    page.Size(PageSizes.A4.Landscape());
+                    page.PageColor(Colors.White);
 
-                    // 🔹 ENCABEZADO
-                    page.Header().Element(ComposeHeader);
-
-                    // 🔹 CONTENIDO PRINCIPAL
-                    page.Content().PaddingVertical(10).Element(content =>
+                    // Header mejorado
+                    page.Header().Column(header =>
                     {
-                        content.Column(column =>
+                        // Logo y título
+                        header.Item().Row(row =>
                         {
-                            // ---- TABLA DE VENTAS ----
-                            column.Item().Table(table =>
+                            row.RelativeItem().Column(col =>
                             {
-                                // 🔹 COLUMNAS AJUSTADAS AL ESPACIO DISPONIBLE
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.ConstantColumn(50);   // Fecha (reducida)
-                                    columns.ConstantColumn(65);   // Factura  
-                                    columns.RelativeColumn(1.5f); // Cliente (ajustada)
-                                    columns.ConstantColumn(70);   // NIT (reducida)
-                                    columns.RelativeColumn(1);    // Vendedor
-                                    columns.ConstantColumn(65);   // Subtotal (reducida)
-                                    columns.ConstantColumn(50);   // IVA (reducida)
-                                    columns.ConstantColumn(65);   // Total (reducida)
-                                    columns.ConstantColumn(75);   // Forma de pago
-                                });
-
-                                // 🔹 Encabezado tabla con fuentes más pequeñas
-                                table.Header(header =>
-                                {
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Fecha").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Factura").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Cliente").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("NIT").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Vendedor").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Subtotal").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("IVA").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Total").Bold().FontSize(8);
-                                    header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Forma Pago").Bold().FontSize(8);
-                                });
-
-                                // 🔹 Filas de datos con fuentes más pequeñas
-                                foreach (var v in ventas)
-                                {
-                                    var sub = v.Total / 1.12m;
-                                    var imp = v.Total - sub;
-                                    var fechaLocal = FechaLocal.ConvertirDeUtc(v.FechaVenta);
-
-                                    // 🔹 Si el cliente o NIT están vacíos, mostrar "CF"
-                                    // 🔹 Verificar si el cliente no tiene nombre o NIT, mostrar "CF"
-                                    var nombreCliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
-                                        ? "CF"
-                                        : $"{v.Cliente.Nombres} {v.Cliente.Apellidos}";
-                                    var nitCliente = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit;
-
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(fechaLocal.ToString("dd/MM/yyyy")).FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(v.NumeroFactura).FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(TruncateText(nombreCliente, 20)).FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(TruncateText(nitCliente, 12)).FontSize(8);
-
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(TruncateText(v.Usuario.NombreUsuario, 15)).FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).AlignRight().Text($"Q{sub:F2}").FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).AlignRight().Text($"Q{imp:F2}").FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).AlignRight().Text($"Q{v.Total:F2}").FontSize(8);
-                                    table.Cell().BorderBottom(0.5f).Padding(1).Text(TruncateText(v.MetodoPago, 10)).FontSize(8);
-                                }
+                                col.Item().Text("Smartcell Company").FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
+                                col.Item().Text("Reporte de Ventas").FontSize(12).SemiBold().FontColor(Colors.Grey.Darken2);
                             });
 
-                            // ---- ESPACIADO ----
-                            column.Item().PaddingVertical(10);
-
-                            // ---- TOTALES GENERALES ----
-                            column.Item().Table(t =>
+                            row.ConstantItem(100).AlignRight().Text(txt =>
                             {
-                                t.ColumnsDefinition(c =>
-                                {
-                                    c.RelativeColumn(6);
-                                    c.ConstantColumn(100);
-                                });
+                                txt.Span("Fecha: ").SemiBold().FontSize(9);
+                                txt.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(9);
+                            });
+                        });
 
-                                t.Cell().AlignRight().Text("Subtotal general:").Bold().FontSize(10);
-                                t.Cell().AlignRight().Text($"Q{subtotal:F2}").FontSize(10);
+                        // Línea separadora
+                        header.Item().PaddingTop(5).PaddingBottom(10).LineHorizontal(1).LineColor(Colors.Blue.Medium);
 
-                                t.Cell().AlignRight().Text("IVA general:").Bold().FontSize(10);
-                                t.Cell().AlignRight().Text($"Q{iva:F2}").FontSize(10);
+                        // Filtros aplicados en tarjetas
+                        header.Item().PaddingBottom(15).Row(filterRow =>
+                        {
+                            filterRow.RelativeItem().Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
+                            {
+                                col.Item().Text("Período").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                col.Item().Text($"{desde?.ToString("dd/MM/yyyy") ?? "Inicio"} - {hasta?.ToString("dd/MM/yyyy") ?? "Fin"}").FontSize(9);
+                            });
 
-                                t.Cell().AlignRight().Text("Total general:").Bold().FontSize(11).FontColor(Colors.Green.Darken2);
-                                t.Cell().AlignRight().Text($"Q{total:F2}").Bold().FontSize(11).FontColor(Colors.Green.Darken2);
+                            filterRow.RelativeItem().PaddingLeft(5).Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
+                            {
+                                col.Item().Text("Vendedor").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                col.Item().Text(!string.IsNullOrEmpty(vendedor) ? vendedor : "Todos").FontSize(9);
+                            });
+
+                            filterRow.RelativeItem().PaddingLeft(5).Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
+                            {
+                                col.Item().Text("Forma de Pago").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                col.Item().Text(!string.IsNullOrEmpty(formaPago) ? formaPago : "Todas").FontSize(9);
                             });
                         });
                     });
 
-                    // 🔹 PIE DE PÁGINA
-                    page.Footer().AlignCenter().Text(text =>
+                    // Content mejorado
+                    page.Content().PaddingVertical(5).Column(col =>
                     {
-                        text.Span("Generado el ").FontSize(9);
-                        text.Span($"{FechaLocal.Ahora():dd/MM/yyyy HH:mm}").FontSize(9); // 🔹 FORMATO CONSISTENTE
+                        // Tabla de ventas con mejor diseño
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(70);   // Fecha
+                                columns.ConstantColumn(75);   // Factura
+                                columns.RelativeColumn(2);    // Cliente
+                                columns.ConstantColumn(70);   // NIT
+                                columns.RelativeColumn(1.2f); // Vendedor
+                                columns.ConstantColumn(75);   // Subtotal
+                                columns.ConstantColumn(65);   // IVA
+                                columns.ConstantColumn(75);   // Total
+                                columns.ConstantColumn(80);   // FormaPago
+                            });
+
+                            // Header con estilo mejorado
+                            table.Header(header =>
+                            {
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Fecha").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Factura").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Cliente").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("NIT").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Vendedor").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Subtotal").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("IVA").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Total").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Forma Pago").Bold().FontColor(Colors.White).FontSize(9);
+                            });
+
+                            // Filas con estilo zebra
+                            for (int i = 0; i < ventas.Count; i++)
+                            {
+                                var v = ventas[i];
+                                var backgroundColor = i % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Fecha.ToString("dd/MM/yyyy")).FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.NoFactura ?? "").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Cliente ?? "").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Nit ?? "").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Vendedor ?? "").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.TotalSinIva:N2}").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.ValorIva:N2}").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.TotalConIva:N2}").FontSize(8);
+                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.FormaPago ?? "").FontSize(8);
+                            }
+                        });
+
+                        // Resumen general con diseño de tarjeta
+                        col.Item().PaddingTop(15).Row(row =>
+                        {
+                            row.ConstantItem(250).Background(Colors.Green.Lighten5).Padding(12).Border(1).BorderColor(Colors.Green.Lighten2).Column(totalCol =>
+                            {
+                                totalCol.Item().Text("RESUMEN GENERAL").FontSize(11).Bold().FontColor(Colors.Green.Darken3);
+                                totalCol.Item().PaddingTop(5).Row(resumenRow =>
+                                {
+                                    resumenRow.RelativeItem().Text("Subtotal:").FontSize(10);
+                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{subtotalGeneral:N2}").FontSize(10);
+                                });
+                                totalCol.Item().Row(resumenRow =>
+                                {
+                                    resumenRow.RelativeItem().Text("IVA:").FontSize(10);
+                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{ivaGeneral:N2}").FontSize(10);
+                                });
+                                totalCol.Item().Row(resumenRow =>
+                                {
+                                    resumenRow.RelativeItem().Text("Total:").FontSize(11).Bold();
+                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{totalGeneral:N2}").FontSize(11).Bold();
+                                });
+                            });
+
+                            // Estadísticas adicionales
+                            row.RelativeItem().PaddingLeft(10).Background(Colors.Blue.Lighten5).Padding(12).Border(1).BorderColor(Colors.Blue.Lighten2).Column(statsCol =>
+                            {
+                                statsCol.Item().Text("ESTADÍSTICAS").FontSize(11).Bold().FontColor(Colors.Blue.Darken3);
+                                statsCol.Item().PaddingTop(5).Text($"Total Ventas: {ventas.Count}").FontSize(10);
+                                statsCol.Item().Text($"Promedio por Venta: Q{(ventas.Count > 0 ? totalGeneral / ventas.Count : 0):N2}").FontSize(10);
+                            });
+                        });
+                    });
+
+                    // Footer mejorado - CORREGIDO
+                    page.Footer().Background(Colors.Grey.Lighten3).Padding(8).Row(footer =>
+                    {
+                        footer.RelativeItem().AlignLeft().Text(txt =>
+                        {
+                            txt.Span("Smartcell Company - ").FontSize(8).SemiBold();
+                            txt.Span("Sistema de Gestión Comercial").FontSize(8);
+                        });
+                        footer.RelativeItem().AlignRight().Text(txt =>
+                        {
+                            txt.CurrentPageNumber().FontSize(8).Bold();
+                            txt.Span(" / ").FontSize(8);
+                            txt.TotalPages().FontSize(8).Bold();
+                        });
                     });
                 });
+            }).GeneratePdf();
 
-                // 🔹 MÉTODO PARA EL ENCABEZADO
-                void ComposeHeader(IContainer header)
-                {
-                    header.Row(row =>
-                    {
-                        row.RelativeColumn().Column(col =>
-                        {
-                            col.Item().Text("SMARTCELL COMPANY")
-                                .FontSize(14).Bold().FontColor(Colors.Blue.Medium);
-                            col.Item().Text("Reporte de Ventas").FontSize(11);
-                            col.Item().Text($"Generado: {FechaLocal.Ahora():dd/MM/yyyy HH:mm}") // 🔹 FORMATO CONSISTENTE
-                                .FontSize(9).FontColor(Colors.Grey.Darken1);
-                        });
-                    });
-                }
-            });
-
-            var pdf = doc.GeneratePdf();
-            return File(pdf, "application/pdf", $"ReporteVentas_{FechaLocal.Ahora():dd-MM-yyyy-HHmm}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteVentas_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         }
 
-        // 🔹 MÉTODO AUXILIAR PARA TRUNCAR TEXTO LARGO
-        private string TruncateText(string text, int maxLength)
-        {
-            if (string.IsNullOrEmpty(text)) return text;
-            return text.Length <= maxLength ? text : text.Substring(0, maxLength - 3) + "...";
-        }
 
 
 
@@ -328,67 +392,109 @@ namespace ProyectoLogin.Controllers
 
             var compras = await query
                 .OrderByDescending(c => c.FechaCompra)
+                .Select(c => new
+                {
+                    Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
+                    Proveedor = c.Proveedor.Nombre,
+                    
+                    Productos = string.Join(", ", c.Detalles.Select(d => d.Producto.Nombre)),
+                    Total = c.Total
+                })
                 .ToListAsync();
 
             var totalGeneral = compras.Sum(c => c.Total);
+            var totalCompras = compras.Count;
 
-            var doc = Document.Create(container =>
+            var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A4);
                     page.Margin(40);
-                    page.Header().Text("Reporte de Compras por Proveedor")
-                        .FontSize(14).Bold().FontColor(Colors.Blue.Medium);
-                    page.Content().PaddingVertical(10).Element(content =>
+                    page.Size(PageSizes.A4);
+                    page.PageColor(Colors.White);
+
+                    // Header simple
+                    page.Header().Column(header =>
                     {
-                        content.Column(column =>
+                        header.Item().AlignCenter().Text("Reporte de Compras")
+                            .FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
+
+                        header.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                        // Información de filtros
+                        header.Item().PaddingBottom(10).Column(filterCol =>
                         {
-                            column.Item().Table(table =>
+                            filterCol.Item().Text(text =>
                             {
-                                table.ColumnsDefinition(cols =>
-                                {
-                                    cols.ConstantColumn(60);
-                                    cols.RelativeColumn(2);
-                                    cols.RelativeColumn(3);
-                                    cols.ConstantColumn(80);
-                                });
-
-                                table.Header(h =>
-                                {
-                                    h.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Fecha").Bold().FontSize(9);
-                                    h.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Proveedor").Bold().FontSize(9);
-                                    h.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Productos Comprados").Bold().FontSize(9);
-                                    h.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Total (Q)").Bold().FontSize(9);
-                                });
-
-                                foreach (var c in compras)
-                                {
-                                    var fechaLocal = FechaLocal.ConvertirDeUtc(c.FechaCompra);
-                                    var productos = string.Join(", ", c.Detalles.Select(d => d.Producto.Nombre));
-                                    table.Cell().Padding(2).Text(fechaLocal.ToString("dd/MM/yyyy")).FontSize(9);
-                                    table.Cell().Padding(2).Text(c.Proveedor.Nombre).FontSize(9);
-                                    table.Cell().Padding(2).Text(TruncateText(productos, 40)).FontSize(9);
-                                    table.Cell().Padding(2).AlignRight().Text($"Q{c.Total:F2}").FontSize(9);
-                                }
+                                text.Span("Período: ").SemiBold();
+                                text.Span($"{desde?.ToString("dd/MM/yyyy") ?? "Todos"} - {hasta?.ToString("dd/MM/yyyy") ?? "Todos"}");
                             });
 
-                            column.Item().PaddingVertical(10);
-                            column.Item().AlignRight().Text($"TOTAL GENERAL: Q{totalGeneral:F2}")
-                                .Bold().FontSize(11).FontColor(Colors.Green.Darken2);
+                            filterCol.Item().Text(text =>
+                            {
+                                text.Span("Total de compras: ").SemiBold();
+                                text.Span($"{totalCompras}");
+                            });
                         });
                     });
 
+                    // Contenido principal
+                    page.Content().PaddingVertical(10).Column(col =>
+                    {
+                        // Tabla simple
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(70);   // Fecha
+                                columns.RelativeColumn(2);    // Proveedor
+                                columns.RelativeColumn(2);    // Productos
+                                columns.ConstantColumn(80);   // Total
+                            });
+
+                            // Encabezado de tabla
+                            table.Header(header =>
+                            {
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Fecha").Bold().FontSize(9);
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Proveedor").Bold().FontSize(9);
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Productos").Bold().FontSize(9);
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total").Bold().FontSize(9);
+                            });
+
+                            // Filas de datos
+                            foreach (var c in compras)
+                            {
+                                // Limitar texto de productos si es muy largo
+                                var productosTexto = c.Productos.Length > 80
+                                    ? c.Productos.Substring(0, 80) + "..."
+                                    : c.Productos;
+
+                                table.Cell().Padding(4).Text(c.Fecha.ToString("dd/MM/yyyy")).FontSize(9);
+                                table.Cell().Padding(4).Text(c.Proveedor).FontSize(9);
+                                table.Cell().Padding(4).Text(productosTexto).FontSize(9);
+                                table.Cell().Padding(4).AlignRight().Text($"Q {c.Total:N2}").FontSize(9);
+                            }
+                        });
+
+                        // Espacio antes del total
+                        col.Item().PaddingTop(15);
+
+                        // Total general
+                        col.Item().Background(Colors.Green.Lighten4).Padding(10).Border(1).BorderColor(Colors.Green.Lighten2).AlignCenter()
+                            .Text($"TOTAL GENERAL: Q {totalGeneral:N2}")
+                            .FontSize(12).Bold().FontColor(Colors.Green.Darken3);
+                    });
+
+                    // Footer simple
                     page.Footer().AlignCenter().Text(text =>
                     {
-                        text.Span("Generado el ").FontSize(9);
-                        text.Span($"{FechaLocal.Ahora():dd/MM/yyyy HH:mm}").FontSize(9);
+                        text.Span("Smartcell Company - ");
+                        text.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
                     });
                 });
-            });
+            }).GeneratePdf();
 
-            var pdf = doc.GeneratePdf();
-            return File(pdf, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():dd-MM-yyyy-HHmm}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteCompras_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         }
 
 

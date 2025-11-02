@@ -5,6 +5,9 @@
 
 <div class="container mt-4">
     <h3 class="text-primary"><i class="bi bi-receipt"></i> Reporte de Ventas</h3>
+                    <a href="@Url.Action("Index", "Reportes")" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver a Reportes
+                    </a>
 
     <form method="get" class="row g-3 my-3">
         <div class="col-md-3">
@@ -32,7 +35,6 @@
         <div class="col-12 text-end mt-2">
             <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Filtrar</button>
             
-            <!-- 🔹 BOTÓN ACTUALIZADO PARA PASAR LOS PARÁMETROS DE FILTRO -->
             <a href="@Url.Action("DescargarPDF", new { 
                 desde = Context.Request.Query["desde"],
                 hasta = Context.Request.Query["hasta"], 
@@ -46,42 +48,135 @@
 
     @if (Model.Any())
     {
-        <table class="table table-bordered table-hover mt-3 align-middle text-center">
-            <thead class="table-primary">
-                <tr>
-                    <th>Fecha</th>
-                    <th>No. Factura</th>
-                    <th>Cliente</th>
-                    <th>NIT</th>
-                    <th>Vendedor</th>
-                    <th>Subtotal</th>
-                    <th>IVA</th>
-                    <th>Total</th>
-                    <th>Forma de Pago</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var v in Model)
-                {
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered table-hover align-middle text-center">
+                <thead class="table-primary">
                     <tr>
-                        <!-- 🔹 CAMBIO: Formato día/mes/año -->
-                        <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
-                        <td>@v.NoFactura</td>
-                        <td>@v.Cliente</td>
-                        <td>@v.Nit</td>
-                        <td>@v.Vendedor</td>
-                        <td>@("Q" + String.Format("{0:N2}", v.TotalSinIva))</td>
-                        <td>@("Q" + String.Format("{0:N2}", v.ValorIva))</td>
-                        <td>@("Q" + String.Format("{0:N2}", v.TotalConIva))</td>
-                        <td>@v.FormaPago</td>
+                        <th>Fecha</th>
+                        <th>No. Factura</th>
+                        <th>Cliente</th>
+                        <th>NIT</th>
+                        <th>Vendedor</th>
+                        <th>Subtotal</th>
+                        <th>IVA</th>
+                        <th>Total</th>
+                        <th>Forma de Pago</th>
+                        <th>Detalles</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var v in Model)
+                    {
+                        <tr>
+                            <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <strong>@v.NoFactura</strong>
+                            </td>
+                            <td>@v.Cliente</td>
+                            <td>@v.Nit</td>
+                            <td>@v.Vendedor</td>
+                            <td>@("Q" + String.Format("{0:N2}", v.TotalSinIva))</td>
+                            <td>@("Q" + String.Format("{0:N2}", v.ValorIva))</td>
+                            <td>
+                                <strong class="text-success">@("Q" + String.Format("{0:N2}", v.TotalConIva))</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@v.FormaPago</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#detalles-@v.IdVenta"
+                                        aria-expanded="false"
+                                        aria-controls="detalles-@v.IdVenta">
+                                    <i class="bi bi-list-ul"></i> Ver Detalles
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="bg-light">
+                            <td colspan="10" class="p-0 border-0">
+                                <div class="collapse" id="detalles-@v.IdVenta">
+                                    <div class="p-3">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="bi bi-box-seam"></i> Detalles de la Venta - Factura: @v.NoFactura
+                                        </h6>
+                                        
+                                        @if (v.Detalles != null && v.Detalles.Count > 0)
+                                        {
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-bordered">
+                                                    <thead class="table-secondary">
+                                                        <tr>
+                                                            <th>Producto/Kit</th>
+                                                            <th class="text-center">Cantidad</th>
+                                                            <th class="text-end">Precio Unitario</th>
+                                                            <th class="text-end">Precio sin IVA</th>
+                                                            <th class="text-end">IVA</th>
+                                                            <th class="text-end">Subtotal</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{
+                                                            decimal subtotalDetalles = 0;
+                                                            decimal ivaDetalles = 0;
+                                                            decimal totalDetalles = 0;
+                                                        }
+                                                        
+                                                        @foreach (var detalle in v.Detalles)
+                                                        {
+                                                            var precioSinIva = detalle.PrecioSinIva;
+                                                            var iva = detalle.Iva;
+                                                            var subtotalSinIva = detalle.SubtotalSinIva;
+                                                            
+                                                            subtotalDetalles += subtotalSinIva;
+                                                            ivaDetalles += iva;
+                                                            totalDetalles += detalle.Subtotal;
+                                                            
+                                                            <tr>
+                                                                <td>
+                                                                    @if (detalle.EsKit)
+                                                                    {
+                                                                        <span class="badge bg-warning text-dark me-1">KIT</span>
+                                                                    }
+                                                                    @detalle.NombreProducto
+                                                                </td>
+                                                                <td class="text-center">@detalle.Cantidad</td>
+                                                                <td class="text-end">Q @detalle.PrecioUnitario.ToString("N2")</td>
+                                                                <td class="text-end">Q @precioSinIva.ToString("N2")</td>
+                                                                <td class="text-end">Q @iva.ToString("N2")</td>
+                                                                <td class="text-end">
+                                                                    <strong>Q @detalle.Subtotal.ToString("N2")</strong>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                    <tfoot class="table-light">
+                                                        <tr>
+                                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                                            
+                                                            <td class="text-end"><strong class="text-success">Q @totalDetalles.ToString("N2")</strong></td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="alert alert-warning mb-0">
+                                                <i class="bi bi-exclamation-triangle"></i> No se encontraron detalles para esta venta.
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
         <div class="mt-4 text-end">
-            <h6><strong>Subtotal general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.SubtotalGeneral))</h6>
-            <h6><strong>IVA general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.IvaGeneral))</h6>
             <h5 class="text-success"><strong>Total general:</strong> @("Q" + String.Format("{0:N2}", ViewBag.TotalGeneral))</h5>
         </div>
     }
@@ -92,3 +187,62 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Opcional: Agregar animación suave a los collapse
+            $('.collapse').on('show.bs.collapse', function () {
+                $(this).prev().find('btn').addClass('active');
+            });
+            
+            $('.collapse').on('hide.bs.collapse', function () {
+                $(this).prev().find('btn').removeClass('active');
+            });
+        });
+    </script>
+
+    <style>
+        .table th {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+        
+        .collapse.show {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-top: none;
+        }
+        
+        .btn-group-sm > .btn, .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .badge {
+            font-size: 0.7rem;
+        }
+        
+        /* Estilo para la fila expandible */
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        
+        /* Mejorar la transición del collapse */
+        .collapse {
+            transition: all 0.3s ease;
+        }
+        
+        /* Estilo para el botón cuando está activo */
+        .btn-outline-info.active {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: white;
+        }
+    </style>
+}
