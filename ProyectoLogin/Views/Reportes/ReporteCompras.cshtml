@@ -11,9 +11,6 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">@ViewData["Title"]</h6>
-                    <a href="@Url.Action("Index", "Reportes")" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-left"></i> Volver a Reportes
-                    </a>
                 </div>
                 <div class="card-body">
                     <!-- Formulario de Filtros -->
@@ -47,16 +44,26 @@
                                             </select>
                                         </div>
                                         <div class="col-12">
-                                            <div class="d-flex gap-2">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="fas fa-search"></i> Buscar
+                                            <div class="d-flex gap-2 flex-wrap">
+                                                <!-- 🔍 Botón Filtrar -->
+                                                <button type="submit" class="btn btn-primary me-2">
+                                                    <i class="bi bi-search"></i> Filtrar
                                                 </button>
-                                                <button type="button" id="btnLimpiar" class="btn btn-outline-secondary">
-                                                    <i class="fas fa-broom"></i> Limpiar
+
+                                                <!-- 📄 Botón Descargar PDF -->
+                                                <button type="button" id="btnDescargarPDF" class="btn btn-success me-2">
+                                                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
                                                 </button>
-                                                <button type="button" id="btnDescargarPDF" class="btn btn-success">
-                                                    <i class="fas fa-file-pdf"></i> Descargar PDF
+
+                                                <!-- 🧹 Botón Limpiar Filtros -->
+                                                <button type="button" id="btnLimpiar" class="btn btn-warning me-2">
+                                                    <i class="bi bi-eraser"></i> Limpiar Filtros
                                                 </button>
+
+                                                <!-- ↩️ Botón Volver a Reportes -->
+                                                <a asp-action="Index" class="btn btn-secondary">
+                                                    <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
+                                                </a>
                                             </div>
                                         </div>
                                     </form>

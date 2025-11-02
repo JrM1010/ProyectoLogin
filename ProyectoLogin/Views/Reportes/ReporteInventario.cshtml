@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Reporte de Inventario";
+    var categorias = ViewBag.Categorias as List<ProyectoLogin.Models.ModelosProducts.Categoria>;
+    var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3 text-center">📦 Reporte de Inventario</h2>
+
+    <form asp-action="ReporteInventario" method="get" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Categoría</label>
+            <select name="idCategoria" class="form-select">
+                <option value="">-- Todas --</option>
+                @foreach (var c in categorias)
+                {
+                    <option value="@c.IdCategoria" selected="@(ViewBag.IdCategoria == c.IdCategoria)">
+                        @c.Nombre
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Proveedor</label>
+            <select name="idProveedor" class="form-select">
+                <option value="">-- Todos --</option>
+                @foreach (var p in proveedores)
+                {
+                    <option value="@p.IdProveedor" selected="@(ViewBag.IdProveedor == p.IdProveedor)">
+                        @p.Nombre
+                    </option>
+
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Nombre</label>
+            <input type="text" name="nombre" value="@ViewBag.Nombre" class="form-control" placeholder="Buscar producto..." />
+        </div>
+
+        <div class="col-12 text-end mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-search"></i> Filtrar
+            </button>
+
+            <a asp-action="ReporteInventario" asp-route-pdf="true" class="btn btn-success me-2">
+                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+            </a>
+
+            <!-- 🔹 Botón limpiar filtros -->
+            <a asp-action="ReporteInventario" class="btn btn-warning me-2">
+                <i class="bi bi-eraser"></i> Limpiar Filtros
+            </a>
+
+            <!-- 🔹 Botón regresar al índice de reportes -->
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
+            </a>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark text-center align-middle">
+            <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Proveedor</th>
+                <th>Stock</th>
+                <th>Mínimo</th>
+                <th>Precio Sin IVA</th>
+                <th>Precio Con IVA</th>
+                <th>Total Inventario (IVA Incluido)</th>
+            </tr>
+        </thead>
+        <tbody class="text-center">
+            @foreach (var item in Model)
+            {
+                <tr class="@(item.StockActual <= item.StockMinimo ? "table-danger" : "")">
+                    <td>@item.Nombre</td>
+                    <td>@item.Categoria</td>
+                    <td>@item.Proveedor</td>
+                    <td>@item.StockActual</td>
+                    <td>@item.StockMinimo</td>
+                    <td>@($"Q{item.PrecioSinIVA:N2}")</td>
+                    <td>@($"Q{item.PrecioConIVA:N2}")</td>
+                    <td>@($"Q{item.ValorTotal:N2}")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot class="table-secondary text-end">
+            <tr>
+                <td colspan="7" class="fw-bold">Total Inventario:</td>
+                <td class="fw-bold">@($"Q{(decimal)ViewBag.TotalInventario:N2}")</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>

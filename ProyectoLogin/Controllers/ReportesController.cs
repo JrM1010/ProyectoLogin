@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Models.ModelosVentas;
 using ProyectoLogin.Recursos;
+using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Drawing;
 using QuestPDF.Previewer;
 
 namespace ProyectoLogin.Controllers
@@ -366,6 +367,7 @@ namespace ProyectoLogin.Controllers
             return View("ReporteCompras", lista);
         }
 
+
         // 🔹 Descargar PDF de compras
         public async Task<IActionResult> DescargarComprasPDF(DateTime? desde, DateTime? hasta, int? proveedorId)
         {
@@ -489,13 +491,168 @@ namespace ProyectoLogin.Controllers
                     page.Footer().AlignCenter().Text(text =>
                     {
                         text.Span("Smartcell Company - ");
-                        text.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
+                        text.Span(FechaLocal.Ahora().ToString("dd/MM/yyyy HH:mm"));
                     });
                 });
             }).GeneratePdf();
 
-            return File(pdfBytes, "application/pdf", $"ReporteCompras_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():ddMMyyyy_HH_mm}.pdf");
         }
+
+
+
+        // reporte Inventario
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> ReporteInventario(int? idCategoria, int? idProveedor, string nombre, bool pdf = false)
+        {
+            // Cargar listas para filtros
+            ViewBag.Categorias = await _context.Categorias.OrderBy(c => c.Nombre).ToListAsync();
+            ViewBag.Proveedores = await _context.Proveedores.Where(p => p.Activo).OrderBy(p => p.Nombre).ToListAsync();
+            ViewBag.IdCategoria = idCategoria;
+            ViewBag.IdProveedor = idProveedor;
+            ViewBag.Nombre = nombre ?? "";
+
+            // Base de productos
+            var productosQuery = _context.Productos.AsQueryable();
+
+            if (idCategoria.HasValue)
+                productosQuery = productosQuery.Where(p => p.IdCategoria == idCategoria.Value);
+
+            if (!string.IsNullOrWhiteSpace(nombre))
+                productosQuery = productosQuery.Where(p => p.Nombre!.Contains(nombre));
+
+            // 🔹 Nuevo filtro real por proveedor
+            if (idProveedor.HasValue)
+            {
+                var idsProductosProveedor = await _context.ProductosProveedores
+                    .Where(pp => pp.IdProveedor == idProveedor.Value)
+                    .Select(pp => pp.IdProducto)
+                    .Distinct()
+                    .ToListAsync();
+
+                productosQuery = productosQuery.Where(p => idsProductosProveedor.Contains(p.IdProducto));
+            }
+
+            // Traer precios activos más recientes
+            var preciosActivos = await _context.ProductoPrecio
+                .Where(pp => pp.Activo)
+                .GroupBy(pp => pp.IdProducto)
+                .Select(g => g.OrderByDescending(x => x.FechaInicio).FirstOrDefault())
+                .ToListAsync();
+
+            var productosList = await productosQuery
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            var data = new List<object>();
+
+            foreach (var p in productosList)
+            {
+                var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == p.IdProducto);
+                var precio = preciosActivos.FirstOrDefault(x => x.IdProducto == p.IdProducto);
+
+                // Obtener proveedor principal (solo el primero)
+                var prodProv = await _context.ProductosProveedores
+                    .Where(pp => pp.IdProducto == p.IdProducto)
+                    .Join(_context.Proveedores,
+                          pp => pp.IdProveedor,
+                          pr => pr.IdProveedor,
+                          (pp, pr) => new { pr.IdProveedor, pr.Nombre })
+                    .FirstOrDefaultAsync();
+
+                var proveedorNombre = prodProv?.Nombre ?? "";
+
+                decimal precioSinIVA = precio?.PrecioBase ?? 0m;
+                decimal precioConIVA = precio?.PrecioVenta ?? 0m;
+                int stockActual = inventario?.StockActual ?? 0;
+                int stockMinimo = inventario?.StockMinimo ?? 0;
+                decimal valorTotal = stockActual * precioConIVA;
+
+                data.Add(new
+                {
+                    IdProducto = p.IdProducto,
+                    Nombre = p.Nombre,
+                    Categoria = p.Categoria?.Nombre ?? "",
+                    Proveedor = proveedorNombre,
+                    StockActual = stockActual,
+                    StockMinimo = stockMinimo,
+                    PrecioSinIVA = precioSinIVA,
+                    PrecioConIVA = precioConIVA,
+                    ValorTotal = valorTotal
+                });
+            }
+
+            // PDF opcional
+            if (pdf)
+            {
+                var totalInventario = data.Cast<dynamic>().Sum(d => (decimal)d.ValorTotal);
+
+                var doc = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Margin(25);
+                        page.Size(PageSizes.A4);
+                        page.Header().Text("Reporte de Inventario").FontSize(16).Bold().AlignCenter();
+                        page.Content().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.RelativeColumn();
+                                cols.RelativeColumn();
+                                cols.RelativeColumn();
+                                cols.ConstantColumn(50);
+                                cols.ConstantColumn(50);
+                                cols.ConstantColumn(70);
+                                cols.ConstantColumn(70);
+                                cols.ConstantColumn(80);
+                            });
+
+                            // Header
+                            table.Header(header =>
+                            {
+                                header.Cell().Text("Producto").Bold();
+                                header.Cell().Text("Categoría").Bold();
+                                header.Cell().Text("Proveedor").Bold();
+                                header.Cell().AlignCenter().Text("Stock").Bold();
+                                header.Cell().AlignCenter().Text("Min").Bold();
+                                header.Cell().AlignRight().Text("Sin IVA").Bold();
+                                header.Cell().AlignRight().Text("Con IVA").Bold();
+                                header.Cell().AlignRight().Text("Total").Bold();
+                            });
+
+                            foreach (var item in data)
+                            {
+                                dynamic it = item;
+                                table.Cell().Text((string)it.Nombre);
+                                table.Cell().Text((string)it.Categoria);
+                                table.Cell().Text((string)it.Proveedor);
+                                table.Cell().AlignCenter().Text(((int)it.StockActual).ToString());
+                                table.Cell().AlignCenter().Text(((int)it.StockMinimo).ToString());
+                                table.Cell().AlignRight().Text($"Q{((decimal)it.PrecioSinIVA):N2}");
+                                table.Cell().AlignRight().Text($"Q{((decimal)it.PrecioConIVA):N2}");
+                                table.Cell().AlignRight().Text($"Q{((decimal)it.ValorTotal):N2}");
+                            }
+
+                            static IContainer CellStyle(IContainer c) => c.PaddingVertical(4).PaddingHorizontal(2);
+                        });
+
+                        page.Footer().AlignRight().Text($"Valor total inventario: Q{totalInventario:N2}").Bold();
+                    });
+                });
+
+                var pdfBytes = doc.GeneratePdf();
+                return File(pdfBytes, "application/pdf", "ReporteInventario.pdf");
+            }
+
+            // Enviar total a la vista
+            ViewBag.TotalInventario = data.Cast<dynamic>().Sum(d => (decimal)d.ValorTotal);
+            return View("~/Views/Reportes/ReporteInventario.cshtml", data);
+        }
+
+
+
 
 
 
