@@ -334,6 +334,13 @@ public partial class DbPruebaContext : DbContext
 
             entity.Property(d => d.Cantidad)
                   .HasPrecision(18,2);
+            entity.HasOne(d => d.UnidadMedida)
+                  .WithMany()
+                  .HasForeignKey(d => d.IdUnidad);
+
+            
+            entity.Property(d => d.PrecioUnitario).HasPrecision(18, 2);
+            entity.Property(d => d.Cantidad).HasPrecision(18, 2);
         });
         
         // ------------------ UNIDADES DE MEDIDA ------------------
@@ -461,6 +468,11 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(d => d.IdKit)
                   .OnDelete(DeleteBehavior.Restrict)
                   .IsRequired(false); // 👈 también opcional
+
+            entity.Property(d => d.Utilidad)
+                  .HasColumnType("decimal(18,2)")
+                  .HasDefaultValue(0m);
+
         });
 
 

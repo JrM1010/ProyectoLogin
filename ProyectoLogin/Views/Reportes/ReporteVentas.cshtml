@@ -80,6 +80,7 @@
                                 <th>IVA</th>
                                 <th>Total</th>
                                 <th>Forma de Pago</th>
+                                <th>Utilidad</th>
                                 <th>Detalles</th>
                             </tr>
                         </thead>
@@ -96,6 +97,7 @@
                                     <td>Q @v.ValorIva.ToString("N2")</td>
                                     <td><strong class="text-success">Q @v.TotalConIva.ToString("N2")</strong></td>
                                     <td><span class="badge bg-info">@v.FormaPago</span></td>
+                                    <td class="text-end text-primary fw-bold">Q @v.UtilidadTotal.ToString("N2")</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-info" type="button"
                                                 data-bs-toggle="collapse"
@@ -108,59 +110,65 @@
                                 </tr>
 
                                 <tr class="bg-light">
-                                    <td colspan="10" class="p-0 border-0">
+                                    <td colspan="11" class="p-0 border-0">
                                         <div class="collapse" id="detalles-@v.IdVenta">
-                                            <div class="p-3">
-                                                <h6 class="text-primary mb-3">
-                                                    <i class="bi bi-box-seam"></i> Detalles de la Venta - Factura: @v.NoFactura
-                                                </h6>
+                                            <div class="d-flex justify-content-center py-3">
+                                                <div class="card shadow-sm border-0 w-75">
+                                                    <div class="card-body">
+                                                        <h6 class="text-primary mb-3 text-center">
+                                                            <i class="bi bi-box-seam"></i> Detalles de la Venta — Factura: <strong>@v.NoFactura</strong>
+                                                        </h6>
 
-                                                @if (v.Detalles != null && v.Detalles.Count > 0)
-                                                {
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-bordered">
-                                                            <thead class="table-secondary">
-                                                                <tr>
-                                                                    <th>Producto/Kit</th>
-                                                                    <th class="text-center">Cantidad</th>
-                                                                    <th class="text-end">Precio Unitario</th>
-                                                                    <th class="text-end">Precio sin IVA</th>
-                                                                    <th class="text-end">IVA</th>
-                                                                    <th class="text-end">Subtotal</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @foreach (var detalle in v.Detalles)
-                                                                {
+                                                                            @if (v.Detalles != null && v.Detalles.Count > 0)
+                                                    {
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-bordered align-middle text-center">
+                                                                <thead class="table-secondary">
                                                                     <tr>
-                                                                        <td>
-                                                                            @if (detalle.EsKit)
-                                                                            {
-                                                                                <span class="badge bg-warning text-dark me-1">KIT</span>
-                                                                            }
-                                                                            @detalle.NombreProducto
-                                                                        </td>
-                                                                        <td class="text-center">@detalle.Cantidad</td>
-                                                                        <td class="text-end">Q @detalle.PrecioUnitario.ToString("N2")</td>
-                                                                        <td class="text-end">Q @detalle.PrecioSinIva.ToString("N2")</td>
-                                                                        <td class="text-end">Q @detalle.Iva.ToString("N2")</td>
-                                                                        <td class="text-end"><strong>Q @detalle.Subtotal.ToString("N2")</strong></td>
+                                                                        <th>Producto/Kit</th>
+                                                                        <th class="text-center">Cantidad</th>
+                                                                        <th class="text-end">Precio Unitario</th>
+                                                                        <th class="text-end">Precio sin IVA</th>
+                                                                        <th class="text-end">IVA</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                        <th class="text-end text-success">Utilidad</th>
                                                                     </tr>
-                                                                }
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="alert alert-warning mb-0">
-                                                        <i class="bi bi-exclamation-triangle"></i> No se encontraron detalles para esta venta.
-                                                    </div>
-                                                }
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var detalle in v.Detalles)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="text-start">
+                                                                                @if (detalle.EsKit)
+                                                                                {
+                                                                                    <span class="badge bg-warning text-dark me-1">KIT</span>
+                                                                                }
+                                                                                @detalle.NombreProducto
+                                                                            </td>
+                                                                            <td class="text-center">@detalle.Cantidad</td>
+                                                                            <td class="text-end">Q @detalle.PrecioUnitario.ToString("N2")</td>
+                                                                            <td class="text-end">Q @detalle.PrecioSinIva.ToString("N2")</td>
+                                                                            <td class="text-end">Q @detalle.Iva.ToString("N2")</td>
+                                                                            <td class="text-end fw-semibold">Q @detalle.Subtotal.ToString("N2")</td>
+                                                                            <td class="text-end text-success fw-bold">Q @detalle.Utilidad.ToString("N2")</td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="alert alert-warning mb-0 text-center">
+                                                            <i class="bi bi-exclamation-triangle"></i> No se encontraron detalles para esta venta.
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </td>
+                            </tr>
                             }
                         </tbody>
                     </table>
@@ -169,6 +177,9 @@
                 <div class="mt-4 text-end">
                     <h5 class="text-success">
                         <strong>Total general:</strong> Q @ViewBag.TotalGeneral.ToString("N2")
+                    </h5>
+                    <h5 class="text-primary">
+                        <strong>Utilidad total general:</strong> Q @ViewBag.UtilidadGeneral.ToString("N2")
                     </h5>
                 </div>
             }
@@ -226,5 +237,24 @@
             background-color: #f8f9fc;
             border-bottom: 1px solid #e3e6f0;
         }
+
+        .collapse .card {
+            background-color: #fdfdfd;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .collapse.show .card {
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .table-sm th, .table-sm td {
+            vertical-align: middle;
+        }
+
+        .table-secondary th {
+            background-color: #e9ecef !important;
+        }
+
     </style>
 }

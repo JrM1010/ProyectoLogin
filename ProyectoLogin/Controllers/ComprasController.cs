@@ -134,7 +134,7 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = idUsuario,
                     Accion = "Registro de compra",
-                    Descripcion = $"Compra #{compra.IdCompra} creada para el proveedor ID {compra.IdProveedor}",
+                    Descripcion = $"Compra #{compra.IdCompra} creada.",
                     Modulo = "Compras",
                     Fecha = FechaLocal.Ahora()
                 });
@@ -151,6 +151,24 @@ namespace ProyectoLogin.Controllers
                 return View(compra);
             }
         }
+
+        // 🔹 DETALLES DE COMPRA
+        public async Task<IActionResult> Details(int id)
+        {
+            var compra = await _context.Compras
+                .Include(c => c.Proveedor)
+                .Include(c => c.Detalles)
+                    .ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles)
+                    .ThenInclude(d => d.UnidadMedida) // ahora válido
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(c => c.IdCompra == id);
+
+            if (compra == null) return NotFound();
+            return View(compra);
+        }
+
+
 
         // 🔹 EDITAR COMPRA (GET)
         public async Task<IActionResult> Edit(int id)
@@ -323,7 +341,7 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = idUsuario,
                     Accion = "Confirmación de compra",
-                    Descripcion = $"Compra #{compra.IdCompra} confirmada por el usuario.",
+                    Descripcion = $"Compra #{compra.IdCompra} confirmada.",
                     Modulo = "Compras",
                     Fecha = FechaLocal.Ahora()
                 });

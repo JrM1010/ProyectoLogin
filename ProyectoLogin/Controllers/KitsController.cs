@@ -209,7 +209,7 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = idUsuario,
                     Accion = "Creación de kit",
-                    Descripcion = $"Se creó el kit '{kit.Nombre}' con {detallesAGuardar.Count} productos. Total: Q{kit.Total:F2}.",
+                    Descripcion = $"Se creó el kit '{kit.Nombre}'. Total: Q{kit.Total:F2}.",
                     Modulo = "Kits",
                     Fecha = FechaLocal.Ahora()
                 });
@@ -264,7 +264,7 @@ namespace ProyectoLogin.Controllers
             {
                 IdUsuario = idUsuario,
                 Accion = "Eliminación de kit",
-                Descripcion = $"Se eliminó el kit '{kit.Nombre}' (ID {kit.IdKit}) con {kit.Detalles.Count} productos.",
+                Descripcion = $"Se eliminó el kit '{kit.Nombre}'.",
                 Modulo = "Kits",
                 Fecha = FechaLocal.Ahora()
             });
@@ -408,7 +408,7 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = idUsuario,
                     Accion = "Edición de kit",
-                    Descripcion = $"Se editó el kit '{kit.Nombre}' (ID {kit.IdKit}). Ahora tiene {nuevosDetalles.Count} productos. Total: Q{kit.Total:F2}.",
+                    Descripcion = $"Se editó el kit '{kit.Nombre}'. Ahora tiene {nuevosDetalles.Count} productos. Total: Q{kit.Total:F2}.",
                     Modulo = "Kits",
                     Fecha = FechaLocal.Ahora()
                 });

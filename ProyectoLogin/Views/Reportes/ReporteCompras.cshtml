@@ -5,195 +5,156 @@
     var totalGeneral = ViewBag.TotalGeneral ?? 0m;
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">@ViewData["Title"]</h6>
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold text-primary">
+                <i class="bi bi-basket"></i> @ViewData["Title"]
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <!-- 🔹 Formulario de filtros -->
+            <form id="filtroForm" method="get" asp-action="Compras" class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Fecha Desde</label>
+                    <input type="date" class="form-control" id="desde" name="desde"
+                           value="@Context.Request.Query["desde"]" />
                 </div>
-                <div class="card-body">
-                    <!-- Formulario de Filtros -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <form id="filtroForm" method="get" asp-action="Compras" class="row g-3">
-                                        <div class="col-md-4">
-                                            <label for="desde" class="form-label">Fecha Desde</label>
-                                            <input type="date" class="form-control" id="desde" name="desde" 
-                                                   value="@Context.Request.Query["desde"]">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="hasta" class="form-label">Fecha Hasta</label>
-                                            <input type="date" class="form-control" id="hasta" name="hasta" 
-                                                   value="@Context.Request.Query["hasta"]">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="proveedorId" class="form-label">Proveedor</label>
-                                            <select class="form-control" id="proveedorId" name="proveedorId">
-                                                <option value="">-- Todos los proveedores --</option>
-                                                @if (proveedores != null)
-                                                {
-                                                    foreach (var proveedor in proveedores)
-                                                    {
-                                                        var selected = Context.Request.Query["proveedorId"] == proveedor.IdProveedor.ToString();
-                                                        <option value="@proveedor.IdProveedor" selected="@selected">@proveedor.Nombre</option>
-                                                    }
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="col-12">
-                                            <div class="d-flex gap-2 flex-wrap">
 
-                                                <!-- 🔍 Botón Filtrar -->
-                                                <button type="submit" class="btn btn-primary me-2">
-                                                    <i class="bi bi-search"></i> Filtrar
-                                                </button>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Fecha Hasta</label>
+                    <input type="date" class="form-control" id="hasta" name="hasta"
+                           value="@Context.Request.Query["hasta"]" />
+                </div>
 
-                                                <!-- 📄 Botón Descargar PDF -->
-                                                <button type="button" id="btnDescargarPDF" class="btn btn-success me-2">
-                                                    <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
-                                                </button>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Proveedor</label>
+                    <select class="form-select" id="proveedorId" name="proveedorId">
+                        <option value="">-- Todos los proveedores --</option>
+                        @if (proveedores != null)
+                        {
+                            foreach (var proveedor in proveedores)
+                            {
+                                var selected = Context.Request.Query["proveedorId"] == proveedor.IdProveedor.ToString();
+                                <option value="@proveedor.IdProveedor" selected="@selected">@proveedor.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
 
-                                                <!-- 🧹 Botón Limpiar Filtros -->
-                                                <button type="button" id="btnLimpiar" class="btn btn-warning me-2">
-                                                    <i class="bi bi-eraser"></i> Limpiar Filtros
-                                                </button>
+                <!-- 🔘 Botones -->
+                <div class="col-12 mt-3 d-flex flex-wrap gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
 
-                                                <!-- ↩️ Botón Volver a Reportes -->
-                                                <a asp-action="Index" class="btn btn-secondary">
-                                                    <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
-                                                </a>
+                    <button type="button" id="btnDescargarPDF" class="btn btn-success me-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                    </button>
+
+                    <button type="button" id="btnLimpiar" class="btn btn-warning me-2">
+                        <i class="bi bi-eraser"></i> Limpiar Filtros
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
+                    </a>
+                </div>
+            </form>
+
+
+            <!-- 🔹 Tabla de resultados -->
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-hover align-middle text-center" id="tablaCompras">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Proveedor</th>
+                                <th>Productos Comprados</th>
+                                <th>Detalles</th>
+                                <th>Total Compra</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var compra in Model)
+                            {
+                                <tr>
+                                    <td>@compra.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td><strong>@compra.Proveedor</strong></td>
+                                    <td class="text-muted">@compra.Productos</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#detalles-@(compra.GetHashCode())"
+                                                aria-expanded="false"
+                                                aria-controls="detalles-@(compra.GetHashCode())">
+                                            <i class="bi bi-list-ul"></i> Ver Detalles
+                                        </button>
+                                    </td>
+                                    <td class="fw-bold text-success text-end">Q @compra.TotalCompra.ToString("N2")</td>
+                                </tr>
+
+                                <tr class="bg-light">
+                                    <td colspan="5" class="p-0 border-0">
+                                        <div class="collapse" id="detalles-@(compra.GetHashCode())">
+                                            <div class="d-flex justify-content-center py-3">
+                                                <div class="card shadow-sm border-0 w-75">
+                                                    <div class="card-body">
+                                                        <h6 class="text-primary mb-3 text-center">
+                                                            <i class="bi bi-box-seam"></i> Detalles de la Compra
+                                                        </h6>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-bordered align-middle text-center">
+                                                                <thead class="table-secondary">
+                                                                    <tr>
+                                                                        <th>Producto</th>
+                                                                        <th class="text-center">Cantidad</th>
+                                                                        <th class="text-end">Precio Unitario</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach (var detalle in compra.Detalles)
+                                                                    {
+                                                                        <tr>
+                                                                            <td class="text-start">@detalle.Nombre</td>
+                                                                            <td class="text-center">@detalle.Cantidad</td>
+                                                                            <td class="text-end">Q @detalle.PrecioCompra.ToString("N2")</td>
+                                                                            <td class="text-end fw-semibold">
+                                                                                Q @((detalle.Cantidad * detalle.PrecioCompra).ToString("N2"))
+                                                                            </td>
+                                                                        </tr>
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Resumen de Resultados -->
-                    @if (Model != null && Model.Any())
-                    {
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <div class="alert alert-info d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <i class="fas fa-info-circle"></i>
-                                        Se encontraron <strong>@Model.Count()</strong> compras en el período seleccionado
-                                    </div>
-                                    <div class="h5 mb-0 font-weight-bold text-success">
-                                        Total General: Q @totalGeneral.ToString("F2")
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
-                    <!-- Tabla de Resultados -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="table-responsive">
-                                @if (Model != null && Model.Any())
-                                {
-                                    <table class="table table-bordered table-striped table-hover" id="tablaCompras" width="100%" cellspacing="0">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Fecha</th>
-                                                <th>Proveedor</th>
-                                                <th>Productos Comprados</th>
-                                                <th>Detalles</th>
-                                                <th class="text-end">Total Compra</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var compra in Model)
-                                            {
-                                                <tr>
-                                                    <td>@compra.Fecha.ToString("dd/MM/yyyy")</td>
-                                                    <td>
-                                                        <strong>@compra.Proveedor</strong>
-                                                    </td>
-                                                    <td>
-                                                        <span class="text-muted">@compra.Productos</span>
-                                                    </td>
-                                                    <td>
-                                                        <button class="btn btn-sm btn-outline-info" 
-                                                                type="button" 
-                                                                data-bs-toggle="collapse" 
-                                                                data-bs-target="#detalles-@(compra.GetHashCode())">
-                                                            <i class="fas fa-list"></i> Ver Detalles
-                                                        </button>
-                                                    </td>
-                                                    <td class="text-end">
-                                                        <strong class="text-success">Q @compra.TotalCompra.ToString("F2")</strong>
-                                                    </td>
-                                                </tr>
-                                                <tr class="bg-light">
-                                                    <td colspan="5" class="p-0">
-                                                        <div class="collapse" id="detalles-@(compra.GetHashCode())">
-                                                            <div class="p-3">
-                                                                <h6 class="text-primary mb-3">
-                                                                    <i class="fas fa-boxes"></i> Detalles de la Compra
-                                                                </h6>
-                                                                <div class="table-responsive">
-                                                                    <table class="table table-sm table-bordered">
-                                                                        <thead class="table-secondary">
-                                                                            <tr>
-                                                                                <th>Producto</th>
-                                                                                <th class="text-center">Cantidad</th>
-                                                                                <th class="text-end">Precio Unitario</th>
-                                                                                <th class="text-end">Subtotal</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            @foreach (var detalle in compra.Detalles)
-                                                                            {
-                                                                                <tr>
-                                                                                    <td>@detalle.Nombre</td>
-                                                                                    <td class="text-center">@detalle.Cantidad</td>
-                                                                                    <td class="text-end">Q @detalle.PrecioCompra.ToString("F2")</td>
-                                                                                    <td class="text-end">
-                                                                                        Q @((detalle.Cantidad * detalle.PrecioCompra).ToString("F2"))
-                                                                                    </td>
-                                                                                </tr>
-                                                                            }
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                        <tfoot class="table-dark">
-                                            <tr>
-                                                <td colspan="4" class="text-end"><strong>TOTAL GENERAL:</strong></td>
-                                                <td class="text-end">
-                                                    <strong class="text-warning">Q @totalGeneral.ToString("F2")</strong>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                                        <h4 class="text-muted">No se encontraron compras</h4>
-                                        <p class="text-muted">No hay compras que coincidan con los criterios de búsqueda seleccionados.</p>
-                                        <button type="button" id="btnLimpiarBusqueda" class="btn btn-primary">
-                                            <i class="fas fa-broom"></i> Limpiar Filtros
-                                        </button>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">TOTAL GENERAL:</td>
+                                <td class="text-end text-warning fw-bold">Q @totalGeneral.ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-3 text-center">
+                    <i class="bi bi-search"></i> No se encontraron compras con los filtros aplicados.
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -203,16 +164,7 @@
         $(document).ready(function () {
             // Limpiar filtros
             $('#btnLimpiar').click(function () {
-                $('#desde').val('');
-                $('#hasta').val('');
-                $('#proveedorId').val('');
-                $('#filtroForm').submit();
-            });
-
-            $('#btnLimpiarBusqueda').click(function () {
-                $('#desde').val('');
-                $('#hasta').val('');
-                $('#proveedorId').val('');
+                $('#desde, #hasta, #proveedorId').val('');
                 $('#filtroForm').submit();
             });
 
@@ -229,39 +181,31 @@
                 if (hasta) params.append('hasta', hasta);
                 if (proveedorId) params.append('proveedorId', proveedorId);
 
-                if (params.toString()) {
-                    url += '?' + params.toString();
-                }
-
+                if (params.toString()) url += '?' + params.toString();
                 window.location.href = url;
             });
 
-            // Validación de fechas
+            // Validación fechas
             $('#filtroForm').submit(function (e) {
                 const desde = $('#desde').val();
                 const hasta = $('#hasta').val();
-
                 if (desde && hasta && new Date(desde) > new Date(hasta)) {
                     e.preventDefault();
                     alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
-                    return false;
                 }
             });
 
-            // Inicializar DataTable si hay datos
+            // DataTable
             @if (Model != null && Model.Any())
             {
-                <text>
-                $('#tablaCompras').DataTable({
-                    language: {
-                        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                    },
-                    order: [[0, 'desc']],
-                    pageLength: 10,
-                    responsive: true,
-                    dom: '"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
-                });
-                </text>
+                    <text>
+                    $('#tablaCompras').DataTable({
+                        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                        order: [[0, 'desc']],
+                        pageLength: 10,
+                        responsive: true
+                    });
+                    </text>
             }
         });
     </script>
@@ -271,29 +215,46 @@
             font-weight: 600;
             font-size: 0.875rem;
         }
-        
+
         .table td {
             font-size: 0.875rem;
             vertical-align: middle;
         }
-        
+
         .collapse.show {
             background-color: #f8f9fa;
         }
-        
-        .btn-group-sm > .btn, .btn-sm {
-            padding: 0.25rem 0.5rem;
+
+        .badge {
             font-size: 0.75rem;
         }
-        
+
         .card {
             border: 1px solid #e3e6f0;
             border-radius: 0.35rem;
         }
-        
+
         .card-header {
             background-color: #f8f9fc;
             border-bottom: 1px solid #e3e6f0;
+        }
+
+        .collapse .card {
+            background-color: #fdfdfd;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .collapse.show .card {
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .table-sm th, .table-sm td {
+            vertical-align: middle;
+        }
+
+        .table-secondary th {
+            background-color: #e9ecef !important;
         }
     </style>
 }

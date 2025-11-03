@@ -1,99 +1,182 @@
-﻿@{
+﻿@model IEnumerable<dynamic>
+@{
     ViewData["Title"] = "Reporte de Inventario";
     var categorias = ViewBag.Categorias as List<ProyectoLogin.Models.ModelosProducts.Categoria>;
     var proveedores = ViewBag.Proveedores as List<ProyectoLogin.Models.Proveedor>;
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3 text-center">📦 Reporte de Inventario</h2>
-
-    <form asp-action="ReporteInventario" method="get" class="row g-3 mb-4">
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Categoría</label>
-            <select name="idCategoria" class="form-select">
-                <option value="">-- Todas --</option>
-                @foreach (var c in categorias)
-                {
-                    <option value="@c.IdCategoria" selected="@(ViewBag.IdCategoria == c.IdCategoria)">
-                        @c.Nombre
-                    </option>
-                }
-            </select>
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold text-primary">
+                <i class="bi bi-box-seam"></i> Reporte de Inventario
+            </h5>
         </div>
 
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Proveedor</label>
-            <select name="idProveedor" class="form-select">
-                <option value="">-- Todos --</option>
-                @foreach (var p in proveedores)
-                {
-                    <option value="@p.IdProveedor" selected="@(ViewBag.IdProveedor == p.IdProveedor)">
-                        @p.Nombre
-                    </option>
+        <div class="card-body">
+            <!-- 🔹 Formulario de filtros -->
+            <form asp-action="ReporteInventario" method="get" class="row g-3 mb-3" id="filtroForm">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Categoría</label>
+                    <select name="idCategoria" class="form-select">
+                        <option value="">-- Todas --</option>
+                        @foreach (var c in categorias)
+                        {
+                            <option value="@c.IdCategoria" selected="@(ViewBag.IdCategoria == c.IdCategoria)">
+                                @c.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
 
-                }
-            </select>
-        </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Proveedor</label>
+                    <select name="idProveedor" class="form-select">
+                        <option value="">-- Todos --</option>
+                        @foreach (var p in proveedores)
+                        {
+                            <option value="@p.IdProveedor" selected="@(ViewBag.IdProveedor == p.IdProveedor)">
+                                @p.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
 
-        <div class="col-md-4">
-            <label class="form-label fw-bold">Nombre</label>
-            <input type="text" name="nombre" value="@ViewBag.Nombre" class="form-control" placeholder="Buscar producto..." />
-        </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Nombre</label>
+                    <input type="text" name="nombre" value="@ViewBag.Nombre" class="form-control" placeholder="Buscar producto..." />
+                </div>
 
-        <div class="col-12 text-end mt-3">
-            <button type="submit" class="btn btn-primary me-2">
-                <i class="bi bi-search"></i> Filtrar
-            </button>
+                <!-- 🔘 Botones alineados -->
+                <div class="col-12 mt-3 d-flex flex-wrap gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
 
-            <a asp-action="ReporteInventario" asp-route-pdf="true" class="btn btn-success me-2">
-                <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
-            </a>
+                    <a asp-action="ReporteInventario" asp-route-pdf="true" class="btn btn-success me-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                    </a>
 
-            <!-- 🔹 Botón limpiar filtros -->
-            <a asp-action="ReporteInventario" class="btn btn-warning me-2">
-                <i class="bi bi-eraser"></i> Limpiar Filtros
-            </a>
+                    <button type="button" id="btnLimpiar" class="btn btn-warning me-2">
+                        <i class="bi bi-eraser"></i> Limpiar Filtros
+                    </button>
 
-            <!-- 🔹 Botón regresar al índice de reportes -->
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
-            </a>
-        </div>
-    </form>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
+                    </a>
+                </div>
+            </form>
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark text-center align-middle">
-            <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Proveedor</th>
-                <th>Stock</th>
-                <th>Mínimo</th>
-                <th>Precio Sin IVA</th>
-                <th>Precio Con IVA</th>
-                <th>Total Inventario (IVA Incluido)</th>
-            </tr>
-        </thead>
-        <tbody class="text-center">
-            @foreach (var item in Model)
+            <!-- 🔹 Tabla de resultados -->
+            @if (Model != null && Model.Any())
             {
-                <tr class="@(item.StockActual <= item.StockMinimo ? "table-danger" : "")">
-                    <td>@item.Nombre</td>
-                    <td>@item.Categoria</td>
-                    <td>@item.Proveedor</td>
-                    <td>@item.StockActual</td>
-                    <td>@item.StockMinimo</td>
-                    <td>@($"Q{item.PrecioSinIVA:N2}")</td>
-                    <td>@($"Q{item.PrecioConIVA:N2}")</td>
-                    <td>@($"Q{item.ValorTotal:N2}")</td>
-                </tr>
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-hover align-middle text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Proveedor</th>
+                                <th>Stock</th>
+                                <th>Mínimo</th>
+                                <th>Precio Sin IVA</th>
+                                <th>Precio Con IVA</th>
+                                <th>Total Inventario (IVA Incluido)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="@(item.StockActual <= item.StockMinimo ? "table-danger" : "")">
+                                    <td class="text-start">@item.Nombre</td>
+                                    <td>@item.Categoria</td>
+                                    <td>@item.Proveedor</td>
+                                    <td>@item.StockActual</td>
+                                    <td>@item.StockMinimo</td>
+                                    <td>Q @item.PrecioSinIVA.ToString("N2")</td>
+                                    <td>Q @item.PrecioConIVA.ToString("N2")</td>
+                                    <td class="fw-bold text-primary">Q @item.ValorTotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-secondary text-end">
+                            <tr>
+                                <td colspan="7" class="fw-bold">Total Inventario:</td>
+                                <td class="fw-bold text-success">
+                                    Q @string.Format("{0:N2}", Convert.ToDecimal(ViewBag.TotalInventario))
+                                </td>
+
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             }
-        </tbody>
-        <tfoot class="table-secondary text-end">
-            <tr>
-                <td colspan="7" class="fw-bold">Total Inventario:</td>
-                <td class="fw-bold">@($"Q{(decimal)ViewBag.TotalInventario:N2}")</td>
-            </tr>
-        </tfoot>
-    </table>
+            else
+            {
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> No se encontraron productos con los filtros aplicados.
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#btnLimpiar').click(function () {
+                $('select[name="idCategoria"], select[name="idProveedor"]').val('');
+                $('input[name="nombre"]').val('');
+                $('#filtroForm').submit();
+            });
+        });
+    </script>
+
+    <style>
+        .table th {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+        }
+
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .table-dark th {
+            background-color: #2c3e50 !important;
+            color: #fff !important;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        .table-danger {
+            background-color: #f8d7da !important;
+        }
+
+        .alert-info {
+            background-color: #e8f4fd;
+            border-color: #b6e0fe;
+        }
+
+        .btn i {
+            margin-right: 4px;
+        }
+    </style>
+}

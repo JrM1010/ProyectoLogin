@@ -29,7 +29,7 @@ namespace ProyectoLogin.Controllers
             var pdfBytes = await _facturaService.GenerarFacturaAsync(idVenta);
 
             // Obtener la fecha actual en formato dd/MM/yyyy
-            var fechaActual = DateTime.Now.ToString("dd/MM/yyyy");
+            var fechaActual = FechaLocal.Ahora().ToString("dd/MM/yyyy");
 
             // Crear el nombre del archivo con el formato deseado
             var nombreArchivo = $"FacturaSmartcell {fechaActual}.pdf";
@@ -260,6 +260,99 @@ namespace ProyectoLogin.Controllers
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
+
+                // === CALCULAR UTILIDAD DE LA VENTA ===
+                decimal utilidadTotalVenta = 0m;
+
+                // obtener lista de productos vendidos
+                var productoIds = venta.Detalles
+                    .Where(d => d.IdProducto.HasValue)
+                    .Select(d => d.IdProducto!.Value)
+                    .Distinct()
+                    .ToList();
+
+                // obtener precios base activos (sin IVA)
+                var preciosBase = await _context.ProductoPrecio
+                    .Where(pp => productoIds.Contains(pp.IdProducto) && pp.Activo)
+                    .GroupBy(pp => pp.IdProducto)
+                    .Select(g => g.OrderByDescending(x => x.FechaInicio).FirstOrDefault())
+                    .ToDictionaryAsync(x => x.IdProducto, x => x.PrecioBase);
+
+                foreach (var det in venta.Detalles)
+                {
+                    decimal utilidad = 0m;
+
+                    // 🧩 Producto normal
+                    if (det.IdProducto.HasValue)
+                    {
+                        decimal precioVentaConIVA = det.PrecioUnitario;
+                        decimal precioVentaSinIVA = precioVentaConIVA / 1.12m;
+
+                        decimal precioBase = preciosBase.ContainsKey(det.IdProducto.Value)
+                            ? preciosBase[det.IdProducto.Value]
+                            : 0m;
+
+                        decimal factor = 1m;
+
+                        if (det.IdUnidad.HasValue)
+                        {
+                            var productoUnidad = await _context.ProductosUnidades
+                                .FirstOrDefaultAsync(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
+
+                            if (productoUnidad != null)
+                                factor = productoUnidad.FactorConversion;
+                            else
+                            {
+                                var unidad = await _context.UnidadesMedida
+                                    .FirstOrDefaultAsync(u => u.IdUnidad == det.IdUnidad);
+                                if (unidad != null)
+                                    factor = unidad.EquivalenciaEnUnidades;
+                            }
+                        }
+
+                        // cantidad real en unidades base
+                        var cantidadReal = det.Cantidad * factor;
+
+                        utilidad = (precioVentaSinIVA - precioBase) * cantidadReal;
+                    }
+
+                    // 🧩 Kit / Promoción
+                    else if (det.IdKit.HasValue)
+                    {
+                        var kit = await _context.Kits
+                            .Include(k => k.Detalles!)
+                            .ThenInclude(d => d.Producto)
+                            .FirstOrDefaultAsync(k => k.IdKit == det.IdKit);
+
+                        if (kit != null)
+                        {
+                            decimal utilidadKit = 0m;
+
+                            foreach (var kd in kit.Detalles)
+                            {
+                                var precioBase = await _context.ProductoPrecio
+                                    .Where(pp => pp.IdProducto == kd.IdProducto && pp.Activo)
+                                    .OrderByDescending(pp => pp.FechaInicio)
+                                    .Select(pp => pp.PrecioBase)
+                                    .FirstOrDefaultAsync();
+
+                                var precioVentaSinIVA = kd.PrecioUnitarioSnapshot / 1.12m;
+                                utilidadKit += (precioVentaSinIVA - precioBase) * kd.Cantidad;
+                            }
+
+                            utilidad = utilidadKit * det.Cantidad; // por cuántos kits se vendieron
+                        }
+                    }
+
+                    det.Utilidad = Math.Round(utilidad, 2);
+                    utilidadTotalVenta += det.Utilidad;
+                }
+
+                
+
+
+
+
                 // === DESCONTAR INVENTARIO ===
                 foreach (var det in venta.Detalles)
                 {
@@ -329,7 +422,7 @@ namespace ProyectoLogin.Controllers
                 {
                     IdUsuario = idUsuario,
                     Accion = "Registro de venta",
-                    Descripcion = $"Venta #{venta.NumeroVenta} realizada al cliente {(venta.Cliente?.Nombres ?? "Sin cliente asignado")}. Total: Q{venta.Total:F2}",
+                    Descripcion = $"Venta #{venta.NumeroVenta} realizada. Total: Q{venta.Total:F2}",
                     Modulo = "Ventas",
                     Fecha = FechaLocal.Ahora()
                 });

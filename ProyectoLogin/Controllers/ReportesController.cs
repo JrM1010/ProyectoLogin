@@ -60,43 +60,50 @@ namespace ProyectoLogin.Controllers
                 query = query.Where(v => v.MetodoPago == formaPago);
 
             var ventas = await query
-                .OrderByDescending(v => v.FechaVenta)
-                .Select(v => new
+            .OrderByDescending(v => v.FechaVenta)
+            .Select(v => new
+            {
+                IdVenta = v.IdVenta,
+                Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
+                NoFactura = v.NumeroFactura,
+                Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
+                            ? "CF"
+                            : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
+                Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
+                Vendedor = v.Usuario.NombreUsuario,
+                TotalSinIva = v.Total / 1.12m,
+                ValorIva = v.Total - (v.Total / 1.12m),
+                TotalConIva = v.Total,
+                FormaPago = v.MetodoPago,
+
+                // 🧮 NUEVO: total de utilidad por venta
+                UtilidadTotal = v.Detalles.Sum(d => d.Utilidad),
+
+                // 🔹 INCLUIR DETALLES DE LA VENTA
+                Detalles = v.Detalles.Select(d => new
                 {
-                    IdVenta = v.IdVenta,
-                    Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
-                    NoFactura = v.NumeroFactura,
-                    // 🔹 Si no tiene nombre ni apellido, mostrar "CF"
-                    Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
-                                ? "CF"
-                                : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
-                    // 🔹 Si el NIT está vacío, mostrar "CF"
-                    Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
-                    Vendedor = v.Usuario.NombreUsuario,
-                    TotalSinIva = v.Total / 1.12m,
-                    ValorIva = v.Total - (v.Total / 1.12m),
-                    TotalConIva = v.Total,
-                    FormaPago = v.MetodoPago,
-                    // 🔹 INCLUIR DETALLES DE LA VENTA
-                    Detalles = v.Detalles.Select(d => new
-                    {
-                        IdDetalle = d.IdDetalleVenta,
-                        IdProducto = d.IdProducto,
-                        IdKit = d.IdKit,
-                        NombreProducto = d.Producto != null ? d.Producto.Nombre :
-                                        d.Kit != null ? "(KIT) " + d.Kit.Nombre : "Producto no disponible",
-                        Cantidad = d.Cantidad,
-                        PrecioUnitario = d.PrecioUnitario,
-                        Subtotal = d.Subtotal,
-                        PrecioSinIva = d.PrecioUnitario / 1.12m,
-                        SubtotalSinIva = d.Subtotal / 1.12m,
-                        Iva = d.Subtotal - (d.Subtotal / 1.12m),
-                        EsKit = d.IdKit.HasValue
-                    }).ToList()
-                })
-                .ToListAsync();
+                    IdDetalle = d.IdDetalleVenta,
+                    IdProducto = d.IdProducto,
+                    IdKit = d.IdKit,
+                    NombreProducto = d.Producto != null ? d.Producto.Nombre :
+                                    d.Kit != null ? "(KIT) " + d.Kit.Nombre : "Producto no disponible",
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario,
+                    Subtotal = d.Subtotal,
+                    PrecioSinIva = d.PrecioUnitario / 1.12m,
+                    SubtotalSinIva = d.Subtotal / 1.12m,
+                    Iva = d.Subtotal - (d.Subtotal / 1.12m),
+                    EsKit = d.IdKit.HasValue,
+
+                    // 🧩 NUEVO: utilidad por producto
+                    Utilidad = d.Utilidad
+                }).ToList()
+            })
+            .ToListAsync();
+
 
             // Calcular totales
+            ViewBag.UtilidadGeneral = ventas.Sum(v => v.UtilidadTotal);
             ViewBag.SubtotalGeneral = ventas.Sum(v => v.TotalSinIva);
             ViewBag.IvaGeneral = ventas.Sum(v => v.ValorIva);
             ViewBag.TotalGeneral = ventas.Sum(v => v.TotalConIva);
@@ -110,26 +117,29 @@ namespace ProyectoLogin.Controllers
             var query = _context.Ventas
                 .Include(v => v.Cliente)
                 .Include(v => v.Usuario)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Kit)
                 .AsQueryable();
 
+            // Filtros
             if (desde.HasValue)
             {
                 var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
                 query = query.Where(v => v.FechaVenta >= desdeUtc);
             }
-
             if (hasta.HasValue)
             {
                 var hastaUtc = FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1));
                 query = query.Where(v => v.FechaVenta < hastaUtc);
             }
-
             if (!string.IsNullOrEmpty(vendedor))
                 query = query.Where(v => v.Usuario.NombreUsuario.Contains(vendedor));
-
             if (!string.IsNullOrEmpty(formaPago))
                 query = query.Where(v => v.MetodoPago == formaPago);
 
+            // Obtener datos
             var ventas = await query
                 .OrderByDescending(v => v.FechaVenta)
                 .Select(v => new
@@ -141,175 +151,116 @@ namespace ProyectoLogin.Controllers
                                 : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
                     Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
                     Vendedor = v.Usuario.NombreUsuario,
-                    TotalSinIva = v.Total / 1.12m,
-                    ValorIva = v.Total - (v.Total / 1.12m),
-                    TotalConIva = v.Total,
-                    FormaPago = v.MetodoPago
+                    FormaPago = v.MetodoPago,
+                    Subtotal = v.Total / 1.12m,
+                    Iva = v.Total - (v.Total / 1.12m),
+                    Total = v.Total,
+                    UtilidadTotal = v.Detalles.Sum(d => d.Utilidad),
+                    Detalles = v.Detalles.Select(d => new
+                    {
+                        Nombre = d.Producto != null ? d.Producto.Nombre :
+                                 d.Kit != null ? "(KIT) " + d.Kit.Nombre : "N/A",
+                        Cantidad = d.Cantidad,
+                        Precio = d.PrecioUnitario,
+                        Subtotal = d.Subtotal,
+                        Utilidad = d.Utilidad
+                    }).ToList()
                 })
                 .ToListAsync();
 
-            decimal subtotalGeneral = ventas.Sum(v => v.TotalSinIva);
-            decimal ivaGeneral = ventas.Sum(v => v.ValorIva);
-            decimal totalGeneral = ventas.Sum(v => v.TotalConIva);
+            decimal subtotalGeneral = ventas.Sum(v => v.Subtotal);
+            decimal ivaGeneral = ventas.Sum(v => v.Iva);
+            decimal totalGeneral = ventas.Sum(v => v.Total);
+            decimal utilidadGeneral = ventas.Sum(v => v.UtilidadTotal);
 
-            // Generar PDF mejorado
+            // Generar PDF simple con detalles
             var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Margin(30);
+                    page.Margin(20);
                     page.Size(PageSizes.A4.Landscape());
                     page.PageColor(Colors.White);
 
-                    // Header mejorado
+                    // Header
                     page.Header().Column(header =>
                     {
-                        // Logo y título
-                        header.Item().Row(row =>
-                        {
-                            row.RelativeItem().Column(col =>
-                            {
-                                col.Item().Text("Smartcell Company").FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
-                                col.Item().Text("Reporte de Ventas").FontSize(12).SemiBold().FontColor(Colors.Grey.Darken2);
-                            });
-
-                            row.ConstantItem(100).AlignRight().Text(txt =>
-                            {
-                                txt.Span("Fecha: ").SemiBold().FontSize(9);
-                                txt.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(9);
-                            });
-                        });
-
-                        // Línea separadora
-                        header.Item().PaddingTop(5).PaddingBottom(10).LineHorizontal(1).LineColor(Colors.Blue.Medium);
-
-                        // Filtros aplicados en tarjetas
-                        header.Item().PaddingBottom(15).Row(filterRow =>
-                        {
-                            filterRow.RelativeItem().Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
-                            {
-                                col.Item().Text("Período").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                col.Item().Text($"{desde?.ToString("dd/MM/yyyy") ?? "Inicio"} - {hasta?.ToString("dd/MM/yyyy") ?? "Fin"}").FontSize(9);
-                            });
-
-                            filterRow.RelativeItem().PaddingLeft(5).Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
-                            {
-                                col.Item().Text("Vendedor").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                col.Item().Text(!string.IsNullOrEmpty(vendedor) ? vendedor : "Todos").FontSize(9);
-                            });
-
-                            filterRow.RelativeItem().PaddingLeft(5).Background(Colors.Grey.Lighten3).Padding(8).Border(1).BorderColor(Colors.Grey.Lighten1).Column(col =>
-                            {
-                                col.Item().Text("Forma de Pago").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                col.Item().Text(!string.IsNullOrEmpty(formaPago) ? formaPago : "Todas").FontSize(9);
-                            });
-                        });
+                        header.Item().Text("SMARTCELL COMPANY - REPORTE DE VENTAS")
+                            .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
+                        header.Item().Text($"{desde?.ToString("dd/MM/yyyy") ?? "Inicio"} - {hasta?.ToString("dd/MM/yyyy") ?? "Fin"}")
+                            .FontSize(9).AlignCenter();
+                        header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
 
-                    // Content mejorado
+                    // Contenido
                     page.Content().PaddingVertical(5).Column(col =>
                     {
-                        // Tabla de ventas con mejor diseño
-                        col.Item().Table(table =>
+                        foreach (var v in ventas)
                         {
-                            table.ColumnsDefinition(columns =>
+                            col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingBottom(4).Column(venta =>
                             {
-                                columns.ConstantColumn(70);   // Fecha
-                                columns.ConstantColumn(75);   // Factura
-                                columns.RelativeColumn(2);    // Cliente
-                                columns.ConstantColumn(70);   // NIT
-                                columns.RelativeColumn(1.2f); // Vendedor
-                                columns.ConstantColumn(75);   // Subtotal
-                                columns.ConstantColumn(65);   // IVA
-                                columns.ConstantColumn(75);   // Total
-                                columns.ConstantColumn(80);   // FormaPago
-                            });
+                                venta.Item().Text($"Factura: {v.NoFactura}  |  Fecha: {v.Fecha:dd/MM/yyyy}  |  Cliente: {v.Cliente}  |  Vendedor: {v.Vendedor}")
+                                    .FontSize(9).Bold();
+                                venta.Item().Text($"NIT: {v.Nit}   |   Forma de Pago: {v.FormaPago}")
+                                    .FontSize(9).FontColor(Colors.Grey.Darken2);
 
-                            // Header con estilo mejorado
-                            table.Header(header =>
-                            {
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Fecha").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Factura").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Cliente").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("NIT").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Vendedor").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Subtotal").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("IVA").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Total").Bold().FontColor(Colors.White).FontSize(9);
-                                header.Cell().Background(Colors.Blue.Darken3).Padding(5).AlignCenter().Text("Forma Pago").Bold().FontColor(Colors.White).FontSize(9);
-                            });
-
-                            // Filas con estilo zebra
-                            for (int i = 0; i < ventas.Count; i++)
-                            {
-                                var v = ventas[i];
-                                var backgroundColor = i % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
-
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Fecha.ToString("dd/MM/yyyy")).FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.NoFactura ?? "").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Cliente ?? "").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Nit ?? "").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.Vendedor ?? "").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.TotalSinIva:N2}").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.ValorIva:N2}").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).AlignRight().Text($"Q {v.TotalConIva:N2}").FontSize(8);
-                                table.Cell().Background(backgroundColor).PaddingVertical(4).PaddingHorizontal(3).Text(v.FormaPago ?? "").FontSize(8);
-                            }
-                        });
-
-                        // Resumen general con diseño de tarjeta
-                        col.Item().PaddingTop(15).Row(row =>
-                        {
-                            row.ConstantItem(250).Background(Colors.Green.Lighten5).Padding(12).Border(1).BorderColor(Colors.Green.Lighten2).Column(totalCol =>
-                            {
-                                totalCol.Item().Text("RESUMEN GENERAL").FontSize(11).Bold().FontColor(Colors.Green.Darken3);
-                                totalCol.Item().PaddingTop(5).Row(resumenRow =>
+                                // Detalles
+                                venta.Item().PaddingTop(4).Table(table =>
                                 {
-                                    resumenRow.RelativeItem().Text("Subtotal:").FontSize(10);
-                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{subtotalGeneral:N2}").FontSize(10);
-                                });
-                                totalCol.Item().Row(resumenRow =>
-                                {
-                                    resumenRow.RelativeItem().Text("IVA:").FontSize(10);
-                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{ivaGeneral:N2}").FontSize(10);
-                                });
-                                totalCol.Item().Row(resumenRow =>
-                                {
-                                    resumenRow.RelativeItem().Text("Total:").FontSize(11).Bold();
-                                    resumenRow.ConstantItem(100).AlignRight().Text($"Q{totalGeneral:N2}").FontSize(11).Bold();
-                                });
-                            });
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.RelativeColumn(3); // Producto
+                                        cols.ConstantColumn(50); // Cantidad
+                                        cols.ConstantColumn(70); // Precio
+                                        cols.ConstantColumn(70); // Subtotal
+                                        cols.ConstantColumn(70); // Utilidad
+                                    });
 
-                            // Estadísticas adicionales
-                            row.RelativeItem().PaddingLeft(10).Background(Colors.Blue.Lighten5).Padding(12).Border(1).BorderColor(Colors.Blue.Lighten2).Column(statsCol =>
-                            {
-                                statsCol.Item().Text("ESTADÍSTICAS").FontSize(11).Bold().FontColor(Colors.Blue.Darken3);
-                                statsCol.Item().PaddingTop(5).Text($"Total Ventas: {ventas.Count}").FontSize(10);
-                                statsCol.Item().Text($"Promedio por Venta: Q{(ventas.Count > 0 ? totalGeneral / ventas.Count : 0):N2}").FontSize(10);
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Producto").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignCenter().Text("Cant").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Precio").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Subtotal").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Utilidad").Bold().FontSize(8);
+                                    });
+
+                                    foreach (var d in v.Detalles)
+                                    {
+                                        table.Cell().Padding(2).Text(d.Nombre).FontSize(8);
+                                        table.Cell().Padding(2).AlignCenter().Text($"{d.Cantidad}").FontSize(8);
+                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Precio:N2}").FontSize(8);
+                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Subtotal:N2}").FontSize(8);
+                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Utilidad:N2}").FontSize(8);
+                                    }
+                                });
+
+                                // Totales por venta
+                                venta.Item().PaddingTop(3).AlignRight().Text(
+                                    $"Subtotal: Q{v.Subtotal:N2}   IVA: Q{v.Iva:N2}   Total: Q{v.Total:N2}   Utilidad: Q{v.UtilidadTotal:N2}"
+                                ).FontSize(9).Bold().FontColor(Colors.Blue.Darken2);
                             });
-                        });
+                        }
+
+                        // Línea de separación
+                        col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                        // Totales generales
+                        col.Item().AlignRight().Text(
+                            $"TOTAL GENERAL — Subtotal: Q{subtotalGeneral:N2} | IVA: Q{ivaGeneral:N2} | Total: Q{totalGeneral:N2} | Utilidad: Q{utilidadGeneral:N2}"
+                        ).FontSize(10).Bold().FontColor(Colors.Green.Darken3);
                     });
 
-                    // Footer mejorado - CORREGIDO
-                    page.Footer().Background(Colors.Grey.Lighten3).Padding(8).Row(footer =>
-                    {
-                        footer.RelativeItem().AlignLeft().Text(txt =>
-                        {
-                            txt.Span("Smartcell Company - ").FontSize(8).SemiBold();
-                            txt.Span("Sistema de Gestión Comercial").FontSize(8);
-                        });
-                        footer.RelativeItem().AlignRight().Text(txt =>
-                        {
-                            txt.CurrentPageNumber().FontSize(8).Bold();
-                            txt.Span(" / ").FontSize(8);
-                            txt.TotalPages().FontSize(8).Bold();
-                        });
-                    });
+                    // Footer
+                    page.Footer().AlignCenter().Text(
+                        $"Generado el {FechaLocal.Ahora():dd/MM/yyyy HH:mm} — Smartcell Company"
+                    ).FontSize(8).FontColor(Colors.Grey.Darken2);
                 });
             }).GeneratePdf();
 
-            return File(pdfBytes, "application/pdf", $"ReporteVentas_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteVentas_{FechaLocal.Ahora():ddMMyyyy HHmm}.pdf");
         }
+
 
 
 
@@ -369,6 +320,7 @@ namespace ProyectoLogin.Controllers
 
 
         // 🔹 Descargar PDF de compras
+        [HttpGet]
         public async Task<IActionResult> DescargarComprasPDF(DateTime? desde, DateTime? hasta, int? proveedorId)
         {
             var query = _context.Compras
@@ -377,127 +329,124 @@ namespace ProyectoLogin.Controllers
                     .ThenInclude(d => d.Producto)
                 .AsQueryable();
 
+            // Aplicar filtros
             if (desde.HasValue)
             {
                 var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
                 query = query.Where(c => c.FechaCompra >= desdeUtc);
             }
-
             if (hasta.HasValue)
             {
                 var hastaUtc = FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1));
                 query = query.Where(c => c.FechaCompra < hastaUtc);
             }
-
             if (proveedorId.HasValue)
                 query = query.Where(c => c.IdProveedor == proveedorId);
 
+            // Obtener datos
             var compras = await query
                 .OrderByDescending(c => c.FechaCompra)
                 .Select(c => new
                 {
                     Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
                     Proveedor = c.Proveedor.Nombre,
-                    
-                    Productos = string.Join(", ", c.Detalles.Select(d => d.Producto.Nombre)),
-                    Total = c.Total
+                    Total = c.Total,
+                    Detalles = c.Detalles.Select(d => new
+                    {
+                        Producto = d.Producto.Nombre,
+                        Cantidad = d.Cantidad,
+                        Precio = d.PrecioUnitario,
+                        Subtotal = d.Subtotal
+                    }).ToList()
                 })
                 .ToListAsync();
 
-            var totalGeneral = compras.Sum(c => c.Total);
-            var totalCompras = compras.Count;
+            decimal totalGeneral = compras.Sum(c => c.Total);
+            int totalCompras = compras.Count;
 
+            // Generar PDF con estilo de ventas
             var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Margin(40);
-                    page.Size(PageSizes.A4);
+                    page.Margin(25);
+                    page.Size(PageSizes.A4.Landscape());
                     page.PageColor(Colors.White);
 
-                    // Header simple
+                    // HEADER
                     page.Header().Column(header =>
                     {
-                        header.Item().AlignCenter().Text("Reporte de Compras")
-                            .FontSize(16).Bold().FontColor(Colors.Blue.Darken3);
-
-                        header.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
-
-                        // Información de filtros
-                        header.Item().PaddingBottom(10).Column(filterCol =>
-                        {
-                            filterCol.Item().Text(text =>
-                            {
-                                text.Span("Período: ").SemiBold();
-                                text.Span($"{desde?.ToString("dd/MM/yyyy") ?? "Todos"} - {hasta?.ToString("dd/MM/yyyy") ?? "Todos"}");
-                            });
-
-                            filterCol.Item().Text(text =>
-                            {
-                                text.Span("Total de compras: ").SemiBold();
-                                text.Span($"{totalCompras}");
-                            });
-                        });
+                        header.Item().Text("SMARTCELL COMPANY - REPORTE DE COMPRAS")
+                            .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
+                        header.Item().Text($"{desde?.ToString("dd/MM/yyyy") ?? "Inicio"} - {hasta?.ToString("dd/MM/yyyy") ?? "Fin"}")
+                            .FontSize(9).AlignCenter();
+                        header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
 
-                    // Contenido principal
-                    page.Content().PaddingVertical(10).Column(col =>
+                    // CONTENIDO
+                    page.Content().PaddingVertical(5).Column(col =>
                     {
-                        // Tabla simple
-                        col.Item().Table(table =>
+                        foreach (var compra in compras)
                         {
-                            table.ColumnsDefinition(columns =>
+                            col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingBottom(4).Column(c =>
                             {
-                                columns.ConstantColumn(70);   // Fecha
-                                columns.RelativeColumn(2);    // Proveedor
-                                columns.RelativeColumn(2);    // Productos
-                                columns.ConstantColumn(80);   // Total
+                                c.Item().Text($"Fecha: {compra.Fecha:dd/MM/yyyy}  |  Proveedor: {compra.Proveedor}")
+                                    .FontSize(9).Bold();
+
+                                // Tabla de detalles
+                                c.Item().PaddingTop(4).Table(table =>
+                                {
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.RelativeColumn(3);  // Producto
+                                        cols.ConstantColumn(60); // Cantidad
+                                        cols.ConstantColumn(80); // Precio
+                                        cols.ConstantColumn(90); // Subtotal
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Producto").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignCenter().Text("Cant").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Precio").Bold().FontSize(8);
+                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Subtotal").Bold().FontSize(8);
+                                    });
+
+                                    foreach (var d in compra.Detalles)
+                                    {
+                                        table.Cell().Padding(2).Text(d.Producto).FontSize(8);
+                                        table.Cell().Padding(2).AlignCenter().Text($"{d.Cantidad}").FontSize(8);
+                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Precio:N2}").FontSize(8);
+                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Subtotal:N2}").FontSize(8);
+                                    }
+                                });
+
+                                // Total de la compra
+                                c.Item().PaddingTop(3).AlignRight()
+                                    .Text($"TOTAL COMPRA: Q {compra.Total:N2}")
+                                    .FontSize(9).Bold().FontColor(Colors.Blue.Darken2);
                             });
+                        }
 
-                            // Encabezado de tabla
-                            table.Header(header =>
-                            {
-                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Fecha").Bold().FontSize(9);
-                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Proveedor").Bold().FontSize(9);
-                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Productos").Bold().FontSize(9);
-                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Total").Bold().FontSize(9);
-                            });
+                        // Línea separadora
+                        col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
 
-                            // Filas de datos
-                            foreach (var c in compras)
-                            {
-                                // Limitar texto de productos si es muy largo
-                                var productosTexto = c.Productos.Length > 80
-                                    ? c.Productos.Substring(0, 80) + "..."
-                                    : c.Productos;
-
-                                table.Cell().Padding(4).Text(c.Fecha.ToString("dd/MM/yyyy")).FontSize(9);
-                                table.Cell().Padding(4).Text(c.Proveedor).FontSize(9);
-                                table.Cell().Padding(4).Text(productosTexto).FontSize(9);
-                                table.Cell().Padding(4).AlignRight().Text($"Q {c.Total:N2}").FontSize(9);
-                            }
-                        });
-
-                        // Espacio antes del total
-                        col.Item().PaddingTop(15);
-
-                        // Total general
-                        col.Item().Background(Colors.Green.Lighten4).Padding(10).Border(1).BorderColor(Colors.Green.Lighten2).AlignCenter()
-                            .Text($"TOTAL GENERAL: Q {totalGeneral:N2}")
-                            .FontSize(12).Bold().FontColor(Colors.Green.Darken3);
+                        // Totales generales
+                        col.Item().AlignRight().Text(
+                            $"TOTAL GENERAL — Compras: {totalCompras}  |  Monto total: Q {totalGeneral:N2}"
+                        ).FontSize(10).Bold().FontColor(Colors.Green.Darken3);
                     });
 
-                    // Footer simple
-                    page.Footer().AlignCenter().Text(text =>
-                    {
-                        text.Span("Smartcell Company - ");
-                        text.Span(FechaLocal.Ahora().ToString("dd/MM/yyyy HH:mm"));
-                    });
+                    // FOOTER
+                    page.Footer().AlignCenter().Text(
+                        $"Generado el {FechaLocal.Ahora():dd/MM/yyyy HH:mm} — Smartcell Company"
+                    ).FontSize(8).FontColor(Colors.Grey.Darken2);
                 });
             }).GeneratePdf();
 
-            return File(pdfBytes, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():ddMMyyyy_HH_mm}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():ddMMyyyy HH:mm}.pdf");
         }
+
 
 
 
@@ -505,23 +454,19 @@ namespace ProyectoLogin.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> ReporteInventario(int? idCategoria, int? idProveedor, string nombre, bool pdf = false)
         {
-            // Cargar listas para filtros
+            // --- Filtros y datos base ---
             ViewBag.Categorias = await _context.Categorias.OrderBy(c => c.Nombre).ToListAsync();
             ViewBag.Proveedores = await _context.Proveedores.Where(p => p.Activo).OrderBy(p => p.Nombre).ToListAsync();
             ViewBag.IdCategoria = idCategoria;
             ViewBag.IdProveedor = idProveedor;
             ViewBag.Nombre = nombre ?? "";
 
-            // Base de productos
             var productosQuery = _context.Productos.AsQueryable();
 
             if (idCategoria.HasValue)
                 productosQuery = productosQuery.Where(p => p.IdCategoria == idCategoria.Value);
-
             if (!string.IsNullOrWhiteSpace(nombre))
                 productosQuery = productosQuery.Where(p => p.Nombre!.Contains(nombre));
-
-            // 🔹 Nuevo filtro real por proveedor
             if (idProveedor.HasValue)
             {
                 var idsProductosProveedor = await _context.ProductosProveedores
@@ -533,7 +478,6 @@ namespace ProyectoLogin.Controllers
                 productosQuery = productosQuery.Where(p => idsProductosProveedor.Contains(p.IdProducto));
             }
 
-            // Traer precios activos más recientes
             var preciosActivos = await _context.ProductoPrecio
                 .Where(pp => pp.Activo)
                 .GroupBy(pp => pp.IdProducto)
@@ -552,13 +496,12 @@ namespace ProyectoLogin.Controllers
                 var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == p.IdProducto);
                 var precio = preciosActivos.FirstOrDefault(x => x.IdProducto == p.IdProducto);
 
-                // Obtener proveedor principal (solo el primero)
                 var prodProv = await _context.ProductosProveedores
                     .Where(pp => pp.IdProducto == p.IdProducto)
                     .Join(_context.Proveedores,
                           pp => pp.IdProveedor,
                           pr => pr.IdProveedor,
-                          (pp, pr) => new { pr.IdProveedor, pr.Nombre })
+                          (pp, pr) => new { pr.Nombre })
                     .FirstOrDefaultAsync();
 
                 var proveedorNombre = prodProv?.Nombre ?? "";
@@ -571,8 +514,8 @@ namespace ProyectoLogin.Controllers
 
                 data.Add(new
                 {
-                    IdProducto = p.IdProducto,
-                    Nombre = p.Nombre,
+                    p.IdProducto,
+                    p.Nombre,
                     Categoria = p.Categoria?.Nombre ?? "",
                     Proveedor = proveedorNombre,
                     StockActual = stockActual,
@@ -583,73 +526,106 @@ namespace ProyectoLogin.Controllers
                 });
             }
 
-            // PDF opcional
+            // --- PDF con nuevo estilo ---
             if (pdf)
             {
                 var totalInventario = data.Cast<dynamic>().Sum(d => (decimal)d.ValorTotal);
 
-                var doc = Document.Create(container =>
+                var pdfBytes = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
                         page.Margin(25);
-                        page.Size(PageSizes.A4);
-                        page.Header().Text("Reporte de Inventario").FontSize(16).Bold().AlignCenter();
-                        page.Content().Table(table =>
+                        page.Size(PageSizes.A4.Landscape());
+                        page.PageColor(Colors.White);
+
+                        // HEADER
+                        page.Header().Column(header =>
                         {
-                            table.ColumnsDefinition(cols =>
-                            {
-                                cols.RelativeColumn();
-                                cols.RelativeColumn();
-                                cols.RelativeColumn();
-                                cols.ConstantColumn(50);
-                                cols.ConstantColumn(50);
-                                cols.ConstantColumn(70);
-                                cols.ConstantColumn(70);
-                                cols.ConstantColumn(80);
-                            });
-
-                            // Header
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Producto").Bold();
-                                header.Cell().Text("Categoría").Bold();
-                                header.Cell().Text("Proveedor").Bold();
-                                header.Cell().AlignCenter().Text("Stock").Bold();
-                                header.Cell().AlignCenter().Text("Min").Bold();
-                                header.Cell().AlignRight().Text("Sin IVA").Bold();
-                                header.Cell().AlignRight().Text("Con IVA").Bold();
-                                header.Cell().AlignRight().Text("Total").Bold();
-                            });
-
-                            foreach (var item in data)
-                            {
-                                dynamic it = item;
-                                table.Cell().Text((string)it.Nombre);
-                                table.Cell().Text((string)it.Categoria);
-                                table.Cell().Text((string)it.Proveedor);
-                                table.Cell().AlignCenter().Text(((int)it.StockActual).ToString());
-                                table.Cell().AlignCenter().Text(((int)it.StockMinimo).ToString());
-                                table.Cell().AlignRight().Text($"Q{((decimal)it.PrecioSinIVA):N2}");
-                                table.Cell().AlignRight().Text($"Q{((decimal)it.PrecioConIVA):N2}");
-                                table.Cell().AlignRight().Text($"Q{((decimal)it.ValorTotal):N2}");
-                            }
-
-                            static IContainer CellStyle(IContainer c) => c.PaddingVertical(4).PaddingHorizontal(2);
+                            header.Item().Text("SMARTCELL COMPANY - REPORTE DE INVENTARIO")
+                                .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
+                            header.Item().Text($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                                .FontSize(9).AlignCenter().FontColor(Colors.Grey.Darken2);
+                            header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         });
 
-                        page.Footer().AlignRight().Text($"Valor total inventario: Q{totalInventario:N2}").Bold();
-                    });
-                });
+                        // CONTENIDO (solo una llamada)
+                        page.Content().PaddingVertical(5).Column(col =>
+                        {
+                            // Tabla
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.RelativeColumn(2);   // Producto
+                                    cols.RelativeColumn(1.5f); // Categoría
+                                    cols.RelativeColumn(1.5f); // Proveedor
+                                    cols.ConstantColumn(55);    // Stock
+                                    cols.ConstantColumn(55);    // Mínimo
+                                    cols.ConstantColumn(75);    // Precio sin IVA
+                                    cols.ConstantColumn(75);    // Precio con IVA
+                                    cols.ConstantColumn(90);    // Total
+                                });
 
-                var pdfBytes = doc.GeneratePdf();
+                                // Encabezado
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Producto").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Categoría").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Proveedor").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Stock").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Min").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignRight().Text("Sin IVA").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignRight().Text("Con IVA").Bold().FontColor(Colors.White).FontSize(8);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignRight().Text("Total").Bold().FontColor(Colors.White).FontSize(8);
+                                });
+
+                                int i = 0;
+                                foreach (var item in data)
+                                {
+                                    var nombre = (item.GetType().GetProperty("Nombre")?.GetValue(item) ?? "").ToString() ?? "";
+                                    var categoria = (item.GetType().GetProperty("Categoria")?.GetValue(item) ?? "").ToString() ?? "";
+                                    var proveedor = (item.GetType().GetProperty("Proveedor")?.GetValue(item) ?? "").ToString() ?? "";
+                                    int stockActual = Convert.ToInt32(item.GetType().GetProperty("StockActual")?.GetValue(item) ?? 0);
+                                    int stockMinimo = Convert.ToInt32(item.GetType().GetProperty("StockMinimo")?.GetValue(item) ?? 0);
+                                    decimal precioSinIVA = Convert.ToDecimal(item.GetType().GetProperty("PrecioSinIVA")?.GetValue(item) ?? 0m);
+                                    decimal precioConIVA = Convert.ToDecimal(item.GetType().GetProperty("PrecioConIVA")?.GetValue(item) ?? 0m);
+                                    decimal valorTotal = Convert.ToDecimal(item.GetType().GetProperty("ValorTotal")?.GetValue(item) ?? 0m);
+
+                                    var bg = i++ % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+
+                                    table.Cell().Background(bg).Padding(3).Text(nombre).FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).Text(categoria).FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).Text(proveedor).FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).AlignCenter().Text(stockActual.ToString()).FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).AlignCenter().Text(stockMinimo.ToString()).FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).AlignRight().Text($"Q {precioSinIVA:N2}").FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).AlignRight().Text($"Q {precioConIVA:N2}").FontSize(8);
+                                    table.Cell().Background(bg).Padding(3).AlignRight().Text($"Q {valorTotal:N2}").FontSize(8);
+                                }
+                            });
+
+                            // Resumen (en la misma columna)
+                            col.Item().PaddingTop(10).AlignRight().Text(
+                                $"VALOR TOTAL DEL INVENTARIO: Q {totalInventario:N2}"
+                            ).FontSize(10).Bold().FontColor(Colors.Green.Darken3);
+                        });
+
+                        // FOOTER
+                        page.Footer().AlignCenter().Text(
+                            "Smartcell Company — Sistema de Gestión Comercial"
+                        ).FontSize(8).FontColor(Colors.Grey.Darken2);
+                    });
+                }).GeneratePdf();
+
                 return File(pdfBytes, "application/pdf", "ReporteInventario.pdf");
             }
 
-            // Enviar total a la vista
+            // Vista normal
             ViewBag.TotalInventario = data.Cast<dynamic>().Sum(d => (decimal)d.ValorTotal);
             return View("~/Views/Reportes/ReporteInventario.cshtml", data);
         }
+
 
 
 
@@ -694,57 +670,88 @@ namespace ProyectoLogin.Controllers
                 })
                 .ToListAsync();
 
-            // 🔹 Generar PDF
+            // 🔹 Generar PDF con estilo
             if (pdf)
             {
-                var doc = Document.Create(container =>
+                var pdfBytes = Document.Create(container =>
                 {
                     container.Page(page =>
                     {
                         page.Margin(25);
                         page.Size(PageSizes.A4);
-                        page.Header().AlignCenter().Text("Reporte de Ajustes de Inventario").Bold().FontSize(16);
+                        page.PageColor(Colors.White);
 
-                        page.Content().Table(table =>
+                        // 🔸 Encabezado
+                        page.Header().Column(header =>
                         {
-                            table.ColumnsDefinition(cols =>
-                            {
-                                cols.ConstantColumn(80);   // Fecha
-                                cols.RelativeColumn(2);    // Producto
-                                cols.ConstantColumn(60);   // Cantidad
-                                cols.ConstantColumn(70);   // Tipo
-                                cols.RelativeColumn(2);    // Motivo
-                            });
+                            header.Item().Text("SMARTCELL COMPANY - REPORTE DE AJUSTES DE INVENTARIO")
+                                .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
 
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Fecha").Bold();
-                                header.Cell().Text("Producto").Bold();
-                                header.Cell().AlignCenter().Text("Cantidad").Bold();
-                                header.Cell().AlignCenter().Text("Tipo").Bold();
-                                header.Cell().Text("Motivo").Bold();
-                            });
+                            header.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                                .FontSize(9).AlignCenter().FontColor(Colors.Grey.Darken2);
 
-                            foreach (var item in data)
-                            {
-                                table.Cell().Text(item.Fecha.ToString("dd/MM/yyyy HH:mm"));
-                                table.Cell().Text(item.Producto);
-                                table.Cell().AlignCenter().Text(item.Cantidad.ToString());
-                                table.Cell().AlignCenter().Text(item.Tipo);
-                                table.Cell().Text(item.Motivo);
-                            }
+                            header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         });
 
-                        page.Footer().AlignCenter().Text($"Generado: {FechaLocal.Ahora():dd/MM/yyyy HH:mm}");
-                    });
-                });
+                        // 🔸 Contenido principal
+                        page.Content().PaddingVertical(5).Column(col =>
+                        {
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(cols =>
+                                {
+                                    cols.ConstantColumn(90);   // Fecha
+                                    cols.RelativeColumn(2);    // Producto
+                                    cols.ConstantColumn(70);   // Cantidad
+                                    cols.ConstantColumn(70);   // Tipo
+                                    cols.RelativeColumn(3);    // Motivo
+                                });
 
-                var pdfBytes = doc.GeneratePdf();
-                return File(pdfBytes, "application/pdf", $"ReporteAjustesInventario_{FechaLocal.Ahora():dd/MM/yyyy_HHmm}.pdf");
+                                // Encabezado de tabla
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Fecha").Bold().FontColor(Colors.White).FontSize(9);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Producto").Bold().FontColor(Colors.White).FontSize(9);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Cantidad").Bold().FontColor(Colors.White).FontSize(9);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Tipo").Bold().FontColor(Colors.White).FontSize(9);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Motivo").Bold().FontColor(Colors.White).FontSize(9);
+                                });
+
+                                int i = 0;
+                                foreach (var item in data)
+                                {
+                                    var bg = i++ % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
+                                    table.Cell().Background(bg).Padding(3).Text(item.Fecha.ToString("dd/MM/yyyy HH:mm")).FontSize(9);
+                                    table.Cell().Background(bg).Padding(3).Text(item.Producto).FontSize(9);
+                                    table.Cell().Background(bg).Padding(3).AlignCenter().Text(item.Cantidad.ToString()).FontSize(9);
+                                    table.Cell().Background(bg).Padding(3).AlignCenter()
+                                        .Text(item.Tipo)
+                                        .FontColor(item.Tipo == "Entrada" ? Colors.Green.Darken2 : Colors.Red.Darken2)
+                                        .Bold().FontSize(9);
+                                    table.Cell().Background(bg).Padding(3).Text(item.Motivo ?? "-").FontSize(9);
+                                }
+                            });
+
+                            // Espacio
+                            col.Item().PaddingTop(10);
+
+                            // Resumen
+                            col.Item().AlignRight().Text($"Total de ajustes: {data.Count}")
+                                .FontSize(10).Bold().FontColor(Colors.Green.Darken3);
+                        });
+
+                        // 🔸 Pie de página
+                        page.Footer().AlignCenter().Text("Smartcell Company — Sistema de Gestión Comercial")
+                            .FontSize(8).FontColor(Colors.Grey.Darken2);
+                    });
+                }).GeneratePdf();
+
+                return File(pdfBytes, "application/pdf", $"ReporteAjustesInventario_{FechaLocal.Ahora():ddMMyyyy_HHmm}.pdf");
             }
 
             return View("~/Views/Reportes/ReporteAjustesInventario.cshtml", data);
         }
+
 
 
 

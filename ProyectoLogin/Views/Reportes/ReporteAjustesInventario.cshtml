@@ -3,72 +3,172 @@
     ViewData["Title"] = "Reporte de Ajustes de Inventario";
 }
 
-<div class="container mt-4">
-    <h3 class="text-primary mb-3"><i class="bi bi-box-arrow-up-right"></i> Reporte de Ajustes de Inventario</h3>
-
-    <form method="get" class="row g-3 mb-3">
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Desde</label>
-            <input type="date" name="desde" class="form-control" value="@Context.Request.Query["desde"]" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Hasta</label>
-            <input type="date" name="hasta" class="form-control" value="@Context.Request.Query["hasta"]" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Usuario</label>
-            <input type="text" name="nombreUsuario" class="form-control" placeholder="Nombre del usuario" value="@Context.Request.Query["nombreUsuario"]" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label fw-bold">Tipo de Ajuste</label>
-            <select name="tipo" class="form-select">
-                <option value="">Todos</option>
-                <option value="entrada" selected="@(Context.Request.Query["tipo"] == "entrada")">Entrada</option>
-                <option value="salida" selected="@(Context.Request.Query["tipo"] == "salida")">Salida</option>
-            </select>
+<div class="container-fluid mt-4">
+    <div class="card shadow mb-4">
+        <!-- 🔹 Encabezado -->
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold text-primary">
+                <i class="bi bi-box-arrow-up-right"></i> Reporte de Ajustes de Inventario
+            </h5>
         </div>
 
-        <div class="col-12 text-end mt-3">
-            <button type="submit" class="btn btn-primary me-2"><i class="bi bi-search"></i> Filtrar</button>
-            <a asp-action="ReporteAjustesInventario" asp-route-pdf="true" class="btn btn-success me-2"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</a>
-            <a asp-action="ReporteAjustesInventario" class="btn btn-warning"><i class="bi bi-eraser"></i> Limpiar</a>
+        <div class="card-body">
+            <!-- 🔹 Formulario de filtros -->
+            <form method="get" class="row g-3 mb-3" id="filtroForm">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Desde</label>
+                    <input type="date" name="desde" class="form-control" value="@Context.Request.Query["desde"]" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Hasta</label>
+                    <input type="date" name="hasta" class="form-control" value="@Context.Request.Query["hasta"]" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Usuario</label>
+                    <input type="text" name="nombreUsuario" class="form-control" placeholder="Nombre del usuario" value="@Context.Request.Query["nombreUsuario"]" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Tipo de Ajuste</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="entrada" selected="@(Context.Request.Query["tipo"] == "entrada")">Entrada</option>
+                        <option value="salida" selected="@(Context.Request.Query["tipo"] == "salida")">Salida</option>
+                    </select>
+                </div>
+
+                <!-- 🔘 Botones -->
+                <div class="col-12 mt-3 d-flex flex-wrap gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+
+                    <a asp-action="ReporteAjustesInventario" asp-route-pdf="true" class="btn btn-success me-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                    </a>
+
+                    <button type="button" id="btnLimpiar" class="btn btn-warning me-2">
+                        <i class="bi bi-eraser"></i> Limpiar Filtros
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle"></i> Volver a Reportes
+                    </a>
+                </div>
+            </form>
+
+            <!-- 🔹 Tabla de resultados -->
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive mt-4">
+                    <table class="table table-bordered table-hover align-middle text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Tipo</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-start">@item.Producto</td>
+                                    <td>@item.Cantidad</td>
+                                    <td class="@(item.Tipo == "Entrada" ? "text-success fw-bold" : "text-danger fw-bold")">@item.Tipo</td>
+                                    <td class="text-start">@item.Motivo</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> No se encontraron ajustes con los filtros aplicados.
+                </div>
+            }
         </div>
-    </form>
-
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark text-center align-middle">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Tipo</th>
-                    <th>Motivo</th>
-                </tr>
-            </thead>
-            <tbody class="text-center">
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var item in Model)
-                    {
-                        <tr>
-                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@item.Producto</td>
-                            <td>@item.Cantidad</td>
-                            <td class="@(item.Tipo == "Entrada" ? "text-success" : "text-danger") fw-bold">@item.Tipo</td>
-                            <td>@item.Motivo</td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr><td colspan="5" class="text-muted text-center">No se encontraron ajustes</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-3 text-end">
-        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle"></i> Volver a Reportes</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#btnLimpiar').click(function () {
+                $('input[name="desde"], input[name="hasta"], input[name="nombreUsuario"]').val('');
+                $('select[name="tipo"]').val('');
+                $('#filtroForm').submit();
+            });
+        });
+    </script>
+
+    <style>
+        /* 🔹 Estilo general */
+        .table th {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .table td {
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-dark th {
+            background-color: #2c3e50 !important;
+            color: #fff !important;
+        }
+
+        .card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+        }
+
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .alert-info {
+            background-color: #e8f4fd;
+            border-color: #b6e0fe;
+            color: #084298;
+        }
+
+        .btn i {
+            margin-right: 4px;
+        }
+
+        /* 🔹 Mejoras visuales */
+        .text-success {
+            color: #28a745 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 0.375rem;
+        }
+
+        .btn {
+            font-weight: 500;
+        }
+    </style>
+}

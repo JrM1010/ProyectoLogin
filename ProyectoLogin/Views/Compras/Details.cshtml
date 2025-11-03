@@ -1,0 +1,98 @@
+﻿@model ProyectoLogin.Models.ModelosCompras.Compra
+@{
+    ViewData["Title"] = "Detalle de Compra";
+}
+
+<div class="card shadow-sm mt-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="bi bi-receipt"></i> Detalle de Compra #@Model.IdCompra</h4>
+        <a class="btn btn-light btn-sm" href="@Url.Action("Index", "Compras", new { estado = Model.Estado })">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
+
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h5 class="text-secondary">Información del Proveedor</h5>
+                <p class="mb-1"><strong>Nombre:</strong> @Model.Proveedor?.Nombre</p>
+                <p class="mb-1"><strong>Teléfono:</strong> @Model.Proveedor?.Telefono</p>
+                <p class="mb-1"><strong>Correo:</strong> @Model.Proveedor?.Email</p>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-secondary">Detalles de la Compra</h5>
+                <p class="mb-1"><strong>Fecha:</strong> @Model.FechaCompra.ToString("dd/MM/yyyy HH:mm")</p>
+                <p class="mb-1">
+                    <strong>Estado:</strong>
+                    <span class="badge bg-@(Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Confirmada" ? "info" : "success")">
+                        @Model.Estado
+                    </span>
+                </p>
+                <p class="mb-1"><strong>Método de Pago:</strong> @Model.MetodoPago</p>
+                @if (!string.IsNullOrEmpty(Model.Observaciones))
+                {
+                    <p class="mb-1"><strong>Observaciones:</strong> @Model.Observaciones</p>
+                }
+            </div>
+        </div>
+
+        <hr />
+
+        <h5 class="text-secondary mb-3">Productos Comprados</h5>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Unidad</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end">Descuento</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Detalles != null && Model.Detalles.Any())
+                    {
+                        foreach (var item in Model.Detalles)
+                        {
+                            <tr>
+                                <td>@item.Producto?.CodigoBarras</td>
+                                <td>@item.Producto?.Nombre</td>
+                                <td>@item.UnidadMedida?.Nombre</td>
+                                <td class="text-end">@item.Cantidad.ToString("N0")</td>
+                                <td class="text-end">Q@(item.PrecioUnitario.ToString("N2"))</td>
+                                <td class="text-end">
+                                    @(item.Descuento > 0 ? (item.Descuento * 100).ToString("N0") + "%" : "-")
+                                </td>
+                                <td class="text-end">Q@(item.Subtotal.ToString("N2"))</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No hay productos registrados en esta compra.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 d-flex flex-column align-items-end">
+            <p class="mb-1 fs-6">
+                <strong>Subtotal:</strong>
+                <span class="text-dark">Q@(Model.Subtotal.ToString("#,##0.00"))</span>
+            </p>
+            <p class="mb-1 fs-6">
+                <strong>IVA (12%):</strong>
+                <span class="text-dark">Q@(Model.IVA.ToString("#,##0.00"))</span>
+            </p>
+            <h5 class="text-primary">
+                <strong>Total:</strong>
+                <span class="fw-bold">Q@(Model.Total.ToString("#,##0.00"))</span>
+            </h5>
+        </div>
+    </div>
+</div>

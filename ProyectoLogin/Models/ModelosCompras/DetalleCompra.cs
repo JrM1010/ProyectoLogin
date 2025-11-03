@@ -1,4 +1,5 @@
 ﻿using ProyectoLogin.Models.ModelosProducts;
+using ProyectoLogin.Models.UnidadesDeMedida;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -24,6 +25,6 @@ namespace ProyectoLogin.Models.ModelosCompras
         public virtual Compra? Compra { get; set; }
         public virtual ProductoCore? Producto { get; set; }
 
-
+        public virtual UnidadMedida? UnidadMedida { get; set; }
     }
 }

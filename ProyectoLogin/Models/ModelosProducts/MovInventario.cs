@@ -32,8 +32,5 @@ namespace ProyectoLogin.Models.ModelosProducts
         public string? Observacion { get; set; }
 
         public virtual ProductoCore? Producto { get; set; }
-
-
-
     }
 }
