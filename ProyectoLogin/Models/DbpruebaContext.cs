@@ -57,6 +57,9 @@ public partial class DbPruebaContext : DbContext
     public IEnumerable<object> DetalleVenta { get; internal set; }
 
 
+    //Registro de movimientos (bitácora)    
+    public DbSet<BitacoraMovimiento> BitacoraMovimientos { get; set; }
+
 
 
 

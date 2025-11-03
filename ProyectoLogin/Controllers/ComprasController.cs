@@ -8,6 +8,7 @@ using ProyectoLogin.Models.UnidadesDeMedida;
 using ProyectoLogin.Recursos;
 using System;
 
+
 namespace ProyectoLogin.Controllers
 {
     [Authorize(Roles = "Administrador,Gerente")]
@@ -126,6 +127,18 @@ namespace ProyectoLogin.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                // 🔹 Registrar movimiento en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Registro de compra",
+                    Descripcion = $"Compra #{compra.IdCompra} creada para el proveedor ID {compra.IdProveedor}",
+                    Modulo = "Compras",
+                    Fecha = FechaLocal.Ahora()
+                });
+                await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Compra creada correctamente.";
                 return RedirectToAction(nameof(Index), new { estado = "Pendiente" });
@@ -250,6 +263,21 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+
+                // 🔹 Registrar movimiento en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Edición de compra",
+                    Descripcion = $"Compra #{compraExistente.IdCompra} modificada.",
+                    Modulo = "Compras",
+                    Fecha = FechaLocal.Ahora()
+                });
+                await _context.SaveChangesAsync();
+
+
+
                 TempData["Success"] = "Compra actualizada correctamente.";
                 return RedirectToAction(nameof(Index), new { estado = "Pendiente" });
             }
@@ -287,6 +315,20 @@ namespace ProyectoLogin.Controllers
 
                 await ActualizarInventarioYPreciosAsync(compra);
                 await _context.SaveChangesAsync();
+
+
+                // 🔹 Registrar movimiento en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Confirmación de compra",
+                    Descripcion = $"Compra #{compra.IdCompra} confirmada por el usuario.",
+                    Modulo = "Compras",
+                    Fecha = FechaLocal.Ahora()
+                });
+                await _context.SaveChangesAsync();
+
 
                 await transaction.CommitAsync();
                 TempData["Success"] = "Compra confirmada correctamente.";
@@ -336,7 +378,21 @@ namespace ProyectoLogin.Controllers
             }
 
             _context.Compras.Remove(compra);
+
             await _context.SaveChangesAsync();
+
+            // 🔹 Registrar movimiento en bitácora
+            var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+            _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+            {
+                IdUsuario = idUsuario,
+                Accion = "Cancelación de compra",
+                Descripcion = $"Compra #{compra.IdCompra} cancelada.",
+                Modulo = "Compras",
+                Fecha = FechaLocal.Ahora()
+            });
+            await _context.SaveChangesAsync();
+
 
             TempData["Success"] = "Compra cancelada correctamente.";
             return RedirectToAction(nameof(Index), new { estado = "Pendiente" });

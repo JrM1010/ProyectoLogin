@@ -322,6 +322,22 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // 🔹 Registrar movimiento en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Registro de venta",
+                    Descripcion = $"Venta #{venta.NumeroVenta} realizada al cliente {(venta.Cliente?.Nombres ?? "Sin cliente asignado")}. Total: Q{venta.Total:F2}",
+                    Modulo = "Ventas",
+                    Fecha = FechaLocal.Ahora()
+                });
+
+                await _context.SaveChangesAsync();
+
+
+
                 return Ok(new
                 {
                     success = true,
@@ -457,6 +473,21 @@ namespace ProyectoLogin.Controllers
 
             _context.Clientes.Add(nuevo);
             await _context.SaveChangesAsync();
+
+            // 🔹 Registrar movimiento en bitácora
+            var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+            _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+            {
+                IdUsuario = idUsuario,
+                Accion = "Registro de cliente rápido",
+                Descripcion = $"Cliente {nuevo.Nombres} {nuevo.Apellidos} (NIT: {nuevo.Nit}) agregado desde el módulo de ventas.",
+                Modulo = "Ventas",
+                Fecha = FechaLocal.Ahora()
+            });
+
+            await _context.SaveChangesAsync();
+
 
             return Ok(new
             {

@@ -146,6 +146,23 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // 🔹 Registrar movimiento en la bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+                string tipoAccion = request.TipoAjuste == "entrada" ? "Ajuste de entrada" : "Ajuste de salida";
+
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = tipoAccion,
+                    Descripcion = $"Producto ID {request.IdProducto}: {tipoAccion.ToLower()} de {request.Cantidad} unidades. Motivo: {request.Motivo}.",
+                    Modulo = "Inventario",
+                    Fecha = FechaLocal.Ahora()
+                });
+
+                await _context.SaveChangesAsync();
+
+
                 return Json(new
                 {
                     success = true,

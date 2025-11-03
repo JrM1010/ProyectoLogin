@@ -202,6 +202,21 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // 🔹 Registrar movimiento en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Creación de kit",
+                    Descripcion = $"Se creó el kit '{kit.Nombre}' con {detallesAGuardar.Count} productos. Total: Q{kit.Total:F2}.",
+                    Modulo = "Kits",
+                    Fecha = FechaLocal.Ahora()
+                });
+
+                await _context.SaveChangesAsync();
+
+
                 return Ok(new { success = true, idKit = kit.IdKit });
             }
             catch (Exception ex)
@@ -242,10 +257,184 @@ namespace ProyectoLogin.Controllers
             _context.Kits.Remove(kit);
             await _context.SaveChangesAsync();
 
+            // 🔹 Registrar movimiento en bitácora
+            var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+            _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+            {
+                IdUsuario = idUsuario,
+                Accion = "Eliminación de kit",
+                Descripcion = $"Se eliminó el kit '{kit.Nombre}' (ID {kit.IdKit}) con {kit.Detalles.Count} productos.",
+                Modulo = "Kits",
+                Fecha = FechaLocal.Ahora()
+            });
+
+            await _context.SaveChangesAsync();
+
+
             return Ok(new { success = true });
         }
 
 
+        // GET: /Kits/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var kit = await _context.Kits
+                .Include(k => k.Detalles!)
+                    .ThenInclude(d => d.Producto)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(k => k.IdKit == id);
+
+            if (kit == null) return NotFound();
+
+            // Traer productos activos y su precio de venta actual (igual que en Create)
+            var productos = await _context.Productos
+                .Where(p => p.Activo)
+                .Select(p => new
+                {
+                    p.IdProducto,
+                    p.Nombre,
+                    PrecioVenta = _context.ProductoPrecio
+                        .Where(pp => pp.IdProducto == p.IdProducto && pp.Activo)
+                        .OrderByDescending(pp => pp.FechaInicio)
+                        .Select(pp => pp.PrecioVenta)
+                        .FirstOrDefault()
+                })
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewBag.Productos = productos;
+            return View(kit);
+        }
+
+
+        // POST: /Kits/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit([FromBody] EditKitRequest request)
+        {
+            if (request == null || request.IdKit <= 0 || string.IsNullOrWhiteSpace(request.Nombre))
+                return BadRequest(new { success = false, message = "Datos inválidos." });
+
+            if (request.Items == null || !request.Items.Any())
+                return BadRequest(new { success = false, message = "Agrega al menos un producto al kit." });
+
+            // Normalizar descuento
+            decimal descuentoPct = request.DescuentoPct <= 0 ? 0m : request.DescuentoPct;
+            if (descuentoPct > 1m && descuentoPct <= 100m) descuentoPct = descuentoPct / 100m;
+
+            var kit = await _context.Kits
+                .Include(k => k.Detalles)
+                .FirstOrDefaultAsync(k => k.IdKit == request.IdKit);
+
+            if (kit == null) return NotFound(new { success = false, message = "Kit no encontrado." });
+
+            var productoIds = request.Items.Select(i => i.IdProducto).Distinct().ToList();
+
+            // Obtener precios snapshot (precio activo más reciente)
+            var precios = await _context.ProductoPrecio
+                .Where(pp => productoIds.Contains(pp.IdProducto) && pp.Activo)
+                .GroupBy(pp => pp.IdProducto)
+                .Select(g => new
+                {
+                    IdProducto = g.Key,
+                    Precio = g.OrderByDescending(x => x.FechaInicio).FirstOrDefault().PrecioVenta
+                })
+                .ToListAsync();
+
+            decimal subtotal = 0m;
+            var nuevosDetalles = new List<KitDetalle>();
+
+            foreach (var it in request.Items)
+            {
+                var p = precios.FirstOrDefault(x => x.IdProducto == it.IdProducto);
+                decimal precioActual = p?.Precio ?? 0m;
+
+                if (precioActual <= 0m)
+                {
+                    return BadRequest(new { success = false, message = $"El producto {it.IdProducto} no tiene precio de venta activo." });
+                }
+
+                var kd = new KitDetalle
+                {
+                    IdProducto = it.IdProducto,
+                    Cantidad = it.Cantidad,
+                    PrecioUnitarioSnapshot = precioActual,
+                    IdKit = kit.IdKit // se setea antes de guardar
+                };
+
+                nuevosDetalles.Add(kd);
+                subtotal += precioActual * it.Cantidad;
+            }
+
+            decimal descuento = subtotal * descuentoPct;
+            decimal total = subtotal - descuento;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Eliminar detalles antiguos
+                if (kit.Detalles != null && kit.Detalles.Any())
+                {
+                    _context.KitDetalles.RemoveRange(kit.Detalles);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Actualizar datos del kit
+                kit.Nombre = request.Nombre;
+                kit.Descripcion = request.Descripcion;
+                kit.Subtotal = subtotal;
+                kit.DescuentoPct = descuentoPct;
+                kit.Total = total;
+                kit.Activo = request.Activo; // si lo incluyes
+                                             // Si tienes campo FechaModificacion: kit.FechaModificacion = FechaLocal.Ahora();
+
+                _context.Kits.Update(kit);
+                await _context.SaveChangesAsync();
+
+                // Agregar nuevos detalles
+                foreach (var d in nuevosDetalles)
+                {
+                    d.IdKit = kit.IdKit;
+                    _context.KitDetalles.Add(d);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Registrar bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Edición de kit",
+                    Descripcion = $"Se editó el kit '{kit.Nombre}' (ID {kit.IdKit}). Ahora tiene {nuevosDetalles.Count} productos. Total: Q{kit.Total:F2}.",
+                    Modulo = "Kits",
+                    Fecha = FechaLocal.Ahora()
+                });
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, idKit = kit.IdKit });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(new { success = false, message = "Error actualizando kit: " + ex.Message });
+            }
+        }
+
+        #region DTOs adicionales para Edit
+        public class EditKitRequest
+        {
+            public int IdKit { get; set; }
+            public string Nombre { get; set; } = null!;
+            public string? Descripcion { get; set; }
+            public bool Activo { get; set; } = true;
+            public decimal DescuentoPct { get; set; } = 0m;
+            public List<ItemRequest> Items { get; set; } = new List<ItemRequest>();
+        }
+        #endregion
 
 
         #region DTOs

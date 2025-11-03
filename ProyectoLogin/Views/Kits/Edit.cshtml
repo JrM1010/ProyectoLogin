@@ -1,0 +1,337 @@
+﻿@model ProyectoLogin.Models.Promociones.Kit
+
+@{
+    ViewData["Title"] = "Editar Kit";
+    // Asegurarse que ViewBag.Productos no sea null
+    var productos = (ViewBag.Productos as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
+    // Asegurarse que Model y Model.Detalles no sean null antes de usarlos en la vista
+    var detalles = Model?.Detalles ?? Enumerable.Empty<dynamic>();
+    var gt = new System.Globalization.CultureInfo("es-GT");
+}
+<div class="container">
+    <h2><i class="bi bi-pencil-square me-2"></i>Editar kit / promoción</h2>
+
+    <form id="form-edit-kit" method="post" onsubmit="return false;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" id="IdKit" value="@(Model?.IdKit ?? 0)" />
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input id="Nombre" class="form-control" value="@(Model?.Nombre ?? String.Empty)" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Descuento (%)</label>
+                <input id="DescuentoPct" type="number" step="1" min="0" max="10" class="form-control"
+                       value="@(((Model?.DescuentoPct ?? 0m) * 100).ToString("F2"))" />
+                <div class="form-text">Ingresa porcentaje (ej: 10 para 10%).</div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Descripción (opcional)</label>
+                <textarea id="Descripcion" class="form-control" rows="2">@((Model?.Descripcion) ?? String.Empty)</textarea>
+            </div>
+
+            <div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Productos del kit</strong>
+                        <div>
+                            <select id="select-producto" class="form-select d-inline-block" style="width:320px;">
+                                <option value="">— seleccionar producto —</option>
+                                @foreach (var p in productos)
+                                {
+                                    // proteger propiedades ausentes
+                                    var id = p?.IdProducto ?? 0;
+                                    var nombre = p?.Nombre ?? $"Producto {id}";
+                                    var precio = (p?.PrecioVenta ?? 0m);
+                                    <option value="@id" data-precio="@precio">@nombre</option>
+                                }
+                            </select>
+                            <button id="btn-add-producto" class="btn btn-primary btn-sm ms-2">Agregar</button>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0" id="tabla-items">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th style="width:100px;">Cantidad</th>
+                                        <th style="width:140px;">Precio unit. (snapshot)</th>
+                                        <th style="width:120px;">Subtotal</th>
+                                        <th style="width:80px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @* Renderizar items existentes con seguridad *@
+                                    @foreach (var d in detalles)
+                                    {
+                                        // d puede ser de tipo KitDetalle o dinámico; proteger accesos
+                                        var idProd = (int?)(d?.IdProducto) ?? 0;
+                                        var nombreProd = (string?)(d?.Producto?.Nombre) ?? (d?.Nombre ?? $"Producto {idProd}");
+                                        var cantidad = (int?)(d?.Cantidad) ?? 1;
+                                        var precioSnap = (decimal?)(d?.PrecioUnitarioSnapshot) ?? 0m;
+                                        <tr data-idproducto="@idProd">
+                                            <td class="nombre">@nombreProd</td>
+                                            <td>
+                                                <input class="form-control cantidad" type="number" min="1" value="@cantidad" />
+                                            </td>
+                                            <td class="precio">@precioSnap.ToString("F2")</td>
+                                            <td class="subtotal">@((precioSnap * cantidad).ToString("F2"))</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger btn-eliminar">✕</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-end align-items-center gap-4">
+                        <div class="text-end">
+                            <div>Subtotal: <strong id="txt-subtotal">Q0.00</strong></div>
+                            <div>Descuento: <strong id="txt-descuento">Q0.00</strong></div>
+                            <div class="fs-4">Total: <strong id="txt-total">Q0.00</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button id="btn-guardar" class="btn btn-success">Guardar cambios</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            // Rutas generadas por MVC (aseguran area/routing correcto)
+            const editUrl = '@Url.Action("Edit", "Kits")';
+            const indexUrl = '@Url.Action("Index", "Kits")';
+
+            // Tomar token anti-forgery
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+
+            function parseNumber(v) {
+                const n = parseFloat(v);
+                return isNaN(n) ? 0 : n;
+            }
+
+            // --- funciones de manipulación de tabla y cálculo ---
+            function recalcRow(tr) {
+                const cantidad = parseNumber(tr.querySelector('.cantidad').value);
+                const precio = parseNumber(tr.querySelector('.precio').textContent);
+                tr.querySelector('.subtotal').textContent = (cantidad * precio).toFixed(2);
+            }
+
+            function recalcUI() {
+                let subtotal = 0;
+                document.querySelectorAll('#tabla-items tbody tr').forEach(tr => {
+                    const s = parseNumber(tr.querySelector('.subtotal').textContent);
+                    subtotal += s;
+                });
+
+                const descuentoPctInput = parseNumber(document.getElementById('DescuentoPct').value) || 0;
+                const descuentoPct = descuentoPctInput > 1 ? (descuentoPctInput / 100) : descuentoPctInput;
+                const descuento = subtotal * descuentoPct;
+                const total = subtotal - descuento;
+
+                const txtSubtotal = document.getElementById('txt-subtotal');
+                const txtDescuento = document.getElementById('txt-descuento');
+                const txtTotal = document.getElementById('txt-total');
+
+                if (txtSubtotal) txtSubtotal.textContent = 'Q' + subtotal.toFixed(2);
+                if (txtDescuento) txtDescuento.textContent = 'Q' + descuento.toFixed(2);
+                if (txtTotal) txtTotal.textContent = 'Q' + total.toFixed(2);
+            }
+
+            function attachRowEvents(tr) {
+                const input = tr.querySelector('.cantidad');
+                if (input) {
+                    input.addEventListener('change', () => {
+                        if (parseInt(input.value) < 1) input.value = 1;
+                        recalcRow(tr);
+                        recalcUI();
+                    });
+                }
+
+                const btnDel = tr.querySelector('.btn-eliminar');
+                if (btnDel) {
+                    btnDel.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        tr.remove();
+                        recalcUI();
+                    });
+                }
+            }
+
+            // Inicial: attach a filas ya renderizadas
+            document.querySelectorAll('#tabla-items tbody tr').forEach(attachRowEvents);
+
+            // Inicial cálculo al cargar
+            try { recalcUI(); } catch (e) { console.warn('recalcUI init:', e); }
+
+            // Agregar producto desde select
+            const btnAdd = document.getElementById('btn-add-producto');
+            if (btnAdd) {
+                btnAdd.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sel = document.getElementById('select-producto');
+                    if (!sel) return;
+                    const id = sel.value;
+                    if (!id) return;
+                    const nombre = sel.options[sel.selectedIndex].text;
+                    const precio = parseNumber(sel.options[sel.selectedIndex].dataset.precio);
+
+                    const tbody = document.querySelector('#tabla-items tbody');
+                    const existe = tbody ? tbody.querySelector(`tr[data-idproducto="${id}"]`) : null;
+                    if (existe) {
+                        const inputCant = existe.querySelector('.cantidad');
+                        inputCant.value = parseInt(inputCant.value || '0') + 1;
+                        recalcRow(existe);
+                        recalcUI();
+                        return;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-idproducto', id);
+                    tr.innerHTML = `
+                        <td class="nombre">${nombre}</td>
+                        <td><input class="form-control cantidad" type="number" min="1" value="1" /></td>
+                        <td class="precio">${precio.toFixed(2)}</td>
+                        <td class="subtotal">${(precio * 1).toFixed(2)}</td>
+                        <td><button class="btn btn-sm btn-outline-danger btn-eliminar">✕</button></td>
+                    `;
+                    if (tbody) {
+                        tbody.appendChild(tr);
+                        attachRowEvents(tr);
+                        recalcUI();
+                    }
+                });
+            }
+
+            // Recalcular cuando cambie el % descuento input
+            const descuentoInput = document.getElementById('DescuentoPct');
+            if (descuentoInput) descuentoInput.addEventListener('change', () => recalcUI());
+
+            // --- Guardar cambios (AJAX) ---
+            const btnGuardar = document.getElementById('btn-guardar');
+            if (btnGuardar) {
+                btnGuardar.addEventListener('click', async (e) => {
+                    e.preventDefault();
+
+                    const idKit = parseInt(document.getElementById('IdKit').value) || 0;
+                    const nombre = (document.getElementById('Nombre').value || '').trim();
+                    const descripcion = (document.getElementById('Descripcion').value || '').trim();
+                    const descuentoPctInput = parseNumber(document.getElementById('DescuentoPct').value) || 0;
+                    const descuentoPct = descuentoPctInput > 1 ? (descuentoPctInput / 100) : descuentoPctInput;
+
+                    if (!nombre) {
+                        alert('El nombre es obligatorio.');
+                        return;
+                    }
+
+                    // Construir items desde la tabla
+                    const items = [];
+                    document.querySelectorAll('#tabla-items tbody tr').forEach(tr => {
+                        const idProducto = parseInt(tr.getAttribute('data-idproducto')) || 0;
+                        const cantidad = parseInt(tr.querySelector('.cantidad').value) || 1;
+                        if (idProducto > 0) items.push({ IdProducto: idProducto, Cantidad: cantidad });
+                    });
+
+                    if (items.length === 0) {
+                        alert('Agrega al menos un producto al kit.');
+                        return;
+                    }
+
+                    const payload = {
+                        IdKit: idKit,
+                        Nombre: nombre,
+                        Descripcion: descripcion,
+                        DescuentoPct: descuentoPct,
+                        Activo: true,
+                        Items: items
+                    };
+
+                    try {
+                        const res = await fetch(editUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify(payload),
+                            credentials: 'same-origin'
+                        });
+
+                        // Si respuesta no ok (4xx/5xx) -> mostrar mensaje
+                        if (!res.ok) {
+                            const txt = await res.text();
+                            // intentar parsear JSON con error o mostrar texto
+                            try {
+                                const j = JSON.parse(txt);
+                                alert('Error guardando el kit: ' + (j.message || JSON.stringify(j)));
+                            } catch {
+                                console.error('Server error text:', txt);
+                                alert('Error guardando el kit. Revisa la consola.');
+                            }
+                            return;
+                        }
+
+                        const ctype = (res.headers.get('content-type') || '').toLowerCase();
+
+                        if (ctype.indexOf('application/json') !== -1) {
+                            const data = await res.json();
+                            if (data && data.success) {
+                                // Mostrar notificación y redirigir al índice usando la ruta generada
+                                const toast = document.createElement('div');
+                                toast.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3';
+                                toast.style.zIndex = '1060';
+                                toast.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Kit actualizado correctamente
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                                document.body.appendChild(toast);
+
+                                // Redirigir al index
+                                window.location.href = indexUrl;
+                                return;
+                            } else {
+                                alert('No se pudo guardar el kit: ' + (data?.message || 'Error desconocido'));
+                                return;
+                            }
+                        } else {
+                            // No viene JSON: puede ser una redirección HTML o vista. Redirigimos de forma segura al Index.
+                            window.location.href = indexUrl;
+                            return;
+                        }
+
+                    } catch (err) {
+                        console.error('Fetch error:', err);
+                        alert('Error al conectar con el servidor.');
+                    }
+                });
+            }
+
+        })();
+    </script>
+
+    <style>
+        #tabla-items td, #tabla-items th {
+            vertical-align: middle;
+        }
+
+        .btn-eliminar {
+            padding: .25rem .50rem;
+        }
+    </style>
+}
+
+

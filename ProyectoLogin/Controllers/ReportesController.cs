@@ -654,7 +654,7 @@ namespace ProyectoLogin.Controllers
 
 
 
-        [Authorize(Roles = "Administrador,Gerente")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> ReporteAjustesInventario(DateTime? desde, DateTime? hasta, string nombreUsuario, string tipo, bool pdf = false)
         {
             var query = _context.MovInventarios
@@ -747,6 +747,32 @@ namespace ProyectoLogin.Controllers
         }
 
 
+
+
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Actividades(DateTime? desde, DateTime? hasta, int? idUsuario)
+        {
+            var query = _context.BitacoraMovimientos
+                .Include(b => b.Usuario)
+                .AsQueryable();
+
+            if (desde.HasValue)
+                query = query.Where(b => b.Fecha >= desde.Value);
+            if (hasta.HasValue)
+                query = query.Where(b => b.Fecha <= hasta.Value);
+            if (idUsuario.HasValue)
+                query = query.Where(b => b.IdUsuario == idUsuario.Value);
+
+            var movimientos = await query
+                .OrderByDescending(b => b.Fecha)
+                .ToListAsync();
+
+            ViewBag.Usuarios = await _context.Usuarios
+                .OrderBy(u => u.NombreUsuario)
+                .ToListAsync();
+
+            return View("~/Views/Reportes/Actividades.cshtml", movimientos);
+        }
 
 
 
