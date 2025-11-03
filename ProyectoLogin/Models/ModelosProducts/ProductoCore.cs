@@ -9,7 +9,6 @@ namespace ProyectoLogin.Models.ModelosProducts
         [Key]
         public int IdProducto { get; set; }
 
-        [Required(ErrorMessage = "El nombre es obligatorio")]
         public string? Nombre { get; set; }
 
         public string? Descripcion { get; set; }
@@ -18,13 +17,9 @@ namespace ProyectoLogin.Models.ModelosProducts
         public string? CodigoBarras { get; set; }
 
 
-
-
-        [Required(ErrorMessage = "Debe seleccionar una categoría")]
         [Display(Name = "Categoría")]
         public int IdCategoria { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar una marca")]
         [Display(Name = "Marca")]
         public int IdMarca { get; set; }
 

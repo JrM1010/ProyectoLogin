@@ -4,7 +4,7 @@ namespace ProyectoLogin.Models.ModelosProducts
 {
     public class Marca
     {
-        [Key] // 👈 Esto es lo que soluciona el error
+        [Key] 
         public int IdMarca { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio")]

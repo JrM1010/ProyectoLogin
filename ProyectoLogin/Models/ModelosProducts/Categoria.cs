@@ -4,7 +4,7 @@ namespace ProyectoLogin.Models.ModelosProducts
 {
     public class Categoria
     {
-        [Key] // 👈 asegura a EF que esta es la clave primaria
+        [Key] 
         public int IdCategoria { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio")]

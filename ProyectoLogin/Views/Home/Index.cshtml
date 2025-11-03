@@ -1,35 +1,129 @@
 ﻿@{
-    ViewData["Title"] = "Inicio del Sistema";
-    string usuario = ViewData["nombreUsuario"]?.ToString();
+    ViewData["Title"] = "Panel Principal";
+    var ventas = ViewData["UltimasVentas"] as List<ProyectoLogin.Models.ModelosVentas.Venta>;
+    var compras = ViewData["UltimasCompras"] as List<ProyectoLogin.Models.ModelosCompras.Compra>;
 }
 
-<div class="container mt-5 text-center">
-    <h2 class="text-primary mb-4">Bienvenido, @usuario</h2>
-    <p class="text-muted">Selecciona un módulo para comenzar:</p>
+<div class="container mt-4">
+    <h2 class="text-primary mb-4">
+        <i class="bi bi-speedometer2"></i> Bienvenido, @ViewData["NombreUsuario"]
+    </h2>
 
-    <div class="row justify-content-center g-4">
+    <div class="row g-3">
         <div class="col-md-3">
-            <a asp-action="Gestion" class="btn btn-outline-primary btn-lg w-100 shadow-sm">
-                <i class="bi bi-gear"></i> Gestión
-            </a>
+            <div class="card shadow-sm border-0 bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5><i class="bi bi-box-seam"></i> Productos</h5>
+                    <h2>@ViewData["TotalProductos"]</h2>
+                    <p class="small mb-0">Registrados</p>
+                </div>
+            </div>
         </div>
+
         <div class="col-md-3">
-            <a asp-action="Movimientos" class="btn btn-outline-success btn-lg w-100 shadow-sm">
-                <i class="bi bi-arrows-repeat"></i> Movimientos
-            </a>
+            <div class="card shadow-sm border-0 bg-success text-white">
+                <div class="card-body text-center">
+                    <h5><i class="bi bi-people"></i> Clientes</h5>
+                    <h2>@ViewData["TotalClientes"]</h2>
+                    <p class="small mb-0">Activos</p>
+                </div>
+            </div>
         </div>
+
         <div class="col-md-3">
-            <a asp-controller="Reportes" asp-action="Index" class="btn btn-outline-info btn-lg w-100 shadow-sm">
-                <i class="bi bi-bar-chart"></i> Reportes
-            </a>
+            <div class="card shadow-sm border-0 bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5><i class="bi bi-person-badge"></i> Empleados</h5>
+                    <h2>@ViewData["TotalUsuarios"]</h2>
+                    <p class="small mb-0">Registrados</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 bg-info text-white">
+                <div class="card-body text-center">
+                    <h5><i class="bi bi-building"></i> Proveedores</h5>
+                    <h2>@ViewData["TotalProveedores"]</h2>
+                    <p class="small mb-0">Activos</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="mt-5">
-        <form asp-action="CerrarSesion" method="post">
-            <button type="submit" class="btn btn-danger btn-sm shadow-sm">
-                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-            </button>
-        </form>
+    <hr class="my-4" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-cart-check"></i> Últimas 5 Ventas
+                </div>
+                <div class="card-body">
+                    @if (ventas != null && ventas.Any())
+                    {
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var v in ventas)
+                                {
+                                    <tr>
+                                        <td>@(string.IsNullOrEmpty(v.Cliente?.Nombres) ? "C/F" : v.Cliente.Nombres)</td>
+                                        <td>@v.FechaVenta.ToString("dd/MM/yyyy")</td>
+                                        <td>Q@(v.Total.ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No hay ventas recientes.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-basket"></i> Últimas 5 Compras
+                </div>
+                <div class="card-body">
+                    @if (compras != null && compras.Any())
+                    {
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-success">
+                                <tr>
+                                    <th>Proveedor</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in compras)
+                                {
+                                    <tr>
+                                        <td>@c.Proveedor?.Nombre</td>
+                                        <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
+                                        <td>Q@(c.Total.ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No hay compras recientes.</p>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 </div>
