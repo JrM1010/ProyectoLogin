@@ -15,7 +15,7 @@ namespace ProyectoLogin.Controllers
     public class ReportesController : Controller
     {
         private readonly DbPruebaContext _context;
-
+        
         public ReportesController(DbPruebaContext context)
         {
             _context = context;
