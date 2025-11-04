@@ -7,7 +7,7 @@
     <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-primary mb-1">Crear Producto</h2>
+            <h2 class="fw-bold text-black-50 mb-1">Crear Producto</h2>
             <p class="text-muted mb-0">Complete la información para registrar un nuevo producto en el sistema</p>
         </div>
         <a asp-action="Index" class="btn btn-outline-secondary rounded-pill d-flex align-items-center">
@@ -35,7 +35,7 @@
 
     <!-- Formulario Principal -->
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-primary text-white py-3">
+        <div class="card-header bg-success text-white py-3">
             <h5 class="card-title mb-0 d-flex align-items-center">
                 <i class="bi bi-box-seam me-2"></i>Información del Producto
             </h5>
@@ -161,18 +161,11 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Alertas para Categorías -->
-                @if (TempData["MensajeCategoria"] != null)
-                {
-                    <div class="alert alert-@(TempData["TipoCategoria"]?.ToString() ?? "info") alert-dismissible fade show">
-                        <i class="bi bi-@(GetAlertIcon(TempData["TipoCategoria"]?.ToString())) me-2"></i>
-                        @TempData["MensajeCategoria"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
+                <!-- Alertas Dinámicas Categorías -->
+                <div id="alertContainerCategoria"></div>
 
                 <!-- Formulario para Crear/Editar Categoría -->
-                <form id="formCategoria" method="post" asp-action="CrearCategoria">
+                <form id="formCategoria">
                     <input type="hidden" id="idCategoria" name="id" value="">
                     <div class="mb-3">
                         <label for="nombreCategoria" class="form-label fw-semibold">Nombre de la Categoría <span class="text-danger">*</span></label>
@@ -208,10 +201,10 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tbodyCategorias">
                             @foreach (var categoria in ViewBag.CategoriasLista)
                             {
-                                <tr>
+                                <tr data-id="@categoria.IdCategoria">
                                     <td class="fw-semibold">@categoria.Nombre</td>
                                     <td class="text-muted">@(categoria.Descripcion ?? "Sin descripción")</td>
                                     <td>
@@ -247,18 +240,11 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Alertas para Marcas -->
-                @if (TempData["MensajeMarca"] != null)
-                {
-                    <div class="alert alert-@(TempData["TipoMarca"]?.ToString() ?? "info") alert-dismissible fade show">
-                        <i class="bi bi-@(GetAlertIcon(TempData["TipoMarca"]?.ToString())) me-2"></i>
-                        @TempData["MensajeMarca"]
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
+                <!-- Alertas Dinámicas Marcas -->
+                <div id="alertContainerMarca"></div>
 
                 <!-- Formulario para Crear/Editar Marca -->
-                <form id="formMarca" method="post" asp-action="CrearMarca">
+                <form id="formMarca">
                     <input type="hidden" id="idMarca" name="id" value="">
                     <div class="mb-3">
                         <label for="nombreMarca" class="form-label fw-semibold">Nombre de la Marca <span class="text-danger">*</span></label>
@@ -290,10 +276,10 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tbodyMarcas">
                             @foreach (var marca in ViewBag.MarcasLista)
                             {
-                                <tr>
+                                <tr data-id="@marca.IdMarca">
                                     <td class="fw-semibold">@marca.Nombre</td>
                                     <td>
                                         <span class="badge bg-@(marca.Activo ? "success" : "secondary")">
@@ -338,20 +324,6 @@
     }
 </style>
 
-@functions {
-    private string GetAlertIcon(string tipo)
-    {
-        return tipo?.ToLower() switch
-        {
-            "success" => "check-circle-fill",
-            "danger" => "exclamation-triangle-fill",
-            "warning" => "exclamation-triangle-fill",
-            "info" => "info-circle-fill",
-            _ => "info-circle-fill"
-        };
-    }
-}
-
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
@@ -364,7 +336,7 @@
             });
         }, 5000);
 
-        // --- VALIDACIONES DEL FORMULARIO ---
+        // --- VALIDACIONES DEL FORMULARIO PRINCIPAL ---
         document.getElementById('productForm').addEventListener('submit', function(e) {
             let isValid = true;
             const submitBtn = document.getElementById('btnSubmit');
@@ -452,102 +424,323 @@
             });
         });
 
-        // --- FUNCIONALIDAD DE MODALES ---
+        // --- FUNCIONALIDAD DINÁMICA DE CATEGORÍAS ---
+        document.getElementById('formCategoria').addEventListener('submit', function(e) {
+            e.preventDefault();
+            guardarCategoria();
+        });
+
+        function guardarCategoria() {
+            const formData = new FormData(document.getElementById('formCategoria'));
+            const idCategoria = document.getElementById('idCategoria').value;
+            const url = idCategoria ? '/Productos/EditarCategoria' : '/Productos/CrearCategoria';
+            const btn = document.getElementById('btnGuardarCategoria');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaCategoria(data.message, 'success');
+                    resetFormCategoria();
+                    cargarCategorias();
+                    actualizarSelectCategorias(data.categorias);
+                } else {
+                    mostrarAlertaCategoria(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                mostrarAlertaCategoria('Error al guardar la categoría', 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = idCategoria ?
+                    '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar' :
+                    '<i class="bi bi-check-lg me-1"></i>Guardar';
+            });
+        }
+
+        function cargarCategorias() {
+            fetch('/Productos/ObtenerCategorias')
+            .then(response => response.json())
+            .then(categorias => {
+                const tbody = document.getElementById('tbodyCategorias');
+                tbody.innerHTML = '';
+
+                categorias.forEach(categoria => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', categoria.idCategoria);
+                    tr.innerHTML = `
+                        <td class="fw-semibold">${categoria.nombre}</td>
+                        <td class="text-muted">${categoria.descripcion || 'Sin descripción'}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary"
+                                        onclick="editarCategoria(${categoria.idCategoria}, '${categoria.nombre}', '${categoria.descripcion || ''}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger"
+                                        onclick="eliminarCategoria(${categoria.idCategoria}, '${categoria.nombre}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function actualizarSelectCategorias(categorias) {
+            const select = document.getElementById('IdCategoria');
+            select.innerHTML = '<option value="">-- Seleccione una categoría --</option>';
+
+            categorias.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria.idCategoria;
+                option.textContent = categoria.nombre;
+                select.appendChild(option);
+            });
+        }
+
         function editarCategoria(id, nombre, descripcion) {
             document.getElementById('idCategoria').value = id;
             document.getElementById('nombreCategoria').value = nombre;
             document.getElementById('descripcionCategoria').value = descripcion || '';
-            const form = document.getElementById('formCategoria');
-            form.action = '/Productos/EditarCategoria';
-            document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
-            document.getElementById('btnGuardarCategoria').classList.replace('btn-success', 'btn-warning');
+
+            const btn = document.getElementById('btnGuardarCategoria');
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
+            btn.classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicion').style.display = 'block';
         }
 
-        document.getElementById('btnCancelarEdicion').addEventListener('click', () => {
-            const form = document.getElementById('formCategoria');
-            form.reset();
-            form.action = '/Productos/CrearCategoria';
-            document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
-            document.getElementById('btnGuardarCategoria').classList.replace('btn-warning', 'btn-success');
+        function eliminarCategoria(id, nombre) {
+            if (confirm(`¿Está seguro de que desea eliminar la categoría "${nombre}"?`)) {
+                const formData = new FormData();
+                formData.append('id', id);
+
+                fetch('/Productos/EliminarCategoria', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlertaCategoria(data.message, 'success');
+                        cargarCategorias();
+                        actualizarSelectCategorias(data.categorias);
+                    } else {
+                        mostrarAlertaCategoria(data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    mostrarAlertaCategoria('Error al eliminar la categoría', 'danger');
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function resetFormCategoria() {
+            document.getElementById('formCategoria').reset();
+            document.getElementById('idCategoria').value = '';
+            const btn = document.getElementById('btnGuardarCategoria');
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
+            btn.classList.replace('btn-warning', 'btn-success');
             document.getElementById('btnCancelarEdicion').style.display = 'none';
+        }
+
+        function mostrarAlertaCategoria(mensaje, tipo) {
+            const alertContainer = document.getElementById('alertContainerCategoria');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo} alert-dismissible fade show`;
+            alert.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // --- FUNCIONALIDAD DINÁMICA DE MARCAS ---
+        document.getElementById('formMarca').addEventListener('submit', function(e) {
+            e.preventDefault();
+            guardarMarca();
         });
+
+        function guardarMarca() {
+            const formData = new FormData(document.getElementById('formMarca'));
+            const idMarca = document.getElementById('idMarca').value;
+            const url = idMarca ? '/Productos/EditarMarca' : '/Productos/CrearMarca';
+            const btn = document.getElementById('btnGuardarMarca');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaMarca(data.message, 'success');
+                    resetFormMarca();
+                    cargarMarcas();
+                    actualizarSelectMarcas(data.marcas);
+                } else {
+                    mostrarAlertaMarca(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                mostrarAlertaMarca('Error al guardar la marca', 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = idMarca ?
+                    '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar' :
+                    '<i class="bi bi-check-lg me-1"></i>Guardar';
+            });
+        }
+
+        function cargarMarcas() {
+            fetch('/Productos/ObtenerMarcas')
+            .then(response => response.json())
+            .then(marcas => {
+                const tbody = document.getElementById('tbodyMarcas');
+                tbody.innerHTML = '';
+
+                marcas.forEach(marca => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', marca.idMarca);
+                    tr.innerHTML = `
+                        <td class="fw-semibold">${marca.nombre}</td>
+                        <td>
+                            <span class="badge bg-${marca.activo ? 'success' : 'secondary'}">
+                                ${marca.activo ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary"
+                                        onclick="editarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger"
+                                        onclick="eliminarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function actualizarSelectMarcas(marcas) {
+            const select = document.getElementById('IdMarca');
+            select.innerHTML = '<option value="">-- Seleccione una marca --</option>';
+
+            marcas.forEach(marca => {
+                const option = document.createElement('option');
+                option.value = marca.idMarca;
+                option.textContent = marca.nombre;
+                select.appendChild(option);
+            });
+        }
 
         function editarMarca(id, nombre) {
             document.getElementById('idMarca').value = id;
             document.getElementById('nombreMarca').value = nombre;
-            const form = document.getElementById('formMarca');
-            form.action = '/Productos/EditarMarca';
-            document.getElementById('btnGuardarMarca').innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
-            document.getElementById('btnGuardarMarca').classList.replace('btn-success', 'btn-warning');
+
+            const btn = document.getElementById('btnGuardarMarca');
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
+            btn.classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicionMarca').style.display = 'block';
-        }
-
-        document.getElementById('btnCancelarEdicionMarca').addEventListener('click', () => {
-            const form = document.getElementById('formMarca');
-            form.reset();
-            form.action = '/Productos/CrearMarca';
-            document.getElementById('btnGuardarMarca').innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
-            document.getElementById('btnGuardarMarca').classList.replace('btn-warning', 'btn-success');
-            document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
-        });
-
-        function eliminarCategoria(id, nombre) {
-            if (confirm(`¿Está seguro de que desea eliminar la categoría "${nombre}"?`)) {
-                const form = document.createElement('form');
-                form.method = 'post';
-                form.action = '/Productos/EliminarCategoria';
-
-                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '__RequestVerificationToken';
-                tokenInput.value = csrfToken;
-                form.appendChild(tokenInput);
-
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'id';
-                idInput.value = id;
-                form.appendChild(idInput);
-
-                document.body.appendChild(form);
-                form.submit();
-            }
         }
 
         function eliminarMarca(id, nombre) {
             if (confirm(`¿Está seguro de que desea eliminar la marca "${nombre}"?`)) {
-                const form = document.createElement('form');
-                form.method = 'post';
-                form.action = '/Productos/EliminarMarca';
+                const formData = new FormData();
+                formData.append('id', id);
 
-                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '__RequestVerificationToken';
-                tokenInput.value = csrfToken;
-                form.appendChild(tokenInput);
-
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'id';
-                idInput.value = id;
-                form.appendChild(idInput);
-
-                document.body.appendChild(form);
-                form.submit();
+                fetch('/Productos/EliminarMarca', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlertaMarca(data.message, 'success');
+                        cargarMarcas();
+                        actualizarSelectMarcas(data.marcas);
+                    } else {
+                        mostrarAlertaMarca(data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    mostrarAlertaMarca('Error al eliminar la marca', 'danger');
+                    console.error('Error:', error);
+                });
             }
         }
 
-        // Reabrir modal tras acción
-        document.addEventListener('DOMContentLoaded', function() {
-            const modalToOpen = '@TempData["AbrirModal"]';
-            if (modalToOpen === 'Categoria') {
-                new bootstrap.Modal('#modalCategoria').show();
-            } else if (modalToOpen === 'Marca') {
-                new bootstrap.Modal('#modalMarca').show();
-            }
-        });
+        function resetFormMarca() {
+            document.getElementById('formMarca').reset();
+            document.getElementById('idMarca').value = '';
+            const btn = document.getElementById('btnGuardarMarca');
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
+            btn.classList.replace('btn-warning', 'btn-success');
+            document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
+        }
+
+        function mostrarAlertaMarca(mensaje, tipo) {
+            const alertContainer = document.getElementById('alertContainerMarca');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo} alert-dismissible fade show`;
+            alert.innerHTML = `
+                <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-2"></i>
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Botones de cancelar edición
+        document.getElementById('btnCancelarEdicion').addEventListener('click', resetFormCategoria);
+        document.getElementById('btnCancelarEdicionMarca').addEventListener('click', resetFormMarca);
     </script>
 }

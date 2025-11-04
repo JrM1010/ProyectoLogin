@@ -12,7 +12,7 @@ public partial class Usuario
     
     public string? Correo { get; set; }
 
-    [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
+
     public string? Clave { get; set; }
 
 

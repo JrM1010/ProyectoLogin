@@ -86,14 +86,14 @@ namespace ProyectoLogin.Controllers
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-            
+
             ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
             ViewBag.CategoriasLista = categorias;
 
             ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
             ViewBag.Proveedores = proveedores;
             ViewBag.MarcasLista = marcas;
-            
+
             // Código sugerido
             ViewBag.CodigoGenerado = $"PROD-{new Random().Next(0, 10000):D4}";
 
@@ -215,7 +215,7 @@ namespace ProyectoLogin.Controllers
         // Genera un código legible y chequea unicidad (async)
         private async Task<string> GenerarCodigoProductoAsync()
         {
-            
+
             string codigo;
             var rnd = new Random();
             int intentos = 0;
@@ -345,11 +345,11 @@ namespace ProyectoLogin.Controllers
 
             // Desactivar precios anteriores si quieres mantener uno activo por producto:
             var activos = await _context.ProductoPrecio.Where(p => p.IdProducto == idProducto && p.Activo).ToListAsync();
-            foreach (var a in activos) 
-            { 
+            foreach (var a in activos)
+            {
                 a.Activo = false;
                 a.FechaFin = FechaLocal.Ahora();
-                _context.Update(a); 
+                _context.Update(a);
             }
 
             _context.ProductoPrecio.Add(precio);
@@ -358,10 +358,263 @@ namespace ProyectoLogin.Controllers
             return RedirectToAction("Edit", new { id = idProducto });
         }
 
+        // ========== MÉTODOS AJAX PARA CATEGORÍAS ==========
 
-        // CATEGORÍAS
+        [HttpGet]
+        public async Task<IActionResult> ObtenerCategorias()
+        {
+            var categorias = await _context.Categorias
+                .Where(c => c.Activo)
+                .OrderBy(c => c.Nombre)
+                .Select(c => new {
+                    idCategoria = c.IdCategoria,
+                    nombre = c.Nombre,
+                    descripcion = c.Descripcion
+                })
+                .ToListAsync();
+
+            return Json(categorias);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CrearCategoria(string nombre, string descripcion)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                {
+                    return Json(new { success = false, message = "El nombre de la categoría es obligatorio." });
+                }
+
+                var existe = await _context.Categorias.AnyAsync(c => c.Nombre == nombre);
+                if (existe)
+                {
+                    return Json(new { success = false, message = "Ya existe una categoría con ese nombre." });
+                }
+
+                var categoria = new Categoria
+                {
+                    Nombre = nombre,
+                    Descripcion = descripcion,
+                    Activo = true
+                };
+
+                _context.Categorias.Add(categoria);
+                await _context.SaveChangesAsync();
+
+                var categorias = await _context.Categorias
+                    .Where(c => c.Activo)
+                    .OrderBy(c => c.Nombre)
+                    .Select(c => new { idCategoria = c.IdCategoria, nombre = c.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Categoría creada correctamente.", categorias });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear la categoría: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditarCategoria(int id, string nombre, string descripcion)
+        {
+            try
+            {
+                var categoria = await _context.Categorias.FindAsync(id);
+                if (categoria == null)
+                {
+                    return Json(new { success = false, message = "Categoría no encontrada." });
+                }
+
+                // Verificar si el nombre ya existe en otra categoría
+                var nombreExiste = await _context.Categorias
+                    .AnyAsync(c => c.Nombre == nombre && c.IdCategoria != id);
+
+                if (nombreExiste)
+                {
+                    return Json(new { success = false, message = "Ya existe una categoría con ese nombre." });
+                }
+
+                categoria.Nombre = nombre;
+                categoria.Descripcion = descripcion;
+                await _context.SaveChangesAsync();
+
+                var categorias = await _context.Categorias
+                    .Where(c => c.Activo)
+                    .OrderBy(c => c.Nombre)
+                    .Select(c => new { idCategoria = c.IdCategoria, nombre = c.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Categoría actualizada correctamente.", categorias });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al actualizar la categoría: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EliminarCategoria(int id)
+        {
+            try
+            {
+                var tieneProductos = await _context.Productos.AnyAsync(p => p.IdCategoria == id);
+                if (tieneProductos)
+                {
+                    return Json(new { success = false, message = "No se puede eliminar: hay productos asociados." });
+                }
+
+                var categoria = await _context.Categorias.FindAsync(id);
+                if (categoria == null)
+                {
+                    return Json(new { success = false, message = "Categoría no encontrada." });
+                }
+
+                _context.Categorias.Remove(categoria);
+                await _context.SaveChangesAsync();
+
+                var categorias = await _context.Categorias
+                    .Where(c => c.Activo)
+                    .OrderBy(c => c.Nombre)
+                    .Select(c => new { idCategoria = c.IdCategoria, nombre = c.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Categoría eliminada correctamente.", categorias });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar la categoría: " + ex.Message });
+            }
+        }
+
+        // ========== MÉTODOS AJAX PARA MARCAS ==========
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerMarcas()
+        {
+            var marcas = await _context.Marcas
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .Select(m => new {
+                    idMarca = m.IdMarca,
+                    nombre = m.Nombre,
+                    activo = m.Activo
+                })
+                .ToListAsync();
+
+            return Json(marcas);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearMarca(string nombre)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                {
+                    return Json(new { success = false, message = "El nombre de la marca es obligatorio." });
+                }
+
+                var existe = await _context.Marcas.AnyAsync(m => m.Nombre == nombre);
+                if (existe)
+                {
+                    return Json(new { success = false, message = "Ya existe una marca con ese nombre." });
+                }
+
+                var marca = new Marca { Nombre = nombre, Activo = true };
+                _context.Marcas.Add(marca);
+                await _context.SaveChangesAsync();
+
+                var marcas = await _context.Marcas
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .Select(m => new { idMarca = m.IdMarca, nombre = m.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Marca creada correctamente.", marcas });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al crear la marca: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditarMarca(int id, string nombre)
+        {
+            try
+            {
+                var marca = await _context.Marcas.FindAsync(id);
+                if (marca == null)
+                {
+                    return Json(new { success = false, message = "Marca no encontrada." });
+                }
+
+                // Verificar si el nombre ya existe en otra marca
+                var nombreExiste = await _context.Marcas
+                    .AnyAsync(m => m.Nombre == nombre && m.IdMarca != id);
+
+                if (nombreExiste)
+                {
+                    return Json(new { success = false, message = "Ya existe una marca con ese nombre." });
+                }
+
+                marca.Nombre = nombre;
+                await _context.SaveChangesAsync();
+
+                var marcas = await _context.Marcas
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .Select(m => new { idMarca = m.IdMarca, nombre = m.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Marca actualizada correctamente.", marcas });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al actualizar la marca: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EliminarMarca(int id)
+        {
+            try
+            {
+                var tieneProductos = await _context.Productos.AnyAsync(p => p.IdMarca == id);
+                if (tieneProductos)
+                {
+                    return Json(new { success = false, message = "No se puede eliminar: hay productos asociados." });
+                }
+
+                var marca = await _context.Marcas.FindAsync(id);
+                if (marca == null)
+                {
+                    return Json(new { success = false, message = "Marca no encontrada." });
+                }
+
+                _context.Marcas.Remove(marca);
+                await _context.SaveChangesAsync();
+
+                var marcas = await _context.Marcas
+                    .Where(m => m.Activo)
+                    .OrderBy(m => m.Nombre)
+                    .Select(m => new { idMarca = m.IdMarca, nombre = m.Nombre })
+                    .ToListAsync();
+
+                return Json(new { success = true, message = "Marca eliminada correctamente.", marcas });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al eliminar la marca: " + ex.Message });
+            }
+        }
+
+        // ========== MÉTODOS LEGACY (mantenidos para compatibilidad) ==========
+
+        [HttpPost]
+        public async Task<IActionResult> CrearCategoriaLegacy(string nombre, string descripcion)
         {
             TempData["AbrirModal"] = "Categoria";
 
@@ -394,57 +647,7 @@ namespace ProyectoLogin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditarCategoria(int id, string nombre, string descripcion)
-        {
-            TempData["AbrirModal"] = "Categoria";
-
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria == null)
-            {
-                TempData["MensajeCategoria"] = "Categoría no encontrada.";
-                TempData["TipoCategoria"] = "danger";
-                return RedirectToAction("Create", "Productos");
-            }
-
-            categoria.Nombre = nombre;
-            categoria.Descripcion = descripcion;
-            await _context.SaveChangesAsync();
-
-            TempData["MensajeCategoria"] = "Categoría actualizada correctamente.";
-            TempData["TipoCategoria"] = "info";
-            return RedirectToAction("Create", "Productos");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EliminarCategoria(int id)
-        {
-            TempData["AbrirModal"] = "Categoria";
-
-            var tieneProductos = await _context.Productos.AnyAsync(p => p.IdCategoria == id);
-            if (tieneProductos)
-            {
-                TempData["MensajeCategoria"] = "No se puede eliminar: hay productos asociados.";
-                TempData["TipoCategoria"] = "warning";
-                return RedirectToAction("Create", "Productos");
-            }
-
-            var categoria = await _context.Categorias.FindAsync(id);
-            if (categoria != null)
-            {
-                _context.Categorias.Remove(categoria);
-                await _context.SaveChangesAsync();
-
-                TempData["MensajeCategoria"] = "Categoría eliminada correctamente.";
-                TempData["TipoCategoria"] = "danger";
-            }
-
-            return RedirectToAction("Create", "Productos");
-        }
-
-
-        // MARCAS
-        [HttpPost]
-        public async Task<IActionResult> CrearMarca(string nombre)
+        public async Task<IActionResult> CrearMarcaLegacy(string nombre)
         {
             TempData["AbrirModal"] = "Marca";
 
@@ -468,53 +671,6 @@ namespace ProyectoLogin.Controllers
 
             TempData["MensajeMarca"] = "Marca creada correctamente.";
             TempData["TipoMarca"] = "success";
-            return RedirectToAction("Create", "Productos");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditarMarca(int id, string nombre)
-        {
-            TempData["AbrirModal"] = "Marca";
-
-            var marca = await _context.Marcas.FindAsync(id);
-            if (marca == null)
-            {
-                TempData["MensajeMarca"] = "Marca no encontrada.";
-                TempData["TipoMarca"] = "danger";
-                return RedirectToAction("Create", "Productos");
-            }
-
-            marca.Nombre = nombre;
-            await _context.SaveChangesAsync();
-
-            TempData["MensajeMarca"] = "Marca actualizada correctamente.";
-            TempData["TipoMarca"] = "info";
-            return RedirectToAction("Create", "Productos");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EliminarMarca(int id)
-        {
-            TempData["AbrirModal"] = "Marca";
-
-            var tieneProductos = await _context.Productos.AnyAsync(p => p.IdMarca == id);
-            if (tieneProductos)
-            {
-                TempData["MensajeMarca"] = "No se puede eliminar: hay productos asociados.";
-                TempData["TipoMarca"] = "warning";
-                return RedirectToAction("Create", "Productos");
-            }
-
-            var marca = await _context.Marcas.FindAsync(id);
-            if (marca != null)
-            {
-                _context.Marcas.Remove(marca);
-                await _context.SaveChangesAsync();
-
-                TempData["MensajeMarca"] = "Marca eliminada correctamente.";
-                TempData["TipoMarca"] = "danger";
-            }
-
             return RedirectToAction("Create", "Productos");
         }
 
