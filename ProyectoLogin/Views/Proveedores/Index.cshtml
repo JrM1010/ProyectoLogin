@@ -1,4 +1,20 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Proveedor>
+@{
+    // Usar las listas paginadas del ViewBag
+    var activos = ViewBag.Activos as List<ProyectoLogin.Models.Proveedor> 
+                  ?? new List<ProyectoLogin.Models.Proveedor>();
+    var inactivos = ViewBag.Inactivos as List<ProyectoLogin.Models.Proveedor> 
+                   ?? new List<ProyectoLogin.Models.Proveedor>();
+
+    // Variables de paginación
+    var totalActivos = ViewBag.TotalActivos ?? 0;
+    var totalInactivos = ViewBag.TotalInactivos ?? 0;
+    var pageSize = ViewBag.PageSize ?? 5;
+    var pageActivos = ViewBag.PageActivos ?? 1;
+    var pageInactivos = ViewBag.PageInactivos ?? 1;
+    var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
+    var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
+}
 
 <div class="container-fluid">
     <!-- HEADER PRINCIPAL -->
@@ -6,9 +22,14 @@
         <h2 class="mb-0">
             <i class="bi bi-truck text-primary me-2"></i>Gestión de Proveedores
         </h2>
-        <a asp-action="Create" class="btn btn-success rounded-pill" title="Agregar nuevo proveedor">
-            <i class="bi bi-plus-circle me-1"></i>Agregar Proveedor
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark">
+                <i class="bi bi-arrow-left me-1"></i>Inicio
+            </a>
+            <a asp-action="Create" class="btn btn-success rounded-pill" title="Agregar nuevo proveedor">
+                <i class="bi bi-plus-circle me-1"></i>Agregar Proveedor
+            </a>
+        </div>
     </div>
 
     <!-- PROVEEDORES ACTIVOS -->
@@ -17,14 +38,14 @@
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle fs-5 me-2"></i>
                 <h5 class="mb-0 me-2">Proveedores Activos</h5>
-                <span class="badge bg-light text-success fs-6">@Model.Count(x => x.Activo)</span>
+                <span class="badge bg-light text-success fs-6">@totalActivos</span>
             </div>
             <a asp-action="Index" asp-route-ordenar="true" class="btn btn-outline-light btn-sm rounded-pill" title="Ordenar alfabéticamente">
                 <i class="bi bi-sort-alpha-down me-1"></i>Ordenar A-Z
             </a>
         </div>
         <div class="card-body p-0">
-            @if (!Model.Any(x => x.Activo))
+            @if (!activos.Any())
             {
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-truck fs-1 mb-2"></i>
@@ -46,7 +67,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var p in Model.Where(x => x.Activo))
+                            @foreach (var p in activos)
                             {
                                 <tr>
                                     <td class="ps-3 fw-semibold">
@@ -99,32 +120,137 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- PAGINACIÓN PROVEEDORES ACTIVOS -->
+                @if (totalPagesActivos > 1)
+                {
+                    <div class="p-3 border-top bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Página @pageActivos de @totalPagesActivos • 
+                                Mostrando @activos.Count() de @totalActivos proveedores
+                            </div>
+                            <div class="pagination-container">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <!-- Flecha anterior -->
+                                    @if (pageActivos > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Index", new { 
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos - 1, 
+                                                   pageInactivos = pageInactivos
+                                               })">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    <!-- Números de página - máximo 5 páginas visibles -->
+                                    @{
+                                        int startPage = Math.Max(1, pageActivos - 2);
+                                        int endPage = Math.Min(totalPagesActivos, pageActivos + 2);
+                                        
+                                        if (startPage > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = 1, 
+                                                       pageInactivos = pageInactivos
+                                                   })">1</a>
+                                            </li>
+                                            if (startPage > 2)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                        }
+
+                                        for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == pageActivos ? "active" : "")">
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = i, 
+                                                       pageInactivos = pageInactivos
+                                                   })">@i</a>
+                                            </li>
+                                        }
+
+                                        if (endPage < totalPagesActivos)
+                                        {
+                                            if (endPage < totalPagesActivos - 1)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = totalPagesActivos, 
+                                                       pageInactivos = pageInactivos
+                                                   })">@totalPagesActivos</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    <!-- Flecha siguiente -->
+                                    @if (pageActivos < totalPagesActivos)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Index", new { 
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos + 1, 
+                                                   pageInactivos = pageInactivos
+                                               })">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
         </div>
     </div>
 
-    <!-- PROVEEDORES INACTIVOS -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-x-circle fs-5 me-2"></i>
-                <h5 class="mb-0 me-2">Proveedores Inactivos</h5>
-                <span class="badge bg-light text-secondary fs-6">@Model.Count(x => !x.Activo)</span>
-            </div>
-            <a asp-action="Index" asp-route-ordenar="true" class="btn btn-outline-light btn-sm rounded-pill" title="Ordenar alfabéticamente">
-                <i class="bi bi-sort-alpha-down me-1"></i>Ordenar A-Z
-            </a>
-        </div>
-        <div class="card-body p-0">
-            @if (!Model.Any(x => !x.Activo))
-            {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-emoji-smile fs-1 mb-2"></i>
-                    <p class="mb-0">No hay proveedores inactivos</p>
+    <!-- PROVEEDORES INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
+    @if (totalInactivos > 0)
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-x-circle fs-5 me-2"></i>
+                    <h5 class="mb-0 me-2">Proveedores Inactivos</h5>
+                    <span class="badge bg-light text-secondary fs-6">@totalInactivos</span>
                 </div>
-            }
-            else
-            {
+                <a asp-action="Index" asp-route-ordenar="true" class="btn btn-outline-light btn-sm rounded-pill" title="Ordenar alfabéticamente">
+                    <i class="bi bi-sort-alpha-down me-1"></i>Ordenar A-Z
+                </a>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -138,7 +264,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var p in Model.Where(x => !x.Activo))
+                            @foreach (var p in inactivos)
                             {
                                 <tr class="text-muted">
                                     <td class="ps-3 fw-semibold">
@@ -185,9 +311,121 @@
                         </tbody>
                     </table>
                 </div>
-            }
+
+                <!-- PAGINACIÓN PROVEEDORES INACTIVOS -->
+                @if (totalPagesInactivos > 1)
+                {
+                    <div class="p-3 border-top bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Página @pageInactivos de @totalPagesInactivos • 
+                                Mostrando @inactivos.Count() de @totalInactivos proveedores
+                            </div>
+                            <div class="pagination-container">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <!-- Flecha anterior -->
+                                    @if (pageInactivos > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Index", new { 
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos, 
+                                                   pageInactivos = pageInactivos - 1
+                                               })">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    <!-- Números de página - máximo 5 páginas visibles -->
+                                    @{
+                                        int startPageInactivos = Math.Max(1, pageInactivos - 2);
+                                        int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
+                                        
+                                        if (startPageInactivos > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = 1
+                                                   })">1</a>
+                                            </li>
+                                            if (startPageInactivos > 2)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                        }
+
+                                        for (int i = startPageInactivos; i <= endPageInactivos; i++)
+                                        {
+                                            <li class="page-item @(i == pageInactivos ? "active" : "")">
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = i
+                                                   })">@i</a>
+                                            </li>
+                                        }
+
+                                        if (endPageInactivos < totalPagesInactivos)
+                                        {
+                                            if (endPageInactivos < totalPagesInactivos - 1)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Index", new { 
+                                                       ordenar = ViewBag.Ordenar,
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = totalPagesInactivos
+                                                   })">@totalPagesInactivos</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    <!-- Flecha siguiente -->
+                                    @if (pageInactivos < totalPagesInactivos)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Index", new { 
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos, 
+                                                   pageInactivos = pageInactivos + 1
+                                               })">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
-    </div>
+    }
 </div>
 
 <style>
@@ -205,5 +443,40 @@
 
     a.text-decoration-none:hover {
         text-decoration: underline !important;
+    }
+
+    /* Estilos para la paginación disimulada */
+    .pagination-container {
+        background: transparent;
+    }
+
+    .pagination-sm .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        background: white;
+    }
+
+    .pagination-sm .page-item.active .page-link {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+
+    .pagination-sm .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: #495057;
+    }
+
+    .pagination-sm .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: white;
+        border-color: #dee2e6;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
     }
 </style>
