@@ -9,7 +9,7 @@
         <div class="col-12 col-lg-8 col-xl-6">
             <!-- CARD PRINCIPAL -->
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
+                <div class="card-header bg-warning text-black py-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-building-gear fs-4 me-2"></i>
                         <h4 class="mb-0">Editar Proveedor</h4>
@@ -23,11 +23,6 @@
 
                         <!-- INFORMACIÓN BÁSICA -->
                         <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-info-circle me-2"></i>Información Básica
-                                </h6>
-                            </div>
                             <div class="col-12 mb-3">
                                 <label asp-for="Nombre" class="form-label fw-semibold text-primary">
                                     <i class="bi bi-building me-1"></i>Nombre del Proveedor *
@@ -92,11 +87,6 @@
                             </a>
 
                             <div class="d-flex gap-2">
-                                <a asp-action="Details" asp-route-id="@Model.IdProveedor"
-                                   class="btn btn-outline-info rounded-pill" title="Ver detalles del proveedor">
-                                    <i class="bi bi-eye me-1"></i>Ver Detalles
-                                </a>
-
                                 <button type="submit" class="btn btn-primary rounded-pill" title="Guardar cambios del proveedor">
                                     <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
                                 </button>
@@ -116,7 +106,7 @@
                         <div class="col-12">
                             <p class="mb-2">
                                 <i class="bi bi-asterisk text-danger me-1"></i>
-                                <strong>Campos obligatorios:</strong> Solo el nombre del proveedor es requerido.
+                                <strong>Campos obligatorios:</strong> Nombre del proveedor, Telefono, Correo electronico.
                             </p>
                             <p class="mb-2">
                                 <i class="bi bi-info-circle text-primary me-1"></i>

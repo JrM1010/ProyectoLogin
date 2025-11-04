@@ -17,25 +17,43 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form asp-action="Create" method="post">
+                    <!-- Mensajes de éxito/error -->
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <!-- Resumen de errores de validación -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Por favor, corrige los siguientes errores:
+                    </div>
+
+                    <form asp-action="Create" method="post" id="proveedorForm">
                         @Html.AntiForgeryToken()
 
                         <!-- INFORMACIÓN BÁSICA -->
                         <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-info-circle me-2"></i>Información Básica
-                                </h6>
-                            </div>
+                           
                             <div class="col-12 mb-3">
                                 <label class="form-label fw-semibold text-primary">
                                     <i class="bi bi-building me-1"></i>Nombre del Proveedor *
                                 </label>
-                                <input asp-for="Nombre" class="form-control" placeholder="Ingrese el nombre del proveedor" required />
+                                <input asp-for="Nombre" class="form-control" 
+                                       placeholder="Ingrese el nombre del proveedor" 
+                                       required 
+                                       maxlength="200" />
                                 <span asp-validation-for="Nombre" class="text-danger small"></span>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-asterisk text-danger me-1"></i>Este campo es obligatorio
-                                </div>
                             </div>
                         </div>
 
@@ -50,7 +68,9 @@
                                 <label class="form-label fw-semibold text-primary">
                                     <i class="bi bi-person me-1"></i>Persona de Contacto
                                 </label>
-                                <input asp-for="Contacto" class="form-control" placeholder="Nombre del contacto principal" />
+                                <input asp-for="Contacto" class="form-control" 
+                                       placeholder="Nombre del contacto principal" 
+                                       maxlength="100" />
                                 <span asp-validation-for="Contacto" class="text-danger small"></span>
                             </div>
 
@@ -58,8 +78,15 @@
                                 <label class="form-label fw-semibold text-primary">
                                     <i class="bi bi-phone me-1"></i>Teléfono
                                 </label>
-                                <input asp-for="Telefono" class="form-control" placeholder="Número de teléfono" />
+                                <input asp-for="Telefono" class="form-control" 
+                                       placeholder="Número de teléfono" 
+                                       maxlength="20"
+                                       pattern="[\d\s\-\(\)\+]+"
+                                       title="Solo se permiten números, espacios, guiones y paréntesis" />
                                 <span asp-validation-for="Telefono" class="text-danger small"></span>
+                                <div class="form-text text-muted">
+                                    Ejemplo: (502) 1234-5678
+                                </div>
                             </div>
                         </div>
 
@@ -74,15 +101,24 @@
                                 <label class="form-label fw-semibold text-primary">
                                     <i class="bi bi-envelope me-1"></i>Correo Electrónico
                                 </label>
-                                <input asp-for="Email" class="form-control" type="email" placeholder="correo@proveedor.com" />
+                                <input asp-for="Email" class="form-control" 
+                                       type="email" 
+                                       placeholder="correo@proveedor.com" 
+                                       maxlength="100" />
                                 <span asp-validation-for="Email" class="text-danger small"></span>
+                                <div class="form-text text-muted">
+                                    Ejemplo: contacto@empresa.com
+                                </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold text-primary">
                                     <i class="bi bi-geo me-1"></i>Dirección
                                 </label>
-                                <input asp-for="Direccion" class="form-control" placeholder="Dirección completa" />
+                                <textarea asp-for="Direccion" class="form-control" 
+                                          placeholder="Dirección completa" 
+                                          rows="2"
+                                          maxlength="500"></textarea>
                                 <span asp-validation-for="Direccion" class="text-danger small"></span>
                             </div>
                         </div>
@@ -94,11 +130,11 @@
                             </a>
 
                             <div class="d-flex gap-2">
-                                <button type="reset" class="btn btn-outline-warning rounded-pill" title="Limpiar formulario">
+                                <button type="reset" class="btn btn-outline-warning rounded-pill" title="Limpiar formulario" id="btnReset">
                                     <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                                 </button>
 
-                                <button type="submit" class="btn btn-success rounded-pill" title="Guardar nuevo proveedor">
+                                <button type="submit" class="btn btn-success rounded-pill" title="Guardar nuevo proveedor" id="btnSubmit">
                                     <i class="bi bi-plus-circle me-1"></i>Agregar Proveedor
                                 </button>
                             </div>
@@ -141,7 +177,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Focus en el primer campo al cargar
-            const firstInput = document.querySelector('input[type="text"]');
+            const firstInput = document.querySelector('#Nombre');
             if (firstInput) firstInput.focus();
 
             // Validación en tiempo real para campos requeridos
@@ -153,19 +189,123 @@
                         this.classList.add('is-invalid');
                     } else {
                         this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    // Remover la clase después de 2 segundos
+                    setTimeout(() => this.classList.remove('is-valid'), 2000);
+                    }
+                });
+            }
+
+            // Validación en tiempo real para email
+            const emailInput = document.querySelector('#Email');
+            if (emailInput) {
+                emailInput.addEventListener('blur', function() {
+                    if (this.value.trim()) {
+                        const emailRegex = /^[^\s]+[^\s]+\.[^\s]+$/;
+                        if (emailRegex.test(this.value)) {
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                            setTimeout(() => this.classList.remove('is-valid'), 2000);
+                        } else {
+                            this.classList.add('is-invalid');
+                            this.classList.remove('is-valid');
+                        }
+                    } else {
+                        this.classList.remove('is-invalid', 'is-valid');
+                    }
+                });
+            }
+
+            // Validación en tiempo real para teléfono
+            const telefonoInput = document.querySelector('#Telefono');
+            if (telefonoInput) {
+                telefonoInput.addEventListener('blur', function() {
+                    if (this.value.trim()) {
+                        const telefonoRegex = /^[\d\s\-\(\)\+]+$/;
+                        if (telefonoRegex.test(this.value)) {
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                            setTimeout(() => this.classList.remove('is-valid'), 2000);
+                        } else {
+                            this.classList.add('is-invalid');
+                            this.classList.remove('is-valid');
+                        }
+                    } else {
+                        this.classList.remove('is-invalid', 'is-valid');
                     }
                 });
             }
 
             // Confirmación antes de limpiar el formulario
-            const resetButton = document.querySelector('button[type="reset"]');
+            const resetButton = document.querySelector('#btnReset');
             if (resetButton) {
                 resetButton.addEventListener('click', function(e) {
                     if (!confirm('¿Estás seguro de que deseas limpiar todos los campos del formulario?')) {
                         e.preventDefault();
+                    } else {
+                        // Remover clases de validación al limpiar
+                        document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+                            el.classList.remove('is-valid', 'is-invalid');
+                        });
                     }
                 });
             }
+
+            // Prevenir envío doble del formulario
+            const form = document.querySelector('#proveedorForm');
+            const submitBtn = document.querySelector('#btnSubmit');
+            
+            if (form && submitBtn) {
+                form.addEventListener('submit', function() {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Procesando...';
+                    
+                    // Re-habilitar después de 5 segundos por si hay error
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Agregar Proveedor';
+                    }, 5000);
+                });
+            }
+
+            // Auto-ocultar alertas después de 5 segundos
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            // Validación antes de enviar
+            form.addEventListener('submit', function(e) {
+                const nombre = document.querySelector('#Nombre').value.trim();
+                if (!nombre) {
+                    e.preventDefault();
+                    document.querySelector('#Nombre').classList.add('is-invalid');
+                    document.querySelector('#Nombre').focus();
+                    
+                    // Mostrar toast de error
+                    const toast = new bootstrap.Toast(document.getElementById('validationToast'));
+                    toast.show();
+                }
+            });
         });
+
+        // Función para mostrar errores específicos del servidor
+        function mostrarErrorServidor(campo, mensaje) {
+            const input = document.querySelector(`#${campo}`);
+            if (input) {
+                // Crear o actualizar mensaje de error
+                let errorSpan = input.nextElementSibling;
+                if (!errorSpan || !errorSpan.classList.contains('text-danger')) {
+                    errorSpan = document.createElement('span');
+                    errorSpan.className = 'text-danger small';
+                    input.parentNode.insertBefore(errorSpan, input.nextElementSibling);
+                }
+                errorSpan.textContent = mensaje;
+                input.classList.add('is-invalid');
+            }
+        }
     </script>
 }
