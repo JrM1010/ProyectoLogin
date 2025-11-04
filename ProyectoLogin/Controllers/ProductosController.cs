@@ -84,7 +84,7 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductoCore producto, int stockMinimo = 0, int idProveedor = 0)
         {
-
+            // Cargar datos para la vista (en caso de error)
             var categorias = await _context.Categorias
                 .Where(c => c.Activo)
                 .OrderBy(c => c.Nombre)
@@ -100,15 +100,23 @@ namespace ProyectoLogin.Controllers
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-            // Categorías
             ViewBag.CategoriasSelect = new SelectList(categorias, "IdCategoria", "Nombre");
             ViewBag.CategoriasLista = categorias;
-
-            // Marcas 
             ViewBag.MarcasSelect = new SelectList(marcas, "IdMarca", "Nombre");
-
-            // Proveedores 
             ViewBag.Proveedores = proveedores;
+            ViewBag.MarcasLista = marcas;
+            ViewBag.CodigoGenerado = $"PROD-{new Random().Next(0, 10000):D4}";
+
+            // Validaciones adicionales
+            if (idProveedor <= 0)
+            {
+                ModelState.AddModelError("idProveedor", "Debe seleccionar un proveedor.");
+            }
+
+            if (string.IsNullOrWhiteSpace(producto.Descripcion))
+            {
+                ModelState.AddModelError("Descripcion", "Las especificaciones del producto son obligatorias.");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -123,11 +131,10 @@ namespace ProyectoLogin.Controllers
                     producto.CodigoBarras = await GenerarCodigoProductoAsync();
                 }
 
-
                 producto.Activo = true;
+                producto.FechaCreacion = DateTime.UtcNow;
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
-
 
                 var invExistente = await _context.Inventarios.FirstOrDefaultAsync(i => i.IdProducto == producto.IdProducto);
                 if (invExistente == null)
@@ -136,15 +143,13 @@ namespace ProyectoLogin.Controllers
                     {
                         IdProducto = producto.IdProducto,
                         StockActual = 0,
-                        StockMinimo = stockMinimo
+                        StockMinimo = stockMinimo,
+                        FechaUltimaActualizacion = DateTime.UtcNow
                     };
                     _context.Inventarios.Add(inv);
-
-
                 }
                 else
                 {
-                    
                     invExistente.StockMinimo = stockMinimo;
                     _context.Inventarios.Update(invExistente);
                 }
@@ -162,8 +167,21 @@ namespace ProyectoLogin.Controllers
                     _context.ProductosProveedores.Add(rel);
                 }
 
-
                 await _context.SaveChangesAsync();
+
+                // Registrar en bitácora
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = idUsuario,
+                    Accion = "Creación de producto",
+                    Descripcion = $"Producto '{producto.Nombre}' creado exitosamente.",
+                    Modulo = "Productos",
+                    Fecha = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Producto creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
