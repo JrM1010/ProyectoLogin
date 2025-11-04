@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
+using ProyectoLogin.Recursos;
 
 [Authorize(Roles = "Administrador")]
 public class AdminController : Controller
@@ -98,26 +99,47 @@ public class AdminController : Controller
         return View(usuario);
     }
 
-
-    // Editar usuario (cambios en rol)
+    // Editar usuario - POST
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(Usuario model)
     {
-        var usuario = await _context.Usuarios.FindAsync(model.IdUsuario);
-        if (usuario == null) return NotFound();
+        // Cargar roles para la vista en caso de error
+        ViewBag.Roles = await _context.Roles.ToListAsync();
 
-        if (model.IdRol == 0)
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError("IdRol", "Debe seleccionar un rol válido.");
-            ViewBag.Roles = await _context.Roles.ToListAsync();
+            ViewData["Mensaje"] = "Por favor, corrija los errores en el formulario";
             return View(model);
         }
 
-        usuario.IdRol = model.IdRol;
-        _context.Update(usuario);
-        await _context.SaveChangesAsync();
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(model.IdUsuario);
+            if (usuario == null) return NotFound();
 
-        return RedirectToAction("Usuarios");
+            // Actualizar solo los campos permitidos
+            usuario.NombreUsuario = model.NombreUsuario;
+            usuario.Correo = model.Correo;
+            usuario.IdRol = model.IdRol;
+
+            // NOTA: La contraseña NO se actualiza - se mantiene la existente
+
+            _context.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Usuario actualizado correctamente.";
+            return RedirectToAction("Usuarios");
+        }
+        catch (DbUpdateException ex)
+        {
+            ViewData["Mensaje"] = "Error al actualizar el usuario. Verifique que el correo no esté en uso.";
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            ViewData["Mensaje"] = "Ocurrió un error inesperado: " + ex.Message;
+            return View(model);
+        }
     }
 }

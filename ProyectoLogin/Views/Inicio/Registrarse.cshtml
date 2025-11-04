@@ -9,7 +9,7 @@
         <div class="col-12 col-xl-6 col-lg-8 col-md-10">
             <!-- CARD PRINCIPAL -->
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
+                <div class="card-header bg-success text-white py-3">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-person-plus fs-4 me-2"></i>
                         <h4 class="mb-0">Registrar Nuevo Usuario</h4>
@@ -17,13 +17,13 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form asp-controller="Inicio" asp-action="Registrarse" method="post">
+                    <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off">
                         @Html.AntiForgeryToken()
 
                         <!-- INFORMACIÓN PERSONAL -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary mb-3">
+                                <h6 class="text-success mb-3">
                                     <i class="bi bi-person-badge me-2"></i>Información Personal
                                 </h6>
                             </div>
@@ -34,7 +34,7 @@
                                         <i class="bi bi-person"></i>
                                     </span>
                                     <input class="form-control" type="text" asp-for="NombreUsuario"
-                                           placeholder="Ejemplo: Juan Pérez" required />
+                                           placeholder="Ejemplo: Juan Pérez" autocomplete="new-name" />
                                 </div>
                                 <span asp-validation-for="NombreUsuario" class="text-danger small"></span>
                             </div>
@@ -46,7 +46,7 @@
                                         <i class="bi bi-envelope"></i>
                                     </span>
                                     <input class="form-control" type="email" asp-for="Correo"
-                                           placeholder="usuario@correo.com" required />
+                                           placeholder="usuario@correo.com" autocomplete="new-email" />
                                 </div>
                                 <span asp-validation-for="Correo" class="text-danger small"></span>
                             </div>
@@ -55,7 +55,7 @@
                         <!-- SEGURIDAD Y ROL -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary mb-3">
+                                <h6 class="text-success mb-3">
                                     <i class="bi bi-shield-lock me-2"></i>Seguridad y Permisos
                                 </h6>
                             </div>
@@ -65,11 +65,21 @@
                                     <span class="input-group-text bg-light">
                                         <i class="bi bi-key"></i>
                                     </span>
-                                    <input class="form-control" type="password" asp-for="Clave"
-                                           placeholder="Mínimo 6 caracteres" required />
+                                    <input class="form-control" type="password" asp-for="Clave" id="passwordField"
+                                           placeholder="Ingrese una contraseña segura" autocomplete="new-password" />
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="bi bi-eye" id="passwordIcon"></i>
+                                    </button>
                                 </div>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>La contraseña debe tener al menos 6 caracteres
+                                <!-- Información sobre requisitos de contraseña -->
+                                <div class="form-text text-muted small">
+                                    <i class="bi bi-info-circle me-1"></i>La contraseña debe cumplir con:
+                                    <ul class="mb-0 mt-1 ps-3">
+                                        <li>Mínimo 8 caracteres</li>
+                                        <li>Al menos una letra mayúscula</li>
+                                        <li>Al menos un número</li>
+                                        <li>Al menos un carácter especial (!#$%^&*()_+-=[]{}|;:',.<>?)</li>
+                                    </ul>
                                 </div>
                                 <span asp-validation-for="Clave" class="text-danger small"></span>
                             </div>
@@ -99,9 +109,19 @@
                             </div>
                         }
 
+                        <!-- Mostrar errores de validación del modelo -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Por favor, corrija los errores en el formulario.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
                         <!-- BOTONES DE ACCIÓN -->
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                           
+
                             <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-secondary rounded-pill" title="Volver a la gestión de usuarios">
                                 <i class="bi bi-arrow-left me-1"></i>Volver a Usuarios
                             </a>
@@ -143,7 +163,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
             </div>
@@ -156,18 +176,72 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Limpiar cualquier autocompletado que el navegador haya puesto
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                // Forzar limpieza de valores autocompletados
+                if (input.value && input.getAttribute('autocomplete') !== 'off') {
+                    input.value = '';
+                }
+            });
+
             // Focus en el primer campo al cargar
             const firstInput = document.querySelector('input[type="text"]');
-            if (firstInput) firstInput.focus();
+            if (firstInput) {
+                firstInput.focus();
+                // Asegurarse de que esté vacío
+                if (firstInput.value) {
+                    firstInput.value = '';
+                }
+            }
+
+            // Limpiar específicamente el campo de contraseña
+            const passwordField = document.getElementById('passwordField');
+            if (passwordField && passwordField.value) {
+                passwordField.value = '';
+            }
 
             // Auto-ocultar alertas después de 5 segundos
-            const alert = document.querySelector('.alert');
-            if (alert) {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
                 setTimeout(() => {
                     const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
                     bsAlert.close();
                 }, 5000);
+            });
+
+            // Funcionalidad para mostrar/ocultar contraseña
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordIcon = document.getElementById('passwordIcon');
+
+            if (togglePassword && passwordField && passwordIcon) {
+                togglePassword.addEventListener('click', function() {
+                    // Cambiar el tipo de input
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+
+                    // Cambiar el icono
+                    if (type === 'text') {
+                        passwordIcon.classList.remove('bi-eye');
+                        passwordIcon.classList.add('bi-eye-slash');
+                        togglePassword.setAttribute('title', 'Ocultar contraseña');
+                    } else {
+                        passwordIcon.classList.remove('bi-eye-slash');
+                        passwordIcon.classList.add('bi-eye');
+                        togglePassword.setAttribute('title', 'Mostrar contraseña');
+                    }
+                });
             }
+
+            // Prevenir que el navegador sugiera contraseñas guardadas
+            document.addEventListener('readystatechange', function() {
+                if (document.readyState === 'complete') {
+                    const forms = document.querySelectorAll('form');
+                    forms.forEach(form => {
+                        form.reset();
+                    });
+                }
+            });
         });
     </script>
 }

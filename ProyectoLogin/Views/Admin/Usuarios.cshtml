@@ -18,13 +18,18 @@
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="bi bi-people-fill text-primary me-2"></i>Gestión de Usuarios
-        </h2>
+    <h2 class="mb-0">
+        <i class="bi bi-people-fill text-primary me-2"></i>Gestión de Usuarios
+    </h2>
+    <div class="d-flex align-items-center gap-2">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left me-1"></i>Inicio
+        </a>
         <a class="btn btn-success rounded-pill" asp-controller="Inicio" asp-action="Registrarse" title="Registrar nuevo usuario">
             <i class="bi bi-person-plus me-1"></i>Registrar Usuario
         </a>
     </div>
+</div>
 
     <!-- Barra de búsqueda -->
     <div class="card shadow-sm mb-4">
