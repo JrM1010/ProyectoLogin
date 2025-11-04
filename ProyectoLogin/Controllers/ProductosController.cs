@@ -18,13 +18,13 @@ namespace ProyectoLogin.Controllers
         }
 
         // LISTADO - muestra datos generales, stock y precio de venta (último activo)
-        public async Task<IActionResult> Index(string q)
+        public async Task<IActionResult> Index(string q, int pageActivos = 1, int pageInactivos = 1, int pageSize = 1)
         {
             var productos = _context.Productos
                 .Include(p => p.Categoria)
                 .Include(p => p.Marca)
                 .Include(p => p.Inventario)
-                .AsQueryable(); // <-- quitar WhereActivo()
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(q))
             {
@@ -34,6 +34,23 @@ namespace ProyectoLogin.Controllers
 
             var lista = await productos.OrderBy(p => p.Nombre).ToListAsync();
 
+            // Separar activos e inactivos
+            var activos = lista.Where(p => p.Activo).ToList();
+            var inactivos = lista.Where(p => !p.Activo).ToList();
+
+            // Aplicar paginación independiente
+            var activosPaginados = activos.Skip((pageActivos - 1) * pageSize).Take(pageSize).ToList();
+            var inactivosPaginados = inactivos.Skip((pageInactivos - 1) * pageSize).Take(pageSize).ToList();
+
+            // Calcular total de páginas
+            ViewBag.TotalActivos = activos.Count;
+            ViewBag.TotalInactivos = inactivos.Count;
+            ViewBag.PageSize = pageSize;
+            ViewBag.PageActivos = pageActivos;
+            ViewBag.PageInactivos = pageInactivos;
+            ViewBag.TotalPagesActivos = (int)Math.Ceiling(activos.Count / (double)pageSize);
+            ViewBag.TotalPagesInactivos = (int)Math.Ceiling(inactivos.Count / (double)pageSize);
+
             var precios = await _context.ProductoPrecio
                 .Where(pp => pp.Activo)
                 .GroupBy(pp => pp.IdProducto)
@@ -41,6 +58,10 @@ namespace ProyectoLogin.Controllers
                 .ToListAsync();
 
             ViewBag.Precios = precios;
+
+            // Pasar las listas paginadas a la vista
+            ViewBag.Activos = activosPaginados;
+            ViewBag.Inactivos = inactivosPaginados;
 
             return View(lista);
         }
