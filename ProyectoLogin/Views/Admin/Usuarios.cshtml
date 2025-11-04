@@ -1,6 +1,19 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Usuario>
 @{
-    var inactivos = ViewBag.UsuariosInactivos as List<ProyectoLogin.Models.Usuario>;
+    // Usar las listas paginadas del ViewBag
+    var activos = ViewBag.Activos as List<ProyectoLogin.Models.Usuario> 
+                  ?? new List<ProyectoLogin.Models.Usuario>();
+    var inactivos = ViewBag.Inactivos as List<ProyectoLogin.Models.Usuario> 
+                   ?? new List<ProyectoLogin.Models.Usuario>();
+
+    // Variables de paginación
+    var totalActivos = ViewBag.TotalActivos ?? 0;
+    var totalInactivos = ViewBag.TotalInactivos ?? 0;
+    var pageSize = ViewBag.PageSize ?? 10;
+    var pageActivos = ViewBag.PageActivos ?? 1;
+    var pageInactivos = ViewBag.PageInactivos ?? 1;
+    var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
+    var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
 }
 
 <div class="container-fluid">
@@ -13,15 +26,37 @@
         </a>
     </div>
 
+    <!-- Barra de búsqueda -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Usuarios" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="col-form-label">Buscar usuario:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control"
+                           style="width: 300px" placeholder="Nombre o correo del usuario..." />
+                </div>
+                <div class="col-auto">
+                    <input type="hidden" name="pageActivos" value="1" />
+                    <input type="hidden" name="pageInactivos" value="1" />
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- USUARIOS ACTIVOS -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-success text-white d-flex align-items-center">
             <i class="bi bi-person-check fs-5 me-2"></i>
             <h5 class="mb-0 me-2">Usuarios Activos</h5>
-            <span class="badge bg-light text-success fs-6">@Model.Count()</span>
+            <span class="badge bg-light text-success fs-6">@totalActivos</span>
         </div>
         <div class="card-body p-0">
-            @if (!Model.Any())
+            @if (!activos.Any())
             {
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-people fs-1 mb-2"></i>
@@ -42,7 +77,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var usuario in Model)
+                            @foreach (var usuario in activos)
                             {
                                 <tr>
                                     <td class="ps-3 fw-semibold text-muted">#@usuario.IdUsuario</td>
@@ -66,6 +101,7 @@
 
                                             <!-- Desactivar -->
                                             <form asp-action="Desactivar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm"
                                                         title="Desactivar usuario"
                                                         onclick="return confirm('¿Estás seguro de desactivar a @usuario.NombreUsuario?')">
@@ -79,18 +115,135 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- PAGINACIÓN USUARIOS ACTIVOS - DISEÑO DISIMULADO -->
+                @if (totalPagesActivos > 1)
+                {
+                    <div class="p-3 border-top bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Página @pageActivos de @totalPagesActivos • 
+                                Mostrando @activos.Count() de @totalActivos usuarios
+                            </div>
+                            <div class="pagination-container">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <!-- Flecha anterior -->
+                                    @if (pageActivos > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Usuarios", new { 
+                                                   q = ViewData["q"], 
+                                                   pageActivos = pageActivos - 1, 
+                                                   pageInactivos = pageInactivos, 
+                                                   pageSize = pageSize 
+                                               })">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    <!-- Números de página - máximo 5 páginas visibles -->
+                                    @{
+                                        int startPage = Math.Max(1, pageActivos - 2);
+                                        int endPage = Math.Min(totalPagesActivos, pageActivos + 2);
+                                        
+                                        if (startPage > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = 1, 
+                                                       pageInactivos = pageInactivos, 
+                                                       pageSize = pageSize 
+                                                   })">1</a>
+                                            </li>
+                                            if (startPage > 2)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                        }
+
+                                        for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == pageActivos ? "active" : "")">
+                                                <a class="page-link"
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = i, 
+                                                       pageInactivos = pageInactivos, 
+                                                       pageSize = pageSize 
+                                                   })">@i</a>
+                                            </li>
+                                        }
+
+                                        if (endPage < totalPagesActivos)
+                                        {
+                                            if (endPage < totalPagesActivos - 1)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = totalPagesActivos, 
+                                                       pageInactivos = pageInactivos, 
+                                                       pageSize = pageSize 
+                                                   })">@totalPagesActivos</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    <!-- Flecha siguiente -->
+                                    @if (pageActivos < totalPagesActivos)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Usuarios", new { 
+                                                   q = ViewData["q"], 
+                                                   pageActivos = pageActivos + 1, 
+                                                   pageInactivos = pageInactivos, 
+                                                   pageSize = pageSize 
+                                               })">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
         </div>
     </div>
 
-    <!-- USUARIOS INACTIVOS -->
-    @if (inactivos != null && inactivos.Any())
+    <!-- USUARIOS INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
+    @if (totalInactivos > 0)
     {
         <div class="card shadow-sm">
             <div class="card-header bg-secondary text-white d-flex align-items-center">
                 <i class="bi bi-person-x fs-5 me-2"></i>
                 <h5 class="mb-0 me-2">Usuarios Inactivos</h5>
-                <span class="badge bg-light text-secondary fs-6">@inactivos.Count()</span>
+                <span class="badge bg-light text-secondary fs-6">@totalInactivos</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -123,6 +276,7 @@
                                         <div class="d-flex justify-content-center gap-1">
                                             <!-- Activar -->
                                             <form asp-action="Activar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-success rounded-circle btn-sm"
                                                         title="Activar usuario"
                                                         onclick="return confirm('¿Estás seguro de activar a @usuario.NombreUsuario?')">
@@ -136,24 +290,136 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-person-x me-2"></i>Usuarios Inactivos
-                </h5>
-            </div>
-            <div class="card-body text-center py-4 text-muted">
-                <i class="bi bi-emoji-smile fs-1 mb-2"></i>
-                <p class="mb-0">No hay usuarios inactivos</p>
+
+                <!-- PAGINACIÓN USUARIOS INACTIVOS - DISEÑO DISIMULADO -->
+                @if (totalPagesInactivos > 1)
+                {
+                    <div class="p-3 border-top bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                Página @pageInactivos de @totalPagesInactivos • 
+                                Mostrando @inactivos.Count() de @totalInactivos usuarios
+                            </div>
+                            <div class="pagination-container">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <!-- Flecha anterior -->
+                                    @if (pageInactivos > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Usuarios", new { 
+                                                   q = ViewData["q"], 
+                                                   pageActivos = pageActivos, 
+                                                   pageInactivos = pageInactivos - 1, 
+                                                   pageSize = pageSize 
+                                               })">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                        </li>
+                                    }
+
+                                    <!-- Números de página - máximo 5 páginas visibles -->
+                                    @{
+                                        int startPageInactivos = Math.Max(1, pageInactivos - 2);
+                                        int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
+                                        
+                                        if (startPageInactivos > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = 1, 
+                                                       pageSize = pageSize 
+                                                   })">1</a>
+                                            </li>
+                                            if (startPageInactivos > 2)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                        }
+
+                                        for (int i = startPageInactivos; i <= endPageInactivos; i++)
+                                        {
+                                            <li class="page-item @(i == pageInactivos ? "active" : "")">
+                                                <a class="page-link"
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = i, 
+                                                       pageSize = pageSize 
+                                                   })">@i</a>
+                                            </li>
+                                        }
+
+                                        if (endPageInactivos < totalPagesInactivos)
+                                        {
+                                            if (endPageInactivos < totalPagesInactivos - 1)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                            <li class="page-item">
+                                                <a class="page-link" 
+                                                   href="@Url.Action("Usuarios", new { 
+                                                       q = ViewData["q"], 
+                                                       pageActivos = pageActivos, 
+                                                       pageInactivos = totalPagesInactivos, 
+                                                       pageSize = pageSize 
+                                                   })">@totalPagesInactivos</a>
+                                            </li>
+                                        }
+                                    }
+
+                                    <!-- Flecha siguiente -->
+                                    @if (pageInactivos < totalPagesInactivos)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" 
+                                               href="@Url.Action("Usuarios", new { 
+                                                   q = ViewData["q"], 
+                                                   pageActivos = pageActivos, 
+                                                   pageInactivos = pageInactivos + 1, 
+                                                   pageSize = pageSize 
+                                               })">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.querySelector('input[name="q"]');
+            if (input) input.focus();
+        });
+    </script>
+}
 
 <style>
     .table td {
@@ -166,5 +432,40 @@
 
     .card-header {
         border-bottom: none;
+    }
+
+    /* Estilos para la paginación disimulada */
+    .pagination-container {
+        background: transparent;
+    }
+
+    .pagination-sm .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        background: white;
+    }
+
+    .pagination-sm .page-item.active .page-link {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+
+    .pagination-sm .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: #495057;
+    }
+
+    .pagination-sm .page-item.disabled .page-link {
+        color: #adb5bd;
+        background-color: white;
+        border-color: #dee2e6;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
     }
 </style>

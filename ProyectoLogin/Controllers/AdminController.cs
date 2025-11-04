@@ -13,20 +13,49 @@ public class AdminController : Controller
         _context = context;
     }
 
-    // Listar usuarios (activos e inactivos)
-    public async Task<IActionResult> Usuarios()
+    // Listar usuarios (activos e inactivos) con paginación
+    public async Task<IActionResult> Usuarios(string q, int pageActivos = 1, int pageInactivos = 1, int pageSize = 5)
     {
-        var usuariosActivos = await _context.Usuarios
+        var usuariosQuery = _context.Usuarios
             .Include(u => u.Rol)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(q))
+        {
+            usuariosQuery = usuariosQuery.Where(u =>
+                u.NombreUsuario.Contains(q) ||
+                u.Correo.Contains(q));
+            ViewData["q"] = q;
+        }
+
+        // Separar activos e inactivos
+        var usuariosActivos = await usuariosQuery
             .Where(u => u.Activo)
+            .OrderBy(u => u.NombreUsuario)
             .ToListAsync();
 
-        var usuariosInactivos = await _context.Usuarios
-            .Include(u => u.Rol)
+        var usuariosInactivos = await usuariosQuery
             .Where(u => !u.Activo)
+            .OrderBy(u => u.NombreUsuario)
             .ToListAsync();
 
-        ViewBag.UsuariosInactivos = usuariosInactivos;
+        // Aplicar paginación independiente
+        var activosPaginados = usuariosActivos.Skip((pageActivos - 1) * pageSize).Take(pageSize).ToList();
+        var inactivosPaginados = usuariosInactivos.Skip((pageInactivos - 1) * pageSize).Take(pageSize).ToList();
+
+        // Calcular total de páginas
+        ViewBag.TotalActivos = usuariosActivos.Count;
+        ViewBag.TotalInactivos = usuariosInactivos.Count;
+        ViewBag.PageSize = pageSize;
+        ViewBag.PageActivos = pageActivos;
+        ViewBag.PageInactivos = pageInactivos;
+        ViewBag.TotalPagesActivos = (int)Math.Ceiling(usuariosActivos.Count / (double)pageSize);
+        ViewBag.TotalPagesInactivos = (int)Math.Ceiling(usuariosInactivos.Count / (double)pageSize);
+
+        // Pasar las listas paginadas a la vista
+        ViewBag.Activos = activosPaginados;
+        ViewBag.Inactivos = inactivosPaginados;
+
         return View(usuariosActivos);
     }
 

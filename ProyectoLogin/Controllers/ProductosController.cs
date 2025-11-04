@@ -18,7 +18,7 @@ namespace ProyectoLogin.Controllers
         }
 
         // LISTADO - muestra datos generales, stock y precio de venta (último activo)
-        public async Task<IActionResult> Index(string q, int pageActivos = 1, int pageInactivos = 1, int pageSize = 1)
+        public async Task<IActionResult> Index(string q, int pageActivos = 1, int pageInactivos = 1, int pageSize = 5)
         {
             var productos = _context.Productos
                 .Include(p => p.Categoria)

@@ -150,7 +150,179 @@
     </div>
 </div>
 
-  <style>
+<!-- Modal para Categorías -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalCategoriaLabel">
+                    <i class="bi bi-tags me-2"></i>Gestión de Categorías
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Alertas para Categorías -->
+                @if (TempData["MensajeCategoria"] != null)
+                {
+                    <div class="alert alert-@(TempData["TipoCategoria"]?.ToString() ?? "info") alert-dismissible fade show">
+                        <i class="bi bi-@(GetAlertIcon(TempData["TipoCategoria"]?.ToString())) me-2"></i>
+                        @TempData["MensajeCategoria"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <!-- Formulario para Crear/Editar Categoría -->
+                <form id="formCategoria" method="post" asp-action="CrearCategoria">
+                    <input type="hidden" id="idCategoria" name="id" value="">
+                    <div class="mb-3">
+                        <label for="nombreCategoria" class="form-label fw-semibold">Nombre de la Categoría <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombreCategoria" name="nombre" required placeholder="Ingrese el nombre de la categoría">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcionCategoria" class="form-label fw-semibold">Descripción</label>
+                        <textarea class="form-control" id="descripcionCategoria" name="descripcion" rows="3" placeholder="Descripción opcional de la categoría"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success" id="btnGuardarCategoria">
+                            <i class="bi bi-check-lg me-1"></i>Guardar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarEdicion" style="display: none;">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
+                            <i class="bi bi-door-closed me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Lista de Categorías Existentes -->
+                <h6 class="fw-semibold mb-3">Categorías Existentes</h6>
+                <div class="table-responsive" style="max-height: 300px;">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var categoria in ViewBag.CategoriasLista)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@categoria.Nombre</td>
+                                    <td class="text-muted">@(categoria.Descripcion ?? "Sin descripción")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                    onclick="editarCategoria(@categoria.IdCategoria, '@categoria.Nombre', '@categoria.Descripcion')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    onclick="eliminarCategoria(@categoria.IdCategoria, '@categoria.Nombre')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Marcas -->
+<div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalMarcaLabel">
+                    <i class="bi bi-bookmark-star me-2"></i>Gestión de Marcas
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Alertas para Marcas -->
+                @if (TempData["MensajeMarca"] != null)
+                {
+                    <div class="alert alert-@(TempData["TipoMarca"]?.ToString() ?? "info") alert-dismissible fade show">
+                        <i class="bi bi-@(GetAlertIcon(TempData["TipoMarca"]?.ToString())) me-2"></i>
+                        @TempData["MensajeMarca"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <!-- Formulario para Crear/Editar Marca -->
+                <form id="formMarca" method="post" asp-action="CrearMarca">
+                    <input type="hidden" id="idMarca" name="id" value="">
+                    <div class="mb-3">
+                        <label for="nombreMarca" class="form-label fw-semibold">Nombre de la Marca <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="nombreMarca" name="nombre" required placeholder="Ingrese el nombre de la marca">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success" id="btnGuardarMarca">
+                            <i class="bi bi-check-lg me-1"></i>Guardar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarEdicionMarca" style="display: none;">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
+                            <i class="bi bi-door-closed me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Lista de Marcas Existentes -->
+                <h6 class="fw-semibold mb-3">Marcas Existentes</h6>
+                <div class="table-responsive" style="max-height: 300px;">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var marca in ViewBag.MarcasLista)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@marca.Nombre</td>
+                                    <td>
+                                        <span class="badge bg-@(marca.Activo ? "success" : "secondary")">
+                                            @(marca.Activo ? "Activa" : "Inactiva")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                    onclick="editarMarca(@marca.IdMarca, '@marca.Nombre')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    onclick="eliminarMarca(@marca.IdMarca, '@marca.Nombre')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
     .is-invalid {
         border-color: #dc3545 !important;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
@@ -164,9 +336,22 @@
     .text-danger {
         font-weight: 500;
     }
-  </style>
+</style>
 
-<!-- Los modales de Categorías y Marcas se mantienen igual que antes -->
+@functions {
+    private string GetAlertIcon(string tipo)
+    {
+        return tipo?.ToLower() switch
+        {
+            "success" => "check-circle-fill",
+            "danger" => "exclamation-triangle-fill",
+            "warning" => "exclamation-triangle-fill",
+            "info" => "info-circle-fill",
+            _ => "info-circle-fill"
+        };
+    }
+}
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
@@ -267,11 +452,11 @@
             });
         });
 
-        // --- FUNCIONALIDAD DE MODALES (se mantiene igual) ---
+        // --- FUNCIONALIDAD DE MODALES ---
         function editarCategoria(id, nombre, descripcion) {
             document.getElementById('idCategoria').value = id;
             document.getElementById('nombreCategoria').value = nombre;
-            document.getElementById('descripcionCategoria').value = descripcion;
+            document.getElementById('descripcionCategoria').value = descripcion || '';
             const form = document.getElementById('formCategoria');
             form.action = '/Productos/EditarCategoria';
             document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
@@ -307,6 +492,54 @@
             document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
         });
 
+        function eliminarCategoria(id, nombre) {
+            if (confirm(`¿Está seguro de que desea eliminar la categoría "${nombre}"?`)) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/Productos/EliminarCategoria';
+
+                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = csrfToken;
+                form.appendChild(tokenInput);
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function eliminarMarca(id, nombre) {
+            if (confirm(`¿Está seguro de que desea eliminar la marca "${nombre}"?`)) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/Productos/EliminarMarca';
+
+                const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = csrfToken;
+                form.appendChild(tokenInput);
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
         // Reabrir modal tras acción
         document.addEventListener('DOMContentLoaded', function() {
             const modalToOpen = '@TempData["AbrirModal"]';
@@ -316,8 +549,5 @@
                 new bootstrap.Modal('#modalMarca').show();
             }
         });
-
-
-
     </script>
 }
