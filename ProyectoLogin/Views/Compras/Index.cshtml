@@ -4,6 +4,11 @@
     ViewData["Title"] = "Gestión de Compras";
     var estadoActual = ViewBag.EstadoActual as string ?? "Pendiente";
     var estados = ViewBag.Estados as List<string> ?? new List<string>();
+    var proveedorFiltro = ViewBag.ProveedorFiltro as string ?? "";
+    var paginaActual = ViewBag.PaginaActual ?? 1;
+    var totalPaginas = ViewBag.TotalPaginas ?? 1;
+    var totalElementos = ViewBag.TotalElementos ?? 0;
+    var elementosPorPagina = ViewBag.ElementosPorPagina ?? 10;
 }
 
 <div class="container-fluid py-4">
@@ -36,20 +41,64 @@
     <!-- Filtros de estado -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <div class="btn-group">
-                @foreach (var estado in estados)
-                {
-                    <a href="@Url.Action("Index", new { estado = estado })"
-                       class="btn @(estado == estadoActual ? "btn-primary text-white" : "btn-outline-primary") rounded-pill px-3">
-                        <i class="bi @(estado == "Pendiente" ? "bi-hourglass-split" :
-                                                                 estado == "Confirmada" ? "bi-check2-square" :
-                                                                 estado == "Completada" ? "bi-flag-fill" : "bi-circle") me-1"></i>
-                    @estado
-                </a>
-                                }
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="btn-group">
+                        @foreach (var estado in estados)
+                        {
+                            <a href="@Url.Action("Index", new { estado = estado, proveedor = proveedorFiltro })"
+                               class="btn @(estado == estadoActual ? "btn-primary text-white" : "btn-outline-primary") rounded-pill px-3">
+                                <i class="bi @(estado == "Pendiente" ? "bi-hourglass-split" :
+                                                                                 estado == "Confirmada" ? "bi-check2-square" :
+                                                                                 estado == "Completada" ? "bi-flag-fill" : "bi-circle") me-1"></i>
+                            @estado
+                        </a>
+                                                }
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- Filtro por proveedor -->
+                    <form method="get" action="@Url.Action("Index")" class="d-flex gap-2">
+                        <input type="hidden" name="estado" value="@estadoActual" />
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Buscar por proveedor..."
+                                   name="proveedor"
+                                   value="@proveedorFiltro"
+                                   aria-label="Buscar proveedor">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            @if (!string.IsNullOrEmpty(proveedorFiltro))
+                            {
+                                <a href="@Url.Action("Index", new { estado = estadoActual })"
+                                   class="btn btn-outline-danger"
+                                   title="Limpiar filtro">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            }
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Información de resultados -->
+    @if (!string.IsNullOrEmpty(proveedorFiltro))
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <span>
+                <i class="bi bi-funnel me-2"></i>
+                Filtrado por proveedor: <strong>@proveedorFiltro</strong>
+                <span class="badge bg-primary ms-2">@totalElementos resultado(s)</span>
+            </span>
+            <a href="@Url.Action("Index", new { estado = estadoActual })" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-x-circle me-1"></i> Limpiar filtro
+            </a>
+        </div>
+    }
 
     <!-- Tabla de compras -->
     <div class="card border-0 shadow-sm">
@@ -78,9 +127,9 @@
                                     <td>@compra.Total.ToString("C2")</td>
                                     <td>
                                         <span class="badge rounded-pill
-                                                    @(compra.Estado == "Pendiente" ? "bg-warning text-dark" :
-                                                                                            compra.Estado == "Confirmada" ? "bg-info text-dark" :
-                                                                                            compra.Estado == "Completada" ? "bg-success" : "bg-secondary")">
+                                                      @(compra.Estado == "Pendiente" ? "bg-warning text-dark" :
+                                                                                              compra.Estado == "Confirmada" ? "bg-info text-dark" :
+                                                                                              compra.Estado == "Completada" ? "bg-success" : "bg-secondary")">
                                     @compra.Estado
                                 </span>
                             </td>
@@ -134,12 +183,73 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Paginación -->
+                @if (totalPaginas > 1)
+                {
+                    <nav aria-label="Paginación de compras">
+                        <ul class="pagination justify-content-center mt-4">
+                            <!-- Botón Anterior -->
+                            <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", new { estado = estadoActual, proveedor = proveedorFiltro, pagina = paginaActual - 1 })">
+                                    <i class="bi bi-chevron-left"></i> Anterior
+                                </a>
+                            </li>
+
+                            <!-- Números de página -->
+                            @for (int i = 1; i <= totalPaginas; i++)
+                            {
+                                if (i == 1 || i == totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2))
+                                {
+                                    <li class="page-item @(i == paginaActual ? "active" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new { estado = estadoActual, proveedor = proveedorFiltro, pagina = i })">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+                                else if (i == paginaActual - 3 || i == paginaActual + 3)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+
+                            <!-- Botón Siguiente -->
+                            <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", new { estado = estadoActual, proveedor = proveedorFiltro, pagina = paginaActual + 1 })">
+                                    Siguiente <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+
+                <!-- Información de paginación -->
+                <div class="text-center text-muted mt-2">
+                    Mostrando <strong>@((paginaActual - 1) * elementosPorPagina + 1)-@Math.Min(paginaActual * elementosPorPagina, totalElementos)</strong>
+                    de <strong>@totalElementos</strong> compras
+                </div>
             }
             else
             {
                 <div class="alert alert-info text-center">
                     <i class="bi bi-info-circle me-2"></i>
-                    No hay compras en estado <strong>@estadoActual</strong>.
+                    @if (!string.IsNullOrEmpty(proveedorFiltro))
+                    {
+                        <text>
+                            No hay compras en estado <strong>@estadoActual</strong> para el proveedor <strong>@proveedorFiltro</strong>.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            No hay compras en estado <strong>@estadoActual</strong>.
+                        </text>
+                    }
                     @if (estadoActual == "Pendiente")
                     {
                         <a href="@Url.Action("Create")" class="alert-link">Crear una nueva compra</a>

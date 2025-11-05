@@ -20,25 +20,59 @@ namespace ProyectoLogin.Controllers
         {
             _context = context;
         }
+        
 
-        // 🔹 LISTAR COMPRAS
-        public async Task<IActionResult> Index(string estado = "Pendiente")
+        // 🔹 LISTAR COMPRAS CON FILTROS Y PAGINACIÓN
+        public async Task<IActionResult> Index(string estado = "Pendiente", string proveedor = "", int pagina = 1)
         {
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            var compras = await _context.Compras
+            // Configuración de paginación
+            int elementosPorPagina = 10;
+            int elementosASaltar = (pagina - 1) * elementosPorPagina;
+
+            // Consulta base
+            var consulta = _context.Compras
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
                 .Where(c => c.Estado == estado)
                 .OrderByDescending(c => c.FechaCompra)
-                .AsSplitQuery() // ✅ mejora rendimiento
+                .AsSplitQuery();
+
+            // Aplicar filtro por proveedor si se especifica
+            if (!string.IsNullOrEmpty(proveedor))
+            {
+                consulta = consulta.Where(c => c.Proveedor.Nombre.Contains(proveedor));
+            }
+
+            // Obtener el total de elementos para la paginación
+            int totalElementos = await consulta.CountAsync();
+            int totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
+
+            // Aplicar paginación
+            var compras = await consulta
+                .Skip(elementosASaltar)
+                .Take(elementosPorPagina)
                 .ToListAsync();
 
+            // Datos para la vista
             ViewBag.EstadoActual = estado;
             ViewBag.Estados = new List<string> { "Pendiente", "Confirmada", "Completada" };
+            ViewBag.ProveedorFiltro = proveedor;
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.TotalElementos = totalElementos;
+            ViewBag.ElementosPorPagina = elementosPorPagina;
+
+            // Obtener lista de proveedores para el dropdown
+            ViewBag.Proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .Select(p => new { p.IdProveedor, p.Nombre })
+                .ToListAsync();
 
             return View("~/Views/Compras/Index.cshtml", compras);
         }
