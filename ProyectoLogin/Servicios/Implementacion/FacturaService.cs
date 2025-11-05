@@ -19,212 +19,290 @@ namespace ProyectoLogin.Servicios.Implementacion
             _context = context;
         }
 
+        [Obsolete]
         public async Task<byte[]> GenerarFacturaAsync(int idVenta)
         {
-            // Licencia Community (obligatorio antes de generar)
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            QuestPDF.Settings.License = LicenseType.Community;
 
             var venta = await _context.Ventas
                 .Include(v => v.Cliente)
                 .Include(v => v.Detalles)
                     .ThenInclude(d => d.Producto)
+                        .ThenInclude(p => p.ProductosUnidades)
+                            .ThenInclude(pu => pu.UnidadMedida)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Kit) // 🔹 INCLUIR LA INFORMACIÓN DEL KIT
                 .Include(v => v.Usuario)
                 .FirstOrDefaultAsync(v => v.IdVenta == idVenta);
 
             if (venta == null)
                 throw new Exception("Venta no encontrada.");
 
-            // helper para formatear moneda local (Q)
             string Moneda(decimal valor) => $"Q{valor.ToString("N2", CultureInfo.InvariantCulture)}";
 
-            // Intentar cargar logo si existe (opcional)
+            // Colores corporativos
+            var colorPrimario = Colors.Blue.Darken3;
+            var colorSecundario = Colors.Grey.Darken3;
+            var colorFondoHeader = Colors.Blue.Lighten5;
+            var colorBorde = Colors.Grey.Lighten2;
+
+            // Logo (si existe)
             string logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "logo.png");
-            byte[]? logoBytes = null;
-            if (File.Exists(logoPath))
-            {
-                logoBytes = await File.ReadAllBytesAsync(logoPath);
-            }
+            byte[]? logoBytes = File.Exists(logoPath) ? await File.ReadAllBytesAsync(logoPath) : null;
 
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(25);
-                    page.DefaultTextStyle(x => x.FontSize(10));
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Helvetica"));
 
-                    // Header con logo + datos empresa + metadatos factura
-                    page.Header().Row(row =>
+                    // ENCABEZADO MEJORADO --------------------------------------------------
+                    page.Header().Background(colorFondoHeader).Padding(15).Row(row =>
                     {
                         row.RelativeColumn().Stack(stack =>
                         {
                             if (logoBytes != null)
-                            {
-                                stack.Item().Height(60).AlignLeft().Image(logoBytes);
-                            }
+                                stack.Item().Height(50).AlignLeft().Image(logoBytes);
                             else
-                            {
-                                stack.Item().Text("Smartcell").FontSize(22).SemiBold();
-                            }
+                                stack.Item().Text("SMARTCELL").FontSize(24).Bold().FontColor(colorPrimario);
 
-                            stack.Item().Text("SmartcellCompany").FontSize(10);
-                            stack.Item().Text("Tel: +502 1234-5678 | smartcellcompany001@gmail.com").FontSize(9).SemiBold();
-                            stack.Item().Text("Dirección: Zona 1, Ciudad, Guatemala").FontSize(9);
+                            stack.Item().PaddingTop(5).Text("Smartcell Company S.A.").FontSize(11).SemiBold().FontColor(colorSecundario);
+                            stack.Item().Text("Tel: +502 1234-5678").FontSize(9);
+                            stack.Item().Text("smartcellcompany001@gmail.com").FontSize(9);
+                            stack.Item().Text("Zona 1, Ciudad de Guatemala").FontSize(9);
                         });
 
-                        row.ConstantColumn(260).Stack(meta =>
+                        row.ConstantColumn(200).Stack(meta =>
                         {
-                            meta.Item().AlignRight().Text("FACTURA").FontSize(18).SemiBold();
-                            meta.Item().PaddingTop(5).Table(table =>
+                            meta.Item().Background(colorPrimario).Padding(8).AlignCenter().Text("FACTURA")
+                                .FontSize(16).Bold().FontColor(Colors.White);
+
+                            meta.Item().PaddingTop(10).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
                                 {
                                     columns.RelativeColumn();
-                                    columns.ConstantColumn(120);
+                                    columns.ConstantColumn(100);
                                 });
 
                                 table.Cell().Column(c =>
                                 {
-                                    c.Item().Text("N° Factura").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    c.Item().Text(venta.NumeroFactura ?? "-").FontSize(11).SemiBold();
+                                    c.Item().Text("N° Factura").FontSize(8).FontColor(Colors.Grey.Darken2);
+                                    c.Item().PaddingBottom(3).Text(venta.NumeroFactura ?? "-").FontSize(10).Bold();
                                 });
 
                                 table.Cell().Column(c =>
                                 {
-                                    c.Item().Text("Fecha emisión").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    c.Item().Text(venta.FechaVenta.ToString("dd/MM/yyyy HH:mm")).FontSize(11);
+                                    c.Item().Text("Fecha emisión").FontSize(8).FontColor(Colors.Grey.Darken2);
+                                    c.Item().PaddingBottom(3).Text(venta.FechaVenta.ToString("dd/MM/yyyy HH:mm")).FontSize(10);
                                 });
 
                                 table.Cell().Column(c =>
                                 {
-                                    c.Item().Text("N° Venta").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                    c.Item().Text(venta.NumeroVenta ?? "-").FontSize(11);
+                                    c.Item().Text("N° Venta").FontSize(8).FontColor(Colors.Grey.Darken2);
+                                    c.Item().PaddingBottom(3).Text(venta.NumeroVenta ?? "-").FontSize(10);
                                 });
 
                                 table.Cell().Column(c =>
                                 {
-                                    c.Item().Text("Atendió").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                    c.Item().Text("Atendió").FontSize(8).FontColor(Colors.Grey.Darken2);
                                     var nombreUsuario = venta.Usuario?.NombreUsuario ?? "-";
-                                    c.Item().Text(nombreUsuario).FontSize(11);
+                                    c.Item().PaddingBottom(3).Text(nombreUsuario).FontSize(10);
                                 });
                             });
                         });
                     });
 
-                    page.Content().Column(col =>
+                    // CONTENIDO MEJORADO --------------------------------------------------
+                    page.Content().PaddingVertical(15).Stack(content =>
                     {
-                        col.Spacing(10);
-
-                        // Datos del receptor (cliente)
-                        col.Item().Row(r =>
+                        // 🔹 DATOS GENERALES CON DISEÑO MEJORADO
+                        content.Item().PaddingBottom(15).Table(table =>
                         {
-                            r.RelativeColumn().Stack(clienteStack =>
+                            table.ColumnsDefinition(columns =>
                             {
-                                clienteStack.Item().Text("Datos del receptor").FontSize(12).SemiBold();
-                                clienteStack.Item().Text($"Nombre: {(venta.Cliente != null ? $"{venta.Cliente.Nombres} {venta.Cliente.Apellidos}".Trim() : "Consumidor Final (CF)")}");
-                                clienteStack.Item().Text($"NIT: {venta.Cliente?.Nit ?? "CF"}");
-                                clienteStack.Item().Text($"Dirección: {venta.Cliente?.Direccion ?? "-"}");
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                            });
+
+                            // Datos del Cliente
+                            table.Cell().Border(1).BorderColor(colorBorde).Padding(10).Stack(left =>
+                            {
+                                left.Item().PaddingBottom(5).Text("DATOS DEL CLIENTE").Bold().FontSize(11).FontColor(colorPrimario);
+                                left.Item().PaddingBottom(2).Text($"Nombre: {(venta.Cliente != null ? $"{venta.Cliente.Nombres} {venta.Cliente.Apellidos}".Trim() : "Consumidor Final (CF)")}");
+                                left.Item().PaddingBottom(2).Text($"NIT: {venta.Cliente?.Nit ?? "CF"}");
+                                left.Item().PaddingBottom(2).Text($"Dirección: {venta.Cliente?.Direccion ?? "-"}");
                                 if (!string.IsNullOrWhiteSpace(venta.Cliente?.Correo))
-                                    clienteStack.Item().Text($"Correo: {venta.Cliente.Correo}");
+                                    left.Item().Text($"Correo: {venta.Cliente.Correo}");
+                            });
+
+                            // Detalles de Venta
+                            table.Cell().Border(1).BorderColor(colorBorde).Padding(10).Stack(right =>
+                            {
+                                right.Item().PaddingBottom(5).Text("INFORMACIÓN DE VENTA").Bold().FontSize(11).FontColor(colorPrimario);
+                                right.Item().PaddingBottom(2).Text($"Fecha: {venta.FechaVenta:dd/MM/yyyy HH:mm}");
+                                right.Item().PaddingBottom(2).Text($"Método de pago: {venta.MetodoPago}");
+                                right.Item().PaddingBottom(2).Text($"Vendedor: {venta.Usuario?.NombreUsuario ?? "-"}");
+                                right.Item().Text($"Estado: {venta.Estado}");
                             });
                         });
 
-                        // Tabla de productos: # | Producto | Cant. | P.Unit | Subtotal
-                        col.Item().Table(table =>
+                        // 🔹 TABLA DE PRODUCTOS MEJORADA
+                        content.Item().PaddingTop(10).Table(table =>
                         {
-                            table.ColumnsDefinition(c =>
+                            table.ColumnsDefinition(columns =>
                             {
-                                c.ConstantColumn(30);           // #
-                                c.RelativeColumn(4);           // Producto
-                                c.ConstantColumn(50);          // Cant.
-                                c.ConstantColumn(90);          // P.Unit
-                                c.ConstantColumn(90);          // Subtotal
+                                columns.ConstantColumn(25); // #
+                                columns.RelativeColumn(3);  // Producto
+                                columns.ConstantColumn(60); // Unidad
+                                columns.ConstantColumn(60); // Cantidad
+                                columns.ConstantColumn(70); // Precio unitario
+                                columns.ConstantColumn(60); // Descuento
+                                columns.ConstantColumn(80); // Subtotal
                             });
 
-                            // Encabezado
+                            // Encabezado de tabla
                             table.Header(header =>
                             {
-                                header.Cell().Element(CellStyleHeader).Text("#");
-                                header.Cell().Element(CellStyleHeader).Text("Producto");
-                                header.Cell().Element(CellStyleHeader).AlignCenter().Text("Cant.");
-                                header.Cell().Element(CellStyleHeader).AlignRight().Text("P.Unit");
-                                header.Cell().Element(CellStyleHeader).AlignRight().Text("Subtotal");
+                                header.Cell().Background(colorPrimario).Padding(8).AlignCenter().Text("#").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).Text("PRODUCTO").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).AlignCenter().Text("UNIDAD").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).AlignCenter().Text("CANTIDAD").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).AlignRight().Text("P. UNIT.").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).AlignCenter().Text("DESC.").FontColor(Colors.White).Bold();
+                                header.Cell().Background(colorPrimario).Padding(8).AlignRight().Text("SUBTOTAL").FontColor(Colors.White).Bold();
                             });
 
                             int index = 1;
-                            foreach (var det in venta.Detalles)
+                            foreach (var d in venta.Detalles)
                             {
-                                decimal precioUnitario = det.PrecioUnitario;
-                                decimal cantidad = det.Cantidad;
-                                decimal descuentoPct = det.Descuento;
-                                decimal factorDescuento = 1 - (descuentoPct / 100m);
+                                // 🔹 CORRECCIÓN: OBTENER NOMBRE CORRECTO PARA KITS
+                                string nombreProducto;
+                                string unidad;
 
-                                // Subtotal con descuento (precios ya incluyen IVA)
-                                decimal lineaSubtotal = Math.Round(precioUnitario * factorDescuento * cantidad, 2);
+                                if (d.IdKit.HasValue && d.IdKit > 0)
+                                {
+                                    // Es un kit - usar el nombre del kit
+                                    nombreProducto = d.Kit?.Nombre ?? "(KIT)";
+                                    unidad = "Kit";
+                                }
+                                else
+                                {
+                                    // Es un producto normal
+                                    nombreProducto = d.Producto?.Nombre ?? "Producto no encontrado";
+                                    unidad = d.Producto?.ProductosUnidades?.FirstOrDefault()?.UnidadMedida?.Nombre ?? "Unidad";
+                                }
 
-                                table.Cell().Element(CellStyle).Text(index.ToString());
-                                table.Cell().Element(CellStyle).Text(det.Producto?.Nombre ?? "(KIT)");
-                                table.Cell().Element(CellStyle).AlignCenter().Text(cantidad.ToString("N0"));
-                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(precioUnitario));
-                                table.Cell().Element(CellStyle).AlignRight().Text(Moneda(lineaSubtotal));
+                                var descuento = d.Descuento > 0 ? $"{d.Descuento:N2}%" : "-";
+                                decimal subtotal = d.Subtotal > 0 ? d.Subtotal : Math.Round(d.Cantidad * d.PrecioUnitario * (1 - d.Descuento / 100m), 2);
+
+                                // Filas alternadas para mejor legibilidad
+                                var backgroundColor = index % 2 == 0 ? Colors.Grey.Lighten5 : Colors.White;
+
+                                table.Cell().Background(backgroundColor).Padding(6).AlignCenter().Text(index.ToString());
+                                table.Cell().Background(backgroundColor).Padding(6).Text(nombreProducto);
+                                table.Cell().Background(backgroundColor).Padding(6).AlignCenter().Text(unidad);
+                                table.Cell().Background(backgroundColor).Padding(6).AlignCenter().Text(d.Cantidad.ToString("N0"));
+                                table.Cell().Background(backgroundColor).Padding(6).AlignRight().Text(Moneda(d.PrecioUnitario));
+                                table.Cell().Background(backgroundColor).Padding(6).AlignCenter().Text(descuento);
+                                table.Cell().Background(backgroundColor).Padding(6).AlignRight().Text(Moneda(subtotal));
 
                                 index++;
                             }
-
-                            // estilos locales para celdas del header y cuerpo
-                            static IContainer CellStyleHeader(IContainer c)
-                            {
-                                return c.Padding(6f).Background(Colors.Grey.Lighten3).BorderBottom(1f).BorderColor(Colors.Grey.Lighten2).Height(26f).AlignMiddle();
-                            }
-
-                            static IContainer CellStyle(IContainer c)
-                            {
-                                return c.Padding(6f).BorderBottom(0f).Height(24f).AlignMiddle();
-                            }
                         });
 
-                        // Totales (alineado a la derecha)
-                        col.Item().PaddingTop(10f).Row(rowTot =>
+                        // 🔹 RESUMEN DE TOTALES MEJORADO
+                        content.Item().AlignRight().PaddingTop(20).Width(250).Table(totales =>
                         {
-                            rowTot.RelativeColumn().Stack(s => { /* espacio a la izquierda */ });
-
-                            rowTot.ConstantColumn(260).Column(tot =>
+                            totales.ColumnsDefinition(c =>
                             {
-                                // Mostrar solo el total (precios ya incluyen IVA)
-                                tot.Item().Row(r =>
-                                {
-                                    r.RelativeColumn().Text("Total:").FontSize(12).SemiBold();
-                                    r.ConstantColumn(120).AlignRight().Text(Moneda(venta.Total)).FontSize(12).SemiBold();
-                                });
-
-                                // Información sobre precios con IVA incluido
-                                tot.Item().PaddingTop(5f).Row(r =>
-                                {
-                                    r.RelativeColumn().Text(" ").FontSize(8);
-                                    r.ConstantColumn(120).AlignRight().Text("IVA incluido").FontSize(8).FontColor(Colors.Grey.Medium);
-                                });
+                                c.ConstantColumn(120);
+                                c.ConstantColumn(130);
                             });
+
+                            totales.Cell().BorderBottom(1).BorderColor(colorBorde).Padding(5).Text("Subtotal:").SemiBold();
+                            totales.Cell().BorderBottom(1).BorderColor(colorBorde).Padding(5).Text(Moneda(venta.Subtotal)).AlignRight();
+
+                            totales.Cell().BorderBottom(1).BorderColor(colorBorde).Padding(5).Text("IVA (12%):").SemiBold();
+                            totales.Cell().BorderBottom(1).BorderColor(colorBorde).Padding(5).Text(Moneda(venta.IVA)).AlignRight();
+
+                            totales.Cell().Background(colorPrimario).Padding(8).Text("TOTAL:").Bold().FontColor(Colors.White);
+                            totales.Cell().Background(colorPrimario).Padding(8).Text(Moneda(venta.Total)).Bold().FontColor(Colors.White).AlignRight();
                         });
 
-                        // Pie con notas y condiciones
-                        col.Item().PaddingTop(12f).Column(notes =>
+                        // 🔹 DETALLE DE KITS (INFORMACIÓN ADICIONAL)
+                        var kitsEnVenta = venta.Detalles.Where(d => d.IdKit.HasValue && d.IdKit > 0).ToList();
+                        if (kitsEnVenta.Any())
                         {
-                            notes.Item().Text("Condiciones:").FontSize(9).SemiBold();
-                            notes.Item().Text("Factura generada electrónicamente.").FontSize(9);
-                            notes.Item().Text("Todos los precios incluyen IVA.").FontSize(9);
-                            notes.Item().Text("Si tiene dudas sobre la factura, contacte a soporte: smartcellcompany001@gmail.com / +502 1234-5678").FontSize(9);
+                            content.Item().PaddingTop(25).Border(1).BorderColor(colorBorde).Padding(10).Stack(async kitsInfo =>
+                            {
+                                kitsInfo.Item().PaddingBottom(5).Text("COMPOSICIÓN DE KITS/PROMOCIONES").Bold().FontSize(10).FontColor(colorPrimario);
+
+                                foreach (var detalleKit in kitsEnVenta)
+                                {
+                                    if (detalleKit.Kit != null)
+                                    {
+                                        kitsInfo.Item().PaddingTop(3).Text($"{detalleKit.Kit.Nombre} (Cantidad: {detalleKit.Cantidad})").SemiBold().FontSize(9);
+
+                                        // Cargar los detalles del kit si no están incluidos
+                                        var kitCompleto = await _context.Kits
+                                            .Include(k => k.Detalles)
+                                                .ThenInclude(d => d.Producto)
+                                            .FirstOrDefaultAsync(k => k.IdKit == detalleKit.IdKit);
+
+                                        if (kitCompleto?.Detalles != null)
+                                        {
+                                            foreach (var detalle in kitCompleto.Detalles)
+                                            {
+                                                kitsInfo.Item().PaddingLeft(10).Text($"• {detalle.Cantidad} x {detalle.Producto?.Nombre ?? "Producto"}").FontSize(8);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        // 🔹 INFORMACIÓN ADICIONAL
+                        content.Item().PaddingTop(20).Border(1).BorderColor(colorBorde).Padding(10).Stack(info =>
+                        {
+                            info.Item().PaddingBottom(5).Text("INFORMACIÓN ADICIONAL").Bold().FontSize(10).FontColor(colorPrimario);
+                            info.Item().Text("• Esta factura es un documento legal válido").FontSize(8);
+                            info.Item().Text("• Los productos tienen garantía según políticas de la empresa").FontSize(8);
+                            info.Item().Text("• Para reclamos o devoluciones presentar esta factura").FontSize(8);
+                            if (kitsEnVenta.Any())
+                            {
+                                info.Item().Text("• Los kits/promociones no son reembolsables individualmente").FontSize(8);
+                            }
+                        });
+
+                        // 🔹 PIE DE PÁGINA MEJORADO
+                        content.Item().PaddingTop(20).Stack(pie =>
+                        {
+                            pie.Item().Background(colorFondoHeader).Padding(10).AlignCenter().Stack(mensaje =>
+                            {
+                                mensaje.Item().Text("¡Gracias por su preferencia!").Bold().FontSize(11).FontColor(colorPrimario);
+                                mensaje.Item().PaddingTop(3).Text("Es un placer atenderle - Su satisfacción es nuestra prioridad").Italic().FontSize(9);
+                            });
+
+                            pie.Item().PaddingTop(10).AlignCenter().Text("Documento generado automáticamente por Smartcell Company")
+                                .FontSize(8).FontColor(Colors.Grey.Darken2);
                         });
                     });
 
-                    // Footer
-                    page.Footer()
-                        .AlignCenter()
-                        .Text(x =>
+                    // FOOTER MEJORADO --------------------------------------------------
+                    page.Footer().AlignCenter().PaddingTop(10).Stack(footer =>
+                    {
+                        footer.Item().BorderTop(1).BorderColor(colorBorde).PaddingTop(5).Text(x =>
                         {
-                            x.Span("Smartcell © ").FontSize(9);
-                            x.Span(DateTime.Now.Year.ToString()).FontSize(9).SemiBold();
-                            x.Span(" - Gracias por su compra").FontSize(9);
+                            x.Span("Smartcell Company S.A. © ").FontSize(9).FontColor(colorSecundario);
+                            x.Span(DateTime.Now.Year.ToString()).FontSize(9).Bold().FontColor(colorPrimario);
+                            x.Span(" - Todos los derechos reservados").FontSize(9).FontColor(colorSecundario);
                         });
+                        footer.Item().Text("www.smartcellcompany.com.gt | +502 1234-5678 | smartcellcompany001@gmail.com")
+                            .FontSize(7).FontColor(Colors.Grey.Darken1);
+                    });
                 });
             });
 

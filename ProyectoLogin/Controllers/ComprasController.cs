@@ -542,11 +542,6 @@ namespace ProyectoLogin.Controllers
 
 
 
-
-
-
-
-
         private async Task ActualizarInventarioYPreciosAsync(Compra compra)
         {
             var productosProveedores = await _context.ProductosProveedores.ToListAsync();
