@@ -306,42 +306,65 @@ namespace ProyectoLogin.Controllers
                 .Select(g => g.OrderByDescending(x => x.FechaInicio).First()) // por si hubiera más de uno activo, tomamos el más nuevo
                 .ToDictionaryAsync(p => p.IdProducto, p => p);
 
-            var lista = compras.Select(c => new
+            // 🔸 Proyección con factor de conversión y totales reales
+            var lista = compras.Select(c =>
             {
-                Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),            // helper zonal GT :contentReference[oaicite:4]{index=4}
-                Numero = c.NumeroDocumento,                                  // ya existe en tus vistas de Compras/Edit :contentReference[oaicite:5]{index=5}
-                Proveedor = c.Proveedor.Nombre,
-                TotalCompra = c.Total,
-                Detalles = c.Detalles.Select(d =>
+                var dets = c.Detalles.Select(d =>
                 {
-                    preciosActivos.TryGetValue(d.IdProducto, out var precio);
+                    // Factor de conversión a unidad base (ej. Paquete=6, Caja=12). Si no existe, 1.
+                    var factor = d.UnidadMedida?.EquivalenciaEnUnidades ?? 1m;
+
+                    // ✅ Precio de COMPRA por unidad individual
+                    // Si guardaste el precio por presentación, dividimos entre el factor para obtener el individual.
+                    var precioCompraIndividual = factor > 0 ? (d.PrecioUnitario / factor) : d.PrecioUnitario;
+
+                    // ✅ Cantidad total en unidades base (ej. 1 paquete x 6 = 6 unidades)
+                    var cantidadUnidadesBase = d.Cantidad * factor;
+
+                    // ✅ Subtotal de compra real (precio individual * unidades base)
+                    var subtotalCompra = precioCompraIndividual * cantidadUnidadesBase;
+
+                    // Traer precios de venta vigentes (si existen)
+                    preciosActivos.TryGetValue(d.IdProducto, out var precioV);
 
                     return new
                     {
                         Producto = d.Producto?.Nombre ?? "N/A",
                         Cantidad = d.Cantidad,
                         Unidad = d.UnidadMedida?.Nombre ?? "",
-                        PrecioCompraUnit = d.PrecioUnitario,                  // lo que pagaste por la unidad elegida
-                                                                              // precios de venta (vigentes)
-                        PrecioVentaSinIVA = precio?.PrecioVentaSinIVA ?? 0m,  // sin IVA
-                        PrecioVentaConIVA = precio?.PrecioVenta ?? 0m,        // con IVA
-                        PrecioVentaUnidad = precio?.PrecioVentaUnidad ?? 0m,
-                        PrecioVentaPaquete = precio?.PrecioVentaPaquete ?? 0m,
-                        PrecioVentaCaja = precio?.PrecioVentaCaja ?? 0m,
-                        Subtotal = d.Subtotal
+                        // Mostrar ambos precios: el guardado y el individual "real"
+                        PrecioCompraUnit = d.PrecioUnitario,              // precio de la presentación elegida (como lo guardaste)
+                        PrecioCompraIndividual = precioCompraIndividual,  // precio individual calculado (lo que quieres ver)
+                        CantidadUnidadesBase = cantidadUnidadesBase,      // útil para debug/validación visual
+                                                                          // Precios de venta vigentes
+                        PrecioVentaSinIVA = precioV?.PrecioVentaSinIVA ?? 0m,
+                        PrecioVentaConIVA = precioV?.PrecioVenta ?? 0m,
+                        PrecioVentaUnidad = precioV?.PrecioVentaUnidad ?? 0m,
+                        PrecioVentaPaquete = precioV?.PrecioVentaPaquete ?? 0m,
+                        PrecioVentaCaja = precioV?.PrecioVentaCaja ?? 0m,
+                        // Subtotal calculado “real”:
+                        Subtotal = subtotalCompra
                     };
-                }).ToList()
+                }).ToList();
+
+                // 🔸 Total de la compra basado en la suma de subtotales “reales”
+                var totalCompraCalc = dets.Sum(x => x.Subtotal);
+
+                return new
+                {
+                    Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
+                    Numero = c.NumeroDocumento,
+                    Proveedor = c.Proveedor.Nombre,
+                    TotalCompra = totalCompraCalc,
+                    Detalles = dets
+                };
             }).ToList();
 
-            // combos / totales para la vista
-            ViewBag.Proveedores = await _context.Proveedores
-                .Where(p => p.Activo)
-                .OrderBy(p => p.Nombre)
-                .ToListAsync();
-
+            // 🔸 Total general del reporte basado en los totales “recalculados”
             ViewBag.TotalGeneral = lista.Sum(c => (decimal)c.TotalCompra);
 
             return View("ReporteCompras", lista);
+
         }
 
 
@@ -374,15 +397,16 @@ namespace ProyectoLogin.Controllers
                 .Select(g => g.OrderByDescending(x => x.FechaInicio).First())
                 .ToDictionaryAsync(p => p.IdProducto, p => p);
 
-            var data = compras.Select(c => new
+            var data = compras.Select(c =>
             {
-                Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
-                Numero = c.NumeroDocumento,
-                Proveedor = c.Proveedor.Nombre,
-                TotalCompra = c.Total,
-                Detalles = c.Detalles.Select(d =>
+                var dets = c.Detalles.Select(d =>
                 {
-                    preciosActivos.TryGetValue(d.IdProducto, out var precio);
+                    var factor = d.UnidadMedida?.EquivalenciaEnUnidades ?? 1m;
+                    var precioCompraIndividual = factor > 0 ? (d.PrecioUnitario / factor) : d.PrecioUnitario;
+                    var cantidadUnidadesBase = d.Cantidad * factor;
+                    var subtotalCompra = precioCompraIndividual * cantidadUnidadesBase;
+
+                    preciosActivos.TryGetValue(d.IdProducto, out var precioV);
 
                     return new
                     {
@@ -390,14 +414,27 @@ namespace ProyectoLogin.Controllers
                         Cantidad = d.Cantidad,
                         Unidad = d.UnidadMedida?.Nombre ?? "",
                         PrecioCompraUnit = d.PrecioUnitario,
-                        PrecioVentaSinIVA = precio?.PrecioVentaSinIVA ?? 0m,
-                        PrecioVentaConIVA = precio?.PrecioVenta ?? 0m,
-                        PVUnidad = precio?.PrecioVentaUnidad ?? 0m,
-                        PVPaq = precio?.PrecioVentaPaquete ?? 0m,
-                        PVCaja = precio?.PrecioVentaCaja ?? 0m,
-                        Subtotal = d.Subtotal
+                        PrecioCompraIndividual = precioCompraIndividual,
+                        CantidadUnidadesBase = cantidadUnidadesBase,
+                        PrecioVentaSinIVA = precioV?.PrecioVentaSinIVA ?? 0m,
+                        PrecioVentaConIVA = precioV?.PrecioVenta ?? 0m,
+                        PVUnidad = precioV?.PrecioVentaUnidad ?? 0m,
+                        PVPaq = precioV?.PrecioVentaPaquete ?? 0m,
+                        PVCaja = precioV?.PrecioVentaCaja ?? 0m,
+                        Subtotal = subtotalCompra
                     };
-                }).ToList()
+                }).ToList();
+
+                var totalCompraCalc = dets.Sum(x => x.Subtotal);
+
+                return new
+                {
+                    Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
+                    Numero = c.NumeroDocumento,
+                    Proveedor = c.Proveedor.Nombre,
+                    TotalCompra = totalCompraCalc,
+                    Detalles = dets
+                };
             }).ToList();
 
             var totalGeneral = data.Sum(x => x.TotalCompra);
