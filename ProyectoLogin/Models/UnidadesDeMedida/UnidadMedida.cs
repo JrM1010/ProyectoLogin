@@ -11,6 +11,15 @@ namespace ProyectoLogin.Models.UnidadesDeMedida
 
         
         public int EquivalenciaEnUnidades { get; set; } // Ej: 12 si una caja tiene 12 unidades
+
+        [Precision(5, 2)]
+        public decimal MargenGanancia { get; set; } = 0.25m; // 25% por defecto
+
+
+        [Precision(5, 2)]
+        public decimal DescuentoAplicable { get; set; } = 0m; // Descuento para el cliente
+
+
         public bool Activo { get; set; } = true;
 
 

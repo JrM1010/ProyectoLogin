@@ -12,8 +12,8 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251105034016_añadirrelacioncomprasusuario")]
-    partial class añadirrelacioncomprasusuario
+    [Migration("20251105100728_addprecioporpresentacion")]
+    partial class addprecioporpresentacion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -411,7 +411,16 @@ namespace ProyectoLogin.Migrations
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("PrecioVentaCaja")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioVentaPaquete")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("PrecioVentaSinIVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioVentaUnidad")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UsuarioRegistro")
@@ -737,12 +746,11 @@ namespace ProyectoLogin.Migrations
 
                     b.HasKey("IdProductoUnidad");
 
+                    b.HasIndex("IdProducto");
+
                     b.HasIndex("IdUnidad");
 
-                    b.HasIndex("IdProducto", "IdUnidad")
-                        .IsUnique();
-
-                    b.ToTable("ProductosUnidades", (string)null);
+                    b.ToTable("ProductosUnidades");
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida", b =>
@@ -754,10 +762,24 @@ namespace ProyectoLogin.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUnidad"));
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("DescuentoAplicable")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<int>("EquivalenciaEnUnidades")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MargenGanancia")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0.25m);
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -773,21 +795,27 @@ namespace ProyectoLogin.Migrations
                         {
                             IdUnidad = 1,
                             Activo = true,
+                            DescuentoAplicable = 0m,
                             EquivalenciaEnUnidades = 1,
+                            MargenGanancia = 0.25m,
                             Nombre = "Unidad"
                         },
                         new
                         {
                             IdUnidad = 2,
                             Activo = true,
+                            DescuentoAplicable = 0.10m,
                             EquivalenciaEnUnidades = 6,
+                            MargenGanancia = 0.15m,
                             Nombre = "Paquete"
                         },
                         new
                         {
                             IdUnidad = 3,
                             Activo = true,
+                            DescuentoAplicable = 0.15m,
                             EquivalenciaEnUnidades = 12,
+                            MargenGanancia = 0.10m,
                             Nombre = "Caja"
                         });
                 });
@@ -854,7 +882,7 @@ namespace ProyectoLogin.Migrations
                     b.HasOne("ProyectoLogin.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("IdUsuario")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Proveedor");

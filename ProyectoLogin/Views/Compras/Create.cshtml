@@ -151,8 +151,6 @@
             // ---- Datos serializados desde el servidor ----
             let productos = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(productos));
             let unidadesGlobales = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(unidades));
-            const paqueteGlobal = unidadesGlobales.find(u => (u.Nombre || "").toString().toLowerCase() === "paquete");
-            const paqueteExists = !!paqueteGlobal;
 
             // ---- Helpers ----
             const getTablaBody = () => document.getElementById("detallesBody");
@@ -199,20 +197,36 @@
                 return valor.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
 
-            // ---- Calcular precios de venta ----
+            // 🔹 FUNCIÓN CORREGIDA: Calcular precios de venta por presentación
             function calcularPreciosVenta(fila) {
                 const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
                 const descuentoPct = parseFloat(fila.querySelector(".descuentoInput")?.value) || 0;
+                const unidadSelect = fila.querySelector(".unidadSelect");
+                const unidadOption = unidadSelect?.selectedOptions[0];
 
-                // Aplicar descuento al precio de compra
+                // Obtener factor de conversión (cantidad de unidades)
+                const factor = parseFloat(unidadOption?.dataset.factor) || 1;
+
+                // 🔹 Obtener margen según la unidad seleccionada
+                let margenGanancia = 0.25; // Por defecto 25%
+
+                if (unidadOption) {
+                    const unidadNombre = unidadOption.textContent.toLowerCase();
+                    if (unidadNombre.includes("paquete")) {
+                        margenGanancia = 0.15; // 15% para paquetes
+                    } else if (unidadNombre.includes("caja")) {
+                        margenGanancia = 0.10; // 10% para cajas
+                    }
+                }
+
+                // Aplicar descuento al precio de compra (si el proveedor da descuento)
                 const precioConDescuento = precio * (1 - (descuentoPct / 100));
 
-                // Calcular precio base sin IVA
+                // Calcular precio base sin IVA del proveedor
                 const precioBase = precioConDescuento / 1.12;
 
-                // Aplicar margen de ganancia (25%)
-                const margenGanancia = 0.25;
-                const precioVentaSinIVA = precioBase * (1 + margenGanancia);
+                // 🔹 CÁLCULO CORREGIDO: Aplicar factor de conversión y margen
+                const precioVentaSinIVA = (precioBase * factor) * (1 + margenGanancia);
                 const precioVentaConIVA = precioVentaSinIVA * 1.12;
 
                 // Actualizar campos
@@ -232,18 +246,18 @@
                     const unidadOption = fila.querySelector(".unidadSelect")?.selectedOptions[0];
                     const factor = parseFloat(unidadOption?.dataset.factor) || 1;
 
-                    // 🔹 Descuento ingresado manualmente
+                    // 🔹 Descuento ingresado manualmente (del proveedor)
                     let descuentoPct = parseFloat(fila.querySelector(".descuentoInput")?.value) || 0;
                     if (descuentoPct < 0) descuentoPct = 0;
                     if (descuentoPct > 100) descuentoPct = 100;
 
-                    // 🔹 Calcular precio con descuento (ya incluye IVA)
+                    // 🔹 Calcular precio con descuento del proveedor (ya incluye IVA)
                     const precioConDescuento = precio * (1 - (descuentoPct / 100));
 
                     // 🔹 Calcular precio base (sin IVA)
                     const precioBase = precioConDescuento / 1.12;
 
-                    // 🔹 Subtotal del producto (sin IVA)
+                    // 🔹 Subtotal del producto (sin IVA) - Solo para la compra
                     const subtotalFila = cantidad * precioBase * factor;
 
                     subtotal += subtotalFila;
@@ -252,7 +266,7 @@
                     calcularPreciosVenta(fila);
                 });
 
-                // 🔹 Totales globales
+                // 🔹 Totales globales de la COMPRA
                 const iva = subtotal * 0.12;
                 const total = subtotal + iva;
 
@@ -298,23 +312,20 @@
                 const unidadSelect = sel.closest("tr").querySelector(".unidadSelect");
                 unidadSelect.innerHTML = '<option value="">--Seleccione--</option>';
 
+                // 🔹 USAR PROPIEDADES CORRECTAS: EquivalenciaEnUnidades
                 const unidades = (producto?.Unidades?.length) ? producto.Unidades : unidadesGlobales;
                 unidades.forEach(u => {
                     const opt = document.createElement("option");
-                    const factor = (u.FactorConversion ?? u.EquivalenciaEnUnidades ?? 1);
+                    // Usar EquivalenciaEnUnidades si existe, sino FactorConversion
+                    const factor = u.EquivalenciaEnUnidades || u.FactorConversion || 1;
                     opt.value = u.IdUnidad ?? "";
                     opt.textContent = `${u.Nombre}${factor > 1 ? ` (x${factor})` : ""}`;
                     opt.dataset.factor = factor;
                     unidadSelect.appendChild(opt);
                 });
 
-                if (!paqueteExists) {
-                    const opt = document.createElement("option");
-                    opt.value = "__PAQUETE_MISSING__";
-                    opt.textContent = "Paquete (x6)";
-                    opt.dataset.factor = 6;
-                    unidadSelect.appendChild(opt);
-                }
+                // Recalcular después de cargar unidades
+                recalcularTotales();
             });
 
             // ---- Eventos de cálculo ----
@@ -404,6 +415,12 @@
                     sel.classList.remove("opacity-50");
                 }
             });
+
+            // Agregar primera fila automáticamente si no hay proveedor seleccionado
+            if (!@(proveedorSeleccionado.HasValue ? "true" : "false")) {
+                const btnAgregar = document.getElementById("btnAgregar");
+                if (btnAgregar) btnAgregar.click();
+            }
         });
     </script>
 }

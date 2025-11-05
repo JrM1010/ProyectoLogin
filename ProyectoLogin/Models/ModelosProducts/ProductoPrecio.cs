@@ -24,18 +24,41 @@ namespace ProyectoLogin.Models.ModelosProducts
         [Column(TypeName = "decimal(18,2)")]
         public decimal IVACompra { get; set; }
 
+
+
+        // 🔹 PRECIOS DE VENTA POR PRESENTACIÓN (CON IVA INCLUIDO)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioVentaUnidad { get; set; }        // 25% ganancia
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioVentaPaquete { get; set; }       // 15% ganancia
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PrecioVentaCaja { get; set; }          // 10% ganancia
+
+
+
+
         // 🔹 Margen de ganancia aplicado sobre el precio base
         [Column(TypeName = "decimal(5,2)")]
         public decimal MargenGanancia { get; set; }
 
-        // 🔹 Precio de venta sin IVA
+
+
+        // 🔹 Precio de venta sin IVA (para compatibilidad)
         [Column(TypeName = "decimal(18,2)")]
         public decimal PrecioVentaSinIVA { get; set; }
+
 
         // 🔹 Precio final con IVA incluido (este se usa en el POS)
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         public decimal PrecioVenta { get; set; }
+
+
+
+
+
 
         public DateTime FechaInicio { get; set; } = FechaLocal.Ahora();
         public DateTime? FechaFin { get; set; }

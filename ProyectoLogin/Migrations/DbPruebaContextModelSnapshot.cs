@@ -90,8 +90,8 @@ namespace ProyectoLogin.Migrations
 
                     b.Property<string>("Nombres")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdCliente");
 
@@ -122,6 +122,9 @@ namespace ProyectoLogin.Migrations
                     b.Property<int>("IdProveedor")
                         .HasColumnType("int");
 
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int");
+
                     b.Property<string>("MetodoPago")
                         .HasMaxLength(50)
                         .IsUnicode(false)
@@ -146,6 +149,8 @@ namespace ProyectoLogin.Migrations
                     b.HasKey("IdCompra");
 
                     b.HasIndex("IdProveedor");
+
+                    b.HasIndex("IdUsuario");
 
                     b.ToTable("Compras", (string)null);
                 });
@@ -403,7 +408,16 @@ namespace ProyectoLogin.Migrations
                     b.Property<decimal>("PrecioVenta")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("PrecioVentaCaja")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioVentaPaquete")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("PrecioVentaSinIVA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PrecioVentaUnidad")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UsuarioRegistro")
@@ -729,12 +743,11 @@ namespace ProyectoLogin.Migrations
 
                     b.HasKey("IdProductoUnidad");
 
+                    b.HasIndex("IdProducto");
+
                     b.HasIndex("IdUnidad");
 
-                    b.HasIndex("IdProducto", "IdUnidad")
-                        .IsUnique();
-
-                    b.ToTable("ProductosUnidades", (string)null);
+                    b.ToTable("ProductosUnidades");
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.UnidadesDeMedida.UnidadMedida", b =>
@@ -746,10 +759,24 @@ namespace ProyectoLogin.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUnidad"));
 
                     b.Property<bool>("Activo")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<decimal>("DescuentoAplicable")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<int>("EquivalenciaEnUnidades")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MargenGanancia")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0.25m);
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -765,21 +792,27 @@ namespace ProyectoLogin.Migrations
                         {
                             IdUnidad = 1,
                             Activo = true,
+                            DescuentoAplicable = 0m,
                             EquivalenciaEnUnidades = 1,
+                            MargenGanancia = 0.25m,
                             Nombre = "Unidad"
                         },
                         new
                         {
                             IdUnidad = 2,
                             Activo = true,
+                            DescuentoAplicable = 0.10m,
                             EquivalenciaEnUnidades = 6,
+                            MargenGanancia = 0.15m,
                             Nombre = "Paquete"
                         },
                         new
                         {
                             IdUnidad = 3,
                             Activo = true,
+                            DescuentoAplicable = 0.15m,
                             EquivalenciaEnUnidades = 12,
+                            MargenGanancia = 0.10m,
                             Nombre = "Caja"
                         });
                 });
@@ -843,7 +876,15 @@ namespace ProyectoLogin.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ProyectoLogin.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("IdUsuario")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Proveedor");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("ProyectoLogin.Models.ModelosCompras.DetalleCompra", b =>

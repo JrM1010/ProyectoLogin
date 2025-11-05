@@ -22,22 +22,15 @@ namespace ProyectoLogin.Controllers
             _facturaService = facturaService;
         }
 
-
         [HttpGet]
         public async Task<IActionResult> DescargarFactura(int idVenta)
         {
             var pdfBytes = await _facturaService.GenerarFacturaAsync(idVenta);
-
-            // Obtener la fecha actual en formato dd/MM/yyyy
             var fechaActual = FechaLocal.Ahora().ToString("dd/MM/yyyy");
-
-            // Crear el nombre del archivo con el formato deseado
             var nombreArchivo = $"FacturaSmartcell {fechaActual}.pdf";
 
             return File(pdfBytes, "application/pdf", nombreArchivo);
         }
-
-
 
         // Vista principal del POS
         public IActionResult Index()
@@ -45,26 +38,27 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Ventas/Index.cshtml");
         }
 
-        // Búsqueda rápida de producto (AJAX)
-        // Dentro de VentasController
+        // 🔹 MÉTODO BUSCAR PRODUCTO - CORREGIDO Y COMPLETO
         [HttpGet]
         public async Task<IActionResult> BuscarProducto(string term)
         {
             if (string.IsNullOrEmpty(term))
                 return Json(new { results = new List<object>() });
 
-            // Traer unidades globales (proyectadas a un shape común)
+            // Traer unidades globales
             var unidadesGlobales = await _context.UnidadesMedida
                 .Where(u => u.Activo)
                 .Select(u => new
                 {
                     IdUnidad = u.IdUnidad,
                     Nombre = u.Nombre,
-                    FactorConversion = u.EquivalenciaEnUnidades
+                    FactorConversion = u.EquivalenciaEnUnidades,
+                    MargenGanancia = u.MargenGanancia,
+                    DescuentoAplicable = u.DescuentoAplicable
                 })
                 .ToListAsync();
 
-            // Cargar productos básicos (cada producto traerá su lista de unidades proyectada)
+            // Cargar productos con sus precios activos
             var productos = await _context.Productos
                 .Include(p => p.Inventario)
                 .Where(p => p.Activo && (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
@@ -72,56 +66,63 @@ namespace ProyectoLogin.Controllers
                 {
                     id = p.IdProducto,
                     text = p.Nombre,
-                    precio = _context.ProductoPrecio
-                        .Where(pr => pr.IdProducto == p.IdProducto && pr.Activo)
-                        .OrderByDescending(pr => pr.FechaInicio)
-                        .Select(pr => pr.PrecioVenta)
-                        .FirstOrDefault(),
                     stock = p.Inventario != null ? p.Inventario.StockActual : 0,
                     tipo = "producto",
-                    // Proyectar unidades del producto al mismo shape que las globales
-                    unidades = _context.ProductosUnidades
-                        .Where(pu => pu.IdProducto == p.IdProducto)
-                        .Select(pu => new
-                        {
-                            IdUnidad = pu.IdUnidad,
-                            Nombre = pu.UnidadMedida.Nombre,
-                            FactorConversion = pu.FactorConversion
-                        })
-                        .ToList()
+                    // Obtener el precio activo más reciente
+                    precioActivo = _context.ProductoPrecio
+                        .Where(pr => pr.IdProducto == p.IdProducto && pr.Activo)
+                        .OrderByDescending(pr => pr.FechaInicio)
+                        .FirstOrDefault()
                 })
                 .Take(15)
                 .ToListAsync();
 
-            // Normalizar productos: si no tiene unidades específicas, usar las globales.
+            // Normalizar productos con precios por presentación
             var productosNormalized = productos.Select(p =>
             {
-                // p.unidades es List<anon> (puede estar vacío). Queremos una List<object> con mismo shape.
-                var unidadesProd = (p.unidades as IEnumerable<object>)?.Cast<object>().ToList();
+                var precioActivo = p.precioActivo;
 
-                // Si no tiene unidades propias, usar las globales (convertidas a object)
-                List<object> unidadesFinal;
-                if (unidadesProd == null || !unidadesProd.Any())
-                {
-                    unidadesFinal = unidadesGlobales.Cast<object>().ToList();
-                }
-                else
-                {
-                    unidadesFinal = unidadesProd;
-                }
+                // 🔹 CREAR PRECIOS POR UNIDAD BASADOS EN LOS PRECIOS ALMACENADOS
+                var unidadesFinal = unidadesGlobales.Select(u => {
+                    decimal precioVenta = 0;
+
+                    // Asignar precio según la unidad
+                    if (u.FactorConversion == 1)
+                        precioVenta = precioActivo?.PrecioVentaUnidad ?? 0;
+                    else if (u.FactorConversion == 6)
+                        precioVenta = precioActivo?.PrecioVentaPaquete ?? 0;
+                    else if (u.FactorConversion == 12)
+                        precioVenta = precioActivo?.PrecioVentaCaja ?? 0;
+                    else
+                        precioVenta = precioActivo?.PrecioVenta ?? 0; // Fallback
+
+                    return new
+                    {
+                        u.IdUnidad,
+                        u.Nombre,
+                        u.FactorConversion,
+                        u.MargenGanancia,
+                        u.DescuentoAplicable,
+                        PrecioVenta = precioVenta
+                    };
+                }).Cast<object>().ToList();
+
+                // Precio por defecto (unidad individual)
+                var precioDefault = precioActivo?.PrecioVentaUnidad ?? precioActivo?.PrecioVenta ?? 0;
 
                 return new
                 {
                     p.id,
                     p.text,
-                    p.precio,
+                    precio = precioDefault,
+                    preciosPorUnidad = unidadesFinal,
                     p.stock,
                     p.tipo,
                     unidades = unidadesFinal
                 };
             }).ToList();
 
-            // KITS (igual que antes)
+            // KITS (sin cambios)
             var kits = await _context.Kits
                 .Where(k => k.Activo && k.Nombre.Contains(term))
                 .Select(k => new
@@ -135,12 +136,10 @@ namespace ProyectoLogin.Controllers
                 .Take(10)
                 .ToListAsync();
 
-            // Concatenar (ambos son listas de objetos anónimos; el serializador JSON los manejará)
             var resultados = productosNormalized.Concat(kits.Cast<object>()).ToList();
 
             return Json(new { results = resultados });
         }
-
 
         // Guardar venta
         [HttpPost]
@@ -260,7 +259,6 @@ namespace ProyectoLogin.Controllers
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-
                 // === CALCULAR UTILIDAD DE LA VENTA ===
                 decimal utilidadTotalVenta = 0m;
 
@@ -340,18 +338,13 @@ namespace ProyectoLogin.Controllers
                                 utilidadKit += (precioVentaSinIVA - precioBase) * kd.Cantidad;
                             }
 
-                            utilidad = utilidadKit * det.Cantidad; // por cuántos kits se vendieron
+                            utilidad = utilidadKit * det.Cantidad;
                         }
                     }
 
                     det.Utilidad = Math.Round(utilidad, 2);
                     utilidadTotalVenta += det.Utilidad;
                 }
-
-                
-
-
-
 
                 // === DESCONTAR INVENTARIO ===
                 foreach (var det in venta.Detalles)
@@ -429,8 +422,6 @@ namespace ProyectoLogin.Controllers
 
                 await _context.SaveChangesAsync();
 
-
-
                 return Ok(new
                 {
                     success = true,
@@ -450,7 +441,6 @@ namespace ProyectoLogin.Controllers
                 });
             }
         }
-
 
         [HttpGet]
         public async Task<IActionResult> BuscarPromocion(string term)
@@ -482,8 +472,6 @@ namespace ProyectoLogin.Controllers
             return Json(new { results = kits });
         }
 
-
-
         // Detalle de venta 
         public async Task<IActionResult> Detalle(int id)
         {
@@ -500,8 +488,6 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Ventas/Detalle.cshtml", venta);
         }
 
-
-
         // Listado de ventas 
         public async Task<IActionResult> Lista()
         {
@@ -514,7 +500,6 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Ventas/Lista.cshtml", ventas);
         }
 
-
         // Buscar cliente por NIT 
         [HttpGet]
         public async Task<IActionResult> BuscarClientePorNit(string nit)
@@ -522,19 +507,19 @@ namespace ProyectoLogin.Controllers
             if (string.IsNullOrWhiteSpace(nit))
                 return Json(new { encontrado = false });
 
-            string nitLimpio = new string(nit.Where(char.IsLetterOrDigit).ToArray()); // elimina guiones y espacios
+            string nitLimpio = new string(nit.Where(char.IsLetterOrDigit).ToArray());
 
             var cliente = await _context.Clientes
                 .Where(c => c.Nit.Replace("-", "") == nitLimpio && c.Activo)
-                            .Select(c => new
-                            {
-                                c.IdCliente,
-                                c.Nit,
-                                c.Nombres,
-                                c.Apellidos,
-                                c.Correo,
-                                c.Direccion
-                            })
+                .Select(c => new
+                {
+                    c.IdCliente,
+                    c.Nit,
+                    c.Nombres,
+                    c.Apellidos,
+                    c.Correo,
+                    c.Direccion
+                })
                 .FirstOrDefaultAsync();
 
             if (cliente == null)
@@ -581,7 +566,6 @@ namespace ProyectoLogin.Controllers
 
             await _context.SaveChangesAsync();
 
-
             return Ok(new
             {
                 IdCliente = nuevo.IdCliente,
@@ -592,7 +576,5 @@ namespace ProyectoLogin.Controllers
                 nuevo.Direccion
             });
         }
-
-
     }
 }

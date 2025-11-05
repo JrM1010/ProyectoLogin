@@ -8,7 +8,6 @@ using ProyectoLogin.Recursos;
 using System;
 using System.Collections.Generic;
 
-
 namespace ProyectoLogin.Models;
 
 public partial class DbPruebaContext : DbContext
@@ -18,12 +17,10 @@ public partial class DbPruebaContext : DbContext
     {
     }
 
-
     // Parte de Usuarios, roles y recuperación de contraseña
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<Rol> Roles { get; set; }
     public virtual DbSet<RecuperacionPassword> Recuperaciones { get; set; }
-
 
     // Parte de Productos
     public virtual DbSet<ProductoCore> Productos { get; set; }
@@ -34,8 +31,6 @@ public partial class DbPruebaContext : DbContext
     public DbSet<ProductoPrecio> ProductoPrecio { get; set; }
     public virtual DbSet<Proveedor> Proveedores { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
-    
-
 
     //Parte de Compras
     public virtual DbSet<Compra> Compras { get; set; }
@@ -50,24 +45,17 @@ public partial class DbPruebaContext : DbContext
     public DbSet<UnidadMedida> UnidadesMedida { get; set; }
     public DbSet<ProductoUnidad> ProductosUnidades { get; set; }
 
-
     //Promociones de Productos (kits)
     public DbSet<Kit> Kits { get; set; }
     public DbSet<KitDetalle> KitDetalles { get; set; }
     public IEnumerable<object> DetalleVenta { get; internal set; }
 
-
     //Registro de movimientos (bitácora)    
     public DbSet<BitacoraMovimiento> BitacoraMovimientos { get; set; }
-
-
-
 
     // Configuración de mapeo entre tu clase Usuario y la tabla "Usuario" en SQL.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
-
         // ------------------ USUARIOS ------------------
         modelBuilder.Entity<Usuario>(entity =>
         {
@@ -104,11 +92,6 @@ public partial class DbPruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(r => r.IdUsuario);
         });
-
-
-
-
-
 
         // ------------------ PRODUCTOS ------------------
         modelBuilder.Entity<ProductoCore>(entity =>
@@ -259,13 +242,11 @@ public partial class DbPruebaContext : DbContext
             .HasIndex(c => c.Nit)
             .IsUnique(false);
 
-
-
         // ------------------ PRODUCTO PRECIO ------------------
         modelBuilder.Entity<ProductoPrecio>(entity =>
         {
             entity.HasKey(e => e.IdPrecio);
-            entity.ToTable("ProductoPrecio"); 
+            entity.ToTable("ProductoPrecio");
 
             entity.Property(e => e.PrecioCompra)
                   .HasColumnType("decimal(18,2)");
@@ -285,13 +266,13 @@ public partial class DbPruebaContext : DbContext
                   .HasDefaultValue(true);
 
             // Mapeo explícito de la relación con ProductoCore usando la propiedad FK IdProducto
-            entity.HasOne(pp => pp.Producto)     
-                  .WithMany()                    
+            entity.HasOne(pp => pp.Producto)
+                  .WithMany()
                   .HasForeignKey(pp => pp.IdProducto)
                   .HasPrincipalKey(p => p.IdProducto)
                   .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // ------------------ COMPRAS Y DETALLES ------------------
         modelBuilder.Entity<Compra>(entity =>
         {
@@ -330,34 +311,17 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(d => d.IdProducto);
 
             entity.Property(d => d.PrecioUnitario)
-                  .HasPrecision(18,2);
+                  .HasPrecision(18, 2);
 
             entity.Property(d => d.Cantidad)
-                  .HasPrecision(18,2);
+                  .HasPrecision(18, 2);
             entity.HasOne(d => d.UnidadMedida)
                   .WithMany()
                   .HasForeignKey(d => d.IdUnidad);
 
-            
+
             entity.Property(d => d.PrecioUnitario).HasPrecision(18, 2);
             entity.Property(d => d.Cantidad).HasPrecision(18, 2);
-        });
-        
-        // ------------------ UNIDADES DE MEDIDA ------------------
-        modelBuilder.Entity<ProductoUnidad>(entity =>
-        {
-            entity.HasKey(e => e.IdProductoUnidad);
-            entity.ToTable("ProductosUnidades");
-
-            entity.HasIndex(e => new { e.IdProducto, e.IdUnidad }).IsUnique();
-
-            entity.HasOne(e => e.Producto)
-                  .WithMany(p => p.ProductosUnidades)
-                  .HasForeignKey(e => e.IdProducto);
-
-            entity.HasOne(e => e.UnidadMedida)
-                  .WithMany(u => u.ProductosUnidades)
-                  .HasForeignKey(e => e.IdUnidad);
         });
 
         // ------------------ UNIDADES DE MEDIDA ------------------
@@ -373,11 +337,44 @@ public partial class DbPruebaContext : DbContext
             entity.Property(u => u.EquivalenciaEnUnidades)
                   .IsRequired();
 
-            // 👇 Insertar datos iniciales al crear la migración
+            // 🔹 Nuevos campos para márgenes de ganancia
+            entity.Property(u => u.MargenGanancia)
+                  .HasPrecision(5, 2)
+                  .HasDefaultValue(0.25m); // 25% por defecto
+
+            entity.Property(u => u.DescuentoAplicable)
+                  .HasPrecision(5, 2)
+                  .HasDefaultValue(0m); // 0% descuento por defecto
+
+            entity.Property(u => u.Activo)
+                  .HasDefaultValue(true);
+
+            // 👇 Insertar datos iniciales con márgenes específicos
             entity.HasData(
-                new UnidadMedida { IdUnidad = 1, Nombre = "Unidad", EquivalenciaEnUnidades = 1 },
-                new UnidadMedida { IdUnidad = 2, Nombre = "Paquete", EquivalenciaEnUnidades = 6 },
-                new UnidadMedida { IdUnidad = 3, Nombre = "Caja", EquivalenciaEnUnidades = 12 }
+                new UnidadMedida
+                {
+                    IdUnidad = 1,
+                    Nombre = "Unidad",
+                    EquivalenciaEnUnidades = 1,
+                    MargenGanancia = 0.25m,    // 25% ganancia
+                    DescuentoAplicable = 0m    // 0% descuento
+                },
+                new UnidadMedida
+                {
+                    IdUnidad = 2,
+                    Nombre = "Paquete",
+                    EquivalenciaEnUnidades = 6,
+                    MargenGanancia = 0.15m,    // 15% ganancia
+                    DescuentoAplicable = 0.10m // 10% descuento al cliente
+                },
+                new UnidadMedida
+                {
+                    IdUnidad = 3,
+                    Nombre = "Caja",
+                    EquivalenciaEnUnidades = 12,
+                    MargenGanancia = 0.10m,    // 10% ganancia  
+                    DescuentoAplicable = 0.15m // 15% descuento al cliente
+                }
             );
         });
 
@@ -396,8 +393,6 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(pu => pu.IdUnidad)
                   .OnDelete(DeleteBehavior.Cascade);
         });
-    
-
 
         // ------------------ VENTAS Y DETALLES ------------------
         modelBuilder.Entity<Venta>(entity =>
@@ -433,6 +428,7 @@ public partial class DbPruebaContext : DbContext
                   .HasForeignKey(v => v.IdUsuario)
                   .OnDelete(DeleteBehavior.Restrict);
         });
+
         modelBuilder.Entity<DetalleVenta>(entity =>
         {
             entity.ToTable("DetalleVenta");
@@ -472,10 +468,7 @@ public partial class DbPruebaContext : DbContext
             entity.Property(d => d.Utilidad)
                   .HasColumnType("decimal(18,2)")
                   .HasDefaultValue(0m);
-
         });
-
-
 
         // ------------------ KITS DE PRODUCTOS PARA PROMOCIONES ------------------
         modelBuilder.Entity<Kit>(entity =>
@@ -489,7 +482,6 @@ public partial class DbPruebaContext : DbContext
                   .HasPrecision(5, 2);
             entity.Property(k => k.Total)
                   .HasPrecision(10, 2);
-            
         });
 
         modelBuilder.Entity<KitDetalle>(entity =>
@@ -506,8 +498,5 @@ public partial class DbPruebaContext : DbContext
                   .WithMany()
                   .HasForeignKey(d => d.IdProducto);
         });
-
-
     }
-
 }

@@ -208,6 +208,21 @@
     </div>
 </div>
 
+<!-- MODAL PARA SELECCIÓN DE UNIDAD -->
+<div class="modal fade" id="modalUnidad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Seleccionar Presentación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="contenidoUnidades">
+                <!-- Las opciones de unidad se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     body {
         background-color: #f8f9fa;
@@ -271,129 +286,288 @@
         text-align: right !important;
     }
 
+    .unidad-option {
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .unidad-option:hover {
+            background-color: #f8f9fa;
+            border-color: #007bff;
+        }
+
+        .unidad-option.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+    .precio-unidad {
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .descuento-unidad {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
 </style>
 
 @section Scripts {
     <script>
-            const tablaBody = document.querySelector("#tablaProductos tbody");
-            const inputBusqueda = document.querySelector("#busqueda");
-            const btnCobrar = document.querySelector("#btnCobrar");
-            const btnCancelar = document.querySelector("#btnCancelar");
+         const tablaBody = document.querySelector("#tablaProductos tbody");
+         const inputBusqueda = document.querySelector("#busqueda");
+         const btnCobrar = document.querySelector("#btnCobrar");
+         const btnCancelar = document.querySelector("#btnCancelar");
 
-            let productosSeleccionados = [];
-            let ultimosResultados = [];
-            let clienteSeleccionado = null;
+         let productosSeleccionados = [];
+         let ultimosResultados = [];
+         let clienteSeleccionado = null;
+         let productoSeleccionadoParaUnidad = null;
 
-            function setValueIfExists(selector, value) {
-                const el = document.querySelector(selector);
-                if (el) el.value = value;
-            }
+         function setValueIfExists(selector, value) {
+             const el = document.querySelector(selector);
+             if (el) el.value = value;
+         }
 
-             function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
-                 let contenedor = document.getElementById("centroAlertas");
-                 if (!contenedor) {
-                     contenedor = document.createElement("div");
-                     contenedor.id = "centroAlertas";
-                     contenedor.style.position = "fixed";
-                     contenedor.style.bottom = "20px";
-                     contenedor.style.left = "20px";
-                     contenedor.style.zIndex = "1055";
-                     contenedor.style.display = "flex";
-                     contenedor.style.flexDirection = "column";
-                     contenedor.style.gap = "8px";
-                     document.body.appendChild(contenedor);
-                 }
-
-                  const alerta = document.createElement("div");
-                 alerta.className = `alert alert-${tipo} shadow-sm border-0 fade show`;
-                 alerta.style.minWidth = "260px";
-                 alerta.style.maxWidth = "320px";
-                 alerta.style.padding = "10px 14px";
-                 alerta.style.fontSize = "0.9rem";
-                 alerta.style.cursor = "pointer";
-                 alerta.style.borderRadius = "10px";
-                 alerta.innerHTML = `<strong>${texto}</strong>`;
-
-                 alerta.addEventListener("click", () => alerta.remove());
-                 contenedor.appendChild(alerta);
-
-                 if (duracion > 0) {
-                     setTimeout(() => alerta.remove(), duracion);
-                 }
+         function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
+             let contenedor = document.getElementById("centroAlertas");
+             if (!contenedor) {
+                 contenedor = document.createElement("div");
+                 contenedor.id = "centroAlertas";
+                 contenedor.style.position = "fixed";
+                 contenedor.style.bottom = "20px";
+                 contenedor.style.left = "20px";
+                 contenedor.style.zIndex = "1055";
+                 contenedor.style.display = "flex";
+                 contenedor.style.flexDirection = "column";
+                 contenedor.style.gap = "8px";
+                 document.body.appendChild(contenedor);
              }
 
-            inputBusqueda.addEventListener("keyup", async (e) => {
-                const term = e.target.value.trim();
-                const contenedor = inputBusqueda.closest(".search-container");
-                if (term.length < 2) {
-                    const prev = contenedor.querySelector(".suggestions-box");
-                    if (prev) prev.remove();
+             const alerta = document.createElement("div");
+             alerta.className = `alert alert-${tipo} shadow-sm border-0 fade show`;
+             alerta.style.minWidth = "260px";
+             alerta.style.maxWidth = "320px";
+             alerta.style.padding = "10px 14px";
+             alerta.style.fontSize = "0.9rem";
+             alerta.style.cursor = "pointer";
+             alerta.style.borderRadius = "10px";
+             alerta.innerHTML = `<strong>${texto}</strong>`;
+
+             alerta.addEventListener("click", () => alerta.remove());
+             contenedor.appendChild(alerta);
+
+             if (duracion > 0) {
+                 setTimeout(() => alerta.remove(), duracion);
+             }
+         }
+
+
+        // --- Util: normalizar factor de conversión (acepta "6", "6,0", number, null...)
+        function parseFactorUnidad(unidad) {
+            // busca varias propiedades posibles donde el factor pueda venir
+            let raw = unidad?.FactorConversion ?? unidad?.factorConversion ?? unidad?.factor ?? unidad?.Factor ?? unidad?.factor_default ?? unidad?.FactorDefault ?? unidad?.cantidadPorPresentacion;
+            if (raw === undefined || raw === null) {
+                return 1; // por defecto unidad simple
+            }
+            // convertir a string, reemplazar coma por punto y parsear
+            if (typeof raw === 'string') raw = raw.replace(',', '.').trim();
+            const n = parseFloat(raw);
+            // evitar 0, NaN o negativos: mínimo 1
+            if (!isFinite(n) || n <= 0) return 1;
+            return Math.max(1, Math.round(n)); // redondeamos a entero por seguridad
+        }
+
+
+         // 🔹 NUEVA FUNCIÓN: Mostrar modal para seleccionar unidad
+                 function mostrarModalUnidades(producto) {
+            const contenidoUnidades = document.getElementById("contenidoUnidades");
+            contenidoUnidades.innerHTML = '';
+
+            console.log("Producto para modal:", producto); // Para debugging
+
+            // Usar preciosPorUnidad si existe, sino usar unidades normales
+            const unidades = producto.preciosPorUnidad || producto.unidades || [];
+
+            if (!unidades.length) {
+                contenidoUnidades.innerHTML = '<p class="text-muted">No hay presentaciones disponibles</p>';
+                return;
+            }
+
+            unidades.forEach(unidad => {
+                // 🔹 EXTRAER PROPIEDADES CON DIFERENTES NOMBRES POSIBLES
+                const idUnidad = unidad.IdUnidad || unidad.idUnidad || unidad.Id || unidad.id;
+                const nombre = unidad.Nombre || unidad.nombre || "Presentación";
+                const factor = unidad.FactorConversion || unidad.factorConversion || unidad.EquivalenciaEnUnidades || 1;
+                const precioVenta = unidad.PrecioVenta || unidad.precioVenta || unidad.Precio || unidad.precio || 0;
+                const descuento = unidad.DescuentoAplicable || unidad.descuentoAplicable || unidad.Descuento || unidad.descuento || 0;
+
+                console.log("Unidad procesada:", { idUnidad, nombre, factor, precioVenta, descuento }); // Para debugging
+
+                const div = document.createElement("div");
+                div.className = "unidad-option";
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${nombre}</strong>
+                            <div class="descuento-unidad">Descuento: ${(descuento * 100)}%</div>
+                        </div>
+                        <div class="precio-unidad">${formatearMonedaGuatemala(precioVenta)}</div>
+                    </div>
+                    <small class="text-muted">Factor: ${factor}</small>
+                `;
+                div.onclick = () => {
+                    seleccionarUnidadParaProducto(producto, {
+                        IdUnidad: idUnidad,
+                        Nombre: nombre,
+                        FactorConversion: factor,
+                        PrecioVenta: precioVenta,
+                        DescuentoAplicable: descuento
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('modalUnidad')).hide();
+                };
+                contenidoUnidades.appendChild(div);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('modalUnidad'));
+            modal.show();
+        }
+
+
+
+
+         // 🔹 NUEVA FUNCIÓN: Seleccionar unidad para producto
+        function seleccionarUnidadParaProducto(producto, unidad) {
+            console.log("Seleccionando unidad:", unidad);
+
+            const factor = parseFloat(unidad.FactorConversion ?? unidad.factorConversion ?? 1) || 1;
+            const stockBase = Number(producto.stock ?? 0);
+            const disponiblesEnUnidad = Math.floor(stockBase / factor);
+
+            if (disponiblesEnUnidad < 1) {
+                mostrarMensaje(`❌ No hay stock suficiente para ${unidad.Nombre ?? unidad.nombre ?? 'esta presentación'}. Stock: ${stockBase}, requiere ${factor} por unidad.`, "danger");
+                return;
+            }
+
+            const productoParaAgregar = {
+                id: producto.id,
+                nombre: producto.text,
+                precio: parseFloat(unidad.PrecioVenta ?? unidad.precioVenta ?? unidad.Precio ?? unidad.precio) || 0,
+                cantidad: 1,
+                descuento: parseFloat(unidad.DescuentoAplicable ?? unidad.descuentoAplicable ?? unidad.Descuento ?? unidad.descuento ?? 0) || 0,
+                stock: stockBase,
+                esKit: false,
+                unidades: producto.preciosPorUnidad || producto.unidades || [],
+                idUnidadSeleccionada: unidad.IdUnidad ?? unidad.idUnidad ?? unidad.Id ?? unidad.id ?? null,
+                unidadNombre: unidad.Nombre ?? unidad.nombre ?? "Unidad",
+                factorConversion: factor,
+                stockBase: stockBase
+            };
+
+            // buscar existente con misma unidad
+            const existente = productosSeleccionados.find(p => p.id === producto.id && String(p.idUnidadSeleccionada) === String(productoParaAgregar.idUnidadSeleccionada));
+
+            const maxPermitido = Math.floor(stockBase / factor);
+            if (existente) {
+                if (existente.cantidad >= maxPermitido) {
+                    mostrarMensaje(`⚠️ Solo puedes vender ${maxPermitido} ${productoParaAgregar.unidadNombre}(s) según el stock disponible.`, "warning");
                     return;
                 }
-
-                 const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
-
-                const data = await resp.json();
-                ultimosResultados = data.results || [];
-                mostrarSugerencias(ultimosResultados, contenedor);
-            });
-
-            inputBusqueda.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (ultimosResultados.length > 0) {
-                        seleccionarProducto(ultimosResultados[0]);
-                        const contenedor = inputBusqueda.closest(".search-container");
-                        const lista = contenedor.querySelector(".suggestions-box");
-                        if (lista) lista.remove();
-                    }
+                existente.cantidad++;
+            } else {
+                if (maxPermitido < 1) {
+                    mostrarMensaje(`❌ No hay suficiente stock para la presentación "${productoParaAgregar.unidadNombre}".`, "danger");
+                    return;
                 }
-            });
-
-            // FUNCIÓN PARA FORMATEAR NÚMEROS EN FORMATO GUATEMALTECO
-            function formatearNumeroGuatemala(numero) {
-                if (numero === null || numero === undefined || isNaN(numero)) {
-                    return "0.00";
-                }
-
-                // Convertir a número si es string
-                const num = typeof numero === 'string' ? parseFloat(numero) : numero;
-
-                return num.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+                productoParaAgregar.maxPermitido = maxPermitido;
+                productosSeleccionados.push(productoParaAgregar);
             }
 
-            // FUNCIÓN PARA FORMATEAR MONEDA EN FORMATO GUATEMALTECO
-            function formatearMonedaGuatemala(monto) {
-                return `Q${formatearNumeroGuatemala(monto)}`;
-            }
-
-            // 🔧 Función para limpiar el formato de moneda "Q1,234.56" -> 1234.56
-            function limpiarFormatoMoneda(valor) {
-                if (!valor) return 0;
-                return parseFloat(
-                    valor.toString()
-                        .replace(/[Q,\s]/g, '') // Q y comas
-                        .replace(/[^\d.-]/g, '') // cualquier otro símbolo no numérico
-                ) || 0;
-            }
+            const mensajeDescuento = productoParaAgregar.descuento > 0 ? ` con descuento del ${(productoParaAgregar.descuento * 100).toFixed(1)}%` : "";
+            mostrarMensaje(`✅ ${producto.text} (${productoParaAgregar.unidadNombre}) añadido a la venta${mensajeDescuento}. Disponible: ${disponiblesEnUnidad} unidades.`, "success");
+            renderTabla();
+        }
 
 
-             function mostrarSugerencias(lista, contenedor) {
+         inputBusqueda.addEventListener("keyup", async (e) => {
+             const term = e.target.value.trim();
+             const contenedor = inputBusqueda.closest(".search-container");
+             if (term.length < 2) {
                  const prev = contenedor.querySelector(".suggestions-box");
                  if (prev) prev.remove();
-                 if (!lista.length) return;
+                 return;
+             }
 
-                 const div = document.createElement("div");
-                 div.classList.add("suggestions-box");
+             const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
+             const data = await resp.json();
+             ultimosResultados = data.results || [];
+             mostrarSugerencias(ultimosResultados, contenedor);
+         });
 
-                lista.forEach(p => {
-                    const stock = p.stock ?? 0;
-                    const esKit = p.tipo === "kit";
-                        let colorStock = "text-success";
-                        let estado = "Disponible";
+         inputBusqueda.addEventListener("keydown", (e) => {
+             if (e.key === "Enter") {
+                 e.preventDefault();
+                 if (ultimosResultados.length > 0) {
+                     const producto = ultimosResultados[0];
+                     if (producto.preciosPorUnidad && producto.preciosPorUnidad.length > 1) {
+                         mostrarModalUnidades(producto);
+                     } else {
+                         seleccionarProducto(producto);
+                     }
+                     const contenedor = inputBusqueda.closest(".search-container");
+                     const lista = contenedor.querySelector(".suggestions-box");
+                     if (lista) lista.remove();
+                 }
+             }
+         });
+
+             // FUNCIÓN PARA FORMATEAR NÚMEROS EN FORMATO GUATEMALTECO
+         function formatearNumeroGuatemala(numero) {
+             if (numero === null || numero === undefined || isNaN(numero)) {
+                 return "0.00";
+             }
+             const num = typeof numero === 'string' ? parseFloat(numero) : numero;
+             return num.toLocaleString('en-US', {
+                 minimumFractionDigits: 2,
+                 maximumFractionDigits: 2
+             });
+         }
+
+         // FUNCIÓN PARA FORMATEAR MONEDA EN FORMATO GUATEMALTECO
+         function formatearMonedaGuatemala(monto) {
+             return `Q${formatearNumeroGuatemala(monto)}`;
+         }
+
+         function limpiarFormatoMoneda(valor) {
+             if (!valor) return 0;
+             return parseFloat(
+                 valor.toString()
+                     .replace(/[Q,\s]/g, '')
+                     .replace(/[^\d.-]/g, '')
+             ) || 0;
+         }
+
+                 function mostrarSugerencias(lista, contenedor) {
+            const prev = contenedor.querySelector(".suggestions-box");
+            if (prev) prev.remove();
+            if (!lista.length) return;
+
+            console.log("Resultados de búsqueda:", lista); // 🔹 PARA DEBUGGING
+
+            const div = document.createElement("div");
+            div.classList.add("suggestions-box");
+
+            lista.forEach(p => {
+                const stock = p.stock ?? 0;
+                const esKit = p.tipo === "kit";
+                let colorStock = "text-success";
+                let estado = "Disponible";
 
                 if (!esKit) {
                     if (stock <= 0) { colorStock = "text-danger"; estado = "Sin existencias"; }
@@ -402,6 +576,23 @@
 
                 const item = document.createElement("button");
                 item.type = "button";
+
+                // 🔹 DEBUG: Ver estructura de unidades
+                console.log(`Producto: ${p.text}`, {
+                    preciosPorUnidad: p.preciosPorUnidad,
+                    unidades: p.unidades,
+                    precio: p.precio
+                });
+
+                // 🔹 MOSTRAR PRECIO SEGÚN SI TIENE MÚLTIPLES UNIDADES
+                let precioTexto = formatearMonedaGuatemala(p.precio);
+                const tieneMultiplesUnidades = (p.preciosPorUnidad && p.preciosPorUnidad.length > 1) ||
+                                             (p.unidades && p.unidades.length > 1);
+
+                if (tieneMultiplesUnidades) {
+                    precioTexto = `<span class="text-primary">Múltiples presentaciones</span>`;
+                }
+
                 item.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center w-100">
                     <div>
@@ -409,94 +600,122 @@
                         <br>
                         ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
                     </div>
-                    <span class="text-muted">${formatearMonedaGuatemala(p.precio)}</span>
+                    <span>${precioTexto}</span>
                 </div>`;
-                item.onclick = () => { seleccionarProducto(p); div.remove(); };
+
+                item.onclick = () => {
+                    if (tieneMultiplesUnidades) {
+                        mostrarModalUnidades(p);
+                    } else {
+                        seleccionarProducto(p);
+                    }
+                    div.remove();
+                };
                 div.appendChild(item);
-           });
+            });
 
-                  contenedor.appendChild(div);
-                 document.addEventListener("click", (ev) => {
-                     if (!contenedor.contains(ev.target)) {
-                         const list = contenedor.querySelector(".suggestions-box");
-                         if (list) list.remove();
-                     }
-                 }, { once: true });
-             }
-
-
-            function seleccionarProducto(prod) {
-                const esKit = prod.tipo === "kit";
-
-                if (esKit) {
-                    const existente = productosSeleccionados.find(p => p.idKit === prod.id);
-                    if (existente) {
-                        existente.cantidad++;
-                    } else {
-                        productosSeleccionados.push({
-                            idKit: prod.id,
-                            id: null,
-                            nombre: prod.text + " (KIT)",
-                            precio: parseFloat(prod.precio),
-                            cantidad: 1,
-                            descuento: 0,
-                            stock: 9999,
-                            esKit: true
-                        });
-                    }
-                    mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
+            contenedor.appendChild(div);
+            document.addEventListener("click", (ev) => {
+                if (!contenedor.contains(ev.target)) {
+                    const list = contenedor.querySelector(".suggestions-box");
+                    if (list) list.remove();
                 }
-                else {
-                    const stockBase = prod.stock ?? 0; // stock en unidades base (ej. unidades individuales)
-                    if (stockBase <= 0) {
-                        mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
+            }, { once: true });
+        }
+
+
+                function seleccionarProducto(prod) {
+            const esKit = prod.tipo === "kit";
+
+            if (esKit) {
+                // 🧩 CÓDIGO FALTANTE PARA KITS - AGREGAR ESTO:
+                const existente = productosSeleccionados.find(p => p.idKit === prod.id);
+                if (existente) {
+                    existente.cantidad++;
+                } else {
+                    productosSeleccionados.push({
+                        idKit: prod.id,
+                        id: null,
+                        nombre: prod.text,
+                        precio: parseFloat(prod.precio),
+                        cantidad: 1,
+                        descuento: 0,
+                        stock: 9999,
+                        esKit: true
+                    });
+                }
+                mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
+
+            }
+            else {
+                const stockBase = prod.stock ?? 0;
+                if (stockBase <= 0) {
+                    mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
+                    return;
+                }
+
+                // 🔹 DETERMINAR SI TIENE MÚLTIPLES UNIDADES (CORREGIDO)
+                const unidades = prod.preciosPorUnidad || prod.unidades || [];
+                const tieneMultiplesUnidades = unidades.length > 1;
+
+                if (tieneMultiplesUnidades) {
+                    mostrarModalUnidades(prod);
+                    return;
+                }
+
+                // 🔹 COMPORTAMIENTO NORMAL (UNA SOLA UNIDAD)
+                const defaultUnidad = unidades[0] || {};
+                const defaultIdUnidad = defaultUnidad.IdUnidad || defaultUnidad.idUnidad || null;
+                const defaultPrecio = defaultUnidad.PrecioVenta || defaultUnidad.precioVenta || prod.precio;
+                const defaultFactor = defaultUnidad.FactorConversion || defaultUnidad.factorConversion || 1;
+                const disponiblesEnUnidad = Math.floor(stockBase / defaultFactor);
+
+                const existente = productosSeleccionados.find(p => p.id === prod.id && !p.esKit);
+                if (existente) {
+                    const nuevasUnidadesNecesarias = (existente.cantidad + 1) * existente.factorConversion;
+                    if (nuevasUnidadesNecesarias > stockBase) {
+                        const maxPermitido = Math.floor(stockBase / existente.factorConversion);
+                        mostrarMensaje(`⚠️ No puedes agregar más unidades. Stock base: ${stockBase}, requiere ${existente.factorConversion} por ${existente.unidadNombre}. Máximo disponible: ${maxPermitido}`, "warning");
                         return;
-                    } else if (stockBase <= 3) {
-                        mostrarMensaje(`⚠️ Stock bajo: ${stockBase} unidades disponibles.`, "warning");
-                    } else {
-                        mostrarMensaje(`✅ Stock disponible: ${stockBase} unidades.`, "success");
+                    }
+                    existente.cantidad++;
+                } else {
+                    // 🔹 VALIDAR STOCK ANTES DE AGREGAR NUEVO PRODUCTO
+                    if (disponiblesEnUnidad < 1) {
+                        mostrarMensaje(`❌ No hay stock suficiente para la presentación "${defaultUnidad.Nombre || 'Unidad'}". Stock: ${stockBase}, requiere ${defaultFactor} por unidad.`, "danger");
+                        return;
                     }
 
-                    // Unidades que vino en el JSON
-                    const unidades = prod.unidades || []; // [{IdUnidad, Nombre, FactorConversion}]
-
-                    // determinar unidad por defecto (primera)
-                    const defaultIdUnidad = (unidades[0] ? unidades[0].IdUnidad : null);
-
-                    const existente = productosSeleccionados.find(p => p.id === prod.id && !p.esKit);
-                    if (existente) {
-                        // calcular unidades disponibles en la unidad actualmente seleccionada
-                        const unidadSel = (existente.unidades || []).find(u => u.IdUnidad == existente.idUnidadSeleccionada);
-                        const factorSel = unidadSel ? parseFloat(unidadSel.FactorConversion) || 1 : 1;
-                        const disponiblesEnUnidad = Math.floor((existente.stock || stockBase) / factorSel);
-
-                        if (existente.cantidad + 1 > disponiblesEnUnidad) {
-                            mostrarMensaje(`⚠️ No puedes agregar más unidades. Disponible en la unidad seleccionada: ${disponiblesEnUnidad}`, "warning");
-                            return;
-                        }
-                        existente.cantidad++;
-                    } else {
-                        productosSeleccionados.push({
-                            id: prod.id,
-                            nombre: prod.text,
-                            precio: parseFloat(prod.precio) || 0,
-                            cantidad: 1,
-                            descuento: 0,
-                            stock: stockBase, // guardamos stock en unidades base
-                            esKit: false,
-                            unidades: unidades,
-                            idUnidadSeleccionada: defaultIdUnidad // default
-                        });
-                    }
+                    productosSeleccionados.push({
+                        id: prod.id,
+                        nombre: prod.text,
+                        precio: parseFloat(defaultPrecio) || 0,
+                        cantidad: 1,
+                        descuento: parseFloat(defaultUnidad.DescuentoAplicable || defaultUnidad.descuentoAplicable || defaultUnidad.Descuento || defaultUnidad.descuento || 0),
+                        stock: stockBase,
+                        stockBase: stockBase,
+                        esKit: false,
+                        unidades: unidades,
+                        idUnidadSeleccionada: defaultIdUnidad,
+                        unidadNombre: defaultUnidad.Nombre || defaultUnidad.nombre || "Unidad",
+                        factorConversion: defaultFactor
+                    });
                 }
 
-                inputBusqueda.value = "";
-                renderTabla();
+                // 🔹 MENSAJE CON INFORMACIÓN DE STOCK
+                const mensajeStock = disponiblesEnUnidad > 1 ?
+                    ` Disponible: ${disponiblesEnUnidad} ${defaultUnidad.Nombre || 'unidades'}` :
+                    '';
+
+                mostrarMensaje(`✅ ${prod.text} (${defaultUnidad.Nombre || 'Unidad'}) añadido a la venta.${mensajeStock}`, "success");
             }
 
+            inputBusqueda.value = "";
+            renderTabla();
+        }
 
-            //Renderiza la tabla para el listado
-                    function renderTabla() {
+         //Renderiza la tabla para el listado
+        function renderTabla() {
             tablaBody.innerHTML = "";
 
             productosSeleccionados.forEach((p, i) => {
@@ -511,13 +730,8 @@
                             ${p.nombre}
                             <div class="small text-muted">Promoción especial</div>
                         </td>
-
                         <td>${formatearMonedaGuatemala(p.precio)}</td>
-
-                        <td>
-                            <span class="text-muted fst-italic">N/A</span>
-                        </td>
-
+                        <td><span class="text-muted fst-italic">N/A</span></td>
                         <td>
                             <div class="input-group input-group-sm justify-content-center">
                                 <button class="btn btn-outline-secondary btn-sm"
@@ -532,15 +746,13 @@
                                         onclick="cambiarCantidadProducto(${i}, 1)">+</button>
                             </div>
                         </td>
-
                         <td>
-                            <input type="number"
-                                   class="form-control form-control-sm text-center"
-                                   min="0" max="100"
-                                   value="${p.descuento}"
-                                   onchange="actualizarDescuento(${i}, this.value)">
+                            <input type="text"
+                                   class="form-control form-control-sm text-center bg-light"
+                                   value="${p.descuento}%"
+                                   readonly
+                                   title="Descuento aplicado">
                         </td>
-
                         <td>
                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
                                 <i class="bi bi-trash"></i>
@@ -555,7 +767,7 @@
                         (u.IdUnidad ?? u.idUnidad) == p.idUnidadSeleccionada
                     );
 
-                    // Si la unidad actual no es válida o no tiene stock, buscar la primera disponible
+                    // 🔹 CORRECCIÓN: Si la unidad actual no es válida, actualizar completamente las propiedades
                     if (!unidadActual) {
                         const primeraUnidadValida = (p.unidades || []).find(u => {
                             const factorU = parseFloat(u.FactorConversion) || 1;
@@ -566,46 +778,89 @@
                         if (primeraUnidadValida) {
                             p.idUnidadSeleccionada = primeraUnidadValida.IdUnidad ?? primeraUnidadValida.idUnidad;
                             unidadActual = primeraUnidadValida;
+                            // 🔹 ACTUALIZAR TODAS LAS PROPIEDADES DEL PRECIO
+                            p.precio = parseFloat(primeraUnidadValida.PrecioVenta || primeraUnidadValida.precioVenta || primeraUnidadValida.Precio || primeraUnidadValida.precio || 0);
+                            p.unidadNombre = primeraUnidadValida.Nombre || primeraUnidadValida.nombre || "Unidad";
+                            p.factorConversion = parseFloat(primeraUnidadValida.FactorConversion || primeraUnidadValida.factorConversion || 1);
+                            p.descuento = parseFloat(primeraUnidadValida.DescuentoAplicable || primeraUnidadValida.descuentoAplicable || primeraUnidadValida.Descuento || primeraUnidadValida.descuento || 0);
                         } else {
-                            // Si no hay ninguna unidad disponible, usar la primera
-                            p.idUnidadSeleccionada = (p.unidades[0]?.IdUnidad ?? p.unidades[0]?.idUnidad) || null;
-                            unidadActual = p.unidades[0] || null;
+                                    p.idUnidadSeleccionada = p.unidades?.[0]?.IdUnidad ?? p.unidades?.[0]?.idUnidad ?? null;
+                                    unidadActual = p.unidades?.[0] ?? null;
+                            // 🔹 ACTUALIZAR PROPIEDADES TAMBIÉN PARA LA PRIMERA UNIDAD
+                            if (unidadActual) {
+                                p.precio = parseFloat(unidadActual.PrecioVenta || unidadActual.precioVenta || unidadActual.Precio || unidadActual.precio || 0);
+                                p.unidadNombre = unidadActual.Nombre || unidadActual.nombre || "Unidad";
+                                p.factorConversion = parseFloat(unidadActual.FactorConversion || unidadActual.factorConversion || 1);
+                                p.descuento = parseFloat(unidadActual.DescuentoAplicable || unidadActual.descuentoAplicable || unidadActual.Descuento || unidadActual.descuento || 0);
+                            }
                         }
                     }
 
-                    const factor = unidadActual ? (parseFloat(unidadActual.FactorConversion) || 1) : 1;
-                    const disponiblesEnUnidad = Math.floor((p.stock || 0) / factor);
-                    const subtotal = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
+                            const factor = parseFloat(p.factorConversion) || 1; // siempre número
+                            const stockBase = Number(p.stockBase ?? p.stock ?? 0);
+                            const disponiblesEnUnidad = Math.floor(stockBase / factor);
+                            const unidadesNecesarias = Math.ceil((p.cantidad || 0) * factor); // mejor usar ceil para evitar fracciones
+                            const subtotal = (parseFloat(p.precio) || 0) * (p.cantidad || 0) * (1 - ((parseFloat(p.descuento) || 0) / 100));
+
+                    // 🔹 CALCULAR PORCENTAJE DE DESCUENTO PARA MOSTRAR
+                    const porcentajeDescuento = (p.descuento * 100).toFixed(1);
 
                     let badgeStock = "";
-                    if (p.stock <= 3 && p.stock > 0)
-                        badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
-                    else if (p.stock <= 0)
+                    if (stockBase <= 0) {
                         badgeStock = `<span class="badge bg-danger ms-2">Sin stock</span>`;
+                    } else if (disponiblesEnUnidad <= 3) {
+                        badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
+                    }
 
-                    const opcionesUnidades = (p.unidades || []).map(u => {
-                        const id = u.IdUnidad ?? u.idUnidad;
-                        const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
-                        const factorU = parseFloat(u.FactorConversion) || 1;
-                        const disponibles = Math.floor((p.stock || 0) / factorU);
+                    // 🔹 BADGE DE DESCUENTO SI APLICA
+                    let badgeDescuento = "";
+                    if (p.descuento > 0) {
+                        badgeDescuento = `<span class="badge bg-success ms-2">Desc. ${porcentajeDescuento}%</span>`;
+                    }
 
-                        const disabled = disponibles < 1 ? "disabled" : "";
-                        const selected = id === p.idUnidadSeleccionada ? "selected" : "";
-                        const alertaStock = disponibles < 1 ? " (Sin stock)" : "";
+                    // 🔹 INFORMACIÓN DETALLADA DE STOCK
+                    let infoStock = "";
+                    if (stockBase > 0) {
+                        infoStock = `
+                            <div class="small text-muted">Stock base: ${formatearNumeroGuatemala(stockBase)} unidades</div>
+                            <div class="small text-info">Presentación: ${p.unidadNombre} (Factor: ${factor})</div>
+                            <div class="small ${unidadesNecesarias > stockBase ? 'text-danger' : 'text-success'}">
+                                ${p.cantidad} ${p.unidadNombre} = ${unidadesNecesarias} unidades base
+                            </div>
+                            <div class="small text-success">Disponible: ${disponiblesEnUnidad} ${p.unidadNombre}</div>
+                        `;
+                    } else {
+                        infoStock = `<div class="small text-danger">❌ Sin stock disponible</div>`;
+                    }
 
-                        return `<option value="${id}" ${selected} ${disabled}>
-                                    ${nombre}${alertaStock}
-                                </option>`;
-                    }).join("");
+                        const opcionesUnidades = (p.unidades || []).map(u => {
+                            const id = u.IdUnidad ?? u.idUnidad ?? u.Id ?? u.id ?? "";
+                            const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
+                            const factorU = parseFloat(u.FactorConversion ?? u.factorConversion ?? u.EquivalenciaEnUnidades ?? 1) || 1;
+                            const disponibles = Math.floor(stockBase / factorU);
+
+                            // precio por unidad (fallback al precio del producto)
+                            const precioUnidad = parseFloat(u.PrecioVenta ?? u.precioVenta ?? u.Precio ?? u.precio) || (parseFloat(p.precio) || 0);
+
+                            const descuentoUnidad = parseFloat(u.DescuentoAplicable ?? u.descuentoAplicable ?? u.Descuento ?? u.descuento ?? 0) || 0;
+                            const porcentajeDescuentoUnidad = (descuentoUnidad * 100).toFixed(1);
+
+                            const disabled = (disponibles < 1) ? "disabled" : "";
+                            const selected = (String(id) === String(p.idUnidadSeleccionada)) ? "selected" : "";
+                            const alertaStock = (disponibles < 1) ? " (Sin stock)" : "";
+                            const infoDescuento = descuentoUnidad > 0 ? ` - Desc. ${porcentajeDescuentoUnidad}%` : "";
+
+                            return `<option value="${id}" ${selected} ${disabled}>
+                                        ${nombre} - ${formatearMonedaGuatemala(precioUnidad)}${infoDescuento}${alertaStock}
+                                    </option>`;
+                        }).join("");
 
                     tr.innerHTML = `
                         <td class="text-start">
-                            ${p.nombre} ${badgeStock}
-                            <div class="small text-muted">Unidades Disponibles: ${formatearNumeroGuatemala(p.stock)}</div>
+                            ${p.nombre} ${badgeStock} ${badgeDescuento}
+                            ${infoStock}
                         </td>
-
                         <td>${formatearMonedaGuatemala(p.precio)}</td>
-
                         <td>
                             <select class="form-select form-select-sm text-center unidadSelect"
                                     data-index="${i}"
@@ -613,7 +868,6 @@
                                 ${opcionesUnidades}
                             </select>
                         </td>
-
                         <td>
                             <div class="input-group input-group-sm justify-content-center">
                                 <button class="btn btn-outline-secondary btn-sm"
@@ -632,18 +886,22 @@
                                         ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
                             </div>
                             ${disponiblesEnUnidad < 1 ?
-                              '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' : ''}
+                              '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' :
+                              `<div class="text-success small mt-1">✅ Disponible: ${disponiblesEnUnidad} ${p.unidadNombre || 'unidades'}</div>`}
+                            ${unidadesNecesarias > stockBase ?
+                              `<div class="text-danger small mt-1">⚠️ Excede stock base (${stockBase} unidades)</div>` : ''}
                         </td>
-
                         <td>
-                            <input type="number"
-                                   class="form-control form-control-sm text-center"
-                                   min="0" max="100"
-                                   value="${p.descuento}"
-                                   onchange="actualizarDescuento(${i}, this.value)"
-                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
+                            <input type="text"
+                                   class="form-control form-control-sm text-center bg-light"
+                                   value="${porcentajeDescuento}%"
+                                   readonly
+                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}
+                                   title="Descuento de la presentación seleccionada">
+                            ${p.descuento > 0 ?
+                              `<div class="small text-success mt-1">💫 Descuento aplicado</div>` :
+                              `<div class="small text-muted mt-1">Sin descuento</div>`}
                         </td>
-
                         <td>
                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
                                 <i class="bi bi-trash"></i>
@@ -659,130 +917,125 @@
         }
 
 
-            function cambiarUnidad(index, idUnidadSeleccionada) {
-                const producto = productosSeleccionados[index];
+             // 🔹 FUNCIÓN PARA CAMBIAR UNIDAD DESDE EL SELECT
+        function cambiarUnidad(index, idUnidadSeleccionada) {
+            const producto = productosSeleccionados[index];
+            if (!producto) return;
+            const unidadAnterior = producto.idUnidadSeleccionada;
 
-                const unidadAnterior = producto.idUnidadSeleccionada;
+            const unidadSeleccionada = (producto.unidades || []).find(u =>
+                String(u.IdUnidad ?? u.idUnidad ?? u.Id ?? u.id) === String(idUnidadSeleccionada)
+            );
 
-                // Encontrar la unidad seleccionada
-                const unidadSeleccionada = producto.unidades.find(u =>
-                    (u.IdUnidad ?? u.idUnidad) == idUnidadSeleccionada
-                );
-
-                if (!unidadSeleccionada) {
-                    // Si no encuentra la unidad, restaurar inmediatamente
-                    restaurarSelectUnidad(index, unidadAnterior);
-                    return;
-                }
-
-                const factor = parseFloat(unidadSeleccionada.FactorConversion ?? unidadSeleccionada.factorConversion ?? 1);
-                const precioBase = producto.precioBase ?? producto.precio;
-
-                // VALIDAR STOCK ANTES DE CAMBIAR
-                const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
-
-                if (disponiblesEnUnidad < 1) {
-                    const nombreUnidad = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? "esta presentación";
-                    mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}.`, "danger");
-
-                    // RESTAURAR INMEDIATAMENTE el valor anterior
-                    restaurarSelectUnidad(index, unidadAnterior);
-                    return;
-                }
-
-                // Si la cantidad actual supera el nuevo disponible, ajustarla
-                if (producto.cantidad > disponiblesEnUnidad) {
-                    producto.cantidad = disponiblesEnUnidad;
-                    mostrarMensaje(`⚠️ La cantidad se ajustó al máximo disponible: ${disponiblesEnUnidad}`, "warning");
-                }
-
-                // Aplicar cambios solo si pasa todas las validaciones
-                producto.idUnidadSeleccionada = parseInt(idUnidadSeleccionada);
-                producto.precioBase = precioBase;
-                producto.precio = precioBase * factor;
-
-                mostrarMensaje(`🔁 Presentación cambiada a: ${unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre}`, "info");
-                renderTabla();
+            if (!unidadSeleccionada) {
+                restaurarSelectUnidad(index, unidadAnterior);
+                return;
             }
 
-            // FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
-            function restaurarSelectUnidad(index, valorAnterior) {
+            const factor = parseFloat(unidadSeleccionada.FactorConversion ?? unidadSeleccionada.factorConversion ?? 1) || 1;
+            const stockBase = Number(producto.stockBase ?? producto.stock ?? 0);
+            const disponiblesEnUnidad = Math.floor(stockBase / factor);
 
-                setTimeout(() => {
-                    const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
-                    if (select) {
-                        select.value = valorAnterior;
-                    }
-                }, 0);
+            if (disponiblesEnUnidad < 1) {
+                const nombreUnidad = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? "esta presentación";
+                mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}. Stock: ${stockBase}, requiere ${factor} por unidad.`, "danger");
+                restaurarSelectUnidad(index, unidadAnterior);
+                return;
             }
 
-            // FUNCIÓN CENTRALIZADA PARA CAMBIAR CANTIDAD
-            function cambiarCantidadProducto(index, delta) {
-                const producto = productosSeleccionados[index];
-                if (!producto) return;
-
-                // Obtener información de la unidad seleccionada
-                const unidadSel = (producto.unidades || []).find(u =>
-                    (u.IdUnidad ?? u.idUnidad) == producto.idUnidadSeleccionada
-                );
-
-                const factor = unidadSel ? (parseFloat(unidadSel.FactorConversion) || 1) : 1;
-                const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
-
-                // Calcular nueva cantidad
-                let nuevaCantidad = producto.cantidad + delta;
-
-                // VALIDACIONES CENTRALIZADAS
-                if (nuevaCantidad < 1) {
-                    nuevaCantidad = 1;
-                    mostrarMensaje("❌ La cantidad mínima es 1", "warning");
-                } else if (nuevaCantidad > disponiblesEnUnidad) {
-                    nuevaCantidad = disponiblesEnUnidad;
-                    mostrarMensaje(`⚠️ No hay suficiente stock. Máximo disponible: ${disponiblesEnUnidad}`, "warning");
-                }
-
-                // Aplicar cambio
-                producto.cantidad = nuevaCantidad;
-                renderTabla();
+            // Ajustar cantidad si excede el nuevo límite
+            if ((producto.cantidad || 0) > disponiblesEnUnidad) {
+                producto.cantidad = disponiblesEnUnidad;
+                mostrarMensaje(`⚠️ La cantidad se ajustó al máximo disponible: ${disponiblesEnUnidad} ${unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre}`, "warning");
             }
 
-            // 🔴 FUNCIÓN CENTRALIZADA PARA ACTUALIZAR CANTIDAD DESDE INPUT
-            function actualizarCantidadProducto(index, nuevaCantidadStr) {
-                const producto = productosSeleccionados[index];
-                if (!producto) return;
+            producto.idUnidadSeleccionada = parseInt(idUnidadSeleccionada, 10);
+            producto.precio = parseFloat(unidadSeleccionada.PrecioVenta ?? unidadSeleccionada.precioVenta ?? unidadSeleccionada.Precio ?? unidadSeleccionada.precio) || producto.precio || 0;
+            producto.unidadNombre = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? producto.unidadNombre ?? "Unidad";
+            producto.factorConversion = factor;
+            producto.descuento = parseFloat(unidadSeleccionada.DescuentoAplicable ?? unidadSeleccionada.descuentoAplicable ?? unidadSeleccionada.Descuento ?? unidadSeleccionada.descuento ?? producto.descuento ?? 0) || 0;
 
-                // Obtener información de la unidad seleccionada
-                const unidadSel = (producto.unidades || []).find(u =>
-                    (u.IdUnidad ?? u.idUnidad) == producto.idUnidadSeleccionada
-                );
+            mostrarMensaje(`🔁 Presentación cambiada a: ${producto.unidadNombre} - Disponible: ${disponiblesEnUnidad} unidades`, "info");
+            renderTabla();
+        }
 
-                const factor = unidadSel ? (parseFloat(unidadSel.FactorConversion) || 1) : 1;
-                const disponiblesEnUnidad = Math.floor((producto.stock || 0) / factor);
 
-                // Convertir y validar
-                let nuevaCantidad = parseInt(nuevaCantidadStr);
-                if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
-                    nuevaCantidad = 1;
-                }
+         // 🔹 FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
+         function restaurarSelectUnidad(index, valorAnterior) {
+             setTimeout(() => {
+                 const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
+                 if (select) {
+                     select.value = valorAnterior;
+                 }
+             }, 0);
+         }
 
-                // 🔴 VALIDACIONES CENTRALIZADAS
-                if (nuevaCantidad > disponiblesEnUnidad) {
-                    nuevaCantidad = disponiblesEnUnidad;
-                    mostrarMensaje(`⚠️ No hay suficiente stock. Máximo disponible: ${disponiblesEnUnidad}`, "warning");
-                }
+         // 🔹 FUNCIÓN CENTRALIZADA PARA CAMBIAR CANTIDAD
+        function cambiarCantidadProducto(index, delta) {
+            const producto = productosSeleccionados[index];
+            if (!producto) return;
 
-                // Aplicar cambio
-                producto.cantidad = nuevaCantidad;
-                renderTabla();
+            const factor = Number(producto.factorConversion || 1);
+            const stockBase = Number(producto.stockBase || producto.stock || 0);
+
+            const usoExcluyendoEsta = productosSeleccionados
+                .filter((p, idx) => String(p.id) === String(producto.id) && idx !== index)
+                .reduce((s, p) => s + (Number(p.cantidad || 0) * Number(p.factorConversion || 1)), 0);
+
+            const maxParaEsta = Math.floor((stockBase - usoExcluyendoEsta) / factor);
+
+            let nuevaCantidad = Number(producto.cantidad || 0) + Number(delta || 0);
+
+            if (nuevaCantidad < 1) nuevaCantidad = 1;
+            if (nuevaCantidad > maxParaEsta) {
+                nuevaCantidad = Math.max(1, maxParaEsta);
+                mostrarMensaje(`⚠️ No puedes vender más de ${maxParaEsta} ${producto.unidadNombre || 'unidades'}.`, 'warning');
             }
 
+            producto.cantidad = nuevaCantidad;
+            producto.maxPermitido = maxParaEsta;
+            renderTabla();
+        }
 
-               function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
-               function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "info"); }
 
-       function recalcularTotales() {
+        // 🔹 FUNCIÓN CENTRALIZADA PARA ACTUALIZAR CANTIDAD DESDE INPUT
+        function actualizarCantidadProducto(index, nuevaCantidadStr) {
+            const producto = productosSeleccionados[index];
+            if (!producto) return;
+
+            const factor = parseFloat(producto.factorConversion) || 1;
+            const stockBase = Number(producto.stockBase ?? producto.stock ?? 0);
+            const disponiblesEnUnidad = Math.floor(stockBase / factor);
+
+            let nuevaCantidad = parseInt(nuevaCantidadStr, 10);
+            if (isNaN(nuevaCantidad) || nuevaCantidad < 1) nuevaCantidad = 1;
+
+            if (nuevaCantidad > disponiblesEnUnidad) {
+                nuevaCantidad = disponiblesEnUnidad;
+                mostrarMensaje(`⚠️ No hay suficiente stock. Máximo disponible: ${disponiblesEnUnidad}`, "warning");
+            }
+
+            producto.cantidad = nuevaCantidad;
+            renderTabla();
+        }
+
+
+
+        
+
+        function actualizarDescuento(i, v) { 
+            productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); 
+            renderTabla(); 
+        }
+        
+        function eliminarProducto(i) { 
+            productosSeleccionados.splice(i, 1); 
+            renderTabla(); 
+            mostrarMensaje("Producto eliminado de la venta.", "info"); 
+        }
+
+        function recalcularTotales() {
             let total = 0;
-
             productosSeleccionados.forEach(p => {
                 const precioConDescuento = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
                 total += precioConDescuento;
@@ -793,42 +1046,42 @@
         }
 
             document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
-                const nit = document.getElementById("nitCliente").value.trim();
-                const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
-                if (!nit) {
-                    mostrarMensaje("Por favor ingrese un NIT antes de buscar.", "warning");
-                    return;
-                }
+            const nit = document.getElementById("nitCliente").value.trim();
+            const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
+            if (!nit) {
+                mostrarMensaje("Por favor ingrese un NIT antes de buscar.", "warning");
+                return;
+            }
 
-                const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
-                const data = await res.json();
+            const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
+            const data = await res.json();
 
-                console.log("Respuesta BuscarClientePorNit:", data);
+            console.log("Respuesta BuscarClientePorNit:", data);
 
-                if (data.encontrado) {
-                    clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.cliente?.id ?? data?.cliente?.Id ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
+            if (data.encontrado) {
+                clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.cliente?.id ?? data?.cliente?.Id ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
 
-                    const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
-                    const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
-                    const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
-                    const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
+                const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
+                const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
+                const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
+                const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
 
-                    document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
-                    document.getElementById("correoCliente").innerText = correo;
-                    document.getElementById("direccionCliente").innerText = direccion;
-                    document.getElementById("datosCliente").classList.remove("d-none");
-                    document.getElementById("formNuevoCliente").classList.add("d-none");
-                    mostrarMensaje("Cliente encontrado correctamente.", "success");
+                document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
+                document.getElementById("correoCliente").innerText = correo;
+                document.getElementById("direccionCliente").innerText = direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+                mostrarMensaje("Cliente encontrado correctamente.", "success");
 
-                    console.log("clienteSeleccionado asignado:", clienteSeleccionado);
-                } else {
-                    clienteSeleccionado = null;
-                    document.getElementById("formNuevoCliente").classList.remove("d-none");
-                    document.getElementById("datosCliente").classList.add("d-none");
-                    mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
-                    console.log("Cliente no encontrado. clienteSeleccionado=", clienteSeleccionado);
-                }
-            });
+                console.log("clienteSeleccionado asignado:", clienteSeleccionado);
+            } else {
+                clienteSeleccionado = null;
+                document.getElementById("formNuevoCliente").classList.remove("d-none");
+                document.getElementById("datosCliente").classList.add("d-none");
+                mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
+                console.log("Cliente no encontrado. clienteSeleccionado=", clienteSeleccionado);
+            }
+        });
 
             document.getElementById("nitCliente").addEventListener("keypress", function (event) {
                 if (event.key === "Enter") {
@@ -1129,16 +1382,6 @@
                  mostrarMensaje("Venta cancelada correctamente.", "info");
              });
 
-            function cambiarCantidad(i, d) { productosSeleccionados[i].cantidad = Math.max(1, productosSeleccionados[i].cantidad + d); renderTabla(); }
-            function actualizarCantidad(i, v) { productosSeleccionados[i].cantidad = Math.max(1, parseInt(v)); renderTabla(); }
-            function actualizarDescuento(i, v) { productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); renderTabla(); }
-            function eliminarProducto(i) { productosSeleccionados.splice(i, 1); renderTabla(); mostrarMensaje("Producto eliminado de la venta.", "warning"); }
-
-            function recalcularTotales() {
-                let total = 0;
-                productosSeleccionados.forEach(p => total += p.precio * p.cantidad * (1 - p.descuento / 100));
-                document.querySelector("#total").value = formatearMonedaGuatemala(total);
-            }
 
             const opcionNit = document.getElementById("opcionNit");
             const opcionCF = document.getElementById("opcionCF");
