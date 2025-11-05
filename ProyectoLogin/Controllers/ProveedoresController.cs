@@ -20,10 +20,22 @@ namespace ProyectoLogin.Controllers
             _logger = logger;
         }
 
-        // LISTAR con opción de ordenar y paginación
-        public async Task<IActionResult> Index(bool ordenar = false, int pageActivos = 1, int pageInactivos = 1)
+        // LISTAR con opción de ordenar, buscar y paginación
+        public async Task<IActionResult> Index(string q = "", bool ordenar = false, int pageActivos = 1, int pageInactivos = 1)
         {
             var proveedoresQuery = _context.Proveedores.AsQueryable();
+
+            // Aplicar búsqueda si se proporciona
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                proveedoresQuery = proveedoresQuery.Where(p =>
+                    p.Nombre.Contains(q) ||
+                    (p.Contacto != null && p.Contacto.Contains(q)) ||
+                    (p.Email != null && p.Email.Contains(q)) ||
+                    (p.Telefono != null && p.Telefono.Contains(q)) ||
+                    (p.Direccion != null && p.Direccion.Contains(q))
+                );
+            }
 
             if (ordenar)
                 proveedoresQuery = proveedoresQuery.OrderBy(p => p.Nombre);
@@ -63,8 +75,9 @@ namespace ProyectoLogin.Controllers
             ViewBag.TotalPagesActivos = totalPagesActivos;
             ViewBag.TotalPagesInactivos = totalPagesInactivos;
             ViewBag.Ordenar = ordenar;
+            ViewData["q"] = q; // Pasar el término de búsqueda a la vista
 
-            return View(await proveedoresQuery.ToListAsync());
+            return View();
         }
 
         // CREAR GET
