@@ -540,13 +540,6 @@ namespace ProyectoLogin.Controllers
             compra.FechaCompra = FechaLocal.Ahora();
         }
 
-
-
-
-
-
-
-
         private async Task ActualizarInventarioYPreciosAsync(Compra compra)
         {
             var productosProveedores = await _context.ProductosProveedores.ToListAsync();
@@ -559,7 +552,7 @@ namespace ProyectoLogin.Controllers
             foreach (var det in compra.Detalles)
             {
                 // ============================
-                // 🔹 ACTUALIZACIÓN DE INVENTARIO (sin cambios)
+                // 🔹 ACTUALIZACIÓN DE INVENTARIO
                 // ============================
                 var prodUnidad = productosUnidades
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
@@ -591,7 +584,7 @@ namespace ProyectoLogin.Controllers
                 }
 
                 // ============================
-                // 🔹 ACTUALIZAR RELACIÓN PRODUCTO-PROVEEDOR (sin cambios)
+                // 🔹 RELACIÓN PRODUCTO-PROVEEDOR
                 // ============================
                 var prodProv = productosProveedores
                     .FirstOrDefault(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
@@ -602,38 +595,26 @@ namespace ProyectoLogin.Controllers
                 }
 
                 if (prodUnidad != null)
-                {
                     prodUnidad.PrecioCompra = det.PrecioUnitario;
-                }
 
                 // ============================
-                // 🔹 CÁLCULO DE PRECIOS BASE
+                // 🔹 CÁLCULO DE PRECIOS BASE Y UTILIDAD
                 // ============================
-                decimal precioCompraConIVA = det.PrecioUnitario;
-                decimal precioBase = precioCompraConIVA / 1.12m;
+                decimal precioCompraConIVA = det.PrecioUnitario; // precio registrado
+                decimal precioBase = precioCompraConIVA / 1.12m; // sin IVA
                 decimal ivaCompra = precioBase * 0.12m;
 
+                // 🔸 Margen de ganancia estándar (puedes ajustar por tipo)
+                const decimal margenUnidad = 0.25m;
+                const decimal margenPaquete = 0.15m;
+                const decimal margenCaja = 0.10m;
+
                 // ============================
-                // 🔹 CALCULAR PRECIOS DE VENTA POR PRESENTACIÓN
+                // 🔹 PRECIOS DE VENTA (CON IVA)
                 // ============================
-
-                // Obtener factores de conversión de las unidades
-                var unidadIndividual = unidadesGlobales.FirstOrDefault(u => u.EquivalenciaEnUnidades == 1);
-                var paquete = unidadesGlobales.FirstOrDefault(u => u.EquivalenciaEnUnidades == 6);
-                var caja = unidadesGlobales.FirstOrDefault(u => u.EquivalenciaEnUnidades == 12);
-
-                // PRECIO VENTA POR UNIDAD (25% ganancia)
-                decimal precioVentaUnidad = (precioBase * 1.25m) * 1.12m;
-
-                // PRECIO VENTA POR PAQUETE (15% ganancia)
-                decimal precioVentaPaquete = ((precioBase * 6) * 1.15m) * 1.12m;
-
-                // PRECIO VENTA POR CAJA (10% ganancia)
-                decimal precioVentaCaja = ((precioBase * 12) * 1.10m) * 1.12m;
-
-                // Precios para compatibilidad (usar precio por unidad como default)
-                decimal precioVentaSinIVA = precioBase * 1.25m;
-                decimal precioVentaConIVA = precioVentaUnidad;
+                decimal precioVentaUnidad = Math.Round((precioBase * (1 + margenUnidad)) * 1.12m, 2);
+                decimal precioVentaPaquete = Math.Round(((precioBase * 6) * (1 + margenPaquete)) * 1.12m, 2);
+                decimal precioVentaCaja = Math.Round(((precioBase * 12) * (1 + margenCaja)) * 1.12m, 2);
 
                 // ============================
                 // 🔹 DESACTIVAR PRECIOS ANTIGUOS
@@ -649,32 +630,47 @@ namespace ProyectoLogin.Controllers
                 }
 
                 // ============================
-                // 🔹 CREAR NUEVO REGISTRO DE PRECIO CON TODAS LAS PRESENTACIONES
+                // 🔹 CREAR NUEVO PRECIO VIGENTE
                 // ============================
                 _context.ProductoPrecio.Add(new ProductoPrecio
                 {
                     IdProducto = det.IdProducto,
-                    PrecioCompra = precioCompraConIVA,
-                    PrecioBase = precioBase,
-                    IVACompra = ivaCompra,
-                    MargenGanancia = 0.25m, // Margen principal (unidad)
+                    PrecioCompra = Math.Round(precioCompraConIVA, 2),
+                    PrecioBase = Math.Round(precioBase, 2),
+                    IVACompra = Math.Round(ivaCompra, 2),
+                    MargenGanancia = margenUnidad,
 
-                    // 🔹 NUEVOS PRECIOS POR PRESENTACIÓN
-                    PrecioVentaUnidad = Math.Round(precioVentaUnidad, 2),
-                    PrecioVentaPaquete = Math.Round(precioVentaPaquete, 2),
-                    PrecioVentaCaja = Math.Round(precioVentaCaja, 2),
-
-                    // Para compatibilidad
-                    PrecioVentaSinIVA = precioVentaSinIVA,
-                    PrecioVenta = precioVentaConIVA,
+                    PrecioVentaUnidad = precioVentaUnidad,
+                    PrecioVentaPaquete = precioVentaPaquete,
+                    PrecioVentaCaja = precioVentaCaja,
+                    PrecioVentaSinIVA = Math.Round(precioBase * (1 + margenUnidad), 2),
+                    PrecioVenta = precioVentaUnidad, // valor principal para POS
 
                     FechaInicio = FechaLocal.Ahora(),
                     Activo = true,
                     UsuarioRegistro = User?.Identity?.Name ?? "Sistema",
                     OrigenCambio = "Compra"
                 });
+
+                // ============================
+                // 🔹 REGISTRAR UTILIDAD ESTIMADA
+                // ============================
+                decimal utilidadUnidad = precioVentaUnidad - precioCompraConIVA;
+                decimal utilidadPorCompra = utilidadUnidad * cantidadEquivalente;
+
+                _context.BitacoraMovimientos.Add(new BitacoraMovimiento
+                {
+                    IdUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value),
+                    Accion = "Actualización de precios",
+                    Descripcion = $"Producto {det.IdProducto}: compra a Q{precioCompraConIVA:N2}, venta unidad Q{precioVentaUnidad:N2}, utilidad estimada total Q{utilidadPorCompra:N2}",
+                    Modulo = "Compras",
+                    Fecha = FechaLocal.Ahora()
+                });
             }
+
+            await _context.SaveChangesAsync();
         }
+
 
     }
 }

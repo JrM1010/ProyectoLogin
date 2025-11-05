@@ -106,7 +106,7 @@
             {
                 <!-- ESTADÍSTICAS RÁPIDAS -->
                 <div class="row mb-4">
-                    <div class="col-xl-4 col-md-6 mb-3">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card border-left-primary shadow-sm h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -123,7 +123,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-4 col-md-6 mb-3">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card border-left-success shadow-sm h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -140,7 +140,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-4 col-md-6 mb-3">
+                    <div class="col-xl-3 col-md-6 mb-3">
                         <div class="card border-left-info shadow-sm h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
@@ -152,6 +152,24 @@
                                     </div>
                                     <div class="col-auto">
                                         <i class="bi bi-receipt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 🔹 NUEVO: Promedio de utilidad general -->
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="card border-left-warning shadow-sm h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            % Promedio de Utilidad
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.MargenPromedioGeneral.ToString("N2")%</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-percent fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
@@ -181,6 +199,7 @@
                                         <th class="fw-semibold text-gray-700 text-end">Total</th>
                                         <th class="fw-semibold text-gray-700 text-center">Forma de Pago</th>
                                         <th class="fw-semibold text-gray-700 text-end">Utilidad</th>
+                                        <th class="fw-semibold text-gray-700 text-end">% Ganancia</th>
                                         <th class="fw-semibold text-gray-700 text-center" style="width: 120px;">Detalles</th>
                                     </tr>
                                 </thead>
@@ -188,28 +207,14 @@
                                     @foreach (var v in Model)
                                     {
                                         <tr>
-                                            <td class="ps-4">
-                                                <small class="text-muted">@v.Fecha.ToString("dd/MM/yyyy")</small>
-                                            </td>
-                                            <td>
-                                                <strong class="text-primary">@v.NoFactura</strong>
-                                            </td>
+                                            <td class="ps-4"><small class="text-muted">@v.Fecha.ToString("dd/MM/yyyy")</small></td>
+                                            <td><strong class="text-primary">@v.NoFactura</strong></td>
                                             <td>@v.Cliente</td>
-                                            <td>
-                                                <span class="badge bg-light text-dark">@v.Nit</span>
-                                            </td>
-                                            <td>
-                                                <span class="fw-medium">@v.Vendedor</span>
-                                            </td>
-                                            <td class="text-end">
-                                                <span class="text-muted">Q @v.TotalSinIva.ToString("N2")</span>
-                                            </td>
-                                            <td class="text-end">
-                                                <span class="text-warning">Q @v.ValorIva.ToString("N2")</span>
-                                            </td>
-                                            <td class="text-end">
-                                                <strong class="text-success">Q @v.TotalConIva.ToString("N2")</strong>
-                                            </td>
+                                            <td><span class="badge bg-light text-dark">@v.Nit</span></td>
+                                            <td><span class="fw-medium">@v.Vendedor</span></td>
+                                            <td class="text-end text-muted">Q @v.TotalSinIva.ToString("N2")</td>
+                                            <td class="text-end text-warning">Q @v.ValorIva.ToString("N2")</td>
+                                            <td class="text-end text-success fw-bold">Q @v.TotalConIva.ToString("N2")</td>
                                             <td class="text-center">
                                                 @{
                                                     var badgeClass = v.FormaPago switch
@@ -223,8 +228,11 @@
                                                 }
                                                 <span class="badge @badgeClass rounded-pill">@v.FormaPago</span>
                                             </td>
+                                            <td class="text-end text-primary fw-bold">Q @v.UtilidadTotal.ToString("N2")</td>
                                             <td class="text-end">
-                                                <strong class="text-primary">Q @v.UtilidadTotal.ToString("N2")</strong>
+                                                <span class="fw-bold @(v.MargenPorcentual >= 25 ? "text-success" : v.MargenPorcentual >= 10 ? "text-warning" : "text-danger")">
+                                                    @v.MargenPorcentual.ToString("N2")%
+                                                </span>
                                             </td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-info rounded-pill" type="button"
@@ -239,7 +247,7 @@
 
                                         <!-- DETALLES EXPANDIBLES -->
                                         <tr class="bg-light">
-                                            <td colspan="11" class="p-0 border-0">
+                                            <td colspan="12" class="p-0 border-0">
                                                 <div class="collapse" id="detalles-@v.IdVenta">
                                                     <div class="p-3">
                                                         <div class="card border-0 shadow-sm">
@@ -256,13 +264,14 @@
                                                                         <table class="table table-sm table-hover align-middle">
                                                                             <thead class="table-light">
                                                                                 <tr>
-                                                                                    <th class="fw-semibold text-gray-700">Producto/Kit</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-center">Cantidad</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-end">Precio Unitario</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-end">Precio sin IVA</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-end">IVA</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-end">Subtotal</th>
-                                                                                    <th class="fw-semibold text-gray-700 text-end">Utilidad</th>
+                                                                                    <th>Producto/Kit</th>
+                                                                                    <th class="text-center">Cantidad</th>
+                                                                                    <th class="text-end">Precio Unitario</th>
+                                                                                    <th class="text-end">Precio sin IVA</th>
+                                                                                    <th class="text-end">IVA</th>
+                                                                                    <th class="text-end">Subtotal</th>
+                                                                                    <th class="text-end">Utilidad</th>
+                                                                                    <th class="text-end">% Utilidad</th>
                                                                                 </tr>
                                                                             </thead>
                                                                             <tbody>
@@ -278,15 +287,16 @@
                                                                                                 <span class="fw-medium">@detalle.NombreProducto</span>
                                                                                             </div>
                                                                                         </td>
-                                                                                        <td class="text-center">
-                                                                                            <span class="badge bg-primary rounded-pill">@detalle.Cantidad</span>
-                                                                                        </td>
+                                                                                        <td class="text-center"><span class="badge bg-primary rounded-pill">@detalle.Cantidad</span></td>
                                                                                         <td class="text-end text-muted">Q @detalle.PrecioUnitario.ToString("N2")</td>
                                                                                         <td class="text-end text-muted">Q @detalle.PrecioSinIva.ToString("N2")</td>
                                                                                         <td class="text-end text-warning">Q @detalle.Iva.ToString("N2")</td>
                                                                                         <td class="text-end fw-semibold">Q @detalle.Subtotal.ToString("N2")</td>
+                                                                                        <td class="text-end text-success fw-bold">Q @detalle.Utilidad.ToString("N2")</td>
                                                                                         <td class="text-end">
-                                                                                            <strong class="text-success">Q @detalle.Utilidad.ToString("N2")</strong>
+                                                                                            <span class="fw-bold @(detalle.MargenPorcentual >= 25 ? "text-success" : detalle.MargenPorcentual >= 10 ? "text-warning" : "text-danger")">
+                                                                                                @detalle.MargenPorcentual.ToString("N2")%
+                                                                                            </span>
                                                                                         </td>
                                                                                     </tr>
                                                                                 }
@@ -356,6 +366,7 @@
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <script>

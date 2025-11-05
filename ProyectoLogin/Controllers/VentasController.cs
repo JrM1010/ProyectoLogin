@@ -259,44 +259,43 @@ namespace ProyectoLogin.Controllers
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // === CALCULAR UTILIDAD DE LA VENTA ===
+                // === CALCULAR UTILIDAD DE LA VENTA (MEJORADO) ===
                 decimal utilidadTotalVenta = 0m;
 
-                // obtener lista de productos vendidos
                 var productoIds = venta.Detalles
                     .Where(d => d.IdProducto.HasValue)
                     .Select(d => d.IdProducto!.Value)
                     .Distinct()
                     .ToList();
 
-                // obtener precios base activos (sin IVA)
-                var preciosBase = await _context.ProductoPrecio
+                var preciosCompra = await _context.ProductoPrecio
                     .Where(pp => productoIds.Contains(pp.IdProducto) && pp.Activo)
                     .GroupBy(pp => pp.IdProducto)
                     .Select(g => g.OrderByDescending(x => x.FechaInicio).FirstOrDefault())
-                    .ToDictionaryAsync(x => x.IdProducto, x => x.PrecioBase);
+                    .ToDictionaryAsync(x => x.IdProducto, x => x.PrecioCompra);
 
                 foreach (var det in venta.Detalles)
                 {
                     decimal utilidad = 0m;
+                    decimal precioCompraVenta = 0m;
 
-                    // 🧩 Producto normal
                     if (det.IdProducto.HasValue)
                     {
                         decimal precioVentaConIVA = det.PrecioUnitario;
                         decimal precioVentaSinIVA = precioVentaConIVA / 1.12m;
 
-                        decimal precioBase = preciosBase.ContainsKey(det.IdProducto.Value)
-                            ? preciosBase[det.IdProducto.Value]
+                        decimal precioCompraConIVA = preciosCompra.ContainsKey(det.IdProducto.Value)
+                            ? preciosCompra[det.IdProducto.Value]
                             : 0m;
 
-                        decimal factor = 1m;
+                        precioCompraVenta = precioCompraConIVA;
+                        decimal precioCompraSinIVA = precioCompraConIVA / 1.12m;
 
+                        decimal factor = 1m;
                         if (det.IdUnidad.HasValue)
                         {
                             var productoUnidad = await _context.ProductosUnidades
                                 .FirstOrDefaultAsync(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
-
                             if (productoUnidad != null)
                                 factor = productoUnidad.FactorConversion;
                             else
@@ -308,13 +307,9 @@ namespace ProyectoLogin.Controllers
                             }
                         }
 
-                        // cantidad real en unidades base
                         var cantidadReal = det.Cantidad * factor;
-
-                        utilidad = (precioVentaSinIVA - precioBase) * cantidadReal;
+                        utilidad = (precioVentaSinIVA - precioCompraSinIVA) * cantidadReal;
                     }
-
-                    // 🧩 Kit / Promoción
                     else if (det.IdKit.HasValue)
                     {
                         var kit = await _context.Kits
@@ -325,26 +320,29 @@ namespace ProyectoLogin.Controllers
                         if (kit != null)
                         {
                             decimal utilidadKit = 0m;
-
                             foreach (var kd in kit.Detalles)
                             {
-                                var precioBase = await _context.ProductoPrecio
+                                var precioCompra = await _context.ProductoPrecio
                                     .Where(pp => pp.IdProducto == kd.IdProducto && pp.Activo)
                                     .OrderByDescending(pp => pp.FechaInicio)
-                                    .Select(pp => pp.PrecioBase)
+                                    .Select(pp => pp.PrecioCompra)
                                     .FirstOrDefaultAsync();
 
+                                var precioCompraSinIVA = precioCompra / 1.12m;
                                 var precioVentaSinIVA = kd.PrecioUnitarioSnapshot / 1.12m;
-                                utilidadKit += (precioVentaSinIVA - precioBase) * kd.Cantidad;
+                                utilidadKit += (precioVentaSinIVA - precioCompraSinIVA) * kd.Cantidad;
                             }
 
                             utilidad = utilidadKit * det.Cantidad;
                         }
                     }
 
+                    det.PrecioCompraVenta = Math.Round(precioCompraVenta, 2);
                     det.Utilidad = Math.Round(utilidad, 2);
                     utilidadTotalVenta += det.Utilidad;
                 }
+
+                venta.UtilidadTotal = Math.Round(utilidadTotalVenta, 2);
 
                 // === DESCONTAR INVENTARIO ===
                 foreach (var det in venta.Detalles)
@@ -408,7 +406,6 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 🔹 Registrar movimiento en bitácora
                 var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
@@ -441,6 +438,7 @@ namespace ProyectoLogin.Controllers
                 });
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> BuscarPromocion(string term)

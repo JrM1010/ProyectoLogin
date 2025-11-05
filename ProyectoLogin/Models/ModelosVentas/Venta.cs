@@ -23,6 +23,7 @@ namespace ProyectoLogin.Models.ModelosVentas
 
         public decimal Total { get; set; }
 
+        public decimal UtilidadTotal { get; set; } // Utilidad global de la venta
 
         public string? MetodoPago { get; set; }
         public string? Estado { get; set; } = "Completada";

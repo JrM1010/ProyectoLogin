@@ -20,6 +20,7 @@ namespace ProyectoLogin.Models.ModelosVentas
         public decimal Subtotal { get; set; }
         public int? IdUnidad { get; set; }
 
+        public decimal PrecioCompraVenta { get; set; } 
         public decimal Utilidad { get; set; } = 0m;
 
         [ForeignKey("IdVenta")]

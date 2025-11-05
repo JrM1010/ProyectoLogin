@@ -39,7 +39,7 @@ namespace ProyectoLogin.Controllers
                     .ThenInclude(d => d.Kit)
                 .AsQueryable();
 
-            // 🔹 CONVERTIR FECHAS A UTC PARA COMPARACIÓN CORRECTA
+            // 🔹 Filtros de fecha
             if (desde.HasValue)
             {
                 var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
@@ -48,68 +48,84 @@ namespace ProyectoLogin.Controllers
 
             if (hasta.HasValue)
             {
-                // 🔹 AGREGAR 1 DÍA PARA INCLUIR EL DÍA COMPLETO
                 var hastaUtc = FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1));
                 query = query.Where(v => v.FechaVenta < hastaUtc);
             }
 
+            // 🔹 Filtros adicionales
             if (!string.IsNullOrEmpty(vendedor))
                 query = query.Where(v => v.Usuario.NombreUsuario.Contains(vendedor));
 
             if (!string.IsNullOrEmpty(formaPago))
                 query = query.Where(v => v.MetodoPago == formaPago);
 
+            // 🔹 Consulta principal
             var ventas = await query
-            .OrderByDescending(v => v.FechaVenta)
-            .Select(v => new
-            {
-                IdVenta = v.IdVenta,
-                Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
-                NoFactura = v.NumeroFactura,
-                Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
-                            ? "CF"
-                            : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
-                Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
-                Vendedor = v.Usuario.NombreUsuario,
-                TotalSinIva = v.Total / 1.12m,
-                ValorIva = v.Total - (v.Total / 1.12m),
-                TotalConIva = v.Total,
-                FormaPago = v.MetodoPago,
-
-                // 🧮 NUEVO: total de utilidad por venta
-                UtilidadTotal = v.Detalles.Sum(d => d.Utilidad),
-
-                // 🔹 INCLUIR DETALLES DE LA VENTA
-                Detalles = v.Detalles.Select(d => new
+                .OrderByDescending(v => v.FechaVenta)
+                .Select(v => new
                 {
-                    IdDetalle = d.IdDetalleVenta,
-                    IdProducto = d.IdProducto,
-                    IdKit = d.IdKit,
-                    NombreProducto = d.Producto != null ? d.Producto.Nombre :
-                                    d.Kit != null ? "(KIT) " + d.Kit.Nombre : "Producto no disponible",
-                    Cantidad = d.Cantidad,
-                    PrecioUnitario = d.PrecioUnitario,
-                    Subtotal = d.Subtotal,
-                    PrecioSinIva = d.PrecioUnitario / 1.12m,
-                    SubtotalSinIva = d.Subtotal / 1.12m,
-                    Iva = d.Subtotal - (d.Subtotal / 1.12m),
-                    EsKit = d.IdKit.HasValue,
+                    IdVenta = v.IdVenta,
+                    Fecha = FechaLocal.ConvertirDeUtc(v.FechaVenta),
+                    NoFactura = v.NumeroFactura,
+                    Cliente = (string.IsNullOrWhiteSpace(v.Cliente.Nombres) && string.IsNullOrWhiteSpace(v.Cliente.Apellidos))
+                                ? "CF"
+                                : (v.Cliente.Nombres + " " + v.Cliente.Apellidos),
+                    Nit = string.IsNullOrWhiteSpace(v.Cliente.Nit) ? "CF" : v.Cliente.Nit,
+                    Vendedor = v.Usuario.NombreUsuario,
+                    TotalSinIva = v.Total / 1.12m,
+                    ValorIva = v.Total - (v.Total / 1.12m),
+                    TotalConIva = v.Total,
+                    FormaPago = v.MetodoPago,
 
-                    // 🧩 NUEVO: utilidad por producto
-                    Utilidad = d.Utilidad
-                }).ToList()
-            })
-            .ToListAsync();
+                    // 🧮 Total utilidad por venta
+                    UtilidadTotal = v.Detalles.Sum(d => d.Utilidad),
 
+                    // 🧮 Margen porcentual total de la venta
+                    MargenPorcentual = v.Detalles.Sum(d => d.Utilidad) > 0
+                        ? (v.Detalles.Sum(d => d.Utilidad) / (v.Total / 1.12m)) * 100
+                        : 0,
 
-            // Calcular totales
+                    // 🔹 Detalles
+                    Detalles = v.Detalles.Select(d => new
+                    {
+                        IdDetalle = d.IdDetalleVenta,
+                        IdProducto = d.IdProducto,
+                        IdKit = d.IdKit,
+                        NombreProducto = d.Producto != null ? d.Producto.Nombre :
+                                        d.Kit != null ? "(KIT) " + d.Kit.Nombre : "Producto no disponible",
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.PrecioUnitario,
+                        Subtotal = d.Subtotal,
+                        PrecioSinIva = d.PrecioUnitario / 1.12m,
+                        SubtotalSinIva = d.Subtotal / 1.12m,
+                        Iva = d.Subtotal - (d.Subtotal / 1.12m),
+                        EsKit = d.IdKit.HasValue,
+
+                        // 🧩 Utilidad individual
+                        Utilidad = d.Utilidad,
+
+                        // 🧮 Margen porcentual por producto
+                        MargenPorcentual = d.Utilidad > 0 && (d.Subtotal / 1.12m) > 0
+                            ? (d.Utilidad / (d.Subtotal / 1.12m)) * 100
+                            : 0
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            // 🔹 Totales generales
             ViewBag.UtilidadGeneral = ventas.Sum(v => v.UtilidadTotal);
             ViewBag.SubtotalGeneral = ventas.Sum(v => v.TotalSinIva);
             ViewBag.IvaGeneral = ventas.Sum(v => v.ValorIva);
             ViewBag.TotalGeneral = ventas.Sum(v => v.TotalConIva);
 
+            // 🔹 Promedio global de margen de utilidad (%)
+            ViewBag.MargenPromedioGeneral = ventas.Any()
+                ? ventas.Average(v => v.MargenPorcentual)
+                : 0;
+
             return View("ReporteVentas", ventas);
         }
+
 
         [HttpGet]
         public async Task<IActionResult> DescargarPDF(DateTime? desde, DateTime? hasta, string vendedor, string formaPago)
@@ -782,7 +798,7 @@ namespace ProyectoLogin.Controllers
                             header.Item().Text("SMARTCELL COMPANY - REPORTE DE AJUSTES DE INVENTARIO")
                                 .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
 
-                            header.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                            header.Item().Text($"Generado: {FechaLocal.Ahora():dd/MM/yyyy HH:mm}")
                                 .FontSize(9).AlignCenter().FontColor(Colors.Grey.Darken2);
 
                             header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
