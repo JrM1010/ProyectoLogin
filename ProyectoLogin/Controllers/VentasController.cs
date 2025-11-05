@@ -452,7 +452,7 @@ namespace ProyectoLogin.Controllers
                 .Include(k => k.Detalles!)
                     .ThenInclude(d => d.Producto)
                 .Where(k => k.Activo &&
-                            (k.Nombre.Contains(term) || (k.Descripcion ?? "").Contains(term)))
+                               (k.Nombre.Contains(term) || (k.Descripcion ?? "").Contains(term)))
                 .Select(k => new
                 {
                     id = k.IdKit,

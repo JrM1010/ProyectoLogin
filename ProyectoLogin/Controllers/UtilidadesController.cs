@@ -178,6 +178,33 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+
+        // 🔹 Buscar productos por nombre o código (para autocompletado)
+        [HttpGet]
+        public async Task<IActionResult> SugerirProductos(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return Json(new { success = false, productos = new object[0] });
+
+            var productos = await _context.Productos
+                .Include(p => p.Inventario)
+                .Where(p => p.Activo &&
+                            (p.Nombre.Contains(term) || p.CodigoBarras.Contains(term)))
+                .Select(p => new
+                {
+                    id = p.IdProducto,
+                    nombre = p.Nombre,
+                    codigo = p.CodigoBarras,
+                    stock = p.Inventario != null ? p.Inventario.StockActual : 0
+                })
+                .OrderBy(p => p.nombre)
+                .Take(8)
+                .ToListAsync();
+
+            return Json(new { success = true, productos });
+        }
+
+
         // GET: Historial de ajustes del producto
         [HttpGet]
         public async Task<IActionResult> ObtenerHistorial(int idProducto)

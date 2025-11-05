@@ -2,121 +2,208 @@
     ViewData["Title"] = "Ajuste de Inventario";
 }
 
-<div class="container-fluid">
+<div class="container-fluid py-4">
+    <!-- HEADER PRINCIPAL -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="d-flex align-items-center">
+            <div class="bg-gradient-info rounded-circle p-3 me-3">
+                <i class="bi bi-box-arrow-in-down text-white fs-4"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1 text-gray-800">Ajuste Manual de Inventario</h1>
+                <p class="text-muted mb-0">Gestiona el stock de tus productos mediante ajustes manuales</p>
+            </div>
+        </div>
+        <button type="button" class="btn btn-outline-secondary rounded-pill d-flex align-items-center" id="btnLimpiarTodo">
+            <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Todo
+        </button>
+    </div>
+
+    <!-- TOAST PARA NOTIFICACIONES -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        <div id="toastNotificacion" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi me-2"></i>
+                    <span id="toast-message">Operación completada</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title">Ajuste Manual de Inventario</h3>
+            <!-- TARJETA PRINCIPAL -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient-info text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-sliders fs-5 me-3"></i>
+                        <h5 class="mb-0 fw-semibold">Ajuste de Stock</h5>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Búsqueda de Producto -->
+                <div class="card-body p-4">
+                    <!-- BÚSQUEDA DE PRODUCTO -->
                     <div class="row mb-4">
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="buscarProducto">Buscar Producto (Código de Barras o Nombre):</label>
+                        <div class="col-lg-8">
+                            <div class="form-group position-relative">
+                                <label for="buscarProducto" class="form-label fw-semibold text-gray-700">
+                                    <i class="bi bi-search text-info me-1"></i>Buscar Producto
+                                </label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="buscarProducto"
-                                           placeholder="Ingrese código o nombre del producto...">
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
-                                            <i class="fas fa-search"></i> Buscar
-                                        </button>
-                                    </div>
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi bi-upc-scan text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" id="buscarProducto"
+                                           placeholder="Ingrese código de barras o nombre del producto..."
+                                           autocomplete="off">
+                                    <button class="btn btn-info text-white" type="button" id="btnBuscar">
+                                        <i class="bi bi-search me-1"></i> Buscar
+                                    </button>
+                                </div>
+                                <div class="form-text text-muted">
+                                    Puedes buscar por código de barras, nombre del producto o referencia
+                                </div>
+
+                                <!-- LISTA DE SUGERENCIAS -->
+                                <ul id="sugerenciasProductos" class="list-group position-absolute w-100 shadow-sm"
+                                    style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;
+                                           border-radius: 0.5rem; top: 100%; left: 0;"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMACIÓN DEL PRODUCTO -->
+                    <div id="productoInfo" class="card border-0 bg-light mb-4" style="display:none;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 fw-semibold text-gray-800">
+                                    <i class="bi bi-info-circle text-info me-2"></i>Información del Producto
+                                </h6>
+                                <span class="badge bg-info rounded-pill" id="infoEstado">Disponible</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted">Nombre</label>
+                                    <div class="fw-medium text-gray-800" id="infoNombre">-</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-semibold text-muted">Código</label>
+                                    <div class="fw-medium text-gray-800" id="infoCodigo">-</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-semibold text-muted">Categoría</label>
+                                    <div class="fw-medium text-gray-800" id="infoCategoria">-</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-semibold text-muted">Marca</label>
+                                    <div class="fw-medium text-gray-800" id="infoMarca">-</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold text-muted">Stock Actual</label>
+                                    <div class="fw-bold fs-5 text-info" id="infoStock">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Información del Producto -->
-                    <div id="productoInfo" class="alert alert-info" style="display: none;">
-                        <h5>Información del Producto</h5>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <strong>Nombre:</strong> <span id="infoNombre"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <strong>Código:</strong> <span id="infoCodigo"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <strong>Categoría:</strong> <span id="infoCategoria"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <strong>Marca:</strong> <span id="infoMarca"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <strong>Stock Actual:</strong> <span id="infoStock"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Formulario de Ajuste -->
-                    <div id="formAjuste" style="display: none;">
-                        <form id="formAjusteStock">
+                    <!-- FORMULARIO DE AJUSTE -->
+                    <div id="formAjuste" style="display:none;">
+                        <form id="formAjusteStock" novalidate>
                             @Html.AntiForgeryToken()
                             <input type="hidden" id="idProducto" name="IdProducto" />
 
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="tipoAjuste">Tipo de Ajuste:</label>
-                                        <select class="form-control" id="tipoAjuste" name="TipoAjuste" required>
-                                            <option value="">Seleccionar...</option>
-                                            <option value="entrada">Entrada (+)</option>
-                                            <option value="salida">Salida (-)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="cantidad">Cantidad:</label>
-                                        <input type="number" class="form-control" id="cantidad"
-                                               name="Cantidad" min="1" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="motivo">Motivo del Ajuste:</label>
-                                        <input type="text" class="form-control" id="motivo"
-                                               name="Motivo" placeholder="Ej: Ajuste por conteo físico, Devolución, etc." required>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-3 fw-semibold text-gray-800">
+                                        <i class="bi bi-pencil-square text-info me-2"></i>Detalles del Ajuste
+                                    </h6>
 
-                            <div class="row">
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Aplicar Ajuste
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" id="btnLimpiar">
-                                        <i class="fas fa-broom"></i> Limpiar
-                                    </button>
+                                    <div class="row g-3">
+                                        <!-- TIPO DE AJUSTE -->
+                                        <div class="col-md-3">
+                                            <label for="tipoAjuste" class="form-label fw-semibold text-gray-700">
+                                                <i class="bi bi-arrow-left-right text-info me-1"></i>Tipo de Ajuste *
+                                            </label>
+                                            <select class="form-select" id="tipoAjuste" name="TipoAjuste" required>
+                                                <option value="">Seleccionar...</option>
+                                                <option value="entrada">Entrada (+)</option>
+                                                <option value="salida">Salida (-)</option>
+                                            </select>
+                                            <div class="invalid-feedback">Selecciona el tipo de ajuste</div>
+                                        </div>
+
+                                        <!-- CANTIDAD -->
+                                        <div class="col-md-3">
+                                            <label for="cantidad" class="form-label fw-semibold text-gray-700">
+                                                <i class="bi bi-hash text-info me-1"></i>Cantidad *
+                                            </label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-info" id="btnMenos">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <input type="number" class="form-control text-center" id="cantidad"
+                                                       name="Cantidad" min="1" value="1" required>
+                                                <button type="button" class="btn btn-outline-info" id="btnMas">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback">La cantidad debe ser mayor a 0</div>
+                                        </div>
+
+                                        <!-- MOTIVO -->
+                                        <div class="col-md-6">
+                                            <label for="motivo" class="form-label fw-semibold text-gray-700">
+                                                <i class="bi bi-chat-text text-info me-1"></i>Motivo del Ajuste *
+                                            </label>
+                                            <input type="text" class="form-control" id="motivo"
+                                                   name="Motivo" placeholder="Ej: Ajuste por conteo físico, Devolución, etc." required>
+                                            <div class="invalid-feedback">Ingresa el motivo del ajuste</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- BOTONES DE ACCIÓN -->
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-success rounded-pill d-flex align-items-center">
+                                                    <i class="bi bi-check-circle me-2"></i>Aplicar Ajuste
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary rounded-pill d-flex align-items-center" id="btnLimpiar">
+                                                    <i class="bi bi-broom me-2"></i>Limpiar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
 
-                    <!-- Resultados -->
-                    <div id="resultadoAjuste" class="mt-3" style="display: none;"></div>
-
-                    <!-- Historial de Ajustes -->
-                    <div id="historialAjustes" class="mt-4" style="display: none;">
-                        <h5>Últimos Ajustes</h5>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Cantidad</th>
-                                        <th>Tipo</th>
-                                        <th>Referencia</th>
-                                        <th>Observación</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbodyHistorial">
-                                    <!-- Los registros se cargan via AJAX -->
-                                </tbody>
-                            </table>
+                    <!-- HISTORIAL DE AJUSTES -->
+                    <div id="historialAjustes" class="mt-4" style="display:none;">
+                        <div class="card border-0">
+                            <div class="card-header bg-light border-0">
+                                <h6 class="mb-0 fw-semibold text-gray-800">
+                                    <i class="bi bi-clock-history text-info me-2"></i>Últimos Ajustes
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-4 fw-semibold text-gray-700">Fecha</th>
+                                                <th class="fw-semibold text-gray-700">Cantidad</th>
+                                                <th class="fw-semibold text-gray-700">Tipo</th>
+                                                <th class="fw-semibold text-gray-700">Referencia</th>
+                                                <th class="fw-semibold text-gray-700">Observación</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyHistorial"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -127,162 +214,453 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+        (function () {
+            // Variables globales
             let productoActual = null;
+            let sugerenciaSeleccionada = -1;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // Buscar producto
-            $('#btnBuscar').click(buscarProducto);
-            $('#buscarProducto').keypress(function (e) {
-                if (e.which === 13) {
-                    buscarProducto();
-                }
-            });
+            // 🔹 Sistema de notificaciones Toast
+            function mostrarToast(mensaje, tipo = 'success') {
+                const toast = document.getElementById('toastNotificacion');
+                const toastMessage = document.getElementById('toast-message');
+                const toastIcon = toast.querySelector('.bi');
 
-            // Enviar formulario de ajuste
-            $('#formAjusteStock').submit(aplicarAjuste);
+                const config = {
+                    success: { bg: 'bg-success', icon: 'bi-check-circle' },
+                    warning: { bg: 'bg-warning', icon: 'bi-exclamation-triangle' },
+                    danger: { bg: 'bg-danger', icon: 'bi-x-circle' },
+                    info: { bg: 'bg-info', icon: 'bi-info-circle' }
+                };
 
-            // Limpiar formulario
-            $('#btnLimpiar').click(limpiarFormulario);
+                const { bg, icon } = config[tipo] || config.success;
 
-            function buscarProducto() {
-                const term = $('#buscarProducto').val().trim();
-                if (!term) {
-                    mostrarAlerta('Por favor ingrese un término de búsqueda', 'warning');
+                toast.className = `toast align-items-center text-white ${bg} border-0`;
+                toastIcon.className = `bi ${icon} me-2`;
+                toastMessage.textContent = mensaje;
+
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+            }
+
+            // 🔹 Buscador Predictivo
+            function debounce(fn, ms) {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => fn(...args), ms);
+                };
+            }
+
+            async function buscarSugerencias(termino) {
+                if (termino.length < 2) {
+                    document.getElementById('sugerenciasProductos').style.display = 'none';
                     return;
                 }
 
-                $.get('/Utilidades/BuscarProducto', { term: term })
-                    .done(function (response) {
-                        if (response.success) {
-                            mostrarProducto(response.producto);
-                            productoActual = response.producto;
-                        } else {
-                            mostrarAlerta(response.message, 'error');
-                            ocultarProducto();
-                        }
-                    })
-                    .fail(function () {
-                        mostrarAlerta('Error al buscar el producto', 'error');
-                    });
+                try {
+                    const response = await fetch(`/Utilidades/SugerirProductos?term=${encodeURIComponent(termino)}`);
+                    const data = await response.json();
+
+                    const lista = document.getElementById('sugerenciasProductos');
+                    lista.innerHTML = '';
+
+                    if (data.success && data.productos && data.productos.length > 0) {
+                        data.productos.forEach(producto => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item list-group-item-action';
+                            li.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">${producto.nombre}</div>
+                                        <small class="text-muted">${producto.codigo}</small>
+                                    </div>
+                                    <span class="badge bg-info rounded-pill">${producto.stock} en stock</span>
+                                </div>
+                            `;
+                            li.addEventListener('click', () => {
+                                document.getElementById('buscarProducto').value = producto.nombre;
+                                lista.style.display = 'none';
+                                buscarProductoPorId(producto.id);
+                            });
+                            lista.appendChild(li);
+                        });
+                        lista.style.display = 'block';
+                        sugerenciaSeleccionada = -1;
+                    } else {
+                        lista.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error buscando sugerencias:', error);
+                    document.getElementById('sugerenciasProductos').style.display = 'none';
+                }
+            }
+
+            // 🔹 Navegación con teclado
+            document.getElementById('buscarProducto').addEventListener('keydown', function(e) {
+                const sugerencias = document.querySelectorAll('#sugerenciasProductos li');
+                if (!sugerencias.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    sugerenciaSeleccionada = (sugerenciaSeleccionada + 1) % sugerencias.length;
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    sugerenciaSeleccionada = (sugerenciaSeleccionada - 1 + sugerencias.length) % sugerencias.length;
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (sugerenciaSeleccionada >= 0) {
+                        sugerencias[sugerenciaSeleccionada].click();
+                    } else {
+                        buscarProducto();
+                    }
+                    return;
+                } else {
+                    return;
+                }
+
+                sugerencias.forEach((sug, index) => {
+                    sug.classList.toggle('active', index === sugerenciaSeleccionada);
+                });
+            });
+
+            // 🔹 Buscar producto
+            async function buscarProducto() {
+                const term = document.getElementById('buscarProducto').value.trim();
+                if (!term) {
+                    mostrarToast('Por favor ingrese un término de búsqueda', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/Utilidades/BuscarProducto?term=${encodeURIComponent(term)}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        mostrarProducto(data.producto);
+                        productoActual = data.producto;
+                    } else {
+                        mostrarToast(data.message || 'Producto no encontrado', 'warning');
+                        ocultarProducto();
+                    }
+                } catch (error) {
+                    console.error('Error buscando producto:', error);
+                    mostrarToast('Error al buscar el producto', 'danger');
+                }
+            }
+
+            async function buscarProductoPorId(idProducto) {
+                try {
+                    const response = await fetch(`/Utilidades/BuscarProducto?term=${idProducto}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        mostrarProducto(data.producto);
+                        productoActual = data.producto;
+                    } else {
+                        mostrarToast(data.message || 'Producto no encontrado', 'warning');
+                    ocultarProducto();
+                    }
+                } catch (error) {
+                    console.error('Error buscando producto por ID:', error);
+                    mostrarToast('Error al obtener el producto', 'danger');
+                }
             }
 
             function mostrarProducto(producto) {
-                $('#infoNombre').text(producto.nombre);
-                $('#infoCodigo').text(producto.codigoBarras);
-                $('#infoCategoria').text(producto.categoria);
-                $('#infoMarca').text(producto.marca);
-                $('#infoStock').text(producto.stockActual);
-                $('#idProducto').val(producto.id);
+                document.getElementById('infoNombre').textContent = producto.nombre;
+                document.getElementById('infoCodigo').textContent = producto.codigoBarras || '-';
+                document.getElementById('infoCategoria').textContent = producto.categoria || '-';
+                document.getElementById('infoMarca').textContent = producto.marca || '-';
+                document.getElementById('infoStock').textContent = producto.stockActual;
+                document.getElementById('idProducto').value = producto.id;
 
-                $('#productoInfo').show();
-                $('#formAjuste').show();
+                document.getElementById('productoInfo').style.display = 'block';
+                document.getElementById('formAjuste').style.display = 'block';
 
-                // Cargar historial
                 cargarHistorial(producto.id);
             }
 
             function ocultarProducto() {
-                $('#productoInfo').hide();
-                $('#formAjuste').hide();
-                $('#historialAjustes').hide();
+                document.getElementById('productoInfo').style.display = 'none';
+                document.getElementById('formAjuste').style.display = 'none';
+                document.getElementById('historialAjustes').style.display = 'none';
                 productoActual = null;
             }
 
-            function cargarHistorial(idProducto) {
-                $.get('/Utilidades/ObtenerHistorial', { idProducto: idProducto })
-                    .done(function (response) {
-                        if (response.success && response.movimientos.length > 0) {
-                            const tbody = $('#tbodyHistorial');
-                            tbody.empty();
+            // 🔹 Controles de cantidad
+            document.getElementById('btnMas').addEventListener('click', () => {
+                const input = document.getElementById('cantidad');
+                let val = parseInt(input.value) || 0;
+                input.value = val + 1;
+            });
 
-                            response.movimientos.forEach(function (mov) {
-                                const tipoClass = mov.tipo === 'Entrada' ? 'success' : 'danger';
-                                const row = `
-                                    <tr>
-                                        <td>${mov.fecha}</td>
-                                        <td><span class="badge badge-${tipoClass}">${mov.cantidad}</span></td>
-                                        <td>${mov.tipo}</td>
-                                        <td>${mov.referencia}</td>
-                                        <td>${mov.observacion}</td>
-                                    </tr>
-                                `;
-                                tbody.append(row);
-                            });
+            document.getElementById('btnMenos').addEventListener('click', () => {
+                const input = document.getElementById('cantidad');
+                let val = parseInt(input.value) || 0;
+                if (val > 1) {
+                    input.value = val - 1;
+                } else {
+                    mostrarToast('La cantidad no puede ser menor que 1', 'warning');
+                }
+            });
 
-                            $('#historialAjustes').show();
-                        } else {
-                            $('#historialAjustes').hide();
-                        }
-                    });
-            }
+            document.getElementById('cantidad').addEventListener('input', function() {
+                let val = parseInt(this.value) || 0;
+                if (val < 1) {
+                    this.value = 1;
+                    mostrarToast('La cantidad no puede ser menor que 1', 'warning');
+                }
+            });
 
-            function aplicarAjuste(e) {
+            // 🔹 Aplicar ajuste
+            document.getElementById('formAjusteStock').addEventListener('submit', async function(e) {
                 e.preventDefault();
 
                 if (!productoActual) {
-                    mostrarAlerta('Primero debe buscar un producto', 'warning');
+                    mostrarToast('Primero debe buscar un producto', 'warning');
+                    return;
+                }
+
+                // Validar formulario
+                const form = this;
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    mostrarToast('Por favor complete todos los campos requeridos', 'warning');
+                    return;
+                }
+
+                const cantidad = parseInt(document.getElementById('cantidad').value);
+                const tipoAjuste = document.getElementById('tipoAjuste').value;
+                const motivo = document.getElementById('motivo').value.trim();
+
+                // Validaciones adicionales
+                if (tipoAjuste === 'salida' && cantidad > productoActual.stockActual) {
+                    mostrarToast(`No puede retirar ${cantidad} unidades. Stock disponible: ${productoActual.stockActual}`, 'danger');
                     return;
                 }
 
                 const formData = {
-                    IdProducto: $('#idProducto').val(),
-                    Cantidad: parseInt($('#cantidad').val()),
-                    TipoAjuste: $('#tipoAjuste').val(),
-                    Motivo: $('#motivo').val()
+                    IdProducto: document.getElementById('idProducto').value,
+                    Cantidad: cantidad,
+                    TipoAjuste: tipoAjuste,
+                    Motivo: motivo
                 };
 
-                // Validación adicional
-                if (formData.TipoAjuste === 'salida' && formData.Cantidad > productoActual.stockActual) {
-                    mostrarAlerta(`No puede retirar ${formData.Cantidad} unidades. Stock disponible: ${productoActual.stockActual}`, 'error');
-                    return;
-                }
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                const originalText = btnSubmit.innerHTML;
 
-                $.ajax({
-                    url: '/Utilidades/AjustarStock',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(formData),
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            mostrarAlerta(response.message, 'success');
-                            // Actualizar información del producto
-                            productoActual.stockActual = response.nuevoStock;
-                            $('#infoStock').text(response.nuevoStock);
-                            limpiarFormulario();
-                            cargarHistorial(formData.IdProducto);
-                        } else {
-                            mostrarAlerta(response.message, 'error');
-                        }
-                    },
-                    error: function () {
-                        mostrarAlerta('Error al procesar el ajuste', 'error');
+                try {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando...';
+
+                    const response = await fetch('/Utilidades/AjustarStock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        mostrarToast(data.message, 'success');
+                        productoActual.stockActual = data.nuevoStock;
+                        document.getElementById('infoStock').textContent = data.nuevoStock;
+                        limpiarFormulario();
+                        cargarHistorial(formData.IdProducto);
+                    } else {
+                        mostrarToast(data.message, 'danger');
                     }
+                } catch (error) {
+                    console.error('Error aplicando ajuste:', error);
+                    mostrarToast('Error al procesar el ajuste', 'danger');
+                } finally {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalText;
+                }
+            });
+
+            // 🔹 Cargar historial
+            async function cargarHistorial(idProducto) {
+                try {
+                    const response = await fetch(`/Utilidades/ObtenerHistorial?idProducto=${idProducto}`);
+                    const data = await response.json();
+
+                    const tbody = document.getElementById('tbodyHistorial');
+                    tbody.innerHTML = '';
+
+                    if (data.success && data.movimientos && data.movimientos.length > 0) {
+                        data.movimientos.forEach(mov => {
+                            const tipoClass = mov.tipo === 'Entrada' ? 'bg-success' : 'bg-danger';
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="ps-4">${mov.fecha}</td>
+                                <td><span class="badge ${tipoClass} rounded-pill">${mov.cantidad}</span></td>
+                                <td>${mov.tipo}</td>
+                                <td>${mov.referencia}</td>
+                                <td>${mov.observacion}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                        document.getElementById('historialAjustes').style.display = 'block';
+                    } else {
+                        document.getElementById('historialAjustes').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error cargando historial:', error);
+                    document.getElementById('historialAjustes').style.display = 'none';
+                }
+            }
+
+            // 🔹 Limpiar formulario
+            function limpiarFormulario() {
+                document.getElementById('buscarProducto').value = '';
+                document.getElementById('motivo').value = '';
+                document.getElementById('tipoAjuste').value = '';
+                document.getElementById('idProducto').value = '';
+                document.getElementById('cantidad').value = '1';
+                document.getElementById('sugerenciasProductos').style.display = 'none';
+
+                const form = document.getElementById('formAjusteStock');
+                form.classList.remove('was-validated');
+
+                ocultarProducto();
+            }
+
+            // 🔹 Inicialización
+            function inicializar() {
+                // Eventos de búsqueda
+                const searchInput = document.getElementById('buscarProducto');
+                const debouncedBuscar = debounce(buscarSugerencias, 300);
+
+                searchInput.addEventListener('input', (e) => debouncedBuscar(e.target.value));
+                document.getElementById('btnBuscar').addEventListener('click', buscarProducto);
+
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        buscarProducto();
+                    }
+                });
+
+                // Ocultar sugerencias al hacer clic fuera
+                document.addEventListener('click', function(e) {
+                    if (!document.getElementById('sugerenciasProductos').contains(e.target) &&
+                        e.target !== searchInput) {
+                        document.getElementById('sugerenciasProductos').style.display = 'none';
+                    }
+                });
+
+                // Botones de limpieza
+                document.getElementById('btnLimpiar').addEventListener('click', limpiarFormulario);
+                document.getElementById('btnLimpiarTodo').addEventListener('click', limpiarFormulario);
+
+                // Validación en tiempo real
+                document.querySelectorAll('#formAjusteStock input, #formAjusteStock select').forEach(element => {
+                    element.addEventListener('input', function() {
+                        if (this.checkValidity()) {
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                        } else {
+                            this.classList.remove('is-valid');
+                        }
+                    });
                 });
             }
 
-            function limpiarFormulario() {
-                $('#cantidad').val('');
-                $('#motivo').val('');
-                $('#tipoAjuste').val('');
-                $('#resultadoAjuste').hide();
+            // Ejecutar cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', inicializar);
+            } else {
+                inicializar();
             }
-
-            function mostrarAlerta(mensaje, tipo) {
-                const alertClass = tipo === 'success' ? 'alert-success' :
-                                 tipo === 'warning' ? 'alert-warning' : 'alert-danger';
-
-                $('#resultadoAjuste').html(`
-                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                        ${mensaje}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                `).show();
-            }
-        });
+        })();
     </script>
+
+    <style>
+        .table td, .table th {
+            vertical-align: middle;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.5rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+            .btn-sm:hover {
+                transform: translateY(-1px);
+            }
+
+        .card-header {
+            border-bottom: none;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+        }
+
+        .form-control:focus {
+            border-color: #36b9cc;
+            box-shadow: 0 0 0 0.2rem rgba(54, 185, 204, 0.25);
+        }
+
+        /* Estilos del buscador predictivo */
+        #sugerenciasProductos {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+
+            #sugerenciasProductos li {
+                cursor: pointer;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+                transition: all 0.15s ease-in-out;
+            }
+
+                #sugerenciasProductos li:first-child {
+                    border-top: none;
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                }
+
+                #sugerenciasProductos li:last-child {
+                    border-bottom: none;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                }
+
+                #sugerenciasProductos li:hover,
+                #sugerenciasProductos li.active {
+                    background-color: #d1ecf1;
+                    border-color: #bee5eb;
+                }
+
+        /* Animaciones personalizadas */
+        @@keyframes slideInDown {
+            from
+
+        {
+            transform: translate3d(0, -100%, 0);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate3d(0, 0, 0);
+            opacity: 1;
+        }
+
+        }
+
+        .toast {
+            animation: slideInDown 0.3s ease-out;
+        }
+    </style>
 }

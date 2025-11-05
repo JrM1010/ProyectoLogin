@@ -7,6 +7,7 @@ using ProyectoLogin.Models.Promociones;
 using ProyectoLogin.Recursos;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,8 +28,8 @@ namespace ProyectoLogin.Controllers
         public async Task<IActionResult> Index()
         {
             // Lista de kits con su total
-            var kits = await _context.Set<Kit>()
-                .AsNoTracking()
+            var kits = await _context.Kits
+                .Where(k => k.Activo)
                 .OrderByDescending(k => k.FechaCreacion)
                 .ToListAsync();
 
@@ -246,31 +247,26 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var kit = await _context.Kits
-                .Include(k => k.Detalles)
-                .FirstOrDefaultAsync(k => k.IdKit == id);
-
+            var kit = await _context.Kits.FindAsync(id);
             if (kit == null)
                 return NotFound();
 
-            _context.KitDetalles.RemoveRange(kit.Detalles);
-            _context.Kits.Remove(kit);
+            // 🔹 Soft delete
+            kit.Activo = false;
+            _context.Kits.Update(kit);
             await _context.SaveChangesAsync();
 
             // 🔹 Registrar movimiento en bitácora
             var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-
             _context.BitacoraMovimientos.Add(new BitacoraMovimiento
             {
                 IdUsuario = idUsuario,
-                Accion = "Eliminación de kit",
-                Descripcion = $"Se eliminó el kit '{kit.Nombre}'.",
+                Accion = "Desactivación de kit",
+                Descripcion = $"Se desactivó el kit '{kit.Nombre}'.",
                 Modulo = "Kits",
                 Fecha = FechaLocal.Ahora()
             });
-
             await _context.SaveChangesAsync();
-
 
             return Ok(new { success = true });
         }
@@ -449,7 +445,12 @@ namespace ProyectoLogin.Controllers
         // Request para crear kit
         public class CrearKitRequest
         {
+            [Required(ErrorMessage = "El nombre del kit es obligatorio.")]
+            [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres.")]
             public string Nombre { get; set; } = null!;
+
+            [Required(ErrorMessage = "La descripción del kit es obligatoria.")]
+            [StringLength(300, ErrorMessage = "La descripción no puede exceder los 300 caracteres.")]
             public string? Descripcion { get; set; }
             public decimal DescuentoPct { get; set; } = 0m;
             public List<ItemRequest> Items { get; set; } = new List<ItemRequest>();
