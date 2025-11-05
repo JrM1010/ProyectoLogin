@@ -267,12 +267,17 @@ namespace ProyectoLogin.Controllers
 
 
         // 🔹 Filtro de compras por proveedor
+        // 🔹 Filtro de compras por proveedor (y últimas 10 por defecto)
+        [HttpGet]
         public async Task<IActionResult> Compras(DateTime? desde, DateTime? hasta, int? proveedorId)
         {
+            // Base query con joins mínimos necesarios
             var query = _context.Compras
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles)
+                    .ThenInclude(d => d.UnidadMedida)
                 .AsQueryable();
 
             if (desde.HasValue)
@@ -280,43 +285,66 @@ namespace ProyectoLogin.Controllers
                 var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
                 query = query.Where(c => c.FechaCompra >= desdeUtc);
             }
-
             if (hasta.HasValue)
             {
                 var hastaUtc = FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1));
                 query = query.Where(c => c.FechaCompra < hastaUtc);
             }
-
             if (proveedorId.HasValue)
                 query = query.Where(c => c.IdProveedor == proveedorId);
 
+            // Trae las compras
             var compras = await query
                 .OrderByDescending(c => c.FechaCompra)
                 .ToListAsync();
 
+            // Mapa de precios vigentes por producto (Activo = true)
+            // ProductoPrecio tiene: PrecioVentaSinIVA, PrecioVenta (con IVA) y por presentación (Unidad/Paquete/Caja). 
+            var preciosActivos = await _context.ProductoPrecio
+                .Where(p => p.Activo)
+                .GroupBy(p => p.IdProducto)
+                .Select(g => g.OrderByDescending(x => x.FechaInicio).First()) // por si hubiera más de uno activo, tomamos el más nuevo
+                .ToDictionaryAsync(p => p.IdProducto, p => p);
+
             var lista = compras.Select(c => new
             {
-                Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
+                Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),            // helper zonal GT :contentReference[oaicite:4]{index=4}
+                Numero = c.NumeroDocumento,                                  // ya existe en tus vistas de Compras/Edit :contentReference[oaicite:5]{index=5}
                 Proveedor = c.Proveedor.Nombre,
-                Productos = string.Join(", ", c.Detalles.Select(d => d.Producto.Nombre)),
                 TotalCompra = c.Total,
-                Detalles = c.Detalles.Select(d => new
+                Detalles = c.Detalles.Select(d =>
                 {
-                    d.Producto.Nombre,
-                    d.Cantidad,
-                    PrecioCompra = d.PrecioUnitario
+                    preciosActivos.TryGetValue(d.IdProducto, out var precio);
+
+                    return new
+                    {
+                        Producto = d.Producto?.Nombre ?? "N/A",
+                        Cantidad = d.Cantidad,
+                        Unidad = d.UnidadMedida?.Nombre ?? "",
+                        PrecioCompraUnit = d.PrecioUnitario,                  // lo que pagaste por la unidad elegida
+                                                                              // precios de venta (vigentes)
+                        PrecioVentaSinIVA = precio?.PrecioVentaSinIVA ?? 0m,  // sin IVA
+                        PrecioVentaConIVA = precio?.PrecioVenta ?? 0m,        // con IVA
+                        PrecioVentaUnidad = precio?.PrecioVentaUnidad ?? 0m,
+                        PrecioVentaPaquete = precio?.PrecioVentaPaquete ?? 0m,
+                        PrecioVentaCaja = precio?.PrecioVentaCaja ?? 0m,
+                        Subtotal = d.Subtotal
+                    };
                 }).ToList()
             }).ToList();
 
+            // combos / totales para la vista
             ViewBag.Proveedores = await _context.Proveedores
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
 
-            ViewBag.TotalGeneral = lista.Sum(c => c.TotalCompra);
+            ViewBag.TotalGeneral = lista.Sum(c => (decimal)c.TotalCompra);
 
             return View("ReporteCompras", lista);
         }
+
+
 
 
         // 🔹 Descargar PDF de compras
@@ -325,127 +353,157 @@ namespace ProyectoLogin.Controllers
         {
             var query = _context.Compras
                 .Include(c => c.Proveedor)
-                .Include(c => c.Detalles)
-                    .ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles).ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles).ThenInclude(d => d.UnidadMedida)
                 .AsQueryable();
 
-            // Aplicar filtros
             if (desde.HasValue)
-            {
-                var desdeUtc = FechaLocal.ConvertirAUtc(desde.Value);
-                query = query.Where(c => c.FechaCompra >= desdeUtc);
-            }
+                query = query.Where(c => c.FechaCompra >= FechaLocal.ConvertirAUtc(desde.Value));
             if (hasta.HasValue)
-            {
-                var hastaUtc = FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1));
-                query = query.Where(c => c.FechaCompra < hastaUtc);
-            }
+                query = query.Where(c => c.FechaCompra < FechaLocal.ConvertirAUtc(hasta.Value.AddDays(1)));
             if (proveedorId.HasValue)
                 query = query.Where(c => c.IdProveedor == proveedorId);
 
-            // Obtener datos
             var compras = await query
                 .OrderByDescending(c => c.FechaCompra)
-                .Select(c => new
-                {
-                    Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
-                    Proveedor = c.Proveedor.Nombre,
-                    Total = c.Total,
-                    Detalles = c.Detalles.Select(d => new
-                    {
-                        Producto = d.Producto.Nombre,
-                        Cantidad = d.Cantidad,
-                        Precio = d.PrecioUnitario,
-                        Subtotal = d.Subtotal
-                    }).ToList()
-                })
                 .ToListAsync();
 
-            decimal totalGeneral = compras.Sum(c => c.Total);
-            int totalCompras = compras.Count;
+            var preciosActivos = await _context.ProductoPrecio
+                .Where(p => p.Activo)
+                .GroupBy(p => p.IdProducto)
+                .Select(g => g.OrderByDescending(x => x.FechaInicio).First())
+                .ToDictionaryAsync(p => p.IdProducto, p => p);
 
-            // Generar PDF con estilo de ventas
+            var data = compras.Select(c => new
+            {
+                Fecha = FechaLocal.ConvertirDeUtc(c.FechaCompra),
+                Numero = c.NumeroDocumento,
+                Proveedor = c.Proveedor.Nombre,
+                TotalCompra = c.Total,
+                Detalles = c.Detalles.Select(d =>
+                {
+                    preciosActivos.TryGetValue(d.IdProducto, out var precio);
+
+                    return new
+                    {
+                        Producto = d.Producto?.Nombre ?? "N/A",
+                        Cantidad = d.Cantidad,
+                        Unidad = d.UnidadMedida?.Nombre ?? "",
+                        PrecioCompraUnit = d.PrecioUnitario,
+                        PrecioVentaSinIVA = precio?.PrecioVentaSinIVA ?? 0m,
+                        PrecioVentaConIVA = precio?.PrecioVenta ?? 0m,
+                        PVUnidad = precio?.PrecioVentaUnidad ?? 0m,
+                        PVPaq = precio?.PrecioVentaPaquete ?? 0m,
+                        PVCaja = precio?.PrecioVentaCaja ?? 0m,
+                        Subtotal = d.Subtotal
+                    };
+                }).ToList()
+            }).ToList();
+
+            var totalGeneral = data.Sum(x => x.TotalCompra);
+
             var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Margin(25);
-                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(20);
                     page.PageColor(Colors.White);
+                    page.Size(PageSizes.A4.Landscape());
 
-                    // HEADER
-                    page.Header().Column(header =>
+                    page.Header().Column(h =>
                     {
-                        header.Item().Text("SMARTCELL COMPANY - REPORTE DE COMPRAS")
+                        h.Item().Text("SMARTCELL COMPANY - REPORTE DE COMPRAS")
                             .FontSize(14).Bold().FontColor(Colors.Blue.Darken3).AlignCenter();
-                        header.Item().Text($"{desde?.ToString("dd/MM/yyyy") ?? "Inicio"} - {hasta?.ToString("dd/MM/yyyy") ?? "Fin"}")
+                        h.Item().Text($"{(desde?.ToString("dd/MM/yyyy") ?? "Inicio")} - {(hasta?.ToString("dd/MM/yyyy") ?? "Fin")}")
                             .FontSize(9).AlignCenter();
-                        header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+                        h.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
 
-                    // CONTENIDO
-                    page.Content().PaddingVertical(5).Column(col =>
+                    page.Content().Column(col =>
                     {
-                        foreach (var compra in compras)
+                        foreach (var c in data)
                         {
-                            col.Item().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingBottom(4).Column(c =>
+                            col.Item().Text($"Compra: {c.Numero}  |  Proveedor: {c.Proveedor}  |  Fecha: {c.Fecha:dd/MM/yyyy}")
+                                .Bold().FontSize(10);
+                            col.Item().Table(t =>
                             {
-                                c.Item().Text($"Fecha: {compra.Fecha:dd/MM/yyyy}  |  Proveedor: {compra.Proveedor}")
-                                    .FontSize(9).Bold();
-
-                                // Tabla de detalles
-                                c.Item().PaddingTop(4).Table(table =>
+                                // Encabezados
+                                t.ColumnsDefinition(cols =>
                                 {
-                                    table.ColumnsDefinition(cols =>
-                                    {
-                                        cols.RelativeColumn(3);  // Producto
-                                        cols.ConstantColumn(60); // Cantidad
-                                        cols.ConstantColumn(80); // Precio
-                                        cols.ConstantColumn(90); // Subtotal
-                                    });
-
-                                    table.Header(header =>
-                                    {
-                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).Text("Producto").Bold().FontSize(8);
-                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignCenter().Text("Cant").Bold().FontSize(8);
-                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Precio").Bold().FontSize(8);
-                                        header.Cell().Background(Colors.Grey.Lighten2).Padding(3).AlignRight().Text("Subtotal").Bold().FontSize(8);
-                                    });
-
-                                    foreach (var d in compra.Detalles)
-                                    {
-                                        table.Cell().Padding(2).Text(d.Producto).FontSize(8);
-                                        table.Cell().Padding(2).AlignCenter().Text($"{d.Cantidad}").FontSize(8);
-                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Precio:N2}").FontSize(8);
-                                        table.Cell().Padding(2).AlignRight().Text($"Q {d.Subtotal:N2}").FontSize(8);
-                                    }
+                                    cols.RelativeColumn(3); // Producto
+                                    cols.RelativeColumn(1); // Cant
+                                    cols.RelativeColumn(1); // Unidad
+                                    cols.RelativeColumn(1.2f); // Precio Compra
+                                    cols.RelativeColumn(1.2f); // PV sin IVA
+                                    cols.RelativeColumn(1.2f); // PV con IVA
+                                    cols.RelativeColumn(1.2f); // PV Unidad
+                                    cols.RelativeColumn(1.2f); // PV Paquete
+                                    cols.RelativeColumn(1.2f); // PV Caja
+                                    cols.RelativeColumn(1.2f); // Subtotal
                                 });
 
-                                // Total de la compra
-                                c.Item().PaddingTop(3).AlignRight()
-                                    .Text($"TOTAL COMPRA: Q {compra.Total:N2}")
-                                    .FontSize(9).Bold().FontColor(Colors.Blue.Darken2);
+                                t.Header(h =>
+                                {
+                                    h.Cell().Element(CellHeader).Text("Producto");
+                                    h.Cell().Element(CellHeader).Text("Cant.");
+                                    h.Cell().Element(CellHeader).Text("Unidad");
+                                    h.Cell().Element(CellHeader).Text("Precio Compra");
+                                    h.Cell().Element(CellHeader).Text("PV sin IVA");
+                                    h.Cell().Element(CellHeader).Text("PV con IVA");
+                                    h.Cell().Element(CellHeader).Text("PV Unidad");
+                                    h.Cell().Element(CellHeader).Text("PV Paquete");
+                                    h.Cell().Element(CellHeader).Text("PV Caja");
+                                    h.Cell().Element(CellHeader).Text("Subtotal");
+                                });
+
+                                foreach (var d in c.Detalles)
+                                {
+                                    t.Cell().Element(CellBody).Text(d.Producto);
+                                    t.Cell().Element(CellBody).Text($"{d.Cantidad:N2}");
+                                    t.Cell().Element(CellBody).Text(d.Unidad);
+                                    t.Cell().Element(CellBody).Text($"Q{d.PrecioCompraUnit:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.PrecioVentaSinIVA:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.PrecioVentaConIVA:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.PVUnidad:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.PVPaq:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.PVCaja:N2}");
+                                    t.Cell().Element(CellBody).Text($"Q{d.Subtotal:N2}");
+                                }
                             });
+
+                            // Totales por compra
+                            col.Item().PaddingTop(3).AlignRight()
+                                .Text($"Total compra: Q{c.TotalCompra:N2}")
+                                .FontSize(9).Bold().FontColor(Colors.Blue.Darken2);
+
+                            col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         }
 
-                        // Línea separadora
-                        col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
-
-                        // Totales generales
-                        col.Item().AlignRight().Text(
-                            $"TOTAL GENERAL — Compras: {totalCompras}  |  Monto total: Q {totalGeneral:N2}"
-                        ).FontSize(10).Bold().FontColor(Colors.Green.Darken3);
+                        // Total general
+                        col.Item().AlignRight()
+                            .Text($"TOTAL GENERAL: Q{totalGeneral:N2}")
+                            .FontSize(10).Bold().FontColor(Colors.Green.Darken3);
                     });
 
-                    // FOOTER
                     page.Footer().AlignCenter().Text(
                         $"Generado el {FechaLocal.Ahora():dd/MM/yyyy HH:mm} — Smartcell Company"
                     ).FontSize(8).FontColor(Colors.Grey.Darken2);
                 });
+
+                static IContainer CellHeader(IContainer c) => c
+                    .PaddingVertical(2).PaddingHorizontal(4)
+                    .Background(Colors.Grey.Lighten3)
+                    .BorderBottom(1).BorderColor(Colors.Grey.Medium)
+                    .DefaultTextStyle(x => x.SemiBold().FontSize(9));
+
+                static IContainer CellBody(IContainer c) => c
+                    .PaddingVertical(2).PaddingHorizontal(4)
+                    .DefaultTextStyle(x => x.FontSize(9));
             }).GeneratePdf();
 
-            return File(pdfBytes, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():ddMMyyyy HH:mm}.pdf");
+            return File(pdfBytes, "application/pdf", $"ReporteCompras_{FechaLocal.Ahora():yyyyMMdd_HHmm}.pdf");
         }
+
 
 
 
