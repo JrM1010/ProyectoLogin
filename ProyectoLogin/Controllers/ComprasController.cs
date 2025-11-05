@@ -130,6 +130,7 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detalles)
         {
+            // 🔹 Filtrar solo los detalles válidos
             detalles = detalles
                 .Where(d => d.IdProducto > 0 && d.Cantidad > 0 && d.PrecioUnitario > 0)
                 .ToList();
@@ -150,9 +151,15 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                // ✅ Asignar el usuario actual que realiza la compra
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                compra.IdUsuario = idUsuario;
+
+                // ✅ Guardar la compra
                 _context.Compras.Add(compra);
                 await _context.SaveChangesAsync();
 
+                // ✅ Guardar los detalles
                 foreach (var det in detalles)
                 {
                     det.IdCompra = compra.IdCompra;
@@ -163,7 +170,6 @@ namespace ProyectoLogin.Controllers
                 await transaction.CommitAsync();
 
                 // 🔹 Registrar movimiento en bitácora
-                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
                 {
                     IdUsuario = idUsuario,
@@ -185,6 +191,7 @@ namespace ProyectoLogin.Controllers
                 return View(compra);
             }
         }
+
 
         // 🔹 DETALLES DE COMPRA
         public async Task<IActionResult> Details(int id)

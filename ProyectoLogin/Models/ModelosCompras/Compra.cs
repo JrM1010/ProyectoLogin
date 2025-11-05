@@ -22,11 +22,17 @@ namespace ProyectoLogin.Models.ModelosCompras
         public string? MetodoPago { get; set; }
         public string? Observaciones { get; set; }
 
+
+        public int IdUsuario { get; set; }
+
+        [ForeignKey("IdUsuario")]
+        public virtual Usuario? Usuario { get; set; }
+
+
         public virtual Proveedor? Proveedor { get; set; }
         public ICollection<DetalleCompra>? Detalles { get; set; }
 
         public string? Estado { get; set; } = "Pendiente"; // Pendiente, Confirmada, Completada
-
-
+       
     }
 }
