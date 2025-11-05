@@ -20,7 +20,7 @@ namespace ProyectoLogin.Controllers
         {
             _context = context;
         }
-        
+
 
         // 🔹 LISTAR COMPRAS CON FILTROS Y PAGINACIÓN
         public async Task<IActionResult> Index(string estado = "Pendiente", string proveedor = "", int pagina = 1)
@@ -33,30 +33,52 @@ namespace ProyectoLogin.Controllers
             int elementosPorPagina = 10;
             int elementosASaltar = (pagina - 1) * elementosPorPagina;
 
-            // Consulta base
+            // Consulta base con cálculo de totales
             var consulta = _context.Compras
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
+                .Include(c => c.Detalles)
+                    .ThenInclude(d => d.UnidadMedida)
                 .Where(c => c.Estado == estado)
                 .OrderByDescending(c => c.FechaCompra)
-                .AsSplitQuery();
+                .AsSplitQuery()
+                .Select(c => new
+                {
+                    Compra = c,
+                    // Calcular totales en tiempo real por si hay discrepancias
+                    TotalCalculado = c.Detalles.Sum(d =>
+                        (d.Cantidad * (d.PrecioUnitario / 1.12m) *
+                         d.UnidadMedida.EquivalenciaEnUnidades) * 1.12m
+                    )
+                });
 
             // Aplicar filtro por proveedor si se especifica
             if (!string.IsNullOrEmpty(proveedor))
             {
-                consulta = consulta.Where(c => c.Proveedor.Nombre.Contains(proveedor));
+                consulta = consulta.Where(c => c.Compra.Proveedor.Nombre.Contains(proveedor));
             }
 
             // Obtener el total de elementos para la paginación
             int totalElementos = await consulta.CountAsync();
             int totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
 
-            // Aplicar paginación
-            var compras = await consulta
+            // Aplicar paginación y obtener datos
+            var comprasConTotales = await consulta
                 .Skip(elementosASaltar)
                 .Take(elementosPorPagina)
                 .ToListAsync();
+
+            // Extraer las compras y verificar/actualizar totales si es necesario
+            var compras = comprasConTotales.Select(c =>
+            {
+                // Si hay discrepancia entre el total guardado y el calculado, usar el calculado
+                if (Math.Abs(c.TotalCalculado - c.Compra.Total) > 0.01m) // Tolerancia de 0.01 para decimales
+                {
+                    c.Compra.Total = c.TotalCalculado;
+                }
+                return c.Compra;
+            }).ToList();
 
             // Datos para la vista
             ViewBag.EstadoActual = estado;
