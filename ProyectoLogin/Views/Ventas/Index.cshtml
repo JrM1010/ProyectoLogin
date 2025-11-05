@@ -250,6 +250,7 @@
     .search-container {
         flex-grow: 1;
         min-width: 200px;
+        position: relative;
     }
 
     .suggestions-box {
@@ -263,6 +264,7 @@
         z-index: 1000;
         max-height: 250px;
         overflow-y: auto;
+        margin-top: 2px;
     }
 
         .suggestions-box button {
@@ -309,11 +311,6 @@
     .precio-unidad {
         font-weight: bold;
         color: #28a745;
-    }
-
-    .descuento-unidad {
-        color: #6c757d;
-        font-size: 0.85rem;
     }
 
 </style>
@@ -368,31 +365,21 @@
              }
          }
 
-
-        // --- Util: normalizar factor de conversión (acepta "6", "6,0", number, null...)
         function parseFactorUnidad(unidad) {
-            // busca varias propiedades posibles donde el factor pueda venir
             let raw = unidad?.FactorConversion ?? unidad?.factorConversion ?? unidad?.factor ?? unidad?.Factor ?? unidad?.factor_default ?? unidad?.FactorDefault ?? unidad?.cantidadPorPresentacion;
             if (raw === undefined || raw === null) {
-                return 1; // por defecto unidad simple
+                return 1;
             }
-            // convertir a string, reemplazar coma por punto y parsear
             if (typeof raw === 'string') raw = raw.replace(',', '.').trim();
             const n = parseFloat(raw);
-            // evitar 0, NaN o negativos: mínimo 1
             if (!isFinite(n) || n <= 0) return 1;
-            return Math.max(1, Math.round(n)); // redondeamos a entero por seguridad
+            return Math.max(1, Math.round(n));
         }
 
-
-         // 🔹 NUEVA FUNCIÓN: Mostrar modal para seleccionar unidad
-                 function mostrarModalUnidades(producto) {
+         function mostrarModalUnidades(producto) {
             const contenidoUnidades = document.getElementById("contenidoUnidades");
             contenidoUnidades.innerHTML = '';
 
-            console.log("Producto para modal:", producto); // Para debugging
-
-            // Usar preciosPorUnidad si existe, sino usar unidades normales
             const unidades = producto.preciosPorUnidad || producto.unidades || [];
 
             if (!unidades.length) {
@@ -401,14 +388,10 @@
             }
 
             unidades.forEach(unidad => {
-                // 🔹 EXTRAER PROPIEDADES CON DIFERENTES NOMBRES POSIBLES
                 const idUnidad = unidad.IdUnidad || unidad.idUnidad || unidad.Id || unidad.id;
                 const nombre = unidad.Nombre || unidad.nombre || "Presentación";
                 const factor = unidad.FactorConversion || unidad.factorConversion || unidad.EquivalenciaEnUnidades || 1;
                 const precioVenta = unidad.PrecioVenta || unidad.precioVenta || unidad.Precio || unidad.precio || 0;
-                const descuento = unidad.DescuentoAplicable || unidad.descuentoAplicable || unidad.Descuento || unidad.descuento || 0;
-
-                console.log("Unidad procesada:", { idUnidad, nombre, factor, precioVenta, descuento }); // Para debugging
 
                 const div = document.createElement("div");
                 div.className = "unidad-option";
@@ -416,11 +399,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong>${nombre}</strong>
-                            <div class="descuento-unidad">Descuento: ${(descuento * 100)}%</div>
                         </div>
                         <div class="precio-unidad">${formatearMonedaGuatemala(precioVenta)}</div>
                     </div>
-                    <small class="text-muted">Factor: ${factor}</small>
                 `;
                 div.onclick = () => {
                     seleccionarUnidadParaProducto(producto, {
@@ -428,7 +409,7 @@
                         Nombre: nombre,
                         FactorConversion: factor,
                         PrecioVenta: precioVenta,
-                        DescuentoAplicable: descuento
+                        DescuentoAplicable: 0
                     });
                     bootstrap.Modal.getInstance(document.getElementById('modalUnidad')).hide();
                 };
@@ -439,19 +420,13 @@
             modal.show();
         }
 
-
-
-
-         // 🔹 NUEVA FUNCIÓN: Seleccionar unidad para producto
         function seleccionarUnidadParaProducto(producto, unidad) {
-            console.log("Seleccionando unidad:", unidad);
-
             const factor = parseFloat(unidad.FactorConversion ?? unidad.factorConversion ?? 1) || 1;
             const stockBase = Number(producto.stock ?? 0);
             const disponiblesEnUnidad = Math.floor(stockBase / factor);
 
             if (disponiblesEnUnidad < 1) {
-                mostrarMensaje(`❌ No hay stock suficiente para ${unidad.Nombre ?? unidad.nombre ?? 'esta presentación'}. Stock: ${stockBase}, requiere ${factor} por unidad.`, "danger");
+                mostrarMensaje(`❌ No hay stock suficiente para ${unidad.Nombre ?? unidad.nombre ?? 'esta presentación'}.`, "danger");
                 return;
             }
 
@@ -460,7 +435,7 @@
                 nombre: producto.text,
                 precio: parseFloat(unidad.PrecioVenta ?? unidad.precioVenta ?? unidad.Precio ?? unidad.precio) || 0,
                 cantidad: 1,
-                descuento: parseFloat(unidad.DescuentoAplicable ?? unidad.descuentoAplicable ?? unidad.Descuento ?? unidad.descuento ?? 0) || 0,
+                descuento: 0,
                 stock: stockBase,
                 esKit: false,
                 unidades: producto.preciosPorUnidad || producto.unidades || [],
@@ -470,7 +445,6 @@
                 stockBase: stockBase
             };
 
-            // buscar existente con misma unidad
             const existente = productosSeleccionados.find(p => p.id === producto.id && String(p.idUnidadSeleccionada) === String(productoParaAgregar.idUnidadSeleccionada));
 
             const maxPermitido = Math.floor(stockBase / factor);
@@ -489,11 +463,9 @@
                 productosSeleccionados.push(productoParaAgregar);
             }
 
-            const mensajeDescuento = productoParaAgregar.descuento > 0 ? ` con descuento del ${(productoParaAgregar.descuento * 100).toFixed(1)}%` : "";
-            mostrarMensaje(`✅ ${producto.text} (${productoParaAgregar.unidadNombre}) añadido a la venta${mensajeDescuento}. Disponible: ${disponiblesEnUnidad} unidades.`, "success");
+            mostrarMensaje(`✅ ${producto.text} (${productoParaAgregar.unidadNombre}) añadido a la venta.`, "success");
             renderTabla();
         }
-
 
          inputBusqueda.addEventListener("keyup", async (e) => {
              const term = e.target.value.trim();
@@ -527,7 +499,6 @@
              }
          });
 
-             // FUNCIÓN PARA FORMATEAR NÚMEROS EN FORMATO GUATEMALTECO
          function formatearNumeroGuatemala(numero) {
              if (numero === null || numero === undefined || isNaN(numero)) {
                  return "0.00";
@@ -539,7 +510,6 @@
              });
          }
 
-         // FUNCIÓN PARA FORMATEAR MONEDA EN FORMATO GUATEMALTECO
          function formatearMonedaGuatemala(monto) {
              return `Q${formatearNumeroGuatemala(monto)}`;
          }
@@ -558,8 +528,6 @@
             if (prev) prev.remove();
             if (!lista.length) return;
 
-            console.log("Resultados de búsqueda:", lista); // 🔹 PARA DEBUGGING
-
             const div = document.createElement("div");
             div.classList.add("suggestions-box");
 
@@ -577,14 +545,6 @@
                 const item = document.createElement("button");
                 item.type = "button";
 
-                // 🔹 DEBUG: Ver estructura de unidades
-                console.log(`Producto: ${p.text}`, {
-                    preciosPorUnidad: p.preciosPorUnidad,
-                    unidades: p.unidades,
-                    precio: p.precio
-                });
-
-                // 🔹 MOSTRAR PRECIO SEGÚN SI TIENE MÚLTIPLES UNIDADES
                 let precioTexto = formatearMonedaGuatemala(p.precio);
                 const tieneMultiplesUnidades = (p.preciosPorUnidad && p.preciosPorUnidad.length > 1) ||
                                              (p.unidades && p.unidades.length > 1);
@@ -623,12 +583,10 @@
             }, { once: true });
         }
 
-
                 function seleccionarProducto(prod) {
             const esKit = prod.tipo === "kit";
 
             if (esKit) {
-                // 🧩 CÓDIGO FALTANTE PARA KITS - AGREGAR ESTO:
                 const existente = productosSeleccionados.find(p => p.idKit === prod.id);
                 if (existente) {
                     existente.cantidad++;
@@ -654,7 +612,6 @@
                     return;
                 }
 
-                // 🔹 DETERMINAR SI TIENE MÚLTIPLES UNIDADES (CORREGIDO)
                 const unidades = prod.preciosPorUnidad || prod.unidades || [];
                 const tieneMultiplesUnidades = unidades.length > 1;
 
@@ -663,7 +620,6 @@
                     return;
                 }
 
-                // 🔹 COMPORTAMIENTO NORMAL (UNA SOLA UNIDAD)
                 const defaultUnidad = unidades[0] || {};
                 const defaultIdUnidad = defaultUnidad.IdUnidad || defaultUnidad.idUnidad || null;
                 const defaultPrecio = defaultUnidad.PrecioVenta || defaultUnidad.precioVenta || prod.precio;
@@ -675,14 +631,13 @@
                     const nuevasUnidadesNecesarias = (existente.cantidad + 1) * existente.factorConversion;
                     if (nuevasUnidadesNecesarias > stockBase) {
                         const maxPermitido = Math.floor(stockBase / existente.factorConversion);
-                        mostrarMensaje(`⚠️ No puedes agregar más unidades. Stock base: ${stockBase}, requiere ${existente.factorConversion} por ${existente.unidadNombre}. Máximo disponible: ${maxPermitido}`, "warning");
+                        mostrarMensaje(`⚠️ No puedes agregar más unidades. Máximo disponible: ${maxPermitido}`, "warning");
                         return;
                     }
                     existente.cantidad++;
                 } else {
-                    // 🔹 VALIDAR STOCK ANTES DE AGREGAR NUEVO PRODUCTO
                     if (disponiblesEnUnidad < 1) {
-                        mostrarMensaje(`❌ No hay stock suficiente para la presentación "${defaultUnidad.Nombre || 'Unidad'}". Stock: ${stockBase}, requiere ${defaultFactor} por unidad.`, "danger");
+                        mostrarMensaje(`❌ No hay stock suficiente para la presentación "${defaultUnidad.Nombre || 'Unidad'}".`, "danger");
                         return;
                     }
 
@@ -691,7 +646,7 @@
                         nombre: prod.text,
                         precio: parseFloat(defaultPrecio) || 0,
                         cantidad: 1,
-                        descuento: parseFloat(defaultUnidad.DescuentoAplicable || defaultUnidad.descuentoAplicable || defaultUnidad.Descuento || defaultUnidad.descuento || 0),
+                        descuento: 0,
                         stock: stockBase,
                         stockBase: stockBase,
                         esKit: false,
@@ -702,28 +657,21 @@
                     });
                 }
 
-                // 🔹 MENSAJE CON INFORMACIÓN DE STOCK
-                const mensajeStock = disponiblesEnUnidad > 1 ?
-                    ` Disponible: ${disponiblesEnUnidad} ${defaultUnidad.Nombre || 'unidades'}` :
-                    '';
-
-                mostrarMensaje(`✅ ${prod.text} (${defaultUnidad.Nombre || 'Unidad'}) añadido a la venta.${mensajeStock}`, "success");
+                mostrarMensaje(`✅ ${prod.text} (${defaultUnidad.Nombre || 'Unidad'}) añadido a la venta.`, "success");
             }
 
             inputBusqueda.value = "";
             renderTabla();
         }
 
-         //Renderiza la tabla para el listado
         function renderTabla() {
             tablaBody.innerHTML = "";
 
             productosSeleccionados.forEach((p, i) => {
                 const tr = document.createElement("tr");
 
-                // 🧩 SI ES KIT (PROMOCIÓN)
                 if (p.esKit) {
-                    const subtotal = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
+                    const subtotal = p.precio * p.cantidad;
 
                     tr.innerHTML = `
                         <td class="text-start">
@@ -749,9 +697,8 @@
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm text-center bg-light"
-                                   value="${p.descuento}%"
-                                   readonly
-                                   title="Descuento aplicado">
+                                   value="0%"
+                                   readonly>
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
@@ -760,14 +707,11 @@
                         </td>
                     `;
                 }
-                // 🧩 SI ES PRODUCTO NORMAL
                 else {
-                    // VALIDAR QUE LA UNIDAD SELECCIONADA SIGUE SIENDO VÁLIDA
                     let unidadActual = (p.unidades || []).find(u =>
                         (u.IdUnidad ?? u.idUnidad) == p.idUnidadSeleccionada
                     );
 
-                    // 🔹 CORRECCIÓN: Si la unidad actual no es válida, actualizar completamente las propiedades
                     if (!unidadActual) {
                         const primeraUnidadValida = (p.unidades || []).find(u => {
                             const factorU = parseFloat(u.FactorConversion) || 1;
@@ -778,32 +722,27 @@
                         if (primeraUnidadValida) {
                             p.idUnidadSeleccionada = primeraUnidadValida.IdUnidad ?? primeraUnidadValida.idUnidad;
                             unidadActual = primeraUnidadValida;
-                            // 🔹 ACTUALIZAR TODAS LAS PROPIEDADES DEL PRECIO
                             p.precio = parseFloat(primeraUnidadValida.PrecioVenta || primeraUnidadValida.precioVenta || primeraUnidadValida.Precio || primeraUnidadValida.precio || 0);
                             p.unidadNombre = primeraUnidadValida.Nombre || primeraUnidadValida.nombre || "Unidad";
                             p.factorConversion = parseFloat(primeraUnidadValida.FactorConversion || primeraUnidadValida.factorConversion || 1);
-                            p.descuento = parseFloat(primeraUnidadValida.DescuentoAplicable || primeraUnidadValida.descuentoAplicable || primeraUnidadValida.Descuento || primeraUnidadValida.descuento || 0);
+                            p.descuento = 0;
                         } else {
                                     p.idUnidadSeleccionada = p.unidades?.[0]?.IdUnidad ?? p.unidades?.[0]?.idUnidad ?? null;
                                     unidadActual = p.unidades?.[0] ?? null;
-                            // 🔹 ACTUALIZAR PROPIEDADES TAMBIÉN PARA LA PRIMERA UNIDAD
                             if (unidadActual) {
                                 p.precio = parseFloat(unidadActual.PrecioVenta || unidadActual.precioVenta || unidadActual.Precio || unidadActual.precio || 0);
                                 p.unidadNombre = unidadActual.Nombre || unidadActual.nombre || "Unidad";
                                 p.factorConversion = parseFloat(unidadActual.FactorConversion || unidadActual.factorConversion || 1);
-                                p.descuento = parseFloat(unidadActual.DescuentoAplicable || unidadActual.descuentoAplicable || unidadActual.Descuento || unidadActual.descuento || 0);
+                                p.descuento = 0;
                             }
                         }
                     }
 
-                            const factor = parseFloat(p.factorConversion) || 1; // siempre número
+                            const factor = parseFloat(p.factorConversion) || 1;
                             const stockBase = Number(p.stockBase ?? p.stock ?? 0);
                             const disponiblesEnUnidad = Math.floor(stockBase / factor);
-                            const unidadesNecesarias = Math.ceil((p.cantidad || 0) * factor); // mejor usar ceil para evitar fracciones
-                            const subtotal = (parseFloat(p.precio) || 0) * (p.cantidad || 0) * (1 - ((parseFloat(p.descuento) || 0) / 100));
-
-                    // 🔹 CALCULAR PORCENTAJE DE DESCUENTO PARA MOSTRAR
-                    const porcentajeDescuento = (p.descuento * 100).toFixed(1);
+                            const unidadesNecesarias = Math.ceil((p.cantidad || 0) * factor);
+                            const subtotal = (parseFloat(p.precio) || 0) * (p.cantidad || 0);
 
                     let badgeStock = "";
                     if (stockBase <= 0) {
@@ -812,53 +751,30 @@
                         badgeStock = `<span class="badge bg-warning text-dark ms-2">Stock bajo</span>`;
                     }
 
-                    // 🔹 BADGE DE DESCUENTO SI APLICA
-                    let badgeDescuento = "";
-                    if (p.descuento > 0) {
-                        badgeDescuento = `<span class="badge bg-success ms-2">Desc. ${porcentajeDescuento}%</span>`;
-                    }
-
-                    // 🔹 INFORMACIÓN DETALLADA DE STOCK
-                    let infoStock = "";
-                    if (stockBase > 0) {
-                        infoStock = `
-                            <div class="small text-muted">Stock base: ${formatearNumeroGuatemala(stockBase)} unidades</div>
-                            <div class="small text-info">Presentación: ${p.unidadNombre} (Factor: ${factor})</div>
-                            <div class="small ${unidadesNecesarias > stockBase ? 'text-danger' : 'text-success'}">
-                                ${p.cantidad} ${p.unidadNombre} = ${unidadesNecesarias} unidades base
-                            </div>
-                            <div class="small text-success">Disponible: ${disponiblesEnUnidad} ${p.unidadNombre}</div>
-                        `;
-                    } else {
-                        infoStock = `<div class="small text-danger">❌ Sin stock disponible</div>`;
-                    }
-
-                        const opcionesUnidades = (p.unidades || []).map(u => {
+                    const opcionesUnidades = (p.unidades || []).map(u => {
                             const id = u.IdUnidad ?? u.idUnidad ?? u.Id ?? u.id ?? "";
                             const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
                             const factorU = parseFloat(u.FactorConversion ?? u.factorConversion ?? u.EquivalenciaEnUnidades ?? 1) || 1;
                             const disponibles = Math.floor(stockBase / factorU);
 
-                            // precio por unidad (fallback al precio del producto)
                             const precioUnidad = parseFloat(u.PrecioVenta ?? u.precioVenta ?? u.Precio ?? u.precio) || (parseFloat(p.precio) || 0);
-
-                            const descuentoUnidad = parseFloat(u.DescuentoAplicable ?? u.descuentoAplicable ?? u.Descuento ?? u.descuento ?? 0) || 0;
-                            const porcentajeDescuentoUnidad = (descuentoUnidad * 100).toFixed(1);
 
                             const disabled = (disponibles < 1) ? "disabled" : "";
                             const selected = (String(id) === String(p.idUnidadSeleccionada)) ? "selected" : "";
                             const alertaStock = (disponibles < 1) ? " (Sin stock)" : "";
-                            const infoDescuento = descuentoUnidad > 0 ? ` - Desc. ${porcentajeDescuentoUnidad}%` : "";
 
                             return `<option value="${id}" ${selected} ${disabled}>
-                                        ${nombre} - ${formatearMonedaGuatemala(precioUnidad)}${infoDescuento}${alertaStock}
+                                        ${nombre} - ${formatearMonedaGuatemala(precioUnidad)}${alertaStock}
                                     </option>`;
                         }).join("");
 
                     tr.innerHTML = `
                         <td class="text-start">
-                            ${p.nombre} ${badgeStock} ${badgeDescuento}
-                            ${infoStock}
+                            ${p.nombre} ${badgeStock}
+                            <div class="small text-muted">${p.unidadNombre}</div>
+                            ${stockBase > 0 ?
+                                `<div class="small text-success">Disponible: ${disponiblesEnUnidad} ${p.unidadNombre}</div>` :
+                                `<div class="small text-danger">❌ Sin stock disponible</div>`}
                         </td>
                         <td>${formatearMonedaGuatemala(p.precio)}</td>
                         <td>
@@ -887,20 +803,14 @@
                             </div>
                             ${disponiblesEnUnidad < 1 ?
                               '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' :
-                              `<div class="text-success small mt-1">✅ Disponible: ${disponiblesEnUnidad} ${p.unidadNombre || 'unidades'}</div>`}
-                            ${unidadesNecesarias > stockBase ?
-                              `<div class="text-danger small mt-1">⚠️ Excede stock base (${stockBase} unidades)</div>` : ''}
+                              `<div class="text-success small mt-1">✅ Disponible: ${disponiblesEnUnidad}</div>`}
                         </td>
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm text-center bg-light"
-                                   value="${porcentajeDescuento}%"
+                                   value="0%"
                                    readonly
-                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}
-                                   title="Descuento de la presentación seleccionada">
-                            ${p.descuento > 0 ?
-                              `<div class="small text-success mt-1">💫 Descuento aplicado</div>` :
-                              `<div class="small text-muted mt-1">Sin descuento</div>`}
+                                   ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
@@ -916,8 +826,6 @@
             recalcularTotales();
         }
 
-
-             // 🔹 FUNCIÓN PARA CAMBIAR UNIDAD DESDE EL SELECT
         function cambiarUnidad(index, idUnidadSeleccionada) {
             const producto = productosSeleccionados[index];
             if (!producto) return;
@@ -938,12 +846,11 @@
 
             if (disponiblesEnUnidad < 1) {
                 const nombreUnidad = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? "esta presentación";
-                mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}. Stock: ${stockBase}, requiere ${factor} por unidad.`, "danger");
+                mostrarMensaje(`❌ No hay stock suficiente para ${nombreUnidad}.`, "danger");
                 restaurarSelectUnidad(index, unidadAnterior);
                 return;
             }
 
-            // Ajustar cantidad si excede el nuevo límite
             if ((producto.cantidad || 0) > disponiblesEnUnidad) {
                 producto.cantidad = disponiblesEnUnidad;
                 mostrarMensaje(`⚠️ La cantidad se ajustó al máximo disponible: ${disponiblesEnUnidad} ${unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre}`, "warning");
@@ -953,14 +860,12 @@
             producto.precio = parseFloat(unidadSeleccionada.PrecioVenta ?? unidadSeleccionada.precioVenta ?? unidadSeleccionada.Precio ?? unidadSeleccionada.precio) || producto.precio || 0;
             producto.unidadNombre = unidadSeleccionada.Nombre ?? unidadSeleccionada.nombre ?? producto.unidadNombre ?? "Unidad";
             producto.factorConversion = factor;
-            producto.descuento = parseFloat(unidadSeleccionada.DescuentoAplicable ?? unidadSeleccionada.descuentoAplicable ?? unidadSeleccionada.Descuento ?? unidadSeleccionada.descuento ?? producto.descuento ?? 0) || 0;
+            producto.descuento = 0;
 
-            mostrarMensaje(`🔁 Presentación cambiada a: ${producto.unidadNombre} - Disponible: ${disponiblesEnUnidad} unidades`, "info");
+            mostrarMensaje(`🔁 Presentación cambiada a: ${producto.unidadNombre}`, "info");
             renderTabla();
         }
 
-
-         // 🔹 FUNCIÓN PARA RESTAURAR EL SELECT INMEDIATAMENTE
          function restaurarSelectUnidad(index, valorAnterior) {
              setTimeout(() => {
                  const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
@@ -970,7 +875,6 @@
              }, 0);
          }
 
-         // 🔹 FUNCIÓN CENTRALIZADA PARA CAMBIAR CANTIDAD
         function cambiarCantidadProducto(index, delta) {
             const producto = productosSeleccionados[index];
             if (!producto) return;
@@ -997,8 +901,6 @@
             renderTabla();
         }
 
-
-        // 🔹 FUNCIÓN CENTRALIZADA PARA ACTUALIZAR CANTIDAD DESDE INPUT
         function actualizarCantidadProducto(index, nuevaCantidadStr) {
             const producto = productosSeleccionados[index];
             if (!producto) return;
@@ -1019,25 +921,21 @@
             renderTabla();
         }
 
-
-
-        
-
-        function actualizarDescuento(i, v) { 
-            productosSeleccionados[i].descuento = Math.max(0, parseFloat(v)); 
-            renderTabla(); 
+        function actualizarDescuento(i, v) {
+            productosSeleccionados[i].descuento = Math.max(0, parseFloat(v));
+            renderTabla();
         }
-        
-        function eliminarProducto(i) { 
-            productosSeleccionados.splice(i, 1); 
-            renderTabla(); 
-            mostrarMensaje("Producto eliminado de la venta.", "info"); 
+
+        function eliminarProducto(i) {
+            productosSeleccionados.splice(i, 1);
+            renderTabla();
+            mostrarMensaje("Producto eliminado de la venta.", "info");
         }
 
         function recalcularTotales() {
             let total = 0;
             productosSeleccionados.forEach(p => {
-                const precioConDescuento = p.precio * p.cantidad * (1 - (p.descuento || 0) / 100);
+                const precioConDescuento = p.precio * p.cantidad;
                 total += precioConDescuento;
             });
 
@@ -1121,7 +1019,7 @@
                     const data = await res.json();
                     console.log("RegistrarClienteRapido -> data:", data);
 
-                    clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ?? 
+                    clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ??
                                           data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
 
                     const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
@@ -1258,14 +1156,14 @@
                     }
 
                     const detalles = productosSeleccionados.map(p => {
-                    const sub = parseFloat((p.precio * p.cantidad * (1 - (p.descuento || 0) / 100)).toFixed(2));
+                    const sub = parseFloat((p.precio * p.cantidad).toFixed(2));
                     return {
                         IdProducto: p.esKit ? null : Number(p.id),
                         IdKit: p.esKit ? Number(p.idKit) : null,
                         IdUnidad: p.esKit ? null : Number(p.idUnidadSeleccionada || 0),
                         Cantidad: Number(p.cantidad),
                         PrecioUnitario: Number(p.precio),
-                        Descuento: Number(p.descuento || 0),
+                        Descuento: 0,
                         Subtotal: sub
                     };
             });
@@ -1275,14 +1173,13 @@
                         IdCliente: clienteSeleccionado ?? null,
                         MetodoPago: metodo,
                         Estado: "Completada",
-                        Subtotal: total, // Subtotal igual al total (precios ya incluyen IVA)
-                        IVA: 0, // IVA siempre en 0
+                        Subtotal: total,
+                        IVA: 0,
                         Total: total,
                         Detalles: detalles
                     };
 
                     console.log("Venta enviada:", payload);
-                     console.table(detalles);
 
                     const res = await
                     fetch("/Ventas/GuardarVenta", {
