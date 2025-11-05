@@ -46,6 +46,8 @@ namespace ProyectoLogin.Models.ModelosProducts
         //Relación inversa con ProductoUnidad
         public ICollection<ProductoUnidad>? ProductosUnidades { get; set; }
 
+        // 🔹 Nueva relación con precios del producto
+        public virtual ICollection<ProductoPrecio>? Precios { get; set; }
 
     }
 }
