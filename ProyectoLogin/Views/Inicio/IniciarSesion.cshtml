@@ -1,71 +1,313 @@
 ﻿@{
-    Layout = "_Layout";
-    ViewData["Title"] = "Login";
+    // Para la vista de login, no usar el layout normal
+    Layout = null;
+    ViewData["Title"] = "Iniciar Sesión - SmartCell POS";
 }
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>SmarcellCompany</title>
+    <title>SmartCell - Iniciar Sesión</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1C1973;
+            --secondary-blue: #514BF2;
+            --accent-blue: #8B88F2;
+            --dark-bg: #0D0E26;
+            --alt-bg: #081C59;
+            --light-text: #F0F0F7;
+            --border-radius: 0.5rem;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--alt-bg) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+
+        .login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .login-card {
+            background: var(--alt-bg);
+            border: 1px solid var(--accent-blue);
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: var(--primary-blue);
+            color: white;
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--accent-blue);
+        }
+
+        .brand-logo {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .brand-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .login-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-label {
+            color: var(--light-text);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent-blue);
+            border-radius: var(--border-radius);
+            color: var(--light-text);
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+            .form-control:focus {
+                background-color: rgba(255, 255, 255, 0.15);
+                border-color: var(--secondary-blue);
+                box-shadow: 0 0 0 0.2rem rgba(81, 75, 242, 0.25);
+                color: var(--light-text);
+                outline: none;
+            }
+
+            .form-control::placeholder {
+                color: rgba(255, 255, 255, 0.5);
+            }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+            .toggle-password:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: var(--light-text);
+            }
+
+        .btn-login {
+            background: var(--secondary-blue);
+            border: none;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+            .btn-login:hover {
+                background: #413BF0;
+                transform: translateY(-1px);
+            }
+
+            .btn-login:active {
+                transform: translateY(0);
+            }
+
+            .btn-login:disabled {
+                background: var(--accent-blue);
+                opacity: 0.7;
+            }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: var(--border-radius);
+            color: #ff6b6b;
+            padding: 0.75rem 1rem;
+        }
+
+        .forgot-password {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+            .forgot-password:hover {
+                color: var(--secondary-blue);
+                text-decoration: underline;
+            }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 576px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .login-container {
+                max-width: 100%;
+            }
+
+            .login-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .login-body {
+                padding: 1.5rem 1rem;
+            }
+
+            .brand-logo {
+                font-size: 2rem;
+            }
+
+            .brand-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Centrado forzado */
+        .center-absolute {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 420px;
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="login-card">
+                <!-- Header con logo y título -->
+                <div class="login-header">
+                    <i class="bi bi-phone brand-logo"></i>
+                    <h1 class="brand-title">SmartCellCompany</h1>
+                    <p class="brand-subtitle">Tecnología al alcance de tu mano</p>
+                </div>
 
-    <div class="container mt-5 pt-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-xl-4 col-md-6">
-                <div class="card">
+                <!-- Formulario de login -->
+                <div class="login-body">
+                    <form asp-controller="Inicio" asp-action="IniciarSesion" method="post">
+                        <!-- Campo de correo -->
+                        <div class="mb-3">
+                            <label for="correo" class="form-label">Correo electrónico</label>
+                            <input id="correo" class="form-control" type="email"
+                                   placeholder="usuario@correo.com"
+                                   required name="correo" />
+                        </div>
 
-                    <div class="card-header">
-                        Iniciar Sesión
-                    </div>
-                    
-                    <div class="card-body">
-                        <form asp-controller="Inicio" asp-action="IniciarSesion" method="post">
-                            <div class="mb-3">
-                                <label for="correo" class="form-label">Correo electrónico</label>
-                                <input id="correo" class="form-control" type="text"
-                                       placeholder="Ejem: usuario@correo.com"
-                                       required name="correo" />
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="clave" class="form-label">Contraseña</label>
-                                <div class="password-container">
-                                    <input id="clave" class="form-control" type="password"
-                                           placeholder="Ingrese su contraseña"
-                                           required name="clave" />
-                                    <button type="button" id="togglePassword" class="toggle-password">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!--boton inicio de sesion-->
-                            <div class="d-grid gap-2 mb-3">
-                                <button id="loginButton" class="btn btn-primary" type="submit">
-                                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                        <!-- Campo de contraseña -->
+                        <div class="mb-4">
+                            <label for="clave" class="form-label">Contraseña</label>
+                            <div class="password-container">
+                                <input id="clave" class="form-control" type="password"
+                                       placeholder="Ingrese su contraseña"
+                                       required name="clave" />
+                                <button type="button" id="togglePassword" class="toggle-password">
+                                    <i class="bi bi-eye"></i>
                                 </button>
                             </div>
+                        </div>
 
-                            @if (ViewData["Mensaje"] != null)
-                            {
-                                <div class="form-group">
-                                    <div class="alert alert-danger" role="alert">
-                                        @ViewData["Mensaje"]
-                                    </div>
-                                </div>
-                            }
+                        <!-- Botón de inicio de sesión -->
+                        <div class="d-grid gap-2 mb-4">
+                            <button id="loginButton" class="btn btn-login" type="submit">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+                            </button>
+                        </div>
 
-                            <div class="d-flex justify-content-center mb-3">
-                                <a href="@Url.Action("StartRecovery", "Access")" class="text-danger fw-bold text-decoration-none">
-                                    ¿Olvidaste tu contraseña?
-                                </a>
+                        <!-- Mensaje de error -->
+                        @if (ViewData["Mensaje"] != null)
+                        {
+                            <div class="alert alert-danger mb-4" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>@ViewData["Mensaje"]
                             </div>
+                        }
 
-                        </form>
-                    </div>
+                        <!-- Enlace de recuperación de contraseña -->
+                        <div class="text-center">
+                            <a href="@Url.Action("StartRecovery", "Access")" class="forgot-password">
+                                <i class="bi bi-key me-1"></i> ¿Olvidaste tu contraseña?
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -73,56 +315,54 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Función para mostrar/ocultar contraseña
+            $('#togglePassword').click(function() {
+                const passwordField = $('#clave');
+                const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+                passwordField.attr('type', type);
+
+                // Cambiar icono
+                const icon = $(this).find('i');
+                if (type === 'password') {
+                    icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                } else {
+                    icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                }
+            });
+
+            // Mostrar loading al enviar formulario
+            $('form').on('submit', function() {
+                const loginButton = $('#loginButton');
+                loginButton.prop('disabled', true);
+                loginButton.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Iniciando sesión...');
+            });
+
+            // Efecto de focus en los campos
+            $('.form-control').on('focus', function() {
+                $(this).css('border-color', 'var(--secondary-blue)');
+            }).on('blur', function() {
+                $(this).css('border-color', 'var(--accent-blue)');
+            });
+
+            // Forzar centrado en caso de que persista el problema
+            function centerLogin() {
+                const loginContainer = document.querySelector('.login-container');
+                const windowHeight = window.innerHeight;
+                const containerHeight = loginContainer.offsetHeight;
+                const topMargin = (windowHeight - containerHeight) / 2;
+
+                if (topMargin > 0) {
+                    loginContainer.style.marginTop = topMargin + 'px';
+                }
+            }
+
+            // Centrar al cargar y al redimensionar
+            centerLogin();
+            window.addEventListener('resize', centerLogin);
+        });
+    </script>
 </body>
 </html>
-
-<!--CSS-->
-<script>
-    $(document).ready(function() {
-        // Función para mostrar/ocultar contraseña
-        $('#togglePassword').click(function() {
-            const passwordField = $('#clave');
-            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-            passwordField.attr('type', type);
-
-            // Cambiar icono
-            $(this).find('i').toggleClass('bi-eye bi-eye-slash');
-        });
-
-        // Mostrar loading al enviar formulario
-        $('form').on('submit', function() {
-            $('#loginButton').prop('disabled', true);
-            $('#loginButton').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Iniciando sesión...');
-        });
-    });
-</script>
-
-<style>
-    .password-container {
-        position: relative;
-    }
-
-    .toggle-password {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #6c757d;
-    }
-
-        .toggle-password:hover {
-            color: #495057;
-        }
-
-    #clave {
-        padding-right: 40px;
-    }
-
-    .spinner-border-sm {
-        width: 1rem;
-        height: 1rem;
-    }
-</style>
