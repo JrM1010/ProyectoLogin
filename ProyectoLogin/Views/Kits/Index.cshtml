@@ -4,45 +4,554 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @{
-    ViewData["Title"] = "Lista de Kits / Promociones";
+    ViewData["Title"] = "Kits / Promociones - SmartCell POS";
     var gt = new System.Globalization.CultureInfo("es-GT");
 
-    // Parámetros de paginación (deberías recibirlos del controlador)
+    // Parámetros de paginación
     var pageNumber = ViewBag.PageNumber ?? 1;
     var pageSize = ViewBag.PageSize ?? 10;
     var totalItems = ViewBag.TotalItems ?? Model?.Count() ?? 0;
     var totalPages = ViewBag.TotalPages ?? (int)Math.Ceiling((double)totalItems / pageSize);
 
-
     var user = HttpContextAccessor.HttpContext?.User;
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
+
+    var totalActivos = Model?.Count(k => k.Activo) ?? 0;
+    var totalConDescuento = Model?.Count(k => k.DescuentoPct > 0) ?? 0;
+    var totalValor = Model?.Sum(k => k.Total) ?? 0m;
 }
 
-<div class="container-fluid py-4">
+<style>
+    :root {
+        --kits-primary: #1C1973;
+        --kits-secondary: #514BF2;
+        --kits-accent: #8B88F2;
+        --kits-bg: #0D0E26;
+        --kits-alt-bg: #081C59;
+        --kits-card: #11152F;
+        --kits-card-soft: #15193A;
+        --kits-text: #F0F0F7;
+        --kits-muted: #A4A5D4;
+        --kits-radius: 0.85rem;
+        --kits-border: #2E347A;
+        --kits-success: #1cc88a;
+        --kits-warning: #f6c23e;
+        --kits-danger: #ff6b6b;
+    }
+
+    .kits-theme {
+        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.12), transparent), radial-gradient(circle at top right, rgba(139, 136, 242, 0.1), transparent), var(--kits-bg);
+        min-height: 100vh;
+    }
+
+    .kits-header {
+        background: linear-gradient(135deg, var(--kits-primary), var(--kits-alt-bg));
+        border-radius: var(--kits-radius);
+        padding: 1.5rem 2rem;
+        border: 1px solid rgba(139, 136, 242, 0.35);
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .kits-header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: var(--kits-text);
+    }
+
+    .kits-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--kits-secondary), var(--kits-primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+        font-size: 1.6rem;
+    }
+
+    .kits-header h1 {
+        font-size: 1.6rem;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .kits-header p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--kits-muted);
+    }
+
+    .kits-header-actions .btn-kits-primary,
+    .kits-header-actions .btn-kits-outline {
+        border-radius: 2rem;
+        padding: 0.55rem 1.25rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
+        border-width: 1px;
+    }
+
+    .btn-kits-primary {
+        background: var(--kits-secondary);
+        border-color: var(--kits-accent);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+        .btn-kits-primary:hover {
+            background: var(--kits-primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+        }
+
+    .btn-kits-outline {
+        background: transparent;
+        border-color: var(--kits-accent);
+        color: var(--kits-accent);
+    }
+
+        .btn-kits-outline:hover {
+            background: var(--kits-accent);
+            color: var(--kits-bg);
+            transform: translateY(-1px);
+        }
+
+    /* Tarjetas de stats */
+    .kits-stats-card {
+        background: var(--kits-card);
+        border-radius: var(--kits-radius);
+        padding: 1rem 1.1rem;
+        border: 1px solid rgba(139, 136, 242, 0.18);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .kits-stats-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--kits-muted);
+        letter-spacing: 0.06em;
+        margin-bottom: 0.25rem;
+    }
+
+    .kits-stats-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--kits-text);
+        margin: 0;
+    }
+
+    .kits-stats-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        background: rgba(81, 75, 242, 0.12);
+        color: var(--kits-accent);
+    }
+
+    .kits-stats-card.success .kits-stats-icon {
+        background: rgba(28, 200, 138, 0.12);
+        color: var(--kits-success);
+    }
+
+    .kits-stats-card.warning .kits-stats-icon {
+        background: rgba(246, 194, 62, 0.12);
+        color: var(--kits-warning);
+    }
+
+    .kits-stats-card.info .kits-stats-icon {
+        background: rgba(139, 136, 242, 0.12);
+        color: var(--kits-accent);
+    }
+
+    /* Contenedor principal tabla */
+    .kits-card-wrapper {
+        background: var(--kits-card-soft);
+        border-radius: var(--kits-radius);
+        border: 1px solid var(--kits-border);
+        box-shadow: 0 6px 26px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+    }
+
+    .kits-card-header {
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, rgba(28, 25, 115, 0.96), rgba(8, 28, 89, 0.98));
+        border-bottom: 1px solid rgba(139, 136, 242, 0.3);
+        color: var(--kits-text);
+    }
+
+        .kits-card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .kits-card-header .badge-count {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 0.25rem 0.7rem;
+            font-size: 0.75rem;
+            margin-left: 0.35rem;
+            color: var(--kits-accent);
+        }
+
+        .kits-card-header select {
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--kits-text);
+            border-radius: 999px;
+            border: 1px solid rgba(139, 136, 242, 0.6);
+            padding: 0.25rem 0.8rem;
+            font-size: 0.78rem;
+            outline: none;
+        }
+
+            .kits-card-header select:focus {
+                border-color: var(--kits-secondary);
+                box-shadow: 0 0 0 0.15rem rgba(81, 75, 242, 0.35);
+            }
+
+    /* Tabla */
+    .kits-table-container {
+        width: 100%;
+        overflow-x: auto;
+        background: var(--kits-card-soft);
+    }
+
+    .kits-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        color: var(--kits-text);
+        font-size: 0.86rem;
+    }
+
+        .kits-table thead {
+            background: rgba(8, 28, 89, 0.98);
+        }
+
+        .kits-table th {
+            padding: 0.85rem 0.9rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--kits-muted);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid rgba(139, 136, 242, 0.35);
+            white-space: nowrap;
+        }
+
+            .kits-table th.text-center {
+                text-align: center;
+            }
+
+        .kits-table td {
+            padding: 0.85rem 0.9rem;
+            border-bottom: 1px solid rgba(33, 37, 70, 0.9);
+            vertical-align: middle;
+            color: var(--kits-text);
+        }
+
+        .kits-table tbody tr {
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+
+            .kits-table tbody tr:nth-child(even) {
+                background: rgba(9, 18, 55, 0.9);
+            }
+
+            .kits-table tbody tr:hover {
+                background: rgba(81, 75, 242, 0.14);
+            }
+
+    .kits-kit-id {
+        color: var(--kits-muted);
+        font-weight: 600;
+    }
+
+    .kits-kit-name {
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: var(--kits-text);
+        margin-bottom: 0.1rem;
+    }
+
+    .kits-kit-products {
+        font-size: 0.75rem;
+        color: var(--kits-muted);
+    }
+
+    .kits-icon-pill {
+        width: 32px;
+        height: 32px;
+        border-radius: 0.75rem;
+        background: radial-gradient(circle, rgba(81, 75, 242, 0.3), transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--kits-accent);
+        margin-right: 0.5rem;
+    }
+
+    .badge-kits {
+        border-radius: 999px;
+        padding: 0.15rem 0.65rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-kits-success {
+        background: rgba(28, 200, 138, 0.18);
+        color: var(--kits-success);
+        border: 1px solid rgba(28, 200, 138, 0.5);
+    }
+
+    .badge-kits-danger {
+        background: rgba(255, 107, 107, 0.16);
+        color: var(--kits-danger);
+        border: 1px solid rgba(255, 107, 107, 0.5);
+    }
+
+    .badge-kits-secondary {
+        background: rgba(139, 136, 242, 0.08);
+        color: var(--kits-muted);
+        border: 1px solid rgba(139, 136, 242, 0.35);
+    }
+
+    .kits-total {
+        font-weight: 700;
+        color: #1cc88a;
+        font-size: 0.95rem;
+    }
+
+    .kits-actions {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+        .kits-actions .btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 0.9rem;
+            transition: all 0.18s ease;
+            border-width: 1px;
+            background: transparent;
+        }
+
+            .kits-actions .btn:hover {
+                transform: translateY(-1px) scale(1.05);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            }
+
+    .btn-outline-info {
+        border-color: #17a2b8;
+        color: #17a2b8;
+    }
+
+        .btn-outline-info:hover {
+            background-color: #17a2b8;
+            color: #ffffff;
+        }
+
+    .btn-outline-warning {
+        border-color: #f6c23e;
+        color: #f6c23e;
+    }
+
+        .btn-outline-warning:hover {
+            background-color: #f6c23e;
+            color: #11152F;
+        }
+
+    .btn-outline-danger {
+        border-color: #ff6b6b;
+        color: #ff6b6b;
+    }
+
+        .btn-outline-danger:hover {
+            background-color: #ff6b6b;
+            color: #0D0E26;
+        }
+
+    /* Paginación */
+    .kits-pagination-wrapper {
+        padding: 0.85rem 1.2rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 10, 30, 0.96);
+        border-top: 1px solid rgba(46, 52, 122, 0.9);
+    }
+
+    .pagination-kits .page-link {
+        background: transparent;
+        border-radius: 0.55rem;
+        border: 1px solid rgba(139, 136, 242, 0.45);
+        color: var(--kits-accent);
+        padding: 0.25rem 0.55rem;
+        font-size: 0.78rem;
+        margin: 0 0.08rem;
+        transition: all 0.2s ease;
+    }
+
+        .pagination-kits .page-link:hover {
+            background: var(--kits-secondary);
+            color: #ffffff;
+            border-color: var(--kits-secondary);
+        }
+
+    .pagination-kits .page-item.active .page-link {
+        background: var(--kits-secondary);
+        color: #ffffff;
+        border-color: var(--kits-secondary);
+        font-weight: 700;
+    }
+
+    .pagination-kits .page-item.disabled .page-link {
+        opacity: 0.28;
+        cursor: default;
+    }
+
+    .kits-pagination-info {
+        font-size: 0.7rem;
+        color: var(--kits-muted);
+    }
+
+    /* Estado vacío */
+    .kits-empty {
+        background: var(--kits-card-soft);
+        border-radius: var(--kits-radius);
+        padding: 3rem 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(139, 136, 242, 0.25);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .kits-empty-icon {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(139, 136, 242, 0.18), transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        color: var(--kits-accent);
+        font-size: 2.3rem;
+    }
+
+    .kits-empty h4 {
+        color: var(--kits-text);
+        margin-bottom: 0.5rem;
+    }
+
+    .kits-empty p {
+        color: var(--kits-muted);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .kits-empty .btn-kits-primary {
+        padding-inline: 1.5rem;
+    }
+
+    /* Toast */
+    .toast-dark {
+        background-color: #11152F;
+        color: var(--kits-text);
+        border-radius: 0.75rem;
+        border: 1px solid rgba(139, 136, 242, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+        font-size: 0.85rem;
+    }
+
+        .toast-dark .btn-close-white {
+            filter: invert(1);
+        }
+
+    @@media (max-width: 767.98px) {
+        .kits-header
+
+    {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .kits-header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    }
+</style>
+
+<div class="container-fluid kits-theme py-4">
     <!-- HEADER PRINCIPAL -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <div class="d-flex align-items-center">
-            <div class="bg-gradient-primary rounded-circle p-3 me-3">
-                <i class="bi bi-box-seam text-white fs-4"></i>
+    <div class="kits-header">
+        <div class="kits-header-title">
+            <div class="kits-header-icon">
+                <i class="bi bi-gift"></i>
             </div>
             <div>
-                <h1 class="h3 mb-1 text-gray-800">Kits / Promociones</h1>
-                <p class="text-muted mb-0">Gestiona tus promociones y kits de productos</p>
+                <h1>Kits / Promociones</h1>
+                <p>Configura combos inteligentes, promociones especiales y ofertas dinámicas para tus productos.</p>
             </div>
         </div>
-        @if (isAuth && isAdmin)
-        {
-            <a asp-action="Create" class="btn btn-primary rounded-pill d-flex align-items-center" title="Crear nuevo kit o promoción">
-                <i class="bi bi-plus-circle me-2"></i>Nuevo Kit / Promoción
+
+        <div class="kits-header-actions">
+            <a href="@Url.Action("Index", "Home")" class="btn-kits-outline">
+                <i class="bi bi-arrow-left"></i>
+                Inicio
             </a>
-        }
+            @if (isAuth && isAdmin)
+            {
+                <a asp-action="Create" class="btn-kits-primary" title="Crear nuevo kit o promoción">
+                    <i class="bi bi-plus-circle"></i>
+                    Nuevo Kit / Promoción
+                </a>
+            }
+        </div>
     </div>
 
-    <!-- TOAST PARA NOTIFICACIONES -->
+    <!-- TOAST PARA NOTIFICACIONES (oscuro, sin alertas feas) -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-        <div id="toastNotificacion" class="toast align-items-center text-white border-0" role="alert">
+        <div id="toastNotificacion" class="toast toast-dark align-items-center border-0" role="alert">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi me-2"></i>
@@ -52,129 +561,105 @@
             </div>
         </div>
     </div>
-    @if (isAuth && isAdmin){
-    <!-- MODAL DE CONFIRMACIÓN PARA ELIMINAR -->
-    <div class="modal fade" id="modalEliminarKit" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-danger text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirmar eliminación</h5>
+
+    @if (isAuth && isAdmin)
+    {
+        <!-- MODAL CONFIRMACIÓN ELIMINAR / ACTIVAR KIT -->
+        <div class="modal fade" id="modalEliminarKit" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0" style="background-color:#11152F; color:var(--kits-text);">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#8B0000,#FF6B6B); color:white;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
+                            <h5 class="modal-title mb-0">Confirmar acción</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="text-center mb-3">
-                        <i class="bi bi-trash display-4 text-danger mb-3"></i>
-                        <h4 class="text-gray-800 mb-2" id="modal-eliminar-titulo">¿Eliminar kit?</h4>
-                        <p class="text-muted" id="modal-eliminar-descripcion">Esta acción desactivará el kit y no se podrá utilizar en nuevas ventas.</p>
+                    <div class="modal-body py-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-trash display-5 text-danger mb-3"></i>
+                            <h4 class="mb-2" id="modal-eliminar-titulo">¿Modificar estado del kit?</h4>
+                            <p class="text-muted mb-0" id="modal-eliminar-descripcion">
+                                Esta acción actualizará la disponibilidad del kit en ventas.
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-danger rounded-pill px-4" id="btn-confirmar-eliminar">
-                        <i class="bi bi-check-circle me-2"></i>Sí, eliminar
-                    </button>
+                    <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger rounded-pill px-4" id="btn-confirmar-eliminar">
+                            <i class="bi bi-check-circle me-2"></i>Confirmar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     }
+
     @if (Model != null && Model.Any())
     {
-        <!-- ESTADÍSTICAS RÁPIDAS -->
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow-sm h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Total Kits
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">@totalItems</div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="bi bi-box-seam fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+        <!-- STATS -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="kits-stats-card">
+                    <div>
+                        <div class="kits-stats-label">Total kits</div>
+                        <p class="kits-stats-value">@totalItems</p>
+                    </div>
+                    <div class="kits-stats-icon">
+                        <i class="bi bi-box-seam"></i>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow-sm h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    Kits Activos
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    @Model.Count(k => k.Activo)
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="bi bi-check-circle fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kits-stats-card success">
+                    <div>
+                        <div class="kits-stats-label">Kits activos</div>
+                        <p class="kits-stats-value">@totalActivos</p>
+                    </div>
+                    <div class="kits-stats-icon">
+                        <i class="bi bi-check-circle"></i>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow-sm h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                    Con Descuento
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    @Model.Count(k => k.DescuentoPct > 0)
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="bi bi-percent fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kits-stats-card warning">
+                    <div>
+                        <div class="kits-stats-label">Con descuento</div>
+                        <p class="kits-stats-value">@totalConDescuento</p>
+                    </div>
+                    <div class="kits-stats-icon">
+                        <i class="bi bi-percent"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-info shadow-sm h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                    Valor Total
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    @Model.Sum(k => k.Total).ToString("C2", gt)
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
-                            </div>
-                        </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="kits-stats-card info">
+                    <div>
+                        <div class="kits-stats-label">Valor total</div>
+                        <p class="kits-stats-value">@totalValor.ToString("C2", gt)</p>
+                    </div>
+                    <div class="kits-stats-icon">
+                        <i class="bi bi-currency-dollar"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE KITS -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-light d-flex align-items-center py-3 border-0">
-                <i class="bi bi-list-check text-primary me-2 fs-5"></i>
-                <h5 class="mb-0 fw-semibold text-gray-800 me-3">Kits / Promociones Creados</h5>
-                <span class="badge bg-primary rounded-pill fs-6">@Model.Count()</span>
+        <!-- TABLA KITS -->
+        <div class="kits-card-wrapper">
+            <div class="kits-card-header">
+                <i class="bi bi-list-check fs-5"></i>
+                <h5 class="mb-0">Kits / Promociones Creados</h5>
+                <span class="badge-count">@Model.Count()</span>
 
-                <!-- FILTROS RÁPIDOS -->
-                <div class="ms-auto d-flex gap-2">
-                    <select class="form-select form-select-sm" style="width: auto;" id="filtroOrden">
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <small class="text-white-50 me-1">Ordenar por:</small>
+                    <select id="filtroOrden">
                         <option value="fecha-desc">Más recientes</option>
                         <option value="fecha-asc">Más antiguos</option>
                         <option value="nombre-asc">Nombre A-Z</option>
@@ -184,182 +669,184 @@
                     </select>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+
+            <div class="kits-table-container">
+                <table class="kits-table">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th class="text-center">Descuento</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Fecha creación</th>
+                            <th class="text-center" style="width:150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var kit in Model)
+                        {
                             <tr>
-                                <th class="ps-4 fw-semibold text-gray-700">ID</th>
-                                <th class="fw-semibold text-gray-700">Nombre</th>
-                                <th class="fw-semibold text-gray-700">Descripción</th>
-                                <th class="text-center fw-semibold text-gray-700">Descuento</th>
-                                <th class="text-center fw-semibold text-gray-700">Total</th>
-                                <th class="text-center fw-semibold text-gray-700">Estado</th>
-                                <th class="text-center fw-semibold text-gray-700">Fecha de creación</th>
-                                <th class="text-center fw-semibold text-gray-700" style="width:140px;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var kit in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-semibold text-muted">#@kit.IdKit</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
-                                                <i class="bi bi-tags text-primary"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-medium">@kit.Nombre</div>
-                                                <small class="text-muted">@(kit.Detalles?.Count() ?? 0) productos</small>
+                                <td class="ps-4 kits-kit-id">#@kit.IdKit</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="kits-icon-pill">
+                                            <i class="bi bi-tags"></i>
+                                        </div>
+                                        <div>
+                                            <div class="kits-kit-name">@kit.Nombre</div>
+                                            <div class="kits-kit-products">
+                                                @(kit.Detalles?.Count() ?? 0) productos
                                             </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        @if (string.IsNullOrEmpty(kit.Descripcion))
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(kit.Descripcion))
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-truncate d-inline-block"
+                                              style="max-width: 220px;"
+                                              title="@kit.Descripcion">
+                                            @kit.Descripcion
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (kit.DescuentoPct > 0)
+                                    {
+                                        <span class="badge-kits badge-kits-success">
+                                            @((kit.DescuentoPct * 100).ToString("0.##"))%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-kits badge-kits-secondary">0%</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <span class="kits-total">@kit.Total.ToString("C2", gt)</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (kit.Activo)
+                                    {
+                                        <span class="badge-kits badge-kits-success">
+                                            <i class="bi bi-check-circle me-1"></i>Activo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-kits badge-kits-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Inactivo
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center text-muted">
+                                    <small>@kit.FechaCreacion.ToString("dd/MM/yyyy")</small><br />
+                                    <small>@kit.FechaCreacion.ToString("HH:mm")</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="kits-actions">
+                                        <!-- Detalles -->
+                                        <a asp-action="Details" asp-route-id="@kit.IdKit"
+                                           class="btn btn-outline-info"
+                                           title="Ver detalles del kit">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (isAuth && isAdmin)
                                         {
-                                            <span class="text-muted">-</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-truncate d-inline-block" style="max-width: 200px;"
-                                                  title="@kit.Descripcion">
-                                                @kit.Descripcion
-                                            </span>
-                                        }
-                                    </td>
-                                    <td class="text-center">
-                                        @if (kit.DescuentoPct > 0)
-                                        {
-                                            <span class="badge bg-success rounded-pill">
-                                                @((kit.DescuentoPct * 100).ToString("0.##"))%
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-secondary rounded-pill">0%</span>
-                                        }
-                                    </td>
-                                    <td class="text-center fw-bold text-success">
-                                        @kit.Total.ToString("C2", gt)
-                                    </td>
-                                    <td class="text-center">
-                                        @if (kit.Activo)
-                                        {
-                                            <span class="badge bg-success rounded-pill">
-                                                <i class="bi bi-check-circle me-1"></i>Activo
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-danger rounded-pill">
-                                                <i class="bi bi-x-circle me-1"></i>Inactivo
-                                            </span>
-                                        }
-                                    </td>
-                                    <td class="text-center text-muted">
-                                        <small>@kit.FechaCreacion.ToString("dd/MM/yyyy")</small>
-                                        <br>
-                                        <small class="text-muted">@kit.FechaCreacion.ToString("HH:mm")</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <!-- Ver detalles -->
-                                            <a asp-action="Details" asp-route-id="@kit.IdKit"
-                                               class="btn btn-outline-info rounded-circle btn-sm"
-                                               title="Ver detalles del kit">
-                                                <i class="bi bi-eye"></i>
+                                            <!-- Editar -->
+                                            <a asp-action="Edit" asp-route-id="@kit.IdKit"
+                                               class="btn btn-outline-warning"
+                                               title="Editar kit">
+                                                <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            @if (isAuth && isAdmin)
-                                            {
-                                                <!-- Editar -->
-                                                <a asp-action="Edit" asp-route-id="@kit.IdKit"
-                                                class="btn btn-outline-warning rounded-circle btn-sm"
-                                                title="Editar kit">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </a>
-                                            }@if (isAuth && isAdmin){
-                                            <!-- Eliminar -->
-                                            <button class="btn btn-outline-danger rounded-circle btn-sm btn-eliminar-kit"
+
+                                            <!-- Cambiar estado (activar/desactivar) -->
+                                            <button class="btn btn-outline-danger btn-eliminar-kit"
                                                     data-id="@kit.IdKit"
                                                     data-nombre="@kit.Nombre"
                                                     data-activo="@kit.Activo"
                                                     title="@(kit.Activo ? "Desactivar kit" : "Activar kit")">
                                                 <i class="bi @(kit.Activo ? "bi-trash" : "bi-arrow-clockwise")"></i>
                                             </button>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- PAGINACIÓN -->
-                @if (totalPages > 1)
-                {
-                    <div class="card-footer border-0 bg-light">
-                        <nav aria-label="Paginación de kits">
-                            <ul class="pagination justify-content-center mb-0">
-                                <!-- Botón Anterior -->
-                                <li class="page-item @(pageNumber == 1 ? "disabled" : "")">
-                                    <a class="page-link" href="@Url.Action("Index", new { page = pageNumber - 1, pageSize = pageSize })" aria-label="Anterior">
-                                        <i class="bi bi-chevron-left"></i>
-                                    </a>
-                                </li>
-
-                                <!-- Números de página -->
-                                @for (int i = 1; i <= totalPages; i++)
-                                {
-                                    if (i == 1 || i == totalPages || (i >= pageNumber - 2 && i <= pageNumber + 2))
-                                    {
-                                        <li class="page-item @(i == pageNumber ? "active" : "")">
-                                            <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize = pageSize })">@i</a>
-                                        </li>
-                                    }
-                                    else if (i == pageNumber - 3 || i == pageNumber + 3)
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    }
-                                }
-
-                                <!-- Botón Siguiente -->
-                                <li class="page-item @(pageNumber == totalPages ? "disabled" : "")">
-                                    <a class="page-link" href="@Url.Action("Index", new { page = pageNumber + 1, pageSize = pageSize })" aria-label="Siguiente">
-                                        <i class="bi bi-chevron-right"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-
-                        <!-- Información de paginación -->
-                        <div class="text-center text-muted mt-2">
-                            <small>
-                                Mostrando @((pageNumber - 1) * pageSize + 1)-@Math.Min(pageNumber * pageSize, totalItems)
-                                de @totalItems kits
-                            </small>
-                        </div>
-                    </div>
-                }
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
+
+            <!-- PAGINACIÓN -->
+            @if (totalPages > 1)
+            {
+                <div class="kits-pagination-wrapper">
+                    <nav aria-label="Paginación de kits">
+                        <ul class="pagination pagination-kits justify-content-center mb-1">
+                            <!-- Anterior -->
+                            <li class="page-item @(pageNumber == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", new { page = pageNumber - 1, pageSize = pageSize })"
+                                   aria-label="Anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                if (i == 1 || i == totalPages || (i >= pageNumber - 2 && i <= pageNumber + 2))
+                                {
+                                    <li class="page-item @(i == pageNumber ? "active" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new { page = i, pageSize = pageSize })">@i</a>
+                                    </li>
+                                }
+                                else if (i == pageNumber - 3 || i == pageNumber + 3)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+
+                            <!-- Siguiente -->
+                            <li class="page-item @(pageNumber == totalPages ? "disabled" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", new { page = pageNumber + 1, pageSize = pageSize })"
+                                   aria-label="Siguiente">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div class="kits-pagination-info">
+                        Mostrando @((pageNumber - 1) * pageSize + 1)-@Math.Min(pageNumber * pageSize, totalItems)
+                        de @totalItems kits
+                    </div>
+                </div>
+            }
         </div>
     }
     else
     {
-        <div class="card shadow-sm border-0">
-            <div class="card-body text-center py-5">
-                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
-                    <i class="bi bi-box-seam text-muted fs-1"></i>
-                </div>
-                <h4 class="text-muted mb-3">No hay kits registrados</h4>
-                <p class="text-muted mb-4">Comienza creando tu primer kit o promoción para ofrecer productos combinados.</p>
-                <a asp-action="Create" class="btn btn-primary rounded-pill d-inline-flex align-items-center">
+        <div class="kits-empty">
+            <div class="kits-empty-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <h4>No hay kits registrados</h4>
+            <p>Crea tu primer kit o promoción para ofrecer paquetes atractivos a tus clientes.</p>
+            @if (isAuth && isAdmin)
+            {
+                <a asp-action="Create" class="btn-kits-primary d-inline-flex align-items-center">
                     <i class="bi bi-plus-circle me-2"></i>Crear Primer Kit
                 </a>
-            </div>
+            }
         </div>
     }
 </div>
@@ -371,37 +858,33 @@
         (function () {
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // 🔹 Sistema de notificaciones Toast
             function mostrarToast(mensaje, tipo = 'success') {
                 const toast = document.getElementById('toastNotificacion');
                 const toastMessage = document.getElementById('toast-message');
                 const toastIcon = toast.querySelector('.bi');
 
-                // Configurar color y icono según tipo
                 const config = {
-                    success: { bg: 'bg-success', icon: 'bi-check-circle' },
-                    warning: { bg: 'bg-warning', icon: 'bi-exclamation-triangle' },
-                    danger: { bg: 'bg-danger', icon: 'bi-x-circle' },
-                    info: { bg: 'bg-info', icon: 'bi-info-circle' }
+                    success: { icon: 'bi-check-circle', color: '#1cc88a' },
+                    warning: { icon: 'bi-exclamation-triangle', color: '#f6c23e' },
+                    danger: { icon: 'bi-x-circle', color: '#ff6b6b' },
+                    info: { icon: 'bi-info-circle', color: '#8B88F2' }
                 };
 
-                const { bg, icon } = config[tipo] || config.success;
+                const { icon, color } = config[tipo] || config.success;
 
-                toast.className = `toast align-items-center text-white ${bg} border-0`;
                 toastIcon.className = `bi ${icon} me-2`;
+                toastIcon.style.color = color;
                 toastMessage.textContent = mensaje;
 
                 const bsToast = new bootstrap.Toast(toast);
                 bsToast.show();
             }
 
-            // 🔹 Variables para el modal de eliminación
             let kitAEliminar = null;
             let botonEliminar = null;
 
-            // 🔹 Configurar eventos de eliminación
             document.querySelectorAll(".btn-eliminar-kit").forEach(btn => {
-                btn.addEventListener("click", function(e) {
+                btn.addEventListener("click", function (e) {
                     e.preventDefault();
 
                     const id = this.dataset.id;
@@ -411,7 +894,6 @@
                     kitAEliminar = { id, nombre, activo };
                     botonEliminar = this;
 
-                    // Configurar modal según si está activo o inactivo
                     const modalTitulo = document.getElementById('modal-eliminar-titulo');
                     const modalDescripcion = document.getElementById('modal-eliminar-descripcion');
                     const btnConfirmar = document.getElementById('btn-confirmar-eliminar');
@@ -420,34 +902,36 @@
                         modalTitulo.textContent = `¿Desactivar kit "${nombre}"?`;
                         modalDescripcion.textContent = "El kit se marcará como inactivo y no estará disponible para nuevas ventas. Esta acción se puede revertir.";
                         btnConfirmar.innerHTML = '<i class="bi bi-check-circle me-2"></i>Sí, desactivar';
+                        btnConfirmar.classList.remove('btn-success');
+                        btnConfirmar.classList.add('btn-danger');
                     } else {
                         modalTitulo.textContent = `¿Activar kit "${nombre}"?`;
-                        modalDescripcion.textContent = "El kit se marcará como activo y estará disponible para ventas.";
+                        modalDescripcion.textContent = "El kit se marcará como activo y estará disponible nuevamente.";
                         btnConfirmar.innerHTML = '<i class="bi bi-check-circle me-2"></i>Sí, activar';
+                        btnConfirmar.classList.remove('btn-danger');
+                        btnConfirmar.classList.add('btn-success');
                     }
 
-                    // Mostrar modal
                     const modal = new bootstrap.Modal(document.getElementById('modalEliminarKit'));
                     modal.show();
                 });
             });
 
-            // 🔹 Confirmar eliminación/activación
-            document.getElementById('btn-confirmar-eliminar').addEventListener('click', async function() {
+            document.getElementById('btn-confirmar-eliminar')?.addEventListener('click', async function () {
                 if (!kitAEliminar || !botonEliminar) return;
 
                 const { id, nombre, activo } = kitAEliminar;
                 const accion = activo ? 'desactivar' : 'activar';
+                const btn = this;
 
                 try {
-                    // Mostrar estado de carga
-                    this.disabled = true;
-                    this.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando...';
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Procesando...';
                     botonEliminar.disabled = true;
                     botonEliminar.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
                     const formData = new FormData();
-                    formData.append("__RequestVerificationToken", token);
+                    formData.append("__RequestVerificationToken", token || '');
                     formData.append("id", id);
 
                     const res = await fetch('@Url.Action("Delete", "Kits")', {
@@ -459,14 +943,12 @@
                         const result = await res.json();
                         if (result.success) {
                             mostrarToast(
-                                activo ? `Kit "${nombre}" desactivado correctamente` : `Kit "${nombre}" activado correctamente`,
+                                activo
+                                    ? `Kit "${nombre}" desactivado correctamente`
+                                    : `Kit "${nombre}" activado correctamente`,
                                 'success'
                             );
-
-                            // Actualizar interfaz después de un breve delay
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
+                            setTimeout(() => location.reload(), 900);
                         } else {
                             throw new Error(result.message || 'Error en la operación');
                         }
@@ -474,93 +956,28 @@
                         throw new Error('Error en la respuesta del servidor');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
-                    mostrarToast(
-                        `Error al ${accion} el kit. Por favor, intenta nuevamente.`,
-                        'danger'
-                    );
+                    console.error(error);
+                    mostrarToast(`Error al ${accion} el kit. Intenta nuevamente.`, 'danger');
 
-                    // Restaurar botones
-                    this.disabled = false;
-                    this.innerHTML = activo ?
-                        '<i class="bi bi-check-circle me-2"></i>Sí, desactivar' :
-                        '<i class="bi bi-check-circle me-2"></i>Sí, activar';
+                    btn.disabled = false;
+                    btn.innerHTML = activo
+                        ? '<i class="bi bi-check-circle me-2"></i>Sí, desactivar'
+                        : '<i class="bi bi-check-circle me-2"></i>Sí, activar';
+
                     botonEliminar.disabled = false;
                     botonEliminar.innerHTML = `<i class="bi ${activo ? 'bi-trash' : 'bi-arrow-clockwise'}"></i>`;
                 }
 
-                // Cerrar modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalEliminarKit'));
+                const modalEl = document.getElementById('modalEliminarKit');
+                const modal = bootstrap.Modal.getInstance(modalEl);
                 modal.hide();
             });
 
-            // 🔹 Filtros rápidos (simulados - deberías implementar la lógica real)
-            document.getElementById('filtroEstado')?.addEventListener('change', function() {
-                // Aquí iría la lógica para filtrar por estado
-                console.log('Filtrar por estado:', this.value);
-            });
-
-            document.getElementById('filtroOrden')?.addEventListener('change', function() {
-                // Aquí iría la lógica para ordenar
+            // FiltroOrden (placeholder para que conectes lógica server-side si quieres)
+            document.getElementById('filtroOrden')?.addEventListener('change', function () {
                 console.log('Ordenar por:', this.value);
+                // Aquí puedes implementar redirección con querystring para ordenar desde el servidor.
             });
-
         })();
     </script>
-
-    <style>
-        .table td, .table th {
-            vertical-align: middle;
-        }
-
-        .btn-sm {
-            padding: 0.375rem 0.5rem;
-            transition: all 0.15s ease-in-out;
-        }
-
-            .btn-sm:hover {
-                transform: translateY(-1px);
-            }
-
-        .card-header {
-            border-bottom: none;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-        }
-
-        .page-item.active .page-link {
-            background-color: #4e73df;
-            border-color: #4e73df;
-        }
-
-        .page-link {
-            color: #4e73df;
-        }
-
-            .page-link:hover {
-                color: #2e59d9;
-            }
-
-        .border-left-primary {
-            border-left: 0.25rem solid #4e73df !important;
-        }
-
-        .border-left-success {
-            border-left: 0.25rem solid #1cc88a !important;
-        }
-
-        .border-left-warning {
-            border-left: 0.25rem solid #f6c23e !important;
-        }
-
-        .border-left-info {
-            border-left: 0.25rem solid #36b9cc !important;
-        }
-
-        .bg-gradient-primary {
-            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-        }
-    </style>
 }

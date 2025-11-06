@@ -6,28 +6,25 @@
 
 <style>
     :root {
-        /* Paleta del módulo de Usuarios */
-        --users-primary: #123B5D;
-        --users-secondary: #1F6F8B;
-        --users-accent: #27C1A6;
-        --users-accent-soft: rgba(39, 193, 166, 0.18);
-        --users-bg: #0B1724;
-        --users-card: #111F33;
-        --users-card-soft: #172739;
-        --users-text: #E6F4FF;
-        --users-muted: #8FA3BF;
+        /* Reutilizamos la paleta global del layout / módulo usuarios */
+        --users-primary: var(--primary-blue, #1C1973);
+        --users-secondary: var(--secondary-blue, #514BF2);
+        --users-accent: var(--accent-blue, #8B88F2);
+        --users-bg: var(--dark-bg, #0D0E26);
+        --users-alt-bg: var(--alt-bg, #081C59);
+        --users-text: var(--light-text, #F0F0F7);
+        --users-muted: #A0A0CC;
         --users-radius: 0.9rem;
-        --users-border: #27415D;
+        --users-border: rgba(139, 136, 242, 0.35);
         --users-danger: #ff6b6b;
         --users-success: #35D399;
     }
 
     .users-create-theme {
         min-height: 100vh;
-        padding: 2.5rem 1rem;
-        background: radial-gradient(circle at top left, rgba(39, 193, 166, 0.06), transparent), radial-gradient(circle at bottom right, rgba(31, 111, 139, 0.18), transparent), linear-gradient(135deg, var(--users-bg) 0%, #020817 100%);
+        padding: 2.2rem 0.5rem 2.5rem;
+        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.08), transparent), radial-gradient(circle at bottom right, rgba(8, 28, 89, 0.22), transparent), linear-gradient(135deg, var(--users-bg) 0%, #050814 100%);
         display: flex;
-        align-items: flex-start;
         justify-content: center;
     }
 
@@ -38,20 +35,20 @@
 
     /* CARD PRINCIPAL */
     .users-create-card {
-        background: var(--users-card);
+        background: #11152F;
         border-radius: var(--users-radius);
         border: 1px solid var(--users-border);
-        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.68);
         overflow: hidden;
     }
 
     .users-create-header {
-        padding: 1.3rem 1.7rem;
+        padding: 1.3rem 1.8rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        background: linear-gradient(135deg, var(--users-primary) 0%, var(--users-secondary) 60%, #0f172a 100%);
-        border-bottom: 1px solid rgba(39, 193, 166, 0.28);
+        background: linear-gradient( 135deg, var(--users-primary) 0%, var(--users-secondary) 55%, #0D0E26 100% );
+        border-bottom: 1px solid rgba(139, 136, 242, 0.5);
         color: var(--users-text);
     }
 
@@ -59,7 +56,7 @@
         width: 42px;
         height: 42px;
         border-radius: 16px;
-        background: rgba(3, 10, 23, 0.35);
+        background: rgba(5, 10, 28, 0.55);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -76,7 +73,7 @@
     .users-create-subtitle {
         margin: 0;
         font-size: 0.8rem;
-        color: rgba(230, 244, 255, 0.85);
+        color: rgba(240, 240, 247, 0.85);
     }
 
     .users-create-body {
@@ -84,7 +81,7 @@
         color: var(--users-text);
     }
 
-    /* TITULOS DE SECCIONES */
+    /* TÍTULOS DE SECCIONES */
     .users-section-title {
         display: inline-flex;
         align-items: center;
@@ -103,12 +100,12 @@
 
     /* BLOQUES */
     .users-block {
-        background: var(--users-card-soft);
+        background: #15183A;
         border-radius: var(--users-radius);
         border: 1px solid var(--users-border);
-        padding: 1.1rem 1rem 0.4rem;
+        padding: 1.1rem 1rem 0.5rem;
         margin-bottom: 1.4rem;
-        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
     }
 
     .users-form-label {
@@ -125,10 +122,22 @@
             color: var(--users-accent);
         }
 
-    .users-input,
-    .users-select,
     .users-input-group-text {
-        background: rgba(9, 20, 33, 0.98);
+        background: #070b1b;
+        border-radius: 0.7rem 0 0 0.7rem;
+        border: 1px solid var(--users-border);
+        border-right: none;
+        padding: 0.6rem 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--users-accent);
+        font-size: 1rem;
+    }
+
+    .users-input,
+    .users-select {
+        background: rgba(7, 9, 25, 0.98);
         border-radius: 0.7rem;
         border: 1px solid var(--users-border);
         padding: 0.6rem 0.9rem;
@@ -137,32 +146,22 @@
         transition: all 0.22s ease;
     }
 
-    .users-input-group-text {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        border-right: none;
-        border-radius: 0.7rem 0 0 0.7rem;
-        color: var(--users-accent);
-        background: #07111d;
-    }
-
     .users-input {
-        border-radius: 0 0.7rem 0.7rem 0;
         flex: 1;
+        border-radius: 0 0.7rem 0.7rem 0;
+        border-left: none;
     }
 
         .users-input::placeholder {
-            color: rgba(143, 163, 191, 0.6);
+            color: rgba(160, 160, 204, 0.6);
         }
 
         .users-input:focus,
         .users-select:focus {
             outline: none;
-            border-color: var(--users-accent);
-            box-shadow: 0 0 0 0.13rem rgba(39, 193, 166, 0.25);
-            background: #0b1724;
+            border-color: var(--users-secondary);
+            box-shadow: 0 0 0 0.13rem rgba(81, 75, 242, 0.35);
+            background: #0D0E26;
             color: var(--users-text);
         }
 
@@ -170,31 +169,33 @@
         width: 100%;
         border-radius: 0 0.7rem 0.7rem 0;
         appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2327C1A6' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%238B88F2' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
         background-repeat: no-repeat;
         background-position: right 0.9rem center;
         background-size: 14px 10px;
+        border-left: none;
     }
 
         .users-select option {
-            background: #020817;
+            background: #050814;
             color: var(--users-text);
         }
 
     .users-password-toggle {
         border-radius: 0.7rem;
         border: 1px solid var(--users-border);
-        background: #07111d;
+        background: #070b1b;
         color: var(--users-muted);
         padding: 0.45rem 0.7rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
+        margin-left: 0.4rem;
     }
 
         .users-password-toggle:hover {
-            background: var(--users-accent-soft);
+            background: rgba(139, 136, 242, 0.14);
             color: var(--users-accent);
         }
 
@@ -224,24 +225,25 @@
             margin-bottom: 0.1rem;
         }
 
-    /* ALERTAS */
+    /* ALERTAS (integradas al tema) */
     .alert {
         border-radius: 0.75rem;
         padding: 0.6rem 0.9rem;
         font-size: 0.82rem;
         margin-top: 0.4rem;
-        box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+        border-width: 1px;
     }
 
     .alert-danger {
         background: rgba(255, 107, 107, 0.06);
-        border-color: rgba(255, 107, 107, 0.75);
+        border-color: rgba(255, 107, 107, 0.8);
         color: var(--users-danger);
     }
 
     .alert-warning {
         background: rgba(255, 193, 7, 0.06);
-        border-color: rgba(255, 193, 7, 0.75);
+        border-color: rgba(255, 193, 7, 0.8);
         color: #ffc107;
     }
 
@@ -253,11 +255,12 @@
     .users-actions {
         padding-top: 1rem;
         margin-top: 0.9rem;
-        border-top: 1px solid var(--users-border);
+        border-top: 1px solid rgba(139, 136, 242, 0.28);
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .btn-users-back {
@@ -275,9 +278,9 @@
     }
 
         .btn-users-back:hover {
-            background: rgba(6, 13, 25, 0.98);
+            background: #0D0E26;
             color: var(--users-text);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
             transform: translateY(-1px);
         }
 
@@ -307,20 +310,20 @@
         font-size: 0.88rem;
         font-weight: 600;
         border: none;
-        background: var(--users-accent);
-        color: #020817;
+        background: var(--users-secondary);
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        box-shadow: 0 10px 24px rgba(39, 193, 166, 0.45);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
         transition: all 0.22s ease;
     }
 
         .btn-users-submit:hover {
-            background: #20a98f;
-            color: #E6F4FF;
+            background: var(--users-primary);
+            color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
         }
 
     .btn:disabled {
@@ -338,11 +341,11 @@
     /* TARJETA INFO ROLES */
     .users-roles-card {
         margin-top: 1.4rem;
-        background: radial-gradient(circle at top left, rgba(39,193,166,0.16), transparent), #050814;
+        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.16), transparent), #050814;
         border-radius: var(--users-radius);
         border: 1px solid var(--users-border);
         padding: 1rem 1.2rem;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.75);
         color: var(--users-text);
     }
 
@@ -375,12 +378,13 @@
         }
 
     @@media (max-width: 576px) {
-        .users-create-body
+        .users-create-body {
+            padding: 1.5rem 1.2rem 1.2rem;
+        }
 
-    {
-        padding: 1.5rem 1.2rem 1.2rem;
-    }
-
+        .users-create-header {
+            padding: 1.1rem 1.2rem;
+        }
     }
 </style>
 
@@ -394,7 +398,9 @@
                 </div>
                 <div>
                     <h4>Registrar Nuevo Usuario</h4>
-                    <p class="users-create-subtitle">Crea una nueva cuenta con credenciales y permisos adecuados</p>
+                    <p class="users-create-subtitle">
+                        Crea una nueva cuenta con credenciales y permisos adecuados
+                    </p>
                 </div>
             </div>
 
@@ -402,18 +408,18 @@
                 <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off" id="registroForm">
                     @Html.AntiForgeryToken()
 
-                    <!-- Contenedor para mostrar errores de validación del lado cliente -->
+                    <!-- Contenedor para errores de validación JS -->
                     <div id="validationAlert" style="display:none;"></div>
 
                     <!-- INFORMACIÓN PERSONAL -->
                     <div class="users-block">
                         <div class="users-section-title">
-                            <i class="bi bi-person-badge"></i>Información Personal
+                            <i class="bi bi-person-badge"></i> Información Personal
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="NombreUsuario" class="users-form-label">
-                                    <i class="bi bi-person"></i>Nombre Completo
+                                    <i class="bi bi-person"></i> Nombre Completo
                                 </label>
                                 <div class="d-flex align-items-stretch">
                                     <span class="users-input-group-text">
@@ -430,7 +436,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Correo" class="users-form-label">
-                                    <i class="bi bi-envelope"></i>Correo Electrónico
+                                    <i class="bi bi-envelope"></i> Correo Electrónico
                                 </label>
                                 <div class="d-flex align-items-stretch">
                                     <span class="users-input-group-text">
@@ -450,12 +456,12 @@
                     <!-- SEGURIDAD Y ROL -->
                     <div class="users-block">
                         <div class="users-section-title">
-                            <i class="bi bi-shield-lock"></i>Seguridad y Permisos
+                            <i class="bi bi-shield-lock"></i> Seguridad y Permisos
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Clave" class="users-form-label">
-                                    <i class="bi bi-key"></i>Contraseña
+                                    <i class="bi bi-key"></i> Contraseña
                                 </label>
                                 <div class="d-flex align-items-stretch">
                                     <span class="users-input-group-text">
@@ -480,7 +486,7 @@
                                         <li>Mínimo 8 caracteres</li>
                                         <li>Al menos una letra mayúscula</li>
                                         <li>Al menos un número</li>
-                                        <li>Al menos un carácter especial (!#$%^&*()_+-=[]{}|;:',.<>?)</li>
+                                        <li>Al menos un carácter especial (!#$%^&amp;*()_+-=[]{}|;:',.&lt;&gt;?)</li>
                                     </ul>
                                 </div>
                                 <span asp-validation-for="Clave" class="text-danger small"></span>
@@ -488,7 +494,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label asp-for="IdRol" class="users-form-label">
-                                    <i class="bi bi-shield-check"></i>Rol del Usuario
+                                    <i class="bi bi-shield-check"></i> Rol del Usuario
                                 </label>
                                 <div class="d-flex align-items-stretch">
                                     <span class="users-input-group-text">
@@ -505,7 +511,7 @@
                         </div>
                     </div>
 
-                    <!-- MENSAJES DE ALERTA DESDE EL SERVIDOR -->
+                    <!-- MENSAJES DESDE EL SERVIDOR -->
                     @if (ViewData["Mensaje"] != null)
                     {
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -524,7 +530,7 @@
                         </div>
                     }
 
-                    <!-- BOTONES DE ACCIÓN -->
+                    <!-- BOTONES -->
                     <div class="users-actions">
                         <a asp-controller="Admin" asp-action="Usuarios"
                            class="btn-users-back"
@@ -573,7 +579,7 @@
                         <i class="bi bi-cart-check text-primary"></i>
                         <div>
                             <strong>Vendedor</strong>
-                            <p>Gestión de ventas, clientes e inventario.</p>
+                            <p>Gestión de ventas, clientes, inventario y promociones.</p>
                         </div>
                     </div>
                 </div>
@@ -596,11 +602,11 @@
                 form.noValidate = true;
 
                 form.addEventListener('submit', function (e) {
-                    // Limpiar estado anterior
                     if (validationAlert) {
                         validationAlert.style.display = 'none';
                         validationAlert.innerHTML = '';
                     }
+
                     document.querySelectorAll('.users-input, .users-select')
                         .forEach(el => el.classList.remove('is-invalid'));
 
@@ -632,7 +638,7 @@
                         e.preventDefault();
 
                         if (validationAlert) {
-                            const lista = errores.map(e => `<li>${e}</li>`).join('');
+                            const lista = errores.map(x => `<li>${x}</li>`).join('');
                             validationAlert.innerHTML = `
                                 <div class="alert alert-danger d-flex align-items-start">
                                     <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
@@ -654,10 +660,9 @@
                         return;
                     }
 
-                    // Si todo OK, deshabilitar botón y mostrar estado
                     if (submitBtn) {
                         submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Registrando...';
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Registrando...';
                     }
                 });
             }
@@ -675,6 +680,17 @@
                     passwordIcon.classList.toggle('bi-eye-slash');
                 });
             }
+
+            // Auto-ocultar alertas del servidor
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (!alert.closest('#validationAlert')) {
+                    setTimeout(() => {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    }, 5000);
+                }
+            });
         });
     </script>
 }

@@ -18,41 +18,39 @@
 
 <style>
     :root {
-        /* Paleta específica para USUARIOS (ligeramente distinta a inventario) */
-        --users-primary: #123B5D;
-        --users-secondary: #1F6F8B;
-        --users-accent: #27C1A6;
-        --users-accent-soft: rgba(39, 193, 166, 0.2);
-        --users-bg: #0B1724;
-        --users-card: #111F33;
-        --users-card-soft: #172739;
-        --users-text: #E6F4FF;
-        --users-muted: #8FA3BF;
-        --users-radius: 0.9rem;
-        --users-border: #27415D;
+        /* Aprovechamos la paleta del layout / productos */
+        --users-primary: var(--primary-blue, #1C1973);
+        --users-secondary: var(--secondary-blue, #514BF2);
+        --users-accent: var(--accent-blue, #8B88F2);
+        --users-bg: var(--dark-bg, #0D0E26);
+        --users-alt-bg: var(--alt-bg, #081C59);
+        --users-text: var(--light-text, #F0F0F7);
+        --users-radius: 0.75rem;
+        --users-border: rgba(139, 136, 242, 0.35);
+        --users-muted: #A0A0CC;
         --users-danger: #ff6b6b;
         --users-success: #35D399;
     }
 
     .users-theme {
-        background: radial-gradient(circle at top left, rgba(39, 193, 166, 0.06), transparent),
-                    radial-gradient(circle at top right, rgba(31, 111, 139, 0.18), transparent),
-                    linear-gradient(135deg, var(--users-bg) 0%, #020817 100%);
+        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.12), transparent),
+                    radial-gradient(circle at top right, rgba(139, 136, 242, 0.08), transparent),
+                    linear-gradient(135deg, var(--users-bg) 0%, #050814 100%);
         min-height: 100vh;
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 0 2rem 0;
     }
 
     /* HEADER PRINCIPAL */
     .users-header {
         background: linear-gradient(135deg, var(--users-primary) 0%, var(--users-secondary) 100%);
         border-radius: var(--users-radius);
-        padding: 1.75rem 2rem;
+        padding: 1.5rem 2rem;
         margin-bottom: 1.75rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
-        border: 1px solid rgba(39, 193, 166, 0.22);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+        border: 1px solid var(--users-accent);
         color: var(--users-text);
     }
 
@@ -63,14 +61,14 @@
     }
 
     .users-header-icon {
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
         border-radius: 50%;
-        background: rgba(3, 10, 23, 0.26);
+        background: rgba(8, 12, 32, 0.35);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         color: var(--users-accent);
     }
 
@@ -82,164 +80,162 @@
 
     .users-header p {
         margin: 0;
-        font-size: 0.85rem;
-        color: rgba(230, 244, 255, 0.8);
+        font-size: 0.86rem;
+        color: rgba(240, 240, 247, 0.8);
     }
 
     .users-header-actions .btn {
-        border-radius: 999px;
+        border-radius: var(--users-radius);
         font-weight: 600;
-        padding: 0.55rem 1.3rem;
-        font-size: 0.85rem;
+        padding: 0.55rem 1.35rem;
+        font-size: 0.86rem;
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
     }
 
     .btn-users-outline {
-        border: 1px solid rgba(230, 244, 255, 0.65);
+        border: 1px solid rgba(240, 240, 247, 0.7);
         background: transparent;
         color: var(--users-text);
         transition: all 0.25s ease;
     }
 
     .btn-users-outline:hover {
-        background: rgba(230, 244, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
         transform: translateY(-1px);
     }
 
     .btn-users-primary {
-        background: var(--users-accent);
+        background: var(--users-secondary);
         border: none;
-        color: #041019;
-        box-shadow: 0 6px 18px rgba(39, 193, 166, 0.38);
+        color: #ffffff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
         transition: all 0.25s ease;
     }
 
     .btn-users-primary:hover {
-        background: #20a98f;
+        background: var(--users-primary);
         transform: translateY(-1px);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
-        color: #e6f4ff;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+        color: #ffffff;
     }
 
     /* BARRA DE BÚSQUEDA */
     .users-search-card {
-        background: var(--users-card);
+        background: #121633;
         border-radius: var(--users-radius);
-        padding: 1.1rem 1.4rem;
-        margin-bottom: 1.5rem;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.75rem;
         border: 1px solid var(--users-border);
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
         color: var(--users-text);
     }
 
     .users-search-label {
-        font-size: 0.9rem;
+        font-size: 0.86rem;
         color: var(--users-muted);
-        margin-right: 0.4rem;
+        margin-bottom: 0.25rem;
     }
 
     .users-search-input {
-        background: rgba(9, 20, 33, 0.9);
-        border-radius: 999px;
+        background: rgba(10, 12, 34, 0.95);
+        border-radius: var(--users-radius);
         border: 1px solid var(--users-border);
         color: var(--users-text);
-        padding: 0.6rem 1.1rem;
-        width: 280px;
+        padding: 0.7rem 1rem;
+        width: 260px;
         transition: all 0.25s ease;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
     }
 
     .users-search-input::placeholder {
-        color: rgba(143, 163, 191, 0.7);
+        color: rgba(160, 160, 204, 0.7);
     }
 
     .users-search-input:focus {
         outline: none;
-        border-color: var(--users-accent);
-        box-shadow: 0 0 0 0.15rem rgba(39, 193, 166, 0.22);
-        background: #0b1724;
+        border-color: var(--users-secondary);
+        box-shadow: 0 0 0 0.16rem rgba(81, 75, 242, 0.3);
+        background: #111632;
     }
 
     .btn-users-search {
-        border-radius: 999px;
-        padding: 0.55rem 1.3rem;
+        border-radius: var(--users-radius);
+        padding: 0.7rem 1.4rem;
         font-size: 0.85rem;
         background: var(--users-secondary);
         border: 1px solid var(--users-accent);
-        color: var(--users-text);
+        color: #ffffff;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.35rem;
         transition: all 0.25s ease;
     }
 
     .btn-users-search:hover {
         background: var(--users-accent);
-        color: #041019;
-        box-shadow: 0 6px 18px rgba(39, 193, 166, 0.3);
+        color: var(--users-bg);
+        box-shadow: 0 6px 18px rgba(139, 136, 242, 0.35);
         transform: translateY(-1px);
     }
 
-    /* CARDS DE LISTAS */
+    /* CARDS CONTENEDORAS */
     .users-card {
-        background: var(--users-card);
+        background: #15183A;
         border-radius: var(--users-radius);
         border: 1px solid var(--users-border);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        margin-bottom: 1.75rem;
         overflow: hidden;
     }
 
     .users-card-header {
-        padding: 0.9rem 1.3rem;
+        padding: 0.95rem 1.4rem;
         display: flex;
         align-items: center;
         gap: 0.65rem;
-        border-bottom: 1px solid rgba(39, 193, 166, 0.16);
+        border-bottom: 1px solid rgba(139, 136, 242, 0.25);
+        color: var(--users-text);
     }
 
     .users-card-header.active {
-        background: radial-gradient(circle at left, rgba(39, 193, 166, 0.16), transparent),
-                    linear-gradient(90deg, #123B5D 0%, #132537 100%);
-        color: var(--users-text);
+        background: linear-gradient(135deg, var(--users-primary), var(--users-secondary));
     }
 
     .users-card-header.inactive {
-        background: radial-gradient(circle at left, rgba(255, 107, 107, 0.16), transparent),
-                    linear-gradient(90deg, #171923 0%, #101827 100%);
-        color: var(--users-text);
+        background: linear-gradient(135deg, #3b1b2c, #1f0f18);
     }
 
     .users-card-header h5 {
         margin: 0;
         font-weight: 600;
-        font-size: 0.98rem;
+        font-size: 0.95rem;
         text-transform: uppercase;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.55px;
     }
 
     .users-header-badge {
-        padding: 0.15rem 0.65rem;
+        padding: 0.2rem 0.7rem;
         border-radius: 999px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
+        margin-left: auto;
     }
 
     .badge-active-count {
-        background: var(--users-accent-soft);
+        background: rgba(81, 75, 242, 0.18);
+        border: 1px solid var(--users-accent);
         color: var(--users-accent);
-        border: 1px solid rgba(39, 193, 166, 0.6);
     }
 
     .badge-inactive-count {
-        background: rgba(255, 107, 107, 0.08);
-        color: #ff8a8a;
-        border: 1px solid rgba(255, 107, 107, 0.5);
+        background: rgba(255, 107, 107, 0.16);
+        border: 1px solid rgba(255, 107, 107, 0.7);
+        color: #ffb3b3;
     }
 
     .users-card-body {
@@ -254,11 +250,11 @@
 
     .users-empty i {
         font-size: 2.4rem;
-        margin-bottom: 0.5rem;
-        color: rgba(39, 193, 166, 0.38);
+        margin-bottom: 0.75rem;
+        color: rgba(139, 136, 242, 0.6);
     }
 
-    /* TABLA DE USUARIOS */
+    /* TABLA USUARIOS (alineada al estilo productos) */
     .users-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -267,57 +263,64 @@
     .users-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 0;
-        background: var(--users-card);
+        background: #15183A;
         color: var(--users-text);
-        table-layout: auto;
+        table-layout: fixed;
     }
 
     .users-table thead {
-        background: #131f30;
+        background: #1E2050;
+        position: sticky;
+        top: 0;
+        z-index: 5;
     }
 
     .users-table thead th {
-        padding: 0.8rem 0.9rem;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        padding: 0.9rem 0.9rem;
+        text-align: left;
         font-weight: 600;
-        color: var(--users-muted);
-        border-bottom: 1px solid var(--users-border);
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        letter-spacing: 0.4px;
+        color: #ffffff;
+        border-bottom: 2px solid var(--users-secondary);
         white-space: nowrap;
     }
 
+    .users-table thead th.text-center {
+        text-align: center;
+    }
+
     .users-table tbody tr {
-        transition: all 0.2s ease;
-        background: #111f33;
+        transition: all 0.25s ease;
+        background: #15183A;
     }
 
     .users-table tbody tr:nth-child(even) {
-        background: #172739;
+        background: #191C44;
     }
 
     .users-table tbody tr:hover {
-        background: rgba(31, 111, 139, 0.28);
-        box-shadow: inset 3px 0 0 var(--users-accent);
+        background: rgba(81, 75, 242, 0.16);
+        box-shadow: inset 4px 0 0 var(--users-secondary);
         transform: translateX(2px);
     }
 
     .users-table td {
-        padding: 0.75rem 0.9rem;
-        font-size: 0.86rem;
-        border-bottom: 1px solid #152234;
+        padding: 0.8rem 0.9rem;
+        border-bottom: 1px solid rgba(139, 136, 242, 0.18);
         vertical-align: middle;
+        font-size: 0.86rem;
         color: var(--users-text);
     }
 
-    .users-table td .user-id {
+    .user-id {
         font-weight: 600;
         color: var(--users-muted);
-        font-size: 0.8rem;
+        font-size: 0.78rem;
     }
 
-    .users-table td .user-name {
+    .user-name {
         display: flex;
         align-items: center;
         gap: 0.4rem;
@@ -325,13 +328,13 @@
         color: var(--users-text);
     }
 
-    .users-table td .user-name i {
+    .user-name i {
         color: var(--users-accent);
     }
 
-    .users-table td .user-email {
+    .user-email {
         color: var(--users-muted);
-        font-size: 0.82rem;
+        font-size: 0.8rem;
     }
 
     .badge-role {
@@ -339,29 +342,28 @@
         border-radius: 999px;
         font-size: 0.72rem;
         font-weight: 600;
-        letter-spacing: 0.3px;
-        border: 1px solid rgba(39, 193, 166, 0.55);
-        background: rgba(31, 111, 139, 0.16);
+        border: 1px solid var(--users-accent);
+        background: rgba(81, 75, 242, 0.12);
         color: var(--users-accent);
     }
 
     .badge-role-muted {
-        border-color: rgba(143, 163, 191, 0.6);
-        background: rgba(15, 23, 42, 0.8);
+        border-color: rgba(160, 160, 204, 0.6);
+        background: rgba(10, 11, 28, 0.9);
         color: var(--users-muted);
     }
 
-    /* Botones acciones */
+    /* ACCIONES */
     .user-actions {
         display: flex;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 0.3rem;
     }
 
     .btn-user-action {
         width: 30px;
         height: 30px;
-        border-radius: 10px;
+        border-radius: 999px;
         border: 1px solid transparent;
         display: inline-flex;
         align-items: center;
@@ -370,52 +372,53 @@
         transition: all 0.22s ease;
         background: transparent;
         color: var(--users-muted);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
     }
 
     .btn-user-edit {
-        border-color: rgba(255, 193, 7, 0.35);
+        border-color: rgba(255, 193, 7, 0.45);
         color: #ffc107;
         background: rgba(255, 193, 7, 0.06);
     }
 
     .btn-user-edit:hover {
         background: #ffc107;
-        color: #041019;
-        transform: translateY(-1px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(255, 193, 7, 0.32);
+        color: #111;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 14px rgba(255, 193, 7, 0.4);
     }
 
     .btn-user-disable {
-        border-color: rgba(255, 107, 107, 0.45);
+        border-color: rgba(255, 107, 107, 0.55);
         color: #ff6b6b;
         background: rgba(255, 107, 107, 0.06);
     }
 
     .btn-user-disable:hover {
         background: #ff6b6b;
-        color: #020817;
-        transform: translateY(-1px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(255, 107, 107, 0.35);
+        color: #111;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 14px rgba(255, 107, 107, 0.4);
     }
 
     .btn-user-enable {
-        border-color: rgba(53, 211, 153, 0.5);
+        border-color: rgba(53, 211, 153, 0.55);
         color: var(--users-success);
-        background: rgba(53, 211, 153, 0.05);
+        background: rgba(53, 211, 153, 0.06);
     }
 
     .btn-user-enable:hover {
         background: var(--users-success);
-        color: #020817;
-        transform: translateY(-1px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(53, 211, 153, 0.35);
+        color: #111;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 14px rgba(53, 211, 153, 0.4);
     }
 
     /* PAGINACIÓN */
     .users-pagination-bar {
-        padding: 0.85rem 1.1rem;
-        border-top: 1px solid var(--users-border);
-        background: #0f1b29;
+        padding: 0.85rem 1.2rem;
+        border-top: 1px solid rgba(139, 136, 242, 0.25);
+        background: #101331;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -425,36 +428,35 @@
     }
 
     .users-pagination .page-link {
-        padding: 0.25rem 0.55rem;
+        padding: 0.25rem 0.6rem;
         font-size: 0.75rem;
         border-radius: 0.4rem;
-        border: 1px solid var(--users-border);
-        background: #070F19;
+        border: 1px solid rgba(139, 136, 242, 0.5);
+        background: rgba(5, 7, 22, 0.98);
         color: var(--users-muted);
         transition: all 0.25s ease;
     }
 
     .users-pagination .page-link:hover {
-        background: var(--users-accent-soft);
+        background: rgba(81, 75, 242, 0.18);
         color: var(--users-accent);
         border-color: var(--users-accent);
     }
 
     .users-pagination .page-item.active .page-link {
-        background: var(--users-accent);
-        border-color: var(--users-accent);
-        color: #020817;
-        box-shadow: 0 4px 10px rgba(39, 193, 166, 0.35);
+        background: var(--users-secondary);
+        border-color: var(--users-secondary);
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(81, 75, 242, 0.45);
     }
 
     .users-pagination .page-item.disabled .page-link {
         opacity: 0.35;
-        background: #050910;
-        border-color: var(--users-border);
+        background: #070816;
+        border-color: rgba(139, 136, 242, 0.25);
         color: var(--users-muted);
     }
 
-    /* Utilidades */
     .text-soft-muted {
         color: var(--users-muted);
     }
@@ -488,7 +490,7 @@
     <div class="users-search-card">
         <form method="get" asp-action="Usuarios" class="row g-3 align-items-center">
             <div class="col-auto">
-                <span class="users-search-label">Buscar usuario:</span>
+                <div class="users-search-label">Buscar usuario</div>
             </div>
             <div class="col-auto">
                 <input type="text" name="q" value="@(ViewData["q"] ?? "")"
@@ -498,7 +500,7 @@
             <div class="col-auto">
                 <input type="hidden" name="pageActivos" value="1" />
                 <input type="hidden" name="pageInactivos" value="1" />
-                <button class="btn btn-users-search" type="submit">
+                <button class="btn-users-search" type="submit">
                     <i class="bi bi-search"></i><span>Buscar</span>
                 </button>
             </div>
@@ -556,7 +558,7 @@
                                             @usuario.Rol?.NombreRol
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <div class="user-actions">
                                             <!-- Editar -->
                                             <a asp-action="Editar" asp-route-id="@usuario.IdUsuario"
@@ -590,7 +592,7 @@
                             Mostrando @activos.Count() de @totalActivos usuarios
                         </div>
                         <ul class="pagination users-pagination mb-0">
-                            @* Flecha anterior *@
+                            @* Anterior *@
                             @if (pageActivos > 1)
                             {
                                 <li class="page-item">
@@ -626,12 +628,14 @@
                                                pageInactivos = pageInactivos,
                                                pageSize = pageSize
                                            })">1</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                     if (startPage > 2)
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
-                                        </li>;
+                                        </li>
+                                        ;
                                     }
                                 }
 
@@ -645,7 +649,8 @@
                                                pageInactivos = pageInactivos,
                                                pageSize = pageSize
                                            })">@i</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                 }
 
                                 if (endPage < totalPagesActivos)
@@ -654,7 +659,8 @@
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
-                                        </li>;
+                                        </li>
+                                        ;
                                     }
                                     <li class="page-item">
                                         <a class="page-link"
@@ -664,11 +670,12 @@
                                                pageInactivos = pageInactivos,
                                                pageSize = pageSize
                                            })">@totalPagesActivos</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                 }
                             }
 
-                            @* Flecha siguiente *@
+                            @* Siguiente *@
                             @if (pageActivos < totalPagesActivos)
                             {
                                 <li class="page-item">
@@ -740,7 +747,7 @@
                                             @usuario.Rol?.NombreRol
                                         </span>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <div class="user-actions">
                                             <!-- Activar -->
                                             <form asp-action="Activar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
@@ -768,7 +775,7 @@
                             Mostrando @inactivos.Count() de @totalInactivos usuarios
                         </div>
                         <ul class="pagination users-pagination mb-0">
-                            @* Flecha anterior *@
+                            @* Anterior *@
                             @if (pageInactivos > 1)
                             {
                                 <li class="page-item">
@@ -804,12 +811,14 @@
                                                pageInactivos = 1,
                                                pageSize = pageSize
                                            })">1</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                     if (startPageInactivos > 2)
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
-                                        </li>;
+                                        </li>
+                                        ;
                                     }
                                 }
 
@@ -823,7 +832,8 @@
                                                pageInactivos = i,
                                                pageSize = pageSize
                                            })">@i</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                 }
 
                                 if (endPageInactivos < totalPagesInactivos)
@@ -832,7 +842,8 @@
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
-                                        </li>;
+                                        </li>
+                                        ;
                                     }
                                     <li class="page-item">
                                         <a class="page-link"
@@ -842,11 +853,12 @@
                                                pageInactivos = totalPagesInactivos,
                                                pageSize = pageSize
                                            })">@totalPagesInactivos</a>
-                                    </li>;
+                                    </li>
+                                    ;
                                 }
                             }
 
-                            @* Flecha siguiente *@
+                            @* Siguiente *@
                             @if (pageInactivos < totalPagesInactivos)
                             {
                                 <li class="page-item">

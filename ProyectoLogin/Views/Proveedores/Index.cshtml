@@ -1,12 +1,11 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Proveedor>
+
 @{
-    // Usar las listas paginadas del ViewBag
     var activos = ViewBag.Activos as List<ProyectoLogin.Models.Proveedor>
                   ?? new List<ProyectoLogin.Models.Proveedor>();
     var inactivos = ViewBag.Inactivos as List<ProyectoLogin.Models.Proveedor>
                    ?? new List<ProyectoLogin.Models.Proveedor>();
 
-    // Variables de paginación
     var totalActivos = ViewBag.TotalActivos ?? 0;
     var totalInactivos = ViewBag.TotalInactivos ?? 0;
     var pageSize = ViewBag.PageSize ?? 5;
@@ -14,53 +13,50 @@
     var pageInactivos = ViewBag.PageInactivos ?? 1;
     var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
+
+    ViewData["Title"] = "Gestión de Proveedores";
 }
 
 <style>
     :root {
-        /* Paleta viva para Proveedores
-           Inspirada en el layout azul/morado, pero con giro turquesa/logística */
-        --prov-primary: #152C6B;
-        --prov-secondary: #1FB8A6;
-        --prov-tertiary: #32D5FF;
-        --prov-accent: #21E6A4;
-        --prov-accent-alt: #7C5CFF;
-        --prov-accent-soft: rgba(33, 230, 164, 0.18);
-        --prov-bg: #050817;
-        --prov-card: #0A1022;
-        --prov-card-soft: #0F172A;
-        --prov-text: #F4F7FF;
-        --prov-muted: #9BA4C4;
-        --prov-border: rgba(86, 108, 214, 0.55);
+        --prov-primary: #1C1973;
+        --prov-secondary: #514BF2;
+        --prov-accent: #8B88F2;
+        --prov-bg: #0D0E26;
+        --prov-card: #11133F;
+        --prov-card-alt: #15184B;
+        --prov-text: #F0F0F7;
+        --prov-muted: #A4A5D4;
+        --prov-border: #2E2C7A;
         --prov-radius: 0.9rem;
-        --prov-danger: #ff6b6b;
-        --prov-warning: #f1c40f;
+        --prov-danger: #FF6B6B;
+        --prov-success: #2ECC71;
+        --prov-warning: #F1C40F;
     }
 
     .prov-theme {
         min-height: 100vh;
-        padding: 2.5rem 1.25rem;
+        padding: 1.5rem 0 2.5rem;
         background:
-            radial-gradient(circle at top left, rgba(50, 213, 255, 0.1), transparent),
-            radial-gradient(circle at bottom right, rgba(33, 230, 164, 0.08), transparent),
-            linear-gradient(145deg, #050817 0%, #0D0E26 40%, #050817 100%);
+            radial-gradient(circle at top left, rgba(81, 75, 242, 0.06), transparent),
+            radial-gradient(circle at bottom right, rgba(28, 25, 115, 0.14), transparent),
+            linear-gradient(135deg, var(--prov-bg) 0%, #080A2E 100%);
         color: var(--prov-text);
     }
 
     /* HEADER PRINCIPAL */
     .prov-header-card {
         background:
-            radial-gradient(circle at top left, rgba(50, 213, 255, 0.16), transparent),
-            radial-gradient(circle at top right, rgba(33, 230, 164, 0.12), transparent),
-            linear-gradient(135deg, var(--prov-primary), #222A7F, #14162E);
+            radial-gradient(circle at top left, rgba(139, 136, 242, 0.16), transparent),
+            linear-gradient(135deg, var(--prov-primary), #3230A0, #15184B);
         border-radius: var(--prov-radius);
         padding: 1.4rem 1.6rem;
         margin-bottom: 1.8rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border: 1px solid rgba(124, 92, 255, 0.52);
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85);
+        border: 1px solid rgba(139, 136, 242, 0.55);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.85);
     }
 
     .prov-header-title {
@@ -74,26 +70,26 @@
         width: 50px;
         height: 50px;
         border-radius: 18px;
-        background: radial-gradient(circle, rgba(33, 230, 164, 0.22), transparent);
-        border: 1px solid rgba(50, 213, 255, 0.6);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(139, 136, 242, 0.6);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.8rem;
-        color: var(--prov-tertiary);
+        color: var(--prov-accent);
     }
 
     .prov-header-title h2 {
         margin: 0;
         font-weight: 700;
         letter-spacing: 0.03em;
-        font-size: 1.45rem;
+        font-size: 1.4rem;
     }
 
     .prov-header-subtitle {
-        margin: 0.15rem 0 0;
+        margin: 0.2rem 0 0;
         font-size: 0.8rem;
-        color: rgba(244, 247, 255, 0.8);
+        color: rgba(240, 240, 247, 0.86);
     }
 
     .prov-header-actions {
@@ -107,7 +103,7 @@
         border-radius: 999px;
         padding: 0.45rem 1.2rem;
         font-size: 0.8rem;
-        border: 1px solid rgba(244, 247, 255, 0.45);
+        border: 1px solid rgba(240, 240, 247, 0.45);
         color: var(--prov-text);
         background: transparent;
         display: inline-flex;
@@ -118,11 +114,11 @@
     }
 
     .prov-btn-outline:hover {
-        background: rgba(8, 12, 40, 0.85);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.85);
+        background: rgba(8, 10, 40, 0.96);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.9);
         transform: translateY(-1px);
-        color: var(--prov-tertiary);
-        border-color: var(--prov-tertiary);
+        color: var(--prov-accent);
+        border-color: var(--prov-accent);
     }
 
     .prov-btn-primary {
@@ -131,30 +127,30 @@
         font-size: 0.82rem;
         font-weight: 600;
         border: none;
-        background: linear-gradient(135deg, var(--prov-accent), var(--prov-accent-alt));
-        color: #050817;
+        background: linear-gradient(135deg, var(--prov-accent), var(--prov-secondary));
+        color: #0D0E26;
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        box-shadow: 0 14px 30px rgba(33, 230, 164, 0.45);
+        box-shadow: 0 14px 30px rgba(81, 75, 242, 0.55);
         transition: all 0.22s ease;
         text-decoration: none;
     }
 
     .prov-btn-primary:hover {
-        background: linear-gradient(135deg, var(--prov-accent-alt), var(--prov-accent));
-        color: var(--prov-text);
+        background: linear-gradient(135deg, var(--prov-secondary), var(--prov-accent));
+        color: #F0F0F7;
         transform: translateY(-1px);
-        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.9);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.95);
     }
 
     /* BARRA DE BÚSQUEDA */
     .prov-search-card {
         background: var(--prov-card);
         border-radius: var(--prov-radius);
-        border: 1px solid rgba(124, 92, 255, 0.26);
+        border: 1px solid rgba(139, 136, 242, 0.32);
         margin-bottom: 1.8rem;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.9);
     }
 
     .prov-search-card .card-body {
@@ -162,9 +158,10 @@
     }
 
     .prov-search-label {
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: var(--prov-tertiary);
+        color: var(--prov-accent);
+        margin-bottom: 0.2rem;
     }
 
     .prov-search-input-group {
@@ -173,22 +170,22 @@
     }
 
     .prov-input-icon {
-        background: #050817;
-        border: 1px solid rgba(86, 108, 214, 0.6);
+        background: #0A0C30;
+        border: 1px solid rgba(139, 136, 242, 0.6);
         border-right: none;
         border-radius: 0.7rem 0 0 0.7rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 42px;
-        color: var(--prov-tertiary);
+        color: var(--prov-accent);
         font-size: 0.9rem;
     }
 
     .prov-input-search {
-        background: #050817;
+        background: #050821;
         border-radius: 0 0.7rem 0.7rem 0;
-        border: 1px solid rgba(86, 108, 214, 0.6);
+        border: 1px solid rgba(139, 136, 242, 0.6);
         padding: 0.55rem 0.85rem;
         min-width: 260px;
         font-size: 0.86rem;
@@ -197,14 +194,14 @@
     }
 
     .prov-input-search::placeholder {
-        color: rgba(155, 164, 196, 0.75);
+        color: rgba(164, 165, 212, 0.75);
     }
 
     .prov-input-search:focus {
         outline: none;
         border-color: var(--prov-accent);
-        box-shadow: 0 0 0 0.12rem var(--prov-accent-soft);
-        background: #070b1c;
+        box-shadow: 0 0 0 0.12rem rgba(139, 136, 242, 0.28);
+        background: #080B30;
     }
 
     .prov-btn-search {
@@ -213,7 +210,7 @@
         padding: 0.5rem 1.3rem;
         font-size: 0.8rem;
         border: 1px solid var(--prov-accent);
-        background: #050817;
+        background: transparent;
         color: var(--prov-accent);
         display: inline-flex;
         align-items: center;
@@ -223,17 +220,17 @@
 
     .prov-btn-search:hover {
         background: var(--prov-accent);
-        color: #050817;
-        box-shadow: 0 8px 22px rgba(33, 230, 164, 0.4);
+        color: #0D0E26;
+        box-shadow: 0 8px 22px rgba(81, 75, 242, 0.45);
         transform: translateY(-1px);
     }
 
-    /* TARJETAS: ACTIVOS / INACTIVOS */
+    /* TARJETAS LISTAS */
     .prov-card {
         background: var(--prov-card);
         border-radius: var(--prov-radius);
-        border: 1px solid rgba(86, 108, 214, 0.45);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.9);
+        border: 1px solid rgba(139, 136, 242, 0.4);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.95);
         margin-bottom: 1.6rem;
         overflow: hidden;
     }
@@ -244,7 +241,7 @@
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        background: radial-gradient(circle at top left, rgba(50, 213, 255, 0.1), transparent);
+        background: linear-gradient(90deg, #11133F, #15184B);
     }
 
     .prov-card-header-left {
@@ -265,16 +262,16 @@
         border-radius: 999px;
         font-size: 0.78rem;
         font-weight: 600;
-        background: #050817;
-        color: var(--prov-tertiary);
-        border: 1px solid rgba(50, 213, 255, 0.7);
+        background: #0D0E26;
+        color: var(--prov-accent);
+        border: 1px solid rgba(139, 136, 242, 0.85);
     }
 
     .prov-btn-sort {
         border-radius: 999px;
         padding: 0.25rem 0.9rem;
         font-size: 0.72rem;
-        border: 1px solid rgba(155, 164, 196, 0.6);
+        border: 1px solid rgba(164, 165, 212, 0.6);
         background: transparent;
         color: var(--prov-muted);
         display: inline-flex;
@@ -285,9 +282,9 @@
     }
 
     .prov-btn-sort:hover {
-        background: rgba(7, 11, 30, 0.96);
-        color: var(--prov-tertiary);
-        border-color: var(--prov-tertiary);
+        background: rgba(8, 10, 40, 0.96);
+        color: var(--prov-accent);
+        border-color: var(--prov-accent);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
     }
 
@@ -302,10 +299,11 @@
         border-collapse: collapse;
         font-size: 0.82rem;
         color: var(--prov-text);
+        table-layout: fixed;
     }
 
     .prov-table thead {
-        background: linear-gradient(90deg, #080d24, #0d1630);
+        background: linear-gradient(90deg, #080B30, #11133F);
     }
 
     .prov-table thead th {
@@ -315,7 +313,7 @@
         font-size: 0.7rem;
         letter-spacing: 0.09em;
         color: var(--prov-muted);
-        border-bottom: 1px solid rgba(124, 92, 255, 0.3);
+        border-bottom: 1px solid rgba(139, 136, 242, 0.35);
         white-space: nowrap;
     }
 
@@ -325,11 +323,11 @@
     }
 
     .prov-table tbody tr:nth-child(even) {
-        background: rgba(7, 11, 26, 0.9);
+        background: rgba(8, 10, 40, 0.96);
     }
 
     .prov-table tbody tr:hover {
-        background: rgba(50, 213, 255, 0.06);
+        background: rgba(139, 136, 242, 0.08);
         transform: translateX(2px);
     }
 
@@ -337,6 +335,7 @@
         padding: 0.6rem 0.9rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         vertical-align: middle;
+        color: var(--prov-text);
     }
 
     .prov-name {
@@ -348,7 +347,7 @@
     }
 
     .prov-name i {
-        color: var(--prov-tertiary);
+        color: var(--prov-accent);
     }
 
     .prov-contact-muted {
@@ -376,8 +375,8 @@
     .prov-empty i {
         font-size: 2rem;
         margin-bottom: 0.4rem;
-        color: var(--prov-tertiary);
-        opacity: 0.8;
+        color: var(--prov-accent);
+        opacity: 0.85;
     }
 
     /* ACCIONES */
@@ -397,7 +396,7 @@
     }
 
     .prov-action-btn.edit {
-        border-color: rgba(241, 196, 15, 0.6);
+        border-color: rgba(241, 196, 15, 0.65);
         color: var(--prov-warning);
     }
 
@@ -408,24 +407,24 @@
     }
 
     .prov-action-btn.off {
-        border-color: rgba(255, 107, 107, 0.6);
+        border-color: rgba(255, 107, 107, 0.7);
         color: var(--prov-danger);
     }
 
     .prov-action-btn.off:hover {
-        background: rgba(255, 107, 107, 0.14);
+        background: rgba(255, 107, 107, 0.16);
         box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
         transform: translateY(-1px);
     }
 
     .prov-action-btn.on {
-        border-color: rgba(33, 230, 164, 0.7);
-        color: var(--prov-accent);
+        border-color: rgba(46, 204, 113, 0.7);
+        color: var(--prov-success);
     }
 
     .prov-action-btn.on:hover {
-        background: rgba(33, 230, 164, 0.14);
-        box-shadow: 0 4px 10px rgba(33, 230, 164, 0.3);
+        background: rgba(46, 204, 113, 0.14);
+        box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
         transform: translateY(-1px);
     }
 
@@ -433,7 +432,7 @@
     .prov-paging-bar {
         padding: 0.7rem 1rem;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
-        background: #050817;
+        background: #080A24;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -446,23 +445,23 @@
         padding: 0.28rem 0.55rem;
         font-size: 0.72rem;
         border-radius: 0.45rem;
-        border: 1px solid rgba(155, 164, 196, 0.8);
+        border: 1px solid rgba(164, 165, 212, 0.8);
         background: transparent;
         color: var(--prov-muted);
         transition: all 0.18s ease;
     }
 
     .prov-pagination .page-item.active .page-link {
-        background: linear-gradient(135deg, var(--prov-accent), var(--prov-accent-alt));
-        color: #050817;
+        background: linear-gradient(135deg, var(--prov-accent), var(--prov-secondary));
+        color: #0D0E26;
         border-color: transparent;
-        box-shadow: 0 4px 12px rgba(33, 230, 164, 0.45);
+        box-shadow: 0 4px 12px rgba(81, 75, 242, 0.5);
     }
 
     .prov-pagination .page-link:hover {
-        background: rgba(50, 213, 255, 0.14);
-        color: var(--prov-tertiary);
-        border-color: var(--prov-tertiary);
+        background: rgba(139, 136, 242, 0.14);
+        color: var(--prov-accent);
+        border-color: var(--prov-accent);
     }
 
     .prov-pagination .page-item.disabled .page-link {
@@ -476,16 +475,16 @@
     }
 
     .table-responsive::-webkit-scrollbar-track {
-        background: rgba(5, 8, 23, 0.9);
+        background: #080A24;
     }
 
     .table-responsive::-webkit-scrollbar-thumb {
-        background: rgba(86, 108, 214, 0.75);
+        background: rgba(46, 44, 122, 0.9);
         border-radius: 4px;
     }
 
     .table-responsive::-webkit-scrollbar-thumb:hover {
-        background: var(--prov-tertiary);
+        background: var(--prov-accent);
     }
 
     @@media (max-width: 768px) {
@@ -518,13 +517,13 @@
             <div>
                 <h2>Gestión de Proveedores</h2>
                 <p class="prov-header-subtitle">
-                    Administra tus aliados comerciales, contactos y fuentes de abastecimiento
+                    Administra tus aliados comerciales, contactos y fuentes de abastecimiento.
                 </p>
             </div>
         </div>
         <div class="prov-header-actions">
             <a href="@Url.Action("Index", "Home")" class="prov-btn-outline">
-                <i class="bi bi-arrow-left"></i> Inicio
+                <i class="bi bi-arrow-left"></i> Volver al Inicio
             </a>
             <a asp-action="Create" class="prov-btn-primary" title="Agregar nuevo proveedor">
                 <i class="bi bi-plus-circle"></i> Agregar Proveedor
@@ -537,9 +536,7 @@
         <div class="card-body">
             <form method="get" asp-action="Index" class="row g-3 align-items-center">
                 <div class="col-auto">
-                    <label class="prov-search-label">Buscar proveedor:</label>
-                </div>
-                <div class="col-auto">
+                    <label class="prov-search-label">Buscar proveedor</label>
                     <div class="prov-search-input-group">
                         <span class="prov-input-icon">
                             <i class="bi bi-search"></i>
@@ -551,7 +548,7 @@
                                placeholder="Nombre, contacto, teléfono o email del proveedor..." />
                     </div>
                 </div>
-                <div class="col-auto">
+                <div class="col-auto d-flex align-items-end">
                     <input type="hidden" name="pageActivos" value="1" />
                     <input type="hidden" name="pageInactivos" value="1" />
                     <button class="prov-btn-search" type="submit">
@@ -567,13 +564,13 @@
         <div class="prov-card-header">
             <div class="prov-card-header-left">
                 <i class="bi bi-check-circle text-success"></i>
-                <h5 class="prov-card-title">Proveedores Activos</h5>
+                <h5 class="prov-card-title mb-0">Proveedores Activos</h5>
                 <span class="prov-badge-count">@totalActivos</span>
             </div>
             <a asp-action="Index" asp-route-ordenar="true"
                class="prov-btn-sort"
                title="Ordenar alfabéticamente">
-                <i class="bi bi-sort-alpha-down"></i>A-Z
+                <i class="bi bi-sort-alpha-down"></i> A-Z
             </a>
         </div>
         <div class="card-body p-0 prov-table-wrap">
@@ -679,11 +676,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos - 1,
-                                                   pageInactivos = pageInactivos
-                                               })">
+                                               q = ViewData["q"],
+                                               ordenar = ViewBag.Ordenar,
+                                               pageActivos = pageActivos - 1,
+                                               pageInactivos = pageInactivos
+                                           })">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
@@ -704,12 +701,12 @@
                                         <li class="page-item">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = 1,
-                                                       pageInactivos = pageInactivos
-                                                   })">1</a>
-                                        </li>;
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = 1,
+                                                   pageInactivos = pageInactivos
+                                               })">1</a>
+                                        </li>
                                         if (startPage > 2)
                                         {
                                             <li class="page-item disabled">
@@ -723,11 +720,11 @@
                                         <li class="page-item @(i == pageActivos ? "active" : "")">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = i,
-                                                       pageInactivos = pageInactivos
-                                                   })">@i</a>
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = i,
+                                                   pageInactivos = pageInactivos
+                                               })">@i</a>
                                         </li>
                                     }
 
@@ -742,11 +739,11 @@
                                         <li class="page-item">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = totalPagesActivos,
-                                                       pageInactivos = pageInactivos
-                                                   })">@totalPagesActivos</a>
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = totalPagesActivos,
+                                                   pageInactivos = pageInactivos
+                                               })">@totalPagesActivos</a>
                                         </li>
                                     }
                                 }
@@ -756,11 +753,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos + 1,
-                                                   pageInactivos = pageInactivos
-                                               })">
+                                               q = ViewData["q"],
+                                               ordenar = ViewBag.Ordenar,
+                                               pageActivos = pageActivos + 1,
+                                               pageInactivos = pageInactivos
+                                           })">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
@@ -786,13 +783,13 @@
             <div class="prov-card-header">
                 <div class="prov-card-header-left">
                     <i class="bi bi-x-circle text-danger"></i>
-                    <h5 class="prov-card-title">Proveedores Inactivos</h5>
+                    <h5 class="prov-card-title mb-0">Proveedores Inactivos</h5>
                     <span class="prov-badge-count">@totalInactivos</span>
                 </div>
                 <a asp-action="Index" asp-route-ordenar="true"
                    class="prov-btn-sort"
                    title="Ordenar alfabéticamente">
-                    <i class="bi bi-sort-alpha-down"></i>A-Z
+                    <i class="bi bi-sort-alpha-down"></i> A-Z
                 </a>
             </div>
             <div class="card-body p-0 prov-table-wrap">
@@ -813,7 +810,7 @@
                             {
                                 <tr class="text-muted">
                                     <td class="ps-3">
-                                        <div class="prov-name" style="color:var(--prov-muted);">
+                                        <div class="prov-name" style="color: var(--prov-muted);">
                                             <i class="bi bi-building"></i>
                                             @p.Nombre
                                         </div>
@@ -872,11 +869,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos,
-                                                   pageInactivos = pageInactivos - 1
-                                               })">
+                                               q = ViewData["q"],
+                                               ordenar = ViewBag.Ordenar,
+                                               pageActivos = pageActivos,
+                                               pageInactivos = pageInactivos - 1
+                                           })">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
@@ -897,12 +894,12 @@
                                         <li class="page-item">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = pageActivos,
-                                                       pageInactivos = 1
-                                                   })">1</a>
-                                        </li>;
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos,
+                                                   pageInactivos = 1
+                                               })">1</a>
+                                        </li>
                                         if (startPageInactivos > 2)
                                         {
                                             <li class="page-item disabled">
@@ -916,11 +913,11 @@
                                         <li class="page-item @(i == pageInactivos ? "active" : "")">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = pageActivos,
-                                                       pageInactivos = i
-                                                   })">@i</a>
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos,
+                                                   pageInactivos = i
+                                               })">@i</a>
                                         </li>
                                     }
 
@@ -935,11 +932,11 @@
                                         <li class="page-item">
                                             <a class="page-link"
                                                href="@Url.Action("Index", new {
-                                                       q = ViewData["q"],
-                                                       ordenar = ViewBag.Ordenar,
-                                                       pageActivos = pageActivos,
-                                                       pageInactivos = totalPagesInactivos
-                                                   })">@totalPagesInactivos</a>
+                                                   q = ViewData["q"],
+                                                   ordenar = ViewBag.Ordenar,
+                                                   pageActivos = pageActivos,
+                                                   pageInactivos = totalPagesInactivos
+                                               })">@totalPagesInactivos</a>
                                         </li>
                                     }
                                 }
@@ -949,11 +946,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos,
-                                                   pageInactivos = pageInactivos + 1
-                                               })">
+                                               q = ViewData["q"],
+                                               ordenar = ViewBag.Ordenar,
+                                               pageActivos = pageActivos,
+                                               pageInactivos = pageInactivos + 1
+                                           })">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>

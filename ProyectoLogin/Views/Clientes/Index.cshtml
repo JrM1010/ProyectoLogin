@@ -1,15 +1,14 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Cliente>
 
 @using System.Security.Claims
-
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
-
 @{
-    // Variables de paginación
+    ViewData["Title"] = "Gestión de Clientes";
+
     var activos = ViewBag.Activos as List<ProyectoLogin.Models.Cliente> ?? new List<ProyectoLogin.Models.Cliente>();
     var inactivos = ViewBag.Inactivos as List<ProyectoLogin.Models.Cliente> ?? new List<ProyectoLogin.Models.Cliente>();
-    
+
     var totalActivos = ViewBag.TotalActivos ?? 0;
     var totalInactivos = ViewBag.TotalInactivos ?? 0;
     var pageSize = ViewBag.PageSize ?? 10;
@@ -22,91 +21,111 @@
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
-
 }
 
+<div class="container-fluid clientes-theme py-4">
 
-
-
-
-<div class="container-fluid">
     <!-- HEADER PRINCIPAL -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="bi bi-people-fill text-primary me-2"></i>Gestión de Clientes
-        </h2>
-        <div class="d-flex align-items-center gap-2">
-            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark">
-                <i class="bi bi-arrow-left me-1"></i>Inicio
-            </a>
-            
-                <a asp-action="Create" class="btn btn-success rounded-pill" title="Agregar nuevo cliente">
-                    <i class="bi bi-person-plus me-1"></i>Nuevo Cliente</a>
-            
+    <div class="clientes-header mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8 d-flex align-items-center gap-3 flex-wrap">
+                <div class="clientes-icon-wrapper">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1 text-white">
+                        Gestión de Clientes
+                    </h1>
+                    <p class="mb-0 clientes-header-subtitle">
+                        Administra clientes activos e inactivos con una vista clara y consistente.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex justify-content-md-end justify-content-start gap-2 flex-wrap">
+                <a href="@Url.Action("Index", "Home")"
+                   class="btn btn-outline-clientes">
+                    <i class="bi bi-arrow-left me-2"></i> Volver al Inicio
+                </a>
+
+                @if (isAuth && (isAdmin || isEmpleado))
+                {
+                    <a asp-action="Create"
+                       class="btn btn-clientes-primary"
+                       title="Agregar nuevo cliente">
+                        <i class="bi bi-person-plus me-2"></i> Nuevo Cliente
+                    </a>
+                }
+            </div>
         </div>
     </div>
 
-    <!-- MENSAJES TEMPORALES MEJORADOS -->
+    <!-- MENSAJES TEMPORALES -->
     @if (TempData["Mensaje"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+        <div class="alert alert-success alert-smart shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-5"></i>
                 <div class="flex-grow-1">
-                    <strong class="me-2">¡Éxito!</strong>@TempData["Mensaje"]
+                    <strong>¡Éxito!</strong> @TempData["Mensaje"]
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white ms-2"
+                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div class="alert alert-danger alert-smart shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-5"></i>
                 <div class="flex-grow-1">
-                    <strong class="me-2">¡Error!</strong>@TempData["Error"]
+                    <strong>¡Error!</strong> @TempData["Error"]
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white ms-2"
+                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
 
     @if (TempData["Advertencia"] != null)
     {
-        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        <div class="alert alert-warning alert-smart shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill fs-5"></i>
                 <div class="flex-grow-1">
-                    <strong class="me-2">Advertencia:</strong>@TempData["Advertencia"]
+                    <strong>Advertencia:</strong> @TempData["Advertencia"]
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white ms-2"
+                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
 
-    <!-- BARRA DE BÚSQUEDA MEJORADA -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
+    <!-- BARRA DE BÚSQUEDA -->
+    <div class="clientes-card mb-4">
+        <div class="card-body py-3">
             <form method="get" asp-action="Index" class="row g-3 align-items-center">
                 <div class="col-auto">
-                    <label class="col-form-label fw-semibold text-primary">Buscar cliente:</label>
+                    <label class="col-form-label fw-semibold text-accent">Buscar cliente</label>
                 </div>
-                <div class="col-auto">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light">
+                <div class="col-md-6 col-sm-8">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text clientes-input-addon">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control"
-                               style="width: 300px" placeholder="NIT, nombre, correo..." />
+                        <input type="text"
+                               name="q"
+                               value="@(ViewData["q"] ?? "")"
+                               class="form-control clientes-input"
+                               placeholder="NIT, nombre, correo..." />
                     </div>
                 </div>
                 <div class="col-auto">
                     <input type="hidden" name="pageActivos" value="1" />
                     <input type="hidden" name="pageInactivos" value="1" />
-                    <button class="btn btn-primary rounded-pill" type="submit">
-                        <i class="bi bi-search me-1"></i>Buscar
+                    <button class="btn btn-clientes-primary btn-sm clientes-btn-pill" type="submit">
+                        <i class="bi bi-search me-1"></i> Buscar
                     </button>
                 </div>
             </form>
@@ -114,229 +133,231 @@
     </div>
 
     <!-- CLIENTES ACTIVOS -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-success text-white d-flex align-items-center">
-            <i class="bi bi-person-check fs-5 me-2"></i>
-            <h5 class="mb-0 me-2">Clientes Activos</h5>
-            <span class="badge bg-light text-success fs-6">@totalActivos</span>
+    <div class="clientes-card mb-4">
+        <div class="clientes-card-header d-flex align-items-center">
+            <i class="bi bi-person-check fs-5 me-2 text-success"></i>
+            <h5 class="mb-0 me-2 text-white">Clientes Activos</h5>
+            <span class="badge clientes-badge">@totalActivos</span>
         </div>
+
         <div class="card-body p-0">
             @if (!activos.Any())
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-people fs-1 mb-2"></i>
-                    <p class="mb-0">No hay clientes activos</p>
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <h5 class="mb-1">No hay clientes activos registrados</h5>
+                    <p class="mb-0">Agrega nuevos clientes para comenzar a registrar ventas.</p>
                 </div>
             }
             else
             {
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table clientes-table mb-0 align-middle clientes-table-activos">
+                        <thead>
                             <tr>
                                 <th class="ps-3">NIT</th>
                                 <th>Nombre</th>
                                 <th>Correo</th>
                                 <th>Dirección</th>
-                                @if (isAuth && isAdmin){
-                                <th class="text-center">Acciones</th>
+                                @if (isAuth && isAdmin)
+                                {
+                                    <th class="text-center">Acciones</th>
                                 }
-                                </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach (var c in activos)
                             {
                                 <tr>
                                     <td class="ps-3 fw-semibold">
-                                        <span class="badge bg-primary">@c.Nit</span>
+                                        <span class="badge clientes-badge-soft">@c.Nit</span>
                                     </td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-person-circle text-primary me-2"></i>
-                                            @c.Nombres @c.Apellidos
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-person-circle text-accent"></i>
+                                            <span class="text-white">
+                                                @c.Nombres @c.Apellidos
+                                            </span>
                                         </div>
                                     </td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(c.Correo))
                                         {
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-envelope text-muted me-2"></i>
-                                                <a href="mailto:@c.Correo" class="text-decoration-none">@c.Correo</a>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-envelope text-muted"></i>
+                                                <a href="mailto:@c.Correo" class="clientes-link">@c.Correo</a>
                                             </div>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">-</span>
+                                            <span class="text-muted-small">-</span>
                                         }
                                     </td>
-                                    <td>@(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)</td>
                                     <td>
-                                        <div class="d-flex justify-content-center gap-1">
-                                           
-                                            @if (isAuth && isAdmin)
-                                            {
+                                        @(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)
+                                    </td>
+
+                                    @if (isAuth && isAdmin)
+                                    {
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-1">
                                                 <!-- Editar -->
-                                                <a asp-action="Edit" asp-route-id="@c.IdCliente"
-                                                class="btn btn-outline-warning rounded-circle btn-sm" title="Editar cliente">
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@c.IdCliente"
+                                                   class="btn btn-outline-warning btn-sm rounded-circle clientes-action-btn"
+                                                   title="Editar cliente">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
-                                            }
-                                            
-                                             
-                                            <!-- Desactivar -->
-                                            <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
 
-                                                @if (isAuth && isAdmin){
-                                                <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm"
-                                                        title="Desactivar cliente"
-                                                        onclick="return confirm('¿Estás seguro de desactivar a @c.Nombres @c.Apellidos?')">
-                                                    <i class="bi bi-person-dash"></i>
-                                                </button>
-                                                }
-                                            </form>
-                                        </div>
-                                    </td>
+                                                <!-- Desactivar (confirm personalizado) -->
+                                                <form asp-action="ToggleActivo"
+                                                      asp-route-id="@c.IdCliente"
+                                                      method="post"
+                                                      class="d-inline clientes-confirm-form"
+                                                      data-mensaje="¿Desactivar a @c.Nombres @c.Apellidos?">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="button"
+                                                            class="btn btn-outline-danger btn-sm rounded-circle clientes-action-btn clientes-confirm-trigger"
+                                                            title="Desactivar cliente">
+                                                        <i class="bi bi-person-dash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN CLIENTES ACTIVOS - DISEÑO DISIMULADO -->
+                <!-- PAGINACIÓN ACTIVOS -->
                 @if (totalPagesActivos > 1)
                 {
-                    <div class="p-3 border-top bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="text-muted small">
-                                Página @pageActivos de @totalPagesActivos • 
-                                Mostrando @activos.Count() de @totalActivos clientes
-                            </div>
-                            <div class="pagination-container">
-                                <ul class="pagination pagination-sm mb-0">
-                                    <!-- Flecha anterior -->
-                                    @if (pageActivos > 1)
-                                    {
-                                        <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos - 1, 
-                                                   pageInactivos = pageInactivos, 
-                                                   pageSize = pageSize 
-                                               })">
-                                                <i class="bi bi-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                    }
-                                    else
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                        </li>
-                                    }
-
-                                    <!-- Números de página - máximo 5 páginas visibles -->
-                                    @{
-                                        int startPage = Math.Max(1, pageActivos - 2);
-                                        int endPage = Math.Min(totalPagesActivos, pageActivos + 2);
-                                        
-                                        if (startPage > 1)
-                                        {
-                                            <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = 1, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">1</a>
-                                            </li>
-                                            if (startPage > 2)
-                                            {
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            }
-                                        }
-
-                                        for (int i = startPage; i <= endPage; i++)
-                                        {
-                                            <li class="page-item @(i == pageActivos ? "active" : "")">
-                                                <a class="page-link"
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = i, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@i</a>
-                                            </li>
-                                        }
-
-                                        if (endPage < totalPagesActivos)
-                                        {
-                                            if (endPage < totalPagesActivos - 1)
-                                            {
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            }
-                                            <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = totalPagesActivos, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@totalPagesActivos</a>
-                                            </li>
-                                        }
-                                    }
-
-                                    <!-- Flecha siguiente -->
-                                    @if (pageActivos < totalPagesActivos)
-                                    {
-                                        <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos + 1, 
-                                                   pageInactivos = pageInactivos, 
-                                                   pageSize = pageSize 
-                                               })">
-                                                <i class="bi bi-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    }
-                                    else
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
+                    <div class="clientes-pagination-bar">
+                        <div class="text-muted-small">
+                            Página @pageActivos de @totalPagesActivos •
+                            Mostrando @activos.Count() de @totalActivos clientes
                         </div>
+                        <ul class="pagination pagination-sm mb-0 clientes-pagination">
+                            @if (pageActivos > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new {
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos - 1,
+                                            pageInactivos = pageInactivos,
+                                            pageSize = pageSize
+                                       })">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                </li>
+                            }
+
+                            @{
+                                int startPage = Math.Max(1, pageActivos - 2);
+                                int endPage = Math.Min(totalPagesActivos, pageActivos + 2);
+
+                                if (startPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = 1,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                           })">1</a>
+                                    </li>
+                                    if (startPage > 2)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                }
+
+                                for (int i = startPage; i <= endPage; i++)
+                                {
+                                    <li class="page-item @(i == pageActivos ? "active" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = i,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                           })">@i</a>
+                                    </li>
+                                }
+
+                                if (endPage < totalPagesActivos)
+                                {
+                                    if (endPage < totalPagesActivos - 1)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = totalPagesActivos,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                           })">@totalPagesActivos</a>
+                                    </li>
+                                }
+                            }
+
+                            @if (pageActivos < totalPagesActivos)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new {
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos + 1,
+                                            pageInactivos = pageInactivos,
+                                            pageSize = pageSize
+                                       })">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                </li>
+                            }
+                        </ul>
                     </div>
                 }
             }
         </div>
     </div>
 
-    <!-- CLIENTES INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
-    @if (totalInactivos > 0)
+    <!-- CLIENTES INACTIVOS -->
+    @if (totalInactivos > 0 && isAuth && isAdmin)
     {
-        @if (isAuth && isAdmin){
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white d-flex align-items-center">
-                <i class="bi bi-person-x fs-5 me-2"></i>
-                <h5 class="mb-0 me-2">Clientes Inactivos</h5>
-                <span class="badge bg-light text-secondary fs-6">@totalInactivos</span>
+        <div class="clientes-card">
+            <div class="clientes-card-header-secondary d-flex align-items-center">
+                <i class="bi bi-person-x fs-5 me-2 text-warning"></i>
+                <h5 class="mb-0 me-2 text-white">Clientes Inactivos</h5>
+                <span class="badge clientes-badge">@totalInactivos</span>
             </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table clientes-table mb-0 align-middle clientes-table-inactivos">
+                        <thead>
                             <tr>
                                 <th class="ps-3">NIT</th>
                                 <th>Nombre</th>
@@ -348,38 +369,45 @@
                         <tbody>
                             @foreach (var c in inactivos)
                             {
-                                <tr class="text-muted">
+                                <tr>
                                     <td class="ps-3 fw-semibold">
-                                        <span class="badge bg-secondary">@c.Nit</span>
+                                        <span class="badge clientes-badge-muted">@c.Nit</span>
                                     </td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-person-circle me-2"></i>
-                                            @c.Nombres @c.Apellidos
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-person-circle text-muted"></i>
+                                            <span class="text-muted-small">
+                                                @c.Nombres @c.Apellidos
+                                            </span>
                                         </div>
                                     </td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(c.Correo))
                                         {
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-envelope me-2"></i>
-                                                @c.Correo
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-envelope text-muted"></i>
+                                                <span class="text-muted-small">@c.Correo</span>
                                             </div>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">-</span>
+                                            <span class="text-muted-small">-</span>
                                         }
                                     </td>
-                                    <td>@(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)</td>
-                                    <td>
+                                    <td class="text-muted-small">
+                                        @(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)
+                                    </td>
+                                    <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
-                                            <!-- Activar -->
-                                            <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post" class="d-inline">
+                                            <form asp-action="ToggleActivo"
+                                                  asp-route-id="@c.IdCliente"
+                                                  method="post"
+                                                  class="d-inline clientes-confirm-form"
+                                                  data-mensaje="¿Activar a @c.Nombres @c.Apellidos?">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-success rounded-circle btn-sm"
-                                                        title="Activar cliente"
-                                                        onclick="return confirm('¿Estás seguro de activar a @c.Nombres @c.Apellidos?')">
+                                                <button type="button"
+                                                        class="btn btn-outline-success btn-sm rounded-circle clientes-action-btn clientes-confirm-trigger"
+                                                        title="Activar cliente">
                                                     <i class="bi bi-person-check"></i>
                                                 </button>
                                             </form>
@@ -391,259 +419,556 @@
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN CLIENTES INACTIVOS - DISEÑO DISIMULADO -->
+                <!-- PAGINACIÓN INACTIVOS -->
                 @if (totalPagesInactivos > 1)
                 {
-                    <div class="p-3 border-top bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="text-muted small">
-                                Página @pageInactivos de @totalPagesInactivos • 
-                                Mostrando @inactivos.Count() de @totalInactivos clientes
-                            </div>
-                            <div class="pagination-container">
-                                <ul class="pagination pagination-sm mb-0">
-                                    <!-- Flecha anterior -->
-                                    @if (pageInactivos > 1)
-                                    {
-                                        <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos, 
-                                                   pageInactivos = pageInactivos - 1, 
-                                                   pageSize = pageSize 
-                                               })">
-                                                <i class="bi bi-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                    }
-                                    else
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                        </li>
-                                    }
-
-                                    <!-- Números de página - máximo 5 páginas visibles -->
-                                    @{
-                                        int startPageInactivos = Math.Max(1, pageInactivos - 2);
-                                        int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
-                                        
-                                        if (startPageInactivos > 1)
-                                        {
-                                            <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = 1, 
-                                                       pageSize = pageSize 
-                                                   })">1</a>
-                                            </li>
-                                            if (startPageInactivos > 2)
-                                            {
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            }
-                                        }
-
-                                        for (int i = startPageInactivos; i <= endPageInactivos; i++)
-                                        {
-                                            <li class="page-item @(i == pageInactivos ? "active" : "")">
-                                                <a class="page-link"
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = i, 
-                                                       pageSize = pageSize 
-                                                   })">@i</a>
-                                            </li>
-                                        }
-
-                                        if (endPageInactivos < totalPagesInactivos)
-                                        {
-                                            if (endPageInactivos < totalPagesInactivos - 1)
-                                            {
-                                                <li class="page-item disabled">
-                                                    <span class="page-link">...</span>
-                                                </li>
-                                            }
-                                            <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = totalPagesInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@totalPagesInactivos</a>
-                                            </li>
-                                        }
-                                    }
-
-                                    <!-- Flecha siguiente -->
-                                    @if (pageInactivos < totalPagesInactivos)
-                                    {
-                                        <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos, 
-                                                   pageInactivos = pageInactivos + 1, 
-                                                   pageSize = pageSize 
-                                               })">
-                                                <i class="bi bi-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    }
-                                    else
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
+                    <div class="clientes-pagination-bar">
+                        <div class="text-muted-small">
+                            Página @pageInactivos de @totalPagesInactivos •
+                            Mostrando @inactivos.Count() de @totalInactivos clientes
                         </div>
+                        <ul class="pagination pagination-sm mb-0 clientes-pagination">
+                            @if (pageInactivos > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new {
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos - 1,
+                                            pageSize = pageSize
+                                       })">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                </li>
+                            }
+
+                            @{
+                                int startPageInactivos = Math.Max(1, pageInactivos - 2);
+                                int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
+
+                                if (startPageInactivos > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = 1,
+                                                pageSize = pageSize
+                                           })">1</a>
+                                    </li>
+                                    if (startPageInactivos > 2)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                }
+
+                                for (int i = startPageInactivos; i <= endPageInactivos; i++)
+                                {
+                                    <li class="page-item @(i == pageInactivos ? "active" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = i,
+                                                pageSize = pageSize
+                                           })">@i</a>
+                                    </li>
+                                }
+
+                                if (endPageInactivos < totalPagesInactivos)
+                                {
+                                    if (endPageInactivos < totalPagesInactivos - 1)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new {
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = totalPagesInactivos,
+                                                pageSize = pageSize
+                                           })">@totalPagesInactivos</a>
+                                    </li>
+                                }
+                            }
+
+                            @if (pageInactivos < totalPagesInactivos)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new {
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos + 1,
+                                            pageSize = pageSize
+                                       })">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                </li>
+                            }
+                        </ul>
                     </div>
                 }
             </div>
         </div>
-        }
     }
 </div>
 
+<!-- MODAL CONFIRM CUSTOM -->
+<div id="clientesConfirm" class="clientes-confirm d-none">
+    <div class="clientes-confirm-box">
+        <h6 class="mb-2 text-white">
+            <i class="bi bi-question-circle me-1"></i> Confirmar acción
+        </h6>
+        <p id="clientesConfirmMessage" class="mb-3 text-muted-small"></p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button"
+                    class="btn btn-sm clientes-btn-soft"
+                    id="clientesConfirmCancel">Cancelar</button>
+            <button type="button"
+                    class="btn btn-sm btn-clientes-primary clientes-btn-pill"
+                    id="clientesConfirmOk">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <style>
-    .table td {
+    :root {
+        --primary-blue: #1C1973;
+        --secondary-blue: #514BF2;
+        --accent-blue: #8B88F2;
+        --dark-bg: #0D0E26;
+        --alt-bg: #081C59;
+        --light-text: #F0F0F7;
+        --muted-text: #A4A5D4;
+        --radius: 0.75rem;
+    }
+
+    .clientes-theme {
+        min-height: 100vh;
+        background:
+            radial-gradient(circle at top left, rgba(81,75,242,0.14), transparent),
+            radial-gradient(circle at top right, rgba(139,136,242,0.08), transparent),
+            linear-gradient(180deg, #0D0E26, #040611);
+        color: var(--light-text);
+    }
+
+    .clientes-header {
+        background: linear-gradient(135deg, var(--alt-bg), var(--primary-blue));
+        border-radius: var(--radius);
+        padding: 1.5rem 1.75rem;
+        border: 1px solid rgba(139,136,242,0.35);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+    }
+
+    .clientes-header-subtitle {
+        color: var(--muted-text);
+        font-size: 0.85rem;
+    }
+
+    .clientes-icon-wrapper {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 0, var(--accent-blue), var(--primary-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        box-shadow: 0 5px 16px rgba(0,0,0,0.55);
+        font-size: 1.4rem;
+    }
+
+    .clientes-card {
+        background: rgba(8, 28, 89, 0.97);
+        border-radius: var(--radius);
+        border: 1px solid rgba(81,75,242,0.24);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        overflow: hidden;
+    }
+
+    .clientes-card-header {
+        background: linear-gradient(90deg, rgba(28,25,115,0.98), rgba(81,75,242,0.92));
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(139,136,242,0.35);
+    }
+
+    .clientes-card-header-secondary {
+        background: linear-gradient(90deg, rgba(24,24,48,0.98), rgba(8,28,89,0.98));
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(139,136,242,0.25);
+    }
+
+    .clientes-badge,
+    .clientes-badge-soft,
+    .clientes-badge-muted {
+        border-radius: 999px;
+        font-size: 0.72rem;
+        padding: 0.18rem 0.6rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+    }
+
+    .clientes-badge {
+        background-color: #F0F0F7;
+        color: var(--primary-blue);
+        font-weight: 600;
+    }
+
+    .clientes-badge-soft {
+        background-color: rgba(81,75,242,0.18);
+        color: var(--accent-blue);
+    }
+
+    .clientes-badge-muted {
+        background-color: rgba(255,255,255,0.06);
+        color: var(--muted-text);
+    }
+
+    .text-muted-small {
+        color: var(--muted-text);
+        font-size: 0.8rem;
+    }
+
+    /* Tablas (override completo para evitar fondo blanco) */
+    .clientes-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: transparent !important;
+        color: var(--light-text);
+    }
+
+    .clientes-table thead {
+        background-color: #050A23;
+    }
+
+    .clientes-table thead th {
+        color: var(--muted-text);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid rgba(139,136,242,0.35) !important;
+        padding-top: 0.6rem;
+        padding-bottom: 0.45rem;
+        background-color: transparent;
+    }
+
+    .clientes-table tbody tr {
+        background-color: #090F2D !important;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s ease;
+    }
+
+    .clientes-table tbody tr:nth-child(even) {
+        background-color: #060A22 !important;
+    }
+
+    .clientes-table-activos tbody tr:hover {
+        background:
+            radial-gradient(circle at 0 0, rgba(81,75,242,0.25), transparent),
+            #050918;
+        transform: translateY(-1px);
+    }
+
+    .clientes-table-inactivos tbody tr {
+        opacity: 0.9;
+    }
+
+    .clientes-table-inactivos tbody tr:hover {
+        background:
+            radial-gradient(circle at 0 0, rgba(255,193,7,0.18), transparent),
+            #050918;
+        transform: translateY(-1px);
+    }
+
+    .clientes-table td {
+        color: var(--light-text);
         vertical-align: middle;
+        font-size: 0.86rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        background-color: transparent;
     }
 
-    .btn-sm {
-        padding: 0.375rem 0.5rem;
+    .clientes-link {
+        color: var(--accent-blue);
+        text-decoration: none;
+        font-size: 0.82rem;
     }
 
-    .card-header {
-        border-bottom: none;
+    .clientes-link:hover {
+        color: #ffffff;
+        text-decoration: underline;
     }
 
-    a.text-decoration-none:hover {
-        text-decoration: underline !important;
-    }
-
-    /* Estilos mejorados para las alertas */
-    .alert {
+    /* Botones */
+    .btn-clientes-primary {
+        background: var(--secondary-blue);
+        color: #fff;
         border: none;
-        border-left: 4px solid;
+        border-radius: var(--radius);
+        padding: 0.55rem 1.3rem;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+        transition: all 0.25s ease;
     }
 
-    .alert-success {
-        border-left-color: #198754;
-        background: linear-gradient(135deg, #d1e7dd 0%, #f8f9fa 100%);
+    .btn-clientes-primary:hover {
+        background: var(--primary-blue);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+        color: #fff;
     }
 
-    .alert-danger {
-        border-left-color: #dc3545;
-        background: linear-gradient(135deg, #f8d7da 0%, #f8f9fa 100%);
+    .btn-outline-clientes {
+        border-radius: var(--radius);
+        border: 1px solid rgba(139,136,242,0.6);
+        color: var(--accent-blue);
+        padding: 0.55rem 1.2rem;
+        font-weight: 500;
+        background-color: transparent;
+        transition: all 0.25s ease;
     }
 
-    .alert-warning {
-        border-left-color: #ffc107;
-        background: linear-gradient(135deg, #fff3cd 0%, #f8f9fa 100%);
+    .btn-outline-clientes:hover {
+        background-color: rgba(139,136,242,0.16);
+        color: #fff;
     }
 
-    /* Estilos para la paginación disimulada */
-    .pagination-container {
-        background: transparent;
+    .clientes-btn-pill {
+        border-radius: 999px;
     }
 
-    .pagination-sm .page-link {
-        padding: 0.25rem 0.5rem;
+    .clientes-btn-soft {
+        border-radius: 999px;
+        border: 1px solid rgba(240,240,247,0.35);
+        color: var(--light-text);
+        background-color: transparent;
+        padding-inline: 0.9rem;
+    }
+
+    .clientes-btn-soft:hover {
+        background-color: rgba(240,240,247,0.08);
+    }
+
+    .clientes-action-btn {
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-width: 1px;
         font-size: 0.75rem;
-        border: 1px solid #dee2e6;
-        color: #6c757d;
-        background: white;
     }
 
-    .pagination-sm .page-item.active .page-link {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
+    .clientes-input-addon {
+        background: #050A23;
+        border: 1px solid rgba(81,75,242,0.5);
+        color: var(--accent-blue);
     }
 
-    .pagination-sm .page-link:hover {
-        background-color: #e9ecef;
-        border-color: #dee2e6;
-        color: #495057;
+    .clientes-input {
+        background: #030618;
+        border: 1px solid rgba(81,75,242,0.5);
+        color: var(--light-text);
+        font-size: 0.85rem;
     }
 
-    .pagination-sm .page-item.disabled .page-link {
-        color: #adb5bd;
-        background-color: white;
-        border-color: #dee2e6;
+    .clientes-input::placeholder {
+        color: var(--muted-text);
     }
 
-    .bg-light {
-        background-color: #f8f9fa !important;
+    .clientes-input:focus {
+        box-shadow: 0 0 0 0.15rem rgba(81,75,242,0.35);
+        border-color: var(--secondary-blue);
+        background-color: #030618;
+    }
+
+    /* Alertas */
+    .alert-smart {
+        border-radius: var(--radius);
+        border-left: 4px solid var(--accent-blue);
+        background: radial-gradient(circle at 0 0,
+                    rgba(81,75,242,0.18),
+                    rgba(3,6,24,0.98));
+        color: var(--light-text);
+        font-size: 0.83rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success.alert-smart { border-left-color: #2ECC71; }
+    .alert-danger.alert-smart { border-left-color: #FF6B6B; }
+    .alert-warning.alert-smart { border-left-color: #FFC107; }
+
+    /* Paginación */
+    .clientes-pagination-bar {
+        padding: 0.6rem 1rem;
+        border-top: 1px solid rgba(139,136,242,0.22);
+        background: #020410;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .clientes-pagination .page-link {
+        background-color: transparent;
+        border-radius: 999px !important;
+        border: 1px solid rgba(139,136,242,0.35);
+        color: var(--muted-text);
+        padding: 0.15rem 0.55rem;
+        font-size: 0.72rem;
+        transition: all 0.2s ease;
+    }
+
+    .clientes-pagination .page-item.active .page-link {
+        background-color: var(--secondary-blue);
+        color: #fff;
+        border-color: var(--secondary-blue);
+    }
+
+    .clientes-pagination .page-link:hover {
+        background-color: rgba(81,75,242,0.24);
+        color: #fff;
+    }
+
+    .clientes-pagination .page-item.disabled .page-link {
+        opacity: 0.35;
+        border-color: rgba(139,136,242,0.16);
+    }
+
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+        color: var(--muted-text);
+    }
+
+    .empty-state i {
+        font-size: 2.4rem;
+        margin-bottom: 0.5rem;
+        color: var(--accent-blue);
+        opacity: 0.9;
+    }
+
+    /* Confirm personalizado */
+    .clientes-confirm {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .clientes-confirm-box {
+        background: rgba(5, 10, 35, 0.98);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(81,75,242,0.6);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.7);
+        max-width: 320px;
+        width: 100%;
+    }
+
+    .clientes-confirm.d-none {
+        display: none !important;
+    }
+
+    .text-accent {
+        color: var(--accent-blue);
+    }
+
+    @@media (max-width: 768px) {
+        .clientes-pagination-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .clientes-header {
+            padding: 1.1rem 1.1rem;
+        }
     }
 </style>
 
 @section Scripts {
     <script>
-        // Auto-ocultar alertas después de 5 segundos con animación mejorada
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-
-            alerts.forEach(alert => {
-                // Crear instancia de Bootstrap Alert
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-ocultar alertas
+            document.querySelectorAll('.alert-smart').forEach(alert => {
                 const bsAlert = new bootstrap.Alert(alert);
-
-                // Auto-ocultar después de 5 segundos
                 setTimeout(() => {
-                    if (alert.parentNode) {
-                        bsAlert.close();
-                    }
+                    if (alert.parentNode) bsAlert.close();
                 }, 5000);
-
-                // Efecto de entrada mejorado
-                alert.style.transform = 'translateX(-20px)';
-                alert.style.opacity = '0';
-
-                setTimeout(() => {
-                    alert.style.transition = 'all 0.3s ease-out';
-                    alert.style.transform = 'translateX(0)';
-                    alert.style.opacity = '1';
-                }, 100);
             });
 
-            // Smooth scroll para mensajes si hay muchos elementos
-            if (alerts.length > 0 && window.location.hash === '') {
-                alerts[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-
-            // Focus en el campo de búsqueda al cargar
+            // Focus en búsqueda
             const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
-        });
 
-        // Mejorar las confirmaciones de acciones
-        function confirmarAccion(accion, nombreCliente) {
-            return confirm(`¿Estás seguro de que deseas ${accion} a ${nombreCliente}?`);
-        }
+            // Confirm personalizado
+            const overlay = document.getElementById('clientesConfirm');
+            const msgEl = document.getElementById('clientesConfirmMessage');
+            const btnCancel = document.getElementById('clientesConfirmCancel');
+            const btnOk = document.getElementById('clientesConfirmOk');
+            let formToSubmit = null;
 
-        // Asignar eventos mejorados a los botones de confirmación
-        document.querySelectorAll('button[onclick*="confirm"]').forEach(button => {
-            const originalOnClick = button.getAttribute('onclick');
-            if (originalOnClick) {
-                button.removeAttribute('onclick');
-                button.addEventListener('click', function(e) {
-                    const match = originalOnClick.match(/confirm\('([^']+)'\)/);
-                    if (match) {
-                        if (!confirm(match[1])) {
-                            e.preventDefault();
-                        }
-                    }
+            document.querySelectorAll('.clientes-confirm-trigger').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const form = this.closest('.clientes-confirm-form');
+                    if (!form) return;
+
+                    formToSubmit = form;
+                    const mensaje = form.getAttribute('data-mensaje') || '¿Confirmar la acción seleccionada?';
+                    msgEl.textContent = mensaje;
+                    overlay.classList.remove('d-none');
                 });
-            }
+            });
+
+            btnCancel.addEventListener('click', function () {
+                overlay.classList.add('d-none');
+                formToSubmit = null;
+            });
+
+            btnOk.addEventListener('click', function () {
+                if (formToSubmit) {
+                    formToSubmit.submit();
+                }
+                overlay.classList.add('d-none');
+                formToSubmit = null;
+            });
+
+            // Cerrar al hacer clic fuera
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    overlay.classList.add('d-none');
+                    formToSubmit = null;
+                }
+            });
         });
     </script>
 }

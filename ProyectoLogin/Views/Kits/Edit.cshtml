@@ -2,8 +2,10 @@
 @using System.Security.Claims
 
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
 @{
-    ViewData["Title"] = "Editar Kit";
+    ViewData["Title"] = "Editar Kit / Promoción";
+
     var productos = (ViewBag.Productos as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
     var detalles = Model?.Detalles ?? Enumerable.Empty<dynamic>();
     var gt = new System.Globalization.CultureInfo("es-GT");
@@ -12,373 +14,789 @@
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
-
-
 }
-@if (isAuth && isAdmin){
-<div class="container-fluid py-4">
-    <!-- HEADER PRINCIPAL -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <div class="d-flex align-items-center">
-            <div class="bg-gradient-warning rounded-circle p-3 me-3">
-                <i class="bi bi-pencil-square text-white fs-4"></i>
+
+@if (isAuth && isAdmin)
+{
+    <div class="container-fluid kits-edit-theme py-4">
+        <!-- HEADER -->
+        <div class="kits-edit-header">
+            <div class="kits-edit-header-title">
+                <div class="kits-edit-header-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div>
+                    <h1>Editar Kit / Promoción</h1>
+                    <p>Actualiza los datos, productos y condiciones de tu kit activo sin perder visibilidad.</p>
+                </div>
             </div>
-            <div>
-                <h1 class="h3 mb-1 text-gray-800">Editar Kit / Promoción</h1>
-                <p class="text-muted mb-0">Modifica la información de la promoción seleccionada</p>
+
+            <div class="kits-edit-header-actions">
+                <a asp-action="Index" class="btn-kits-outline">
+                    <i class="bi bi-arrow-left"></i> Volver a Kits
+                </a>
             </div>
         </div>
-        <a asp-action="Index" class="btn btn-outline-secondary d-flex align-items-center rounded-pill" title="Volver al listado de kits">
-            <i class="bi bi-arrow-left me-2"></i>Volver a Kits
+
+        <!-- MODAL LIMPIAR TODO -->
+        <div class="modal fade" id="modalLimpiarTodo" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-kits">
+                    <div class="modal-header modal-kits-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
+                            <h5 class="modal-title mb-0">Confirmar acción</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-trash display-5 text-warning mb-3"></i>
+                            <h4 class="mb-2">¿Eliminar todos los productos del kit?</h4>
+                            <p class="text-muted mb-0">Esta acción eliminará todos los ítems del kit. No se puede deshacer.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-warning text-white rounded-pill px-4" id="btn-confirmar-limpiar">
+                            <i class="bi bi-check-circle me-2"></i>Sí, limpiar todo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL CONFIRMAR GUARDAR -->
+        <div class="modal fade" id="modalConfirmarGuardar" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-kits">
+                    <div class="modal-header modal-kits-success">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle fs-4 me-2"></i>
+                            <h5 class="modal-title mb-0">Confirmar guardado</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-cloud-check display-5 text-success mb-3"></i>
+                            <h4 class="mb-2">¿Guardar cambios del kit?</h4>
+                            <p class="text-muted mb-0">Se actualizará la información con los productos y valores actuales.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success rounded-pill px-4" id="btn-confirmar-guardar">
+                            <i class="bi bi-save me-2"></i>Sí, guardar cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICACIONES (oscuro coherente con index) -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+            <div id="toastNotificacion" class="toast toast-kits align-items-center border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi me-2"></i>
+                        <span id="toast-message">Operación completada</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <form id="form-edit-kit" method="post" onsubmit="return false;" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="IdKit" value="@(Model?.IdKit ?? 0)" />
+
+            <div class="row">
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="col-lg-8">
+                    <!-- INFO BÁSICA -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header-gradient">
+                            <i class="bi bi-tags fs-5 me-2"></i>
+                            <h5 class="mb-0">Información básica del kit</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="row g-3">
+                                <!-- Nombre -->
+                                <div class="col-md-6">
+                                    <label for="Nombre" class="form-label kits-label">
+                                        <i class="bi bi-fonts me-1"></i>Nombre del Kit *
+                                    </label>
+                                    <input id="Nombre"
+                                           class="form-control kits-input"
+                                           placeholder="Ej. Pack Audífonos + Cargador"
+                                           value="@(Model?.Nombre ?? String.Empty)"
+                                           required />
+                                    <div class="invalid-feedback">El nombre del kit es obligatorio.</div>
+                                </div>
+
+                                <!-- Descuento -->
+                                <div class="col-md-6">
+                                    <label for="DescuentoPct" class="form-label kits-label">
+                                        <i class="bi bi-percent me-1"></i>Descuento (opcional)
+                                    </label>
+                                    <div class="input-group">
+                                        <input id="DescuentoPct" type="number" min="0" max="100" step="1"
+                                               value="@(((Model?.DescuentoPct ?? 0m) * 100).ToString("0"))"
+                                               class="form-control kits-input" />
+                                        <span class="input-group-text kits-input-addon">%</span>
+                                    </div>
+                                    <div class="form-text kits-help-text">
+                                        Ingresa el porcentaje de descuento (ejemplo: 10 para 10%).
+                                    </div>
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="col-12">
+                                    <label for="Descripcion" class="form-label kits-label">
+                                        <i class="bi bi-chat-text me-1"></i>Descripción *
+                                    </label>
+                                    <textarea id="Descripcion"
+                                              class="form-control kits-input"
+                                              rows="3"
+                                              required>@(Model?.Descripcion ?? String.Empty)</textarea>
+                                    <div class="invalid-feedback">La descripción del kit es obligatoria.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRODUCTOS DEL KIT -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-search fs-5 text-kits-accent"></i>
+                                <h5 class="mb-0">Productos del kit</h5>
+                            </div>
+                            <div class="kits-search-wrapper">
+                                <input type="text"
+                                       id="busquedaProducto"
+                                       class="form-control kits-input rounded-pill"
+                                       placeholder="Buscar producto para agregar..."
+                                       autocomplete="off" />
+                                <ul id="sugerenciasProductos"
+                                    class="list-group position-absolute w-100 shadow-lg kits-suggestions"
+                                    style="display:none;"></ul>
+                            </div>
+                        </div>
+
+                        <div class="kits-card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table kits-table align-middle mb-0" id="tabla-items">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Producto</th>
+                                            <th class="text-center" style="width:120px;">Cantidad</th>
+                                            <th class="text-center" style="width:140px;">Precio unit.</th>
+                                            <th class="text-center" style="width:140px;">Subtotal</th>
+                                            <th class="text-center" style="width:80px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-productos">
+                                        @foreach (var d in detalles)
+                                        {
+                                            var idProd = (int?)(d?.IdProducto) ?? 0;
+                                            var nombreProd = (string?)(d?.Producto?.Nombre) ?? (d?.Nombre ?? $"Producto {idProd}");
+                                            var cantidad = (int?)(d?.Cantidad) ?? 1;
+                                            var precioSnap = (decimal?)(d?.PrecioUnitarioSnapshot) ?? 0m;
+                                            <tr data-idproducto="@idProd">
+                                                <td class="ps-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="kits-pill-icon">
+                                                            <i class="bi bi-box"></i>
+                                                        </div>
+                                                        <div>
+                                                            <span class="kits-product-name">@nombreProd</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control form-control-sm text-center cantidad kits-input-sm"
+                                                           type="number" min="1" value="@cantidad" />
+                                                </td>
+                                                <td class="text-center kits-price-cell precio-unitario">
+                                                    @precioSnap.ToString("F2")
+                                                </td>
+                                                <td class="text-center kits-subtotal-cell subtotal">
+                                                    @((precioSnap * cantidad).ToString("F2"))
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar"
+                                                            title="Eliminar producto del kit">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot class="kits-tfoot">
+                                        <tr>
+                                            <td colspan="3" class="text-end">Subtotal:</td>
+                                            <td id="txt-subtotal" class="text-center">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end">Descuento:</td>
+                                            <td id="txt-descuento" class="text-center">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr class="kits-total-row">
+                                            <td colspan="3" class="text-end">Total:</td>
+                                            <td id="txt-total" class="text-center">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="alertArea" class="mt-3"></div>
+                </div>
+
+                <!-- COLUMNA DERECHA: RESUMEN + ACCIONES -->
+                <div class="col-lg-4">
+                    <!-- Resumen -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header">
+                            <i class="bi bi-clipboard-check me-2 text-kits-accent"></i>
+                            <h5 class="mb-0">Resumen del kit</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="kits-resumen-row">
+                                <span>Productos en el kit</span>
+                                <span id="resumen-cantidad" class="badge kits-badge">@detalles.Count()</span>
+                            </div>
+                            <div class="kits-resumen-row">
+                                <span>Subtotal</span>
+                                <span id="resumen-subtotal" class="kits-resumen-value">0.00</span>
+                            </div>
+                            <div class="kits-resumen-row">
+                                <span>Descuento aplicado</span>
+                                <span id="resumen-descuento" class="kits-resumen-value">0%</span>
+                            </div>
+                            <div class="kits-resumen-row kits-resumen-total">
+                                <span>Total final</span>
+                                <span id="resumen-total" class="kits-resumen-total-value">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones rápidas -->
+                    <div class="kits-card">
+                        <div class="kits-card-header">
+                            <i class="bi bi-lightning-charge me-2 text-kits-accent"></i>
+                            <h5 class="mb-0">Acciones rápidas</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="d-grid gap-2">
+                                <button id="btn-guardar-lateral"
+                                        class="btn-kits-primary d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-save me-2"></i>Guardar cambios
+                                </button>
+                                <button type="button"
+                                        id="btn-limpiar-todo"
+                                        class="btn-kits-outline-alt d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-trash me-2"></i>Limpiar todo
+                                </button>
+                                <a asp-action="Index"
+                                   class="btn-kits-cancel d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar edición
+                                </a>
+                            </div>
+                            <p class="kits-hint mt-3 mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Los cambios solo se guardan cuando confirmes en el modal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+}
+else
+{
+    <div class="container py-5 text-center text-light">
+        <h4>Acceso restringido</h4>
+        <p>Solo los usuarios con rol <strong>Administrador</strong> pueden editar kits.</p>
+        <a asp-action="Index" class="btn btn-outline-light mt-3">
+            <i class="bi bi-arrow-left me-2"></i>Volver
         </a>
     </div>
-
-    <!-- MODAL DE CONFIRMACIÓN PARA LIMPIAR TODO -->
-    <div class="modal fade" id="modalLimpiarTodo" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirmar acción</h5>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="text-center mb-3">
-                        <i class="bi bi-trash display-4 text-warning mb-3"></i>
-                        <h4 class="text-gray-800 mb-2">¿Eliminar todos los productos?</h4>
-                        <p class="text-muted">Esta acción eliminará todos los productos del kit y no se puede deshacer.</p>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-warning text-white rounded-pill px-4" id="btn-confirmar-limpiar">
-                        <i class="bi bi-check-circle me-2"></i>Sí, limpiar todo
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CONFIRMACIÓN PARA GUARDAR -->
-    <div class="modal fade" id="modalConfirmarGuardar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-success text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-check-circle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirmar guardado</h5>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="text-center mb-3">
-                        <i class="bi bi-cloud-check display-4 text-success mb-3"></i>
-                        <h4 class="text-gray-800 mb-2">¿Guardar cambios?</h4>
-                        <p class="text-muted">Se actualizará la información del kit con los cambios realizados.</p>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" id="btn-confirmar-guardar">
-                        <i class="bi bi-save me-2"></i>Sí, guardar cambios
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TOAST PARA NOTIFICACIONES -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-        <div id="toastNotificacion" class="toast align-items-center text-white bg-success border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-check-circle me-2"></i>
-                    <span id="toast-message">Operación completada</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    </div>
-
-    <form id="form-edit-kit" method="post" onsubmit="return false;" novalidate>
-        @Html.AntiForgeryToken()
-        <input type="hidden" id="IdKit" value="@(Model?.IdKit ?? 0)" />
-
-        <div class="row">
-            <div class="col-lg-8">
-                <!-- INFORMACIÓN BÁSICA DEL KIT -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-gradient-warning text-white py-3 border-0">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-tags fs-5 me-3"></i>
-                            <h5 class="mb-0 fw-semibold">Información Básica del Kit</h5>
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <!-- 🔹 Nombre -->
-                            <div class="col-md-6">
-                                <label for="Nombre" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-fonts text-warning me-1"></i>Nombre del Kit *
-                                </label>
-                                <input id="Nombre" class="form-control" placeholder="Ej. Pack Audífonos + Cargador"
-                                       value="@(Model?.Nombre ?? String.Empty)" required />
-                                <div class="invalid-feedback">El nombre del kit es obligatorio.</div>
-                            </div>
-
-                            <!-- 🔹 Descuento -->
-                            <div class="col-md-6">
-                                <label for="DescuentoPct" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-percent text-warning me-1"></i>Descuento (opcional)
-                                </label>
-                                <div class="input-group">
-                                    <input id="DescuentoPct" type="number" min="0" max="100" step="1"
-                                           value="@(((Model?.DescuentoPct ?? 0m) * 100).ToString("0"))" class="form-control" />
-                                    <span class="input-group-text bg-warning bg-opacity-10 text-warning border-warning">%</span>
-                                </div>
-                                <div class="form-text text-muted">Ingresa porcentaje opcional (ej: 10 para 10%).</div>
-                            </div>
-
-                            <!-- 🔹 Descripción -->
-                            <div class="col-12">
-                                <label for="Descripcion" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-chat-text text-warning me-1"></i>Descripción *
-                                </label>
-                                <textarea id="Descripcion" class="form-control" rows="3" required>@((Model?.Descripcion) ?? String.Empty)</textarea>
-                                <div class="invalid-feedback">La descripción del kit es obligatoria.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PRODUCTOS DEL KIT -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-light d-flex align-items-center py-3 border-0">
-                        <i class="bi bi-search text-warning me-2 fs-5"></i>
-                        <h5 class="mb-0 fw-semibold text-gray-800 me-3">Buscar y Agregar Productos</h5>
-                        <div class="position-relative ms-auto" style="width:320px;">
-                            <input type="text" id="busquedaProducto" class="form-control rounded-pill" placeholder="Buscar producto..." autocomplete="off" />
-                            <ul id="sugerenciasProductos" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; border-radius: 0.5rem;"></ul>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabla-items">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4 fw-semibold text-gray-700">Producto</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:120px;">Cantidad</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:140px;">Precio unit.</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:140px;">Subtotal</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:100px;">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-productos">
-                                    @foreach (var d in detalles)
-                                    {
-                                        var idProd = (int?)(d?.IdProducto) ?? 0;
-                                        var nombreProd = (string?)(d?.Producto?.Nombre) ?? (d?.Nombre ?? $"Producto {idProd}");
-                                        var cantidad = (int?)(d?.Cantidad) ?? 1;
-                                        var precioSnap = (decimal?)(d?.PrecioUnitarioSnapshot) ?? 0m;
-                                        <tr data-idproducto="@idProd">
-                                            <td class="ps-4">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
-                                                        <i class="bi bi-box text-warning"></i>
-                                                    </div>
-                                                    <div>
-                                                        <span class="fw-medium">@nombreProd</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <input class="form-control form-control-sm cantidad text-center" type="number" min="1" value="@cantidad" />
-                                            </td>
-                                            <td class="text-center fw-semibold text-gray-700 precio-unitario">
-                                                @precioSnap.ToString("F2")
-                                            </td>
-                                            <td class="text-center fw-bold text-warning subtotal">
-                                                @((precioSnap * cantidad).ToString("F2"))
-                                            </td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar" title="Eliminar producto">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                                <tfoot class="table-group-divider">
-                                    <tr class="fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Subtotal:</td>
-                                        <td id="txt-subtotal" class="text-center text-warning">0.00</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Descuento:</td>
-                                        <td id="txt-descuento" class="text-center text-warning">0.00</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="table-warning fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Total:</td>
-                                        <td id="txt-total" class="text-center text-warning">0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- PANEL LATERAL -->
-            <div class="col-lg-4">
-                <!-- RESUMEN DE CAMBIOS -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-light py-3 border-0">
-                        <h5 class="mb-0 fw-semibold text-gray-800">
-                            <i class="bi bi-clipboard-check text-warning me-2"></i>Resumen de Cambios
-                        </h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Productos en kit:</span>
-                            <span id="resumen-cantidad" class="badge bg-warning rounded-pill fs-6">@(detalles.Count())</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Subtotal:</span>
-                            <span id="resumen-subtotal" class="fw-bold text-warning">0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Descuento aplicado:</span>
-                            <span id="resumen-descuento" class="fw-bold text-warning">0%</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted fw-semibold">Total final:</span>
-                            <span id="resumen-total" class="fw-bold fs-5 text-warning">0.00</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ACCIONES RÁPIDAS -->
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-light py-3 border-0">
-                        <h5 class="mb-0 fw-semibold text-gray-800">
-                            <i class="bi bi-lightning text-warning me-2"></i>Acciones Rápidas
-                        </h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-grid gap-2">
-                            <button id="btn-guardar-lateral" class="btn btn-warning text-white d-flex align-items-center justify-content-center">
-                                <i class="bi bi-save me-2"></i>Guardar Cambios
-                            </button>
-                            <button type="button" id="btn-limpiar-todo" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
-                                <i class="bi bi-trash me-2"></i>Limpiar Todo
-                            </button>
-                            <a asp-action="Index" class="btn btn-outline-danger d-flex align-items-center justify-content-center">
-                                <i class="bi bi-x-circle me-2"></i>Cancelar Edición
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🔹 Mensaje visual -->
-        <div id="alertArea" class="mt-4"></div>
-    </form>
-</div>
 }
+
 <style>
-    .table td, .table th {
-        vertical-align: middle;
+    :root {
+        --kits-primary: #1C1973;
+        --kits-secondary: #514BF2;
+        --kits-accent: #8B88F2;
+        --kits-bg: #0D0E26;
+        --kits-alt-bg: #081C59;
+        --kits-card: #11152F;
+        --kits-card-soft: #15193A;
+        --kits-text: #F0F0F7;
+        --kits-muted: #A4A5D4;
+        --kits-border: #2E347A;
+        --kits-success: #1cc88a;
+        --kits-warning: #f6c23e;
+        --kits-danger: #ff6b6b;
+        --kits-radius: 0.85rem;
     }
 
-    .btn-eliminar {
-        padding: .25rem .5rem;
-        transition: all 0.15s ease-in-out;
+    .kits-edit-theme {
+        background:
+            radial-gradient(circle at top left, rgba(81, 75, 242, 0.12), transparent),
+            radial-gradient(circle at top right, rgba(139, 136, 242, 0.08), transparent),
+            var(--kits-bg);
+        min-height: 100vh;
     }
 
-    .btn-eliminar:hover {
-        transform: scale(1.1);
+    .kits-edit-header {
+        background: linear-gradient(135deg, var(--kits-primary), var(--kits-alt-bg));
+        border-radius: var(--kits-radius);
+        padding: 1.5rem 2rem;
+        border: 1px solid rgba(139, 136, 242, 0.35);
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        color: var(--kits-text);
     }
 
-    /* Estilos del buscador predictivo */
-    #sugerenciasProductos {
-        max-height: 250px;
-        overflow-y: auto;
-        z-index: 1050;
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
+    .kits-edit-header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
-    #sugerenciasProductos li {
-        cursor: pointer;
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
-        transition: all 0.15s ease-in-out;
+    .kits-edit-header-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--kits-secondary), var(--kits-primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.7rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
     }
 
-    #sugerenciasProductos li:first-child {
-        border-top: none;
-        border-top-left-radius: 0.5rem;
-        border-top-right-radius: 0.5rem;
+    .kits-edit-header-title h1 {
+        margin: 0;
+        font-size: 1.7rem;
+        font-weight: 700;
     }
 
-    #sugerenciasProductos li:last-child {
-        border-bottom: none;
-        border-bottom-left-radius: 0.5rem;
-        border-bottom-right-radius: 0.5rem;
+    .kits-edit-header-title p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--kits-muted);
     }
 
-    #sugerenciasProductos li:hover {
-        background-color: #fff9db;
-        border-color: #ffec99;
+    .kits-edit-header-actions {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
     }
 
-    .card-header {
-        border-bottom: none;
+    .btn-kits-primary,
+    .btn-kits-outline,
+    .btn-kits-outline-alt,
+    .btn-kits-cancel {
+        border-radius: 999px;
+        padding: 0.55rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-width: 1px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
     }
 
-    .badge {
-        font-size: 0.75rem;
+    .btn-kits-primary {
+        background: var(--kits-secondary);
+        border-color: var(--kits-accent);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
     }
-    
-    .bg-gradient-warning {
-        background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
-    }
-    
-    .card {
-        border-radius: 0.5rem;
-    }
-    
-    .btn {
-        border-radius: 0.375rem;
-        transition: all 0.15s ease-in-out;
-    }
-    
-    .btn:hover {
+
+    .btn-kits-primary:hover {
+        background: var(--kits-primary);
         transform: translateY(-1px);
     }
-    
-    .form-control:focus {
-        border-color: #f6c23e;
-        box-shadow: 0 0 0 0.2rem rgba(246, 194, 62, 0.25);
+
+    .btn-kits-outline {
+        background: transparent;
+        border-color: var(--kits-accent);
+        color: var(--kits-accent);
     }
 
-    /* Animaciones personalizadas */
-    @@keyframes slideInDown {
+    .btn-kits-outline:hover {
+        background: var(--kits-accent);
+        color: var(--kits-bg);
+        transform: translateY(-1px);
+    }
+
+    .btn-kits-outline-alt {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.16);
+        color: var(--kits-muted);
+    }
+
+    .btn-kits-outline-alt:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--kits-text);
+        transform: translateY(-1px);
+    }
+
+    .btn-kits-cancel {
+        background: transparent;
+        border-color: var(--kits-danger);
+        color: var(--kits-danger);
+    }
+
+    .btn-kits-cancel:hover {
+        background: var(--kits-danger);
+        color: var(--kits-bg);
+        transform: translateY(-1px);
+    }
+
+    .kits-card {
+        background: var(--kits-card);
+        border-radius: var(--kits-radius);
+        border: 1px solid rgba(46, 52, 122, 0.9);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+    }
+
+    .kits-card-header-gradient {
+        padding: 0.9rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, rgba(81, 75, 242, 0.95), rgba(28, 25, 115, 0.98));
+        color: var(--kits-text);
+        border-bottom: 1px solid rgba(139, 136, 242, 0.45);
+        font-weight: 600;
+    }
+
+    .kits-card-header {
+        padding: 0.8rem 1.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        background: rgba(8, 18, 55, 0.98);
+        color: var(--kits-text);
+        border-bottom: 1px solid rgba(46, 52, 122, 0.9);
+    }
+
+    .kits-card-body {
+        padding: 1rem 1.3rem 1.2rem;
+        color: var(--kits-text);
+        font-size: 0.9rem;
+        background: var(--kits-card-soft);
+    }
+
+    .kits-label {
+        color: var(--kits-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .kits-input,
+    .kits-input-sm {
+        background-color: rgba(5, 10, 30, 0.96);
+        border: 1px solid rgba(139, 136, 242, 0.35);
+        color: var(--kits-text);
+        border-radius: 0.55rem;
+        font-size: 0.9rem;
+    }
+
+    .kits-input-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .kits-input:focus,
+    .kits-input-sm:focus {
+        background-color: rgba(8, 18, 55, 1);
+        border-color: var(--kits-secondary);
+        box-shadow: 0 0 0 0.18rem rgba(81, 75, 242, 0.32);
+        color: var(--kits-text);
+    }
+
+    .kits-input-addon {
+        background: rgba(81, 75, 242, 0.16);
+        border-color: rgba(139, 136, 242, 0.45);
+        color: var(--kits-accent);
+        font-weight: 600;
+    }
+
+    .kits-help-text {
+        color: var(--kits-muted);
+        font-size: 0.75rem;
+    }
+
+    .kits-search-wrapper {
+        position: relative;
+        width: 300px;
+        max-width: 100%;
+    }
+
+    /* Barra de búsqueda destacada */
+    .kits-search-wrapper .kits-input {
+        background: radial-gradient(circle at top left, rgba(81,75,242,0.16), rgba(5,10,30,1));
+        border: 1px solid rgba(139,136,242,0.7);
+        color: var(--kits-text);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+        padding-left: 2.4rem;
+        position: relative;
+    }
+
+    .kits-search-wrapper::before {
+        content: "\f52a";
+        font-family: "bootstrap-icons";
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9rem;
+        color: var(--kits-accent);
+        opacity: 0.9;
+        pointer-events: none;
+    }
+
+    /* Lista de sugerencias */
+    .kits-suggestions {
+        top: 100%;
+        left: 0;
+        margin-top: 0.25rem;
+        background: #070c1c;
+        border-radius: 0.7rem;
+        border: 1px solid rgba(139,136,242,0.45);
+        max-height: 260px;
+        overflow-y: auto;
+    }
+
+    .kits-suggestions .list-group-item {
+        background: transparent;
+        color: var(--kits-text);
+        border: none;
+        border-bottom: 1px solid rgba(46, 52, 122, 0.7);
+        font-size: 0.86rem;
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .kits-suggestions .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+    .kits-suggestions .list-group-item:hover {
+        background: rgba(81,75,242,0.22);
+    }
+
+    /* ===== TABLA PRODUCTOS KIT: tema oscuro y texto forzado ===== */
+
+    .kits-card-body.p-0 {
+        background: var(--kits-card-soft);
+    }
+
+    .kits-table {
+        background-color: var(--kits-card-soft) !important;
+        color: var(--kits-text) !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    /* Sobrescribe celdas default de .table de Bootstrap */
+    .kits-table > :not(caption) > * > * {
+        background-color: transparent !important;
+        color: var(--kits-text) !important;
+    }
+
+    .kits-table thead {
+        background-color: #060d2b !important;
+    }
+
+    .kits-table thead th {
+        border-bottom: 1px solid rgba(46, 52, 122, 0.95) !important;
+        color: var(--kits-muted) !important;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.65rem 0.7rem;
+        white-space: nowrap;
+    }
+
+    /* Filas cuerpo */
+    .kits-table tbody tr {
+        background-color: #11152F !important;
+        color: var(--kits-text) !important;
+        transition: all 0.18s ease;
+    }
+
+    .kits-table tbody tr:nth-child(even) {
+        background-color: #15193A !important;
+    }
+
+    .kits-table tbody tr:hover {
+        background-color: rgba(81, 75, 242, 0.25) !important;
+    }
+
+    .kits-table td {
+        border-bottom: 1px solid #272b4f !important;
+        padding: 0.6rem 0.7rem;
+        font-size: 0.86rem;
+        color: var(--kits-text) !important;
+    }
+
+    /* Aseguramos que el contenido dentro de la celda sea visible */
+    .kits-table .kits-product-name,
+    .kits-table .kits-pill-icon i,
+    .kits-table .kits-price-cell,
+    .kits-table .kits-subtotal-cell,
+    .kits-table tbody tr span,
+    .kits-table tbody tr div {
+        color: var(--kits-text) !important;
+        opacity: 1 !important;
+    }
+
+    .kits-price-cell {
+        opacity: 0.9 !important;
+        font-weight: 500;
+    }
+
+    .kits-subtotal-cell {
+        color: var(--kits-warning) !important;
+        font-weight: 600;
+    }
+
+    .kits-tfoot td {
+        border-top: 1px solid rgba(46, 52, 122, 0.95) !important;
+        font-size: 0.82rem;
+        color: var(--kits-muted) !important;
+        background-color: #11152F !important;
+    }
+
+    .kits-total-row td {
+        background-color: #14194a !important;
+        color: var(--kits-warning) !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    /* Inputs dentro de la tabla */
+    .kits-table input.kits-input-sm,
+    .kits-table input[type="number"] {
+        background-color: #070c1c !important;
+        border-color: rgba(139,136,242,0.5) !important;
+        color: var(--kits-text) !important;
+    }
+
+    /* Botón eliminar visible */
+    .kits-table .btn-eliminar {
+        padding: 0.2rem 0.35rem;
+        font-size: 0.8rem;
+        border-color: rgba(255, 107, 107, 0.8);
+        color: #ff6b6b;
+        transition: all 0.15s ease;
+        background: transparent;
+    }
+
+    .kits-table .btn-eliminar i {
+        color: #ff6b6b;
+    }
+
+    .kits-table .btn-eliminar:hover {
+        background-color: #ff6b6b;
+        color: #11152F;
+        transform: scale(1.1) translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Resumen lateral */
+    .kits-resumen-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.3rem 0;
+        border-bottom: 1px solid rgba(29, 34, 70, 0.9);
+        font-size: 0.86rem;
+        color: var(--kits-muted);
+    }
+
+    .kits-resumen-row:last-child {
+        border-bottom: none;
+    }
+
+    .kits-badge {
+        background: rgba(81, 75, 242, 0.22);
+        color: var(--kits-accent);
+        border-radius: 999px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .kits-resumen-value {
+        color: var(--kits-text);
+        font-weight: 500;
+    }
+
+    .kits-resumen-total {
+        margin-top: 0.4rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(46, 52, 122, 0.95);
+    }
+
+    .kits-resumen-total-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--kits-success);
+    }
+
+    .kits-hint {
+        font-size: 0.75rem;
+        color: var(--kits-muted);
+    }
+
+    /* Toast */
+    .toast-kits {
+        background-color: #11152F;
+        color: var(--kits-text);
+        border-radius: 0.8rem;
+        border: 1px solid rgba(139, 136, 242, 0.5);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .toast-kits .btn-close-white {
+        filter: invert(1);
+    }
+
+    .toast {
+        animation: kits-slide-in 0.25s ease-out;
+    }
+
+    @@keyframes kits-slide-in {
         from {
-            transform: translate3d(0, -100%, 0);
+            transform: translate3d(100%, -20%, 0);
             opacity: 0;
         }
         to {
@@ -387,10 +805,45 @@
         }
     }
 
-    .toast {
-        animation: slideInDown 0.3s ease-out;
+    .modal-kits {
+        background-color: #11152F;
+        color: var(--kits-text);
+        border-radius: 0.9rem;
+        border: 1px solid rgba(139, 136, 242, 0.4);
+        box-shadow: 0 12px 36px rgba(0,0,0,0.85);
+    }
+
+    .modal-kits-warning {
+        background: linear-gradient(135deg, #8B6500, #f6c23e);
+        color: #fff;
+        border-top-left-radius: 0.9rem;
+        border-top-right-radius: 0.9rem;
+        border-bottom: none;
+    }
+
+    .modal-kits-success {
+        background: linear-gradient(135deg, #0d8f5a, #1cc88a);
+        color: #fff;
+        border-top-left-radius: 0.9rem;
+        border-top-right-radius: 0.9rem;
+        border-bottom: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        .kits-edit-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .kits-edit-header-actions {
+            width: 100%;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
     }
 </style>
+
+
+
 
 @section Scripts {
     <script>
@@ -401,35 +854,31 @@
             const alertArea = document.getElementById('alertArea');
             const parseNumber = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
 
-            // 🔹 Sistema de notificaciones Toast
+            // Toast estilizado
             function mostrarToast(mensaje, tipo = 'success') {
                 const toast = document.getElementById('toastNotificacion');
                 const toastMessage = document.getElementById('toast-message');
-                
-                // Configurar color según tipo
-                const colores = {
-                    success: 'bg-success',
-                    warning: 'bg-warning',
-                    danger: 'bg-danger',
-                    info: 'bg-info'
+                const toastIcon = toast.querySelector('.bi');
+
+                const config = {
+                    success: { icon: 'bi-check-circle', color: '#1cc88a' },
+                    warning: { icon: 'bi-exclamation-triangle', color: '#f6c23e' },
+                    danger: { icon: 'bi-x-circle', color: '#ff6b6b' },
+                    info: { icon: 'bi-info-circle', color: '#8B88F2' }
                 };
-                
-                // Configurar icono según tipo
-                const iconos = {
-                    success: 'bi-check-circle',
-                    warning: 'bi-exclamation-triangle',
-                    danger: 'bi-x-circle',
-                    info: 'bi-info-circle'
-                };
-                
-                toast.className = `toast align-items-center text-white ${colores[tipo]} border-0`;
-                toastMessage.innerHTML = `<i class="bi ${iconos[tipo]} me-2"></i>${mensaje}`;
-                
+
+                const { icon, color } = config[tipo] || config.success;
+
+                // Reset icono
+                toastIcon.className = `bi ${icon} me-2`;
+                toastIcon.style.color = color;
+                toastMessage.textContent = mensaje;
+
                 const bsToast = new bootstrap.Toast(toast);
                 bsToast.show();
             }
 
-            // 🔹 Calcular totales
+            // Recalcular subtotal por fila
             function recalcRow(tr) {
                 const cantidad = parseNumber(tr.querySelector('.cantidad').value);
                 const precio = parseNumber(tr.querySelector('.precio-unitario').textContent);
@@ -438,51 +887,53 @@
                 return subtotal;
             }
 
+            // Recalcular totales generales + resumen lateral
             function recalcUI() {
                 let subtotal = 0;
                 document.querySelectorAll('#tabla-items tbody tr').forEach(tr => {
                     subtotal += recalcRow(tr);
                 });
 
-                const descuentoPctInput = parseNumber(document.getElementById('DescuentoPct').value) || 0;
+                const descuentoInput = document.getElementById('DescuentoPct');
+                const descuentoPctInput = parseNumber(descuentoInput?.value || 0);
                 const descuentoPct = descuentoPctInput > 1 ? (descuentoPctInput / 100) : descuentoPctInput;
                 const descuento = subtotal * descuentoPct;
                 const total = subtotal - descuento;
 
-                // Actualizar tabla
                 document.getElementById('txt-subtotal').textContent = subtotal.toFixed(2);
                 document.getElementById('txt-descuento').textContent = descuento.toFixed(2);
                 document.getElementById('txt-total').textContent = total.toFixed(2);
 
-                // Actualizar panel lateral
-                document.getElementById('resumen-cantidad').textContent = document.querySelectorAll('#tabla-items tbody tr').length;
+                const filas = document.querySelectorAll('#tabla-items tbody tr').length;
+                document.getElementById('resumen-cantidad').textContent = filas;
                 document.getElementById('resumen-subtotal').textContent = subtotal.toFixed(2);
                 document.getElementById('resumen-descuento').textContent = (descuentoPct * 100).toFixed(0) + '%';
                 document.getElementById('resumen-total').textContent = total.toFixed(2);
             }
 
             function attachRowEvents(tr) {
-                tr.querySelector('.cantidad')?.addEventListener('change', () => {
-                    if (parseInt(tr.querySelector('.cantidad').value) < 1)
-                        tr.querySelector('.cantidad').value = 1;
-                    recalcRow(tr); 
+                const cantidadInput = tr.querySelector('.cantidad');
+                const btnEliminar = tr.querySelector('.btn-eliminar');
+
+                cantidadInput?.addEventListener('change', () => {
+                    if (parseInt(cantidadInput.value) < 1) cantidadInput.value = 1;
+                    recalcRow(tr);
                     recalcUI();
                 });
-                tr.querySelector('.btn-eliminar')?.addEventListener('click', (e) => {
-                    e.preventDefault(); 
-                    tr.remove(); 
+
+                btnEliminar?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    tr.remove();
                     recalcUI();
                     mostrarToast('Producto eliminado del kit', 'info');
                 });
             }
 
-            // Inicializar eventos y cálculos
+            // Inicializar filas existentes
             document.querySelectorAll('#tabla-items tbody tr').forEach(attachRowEvents);
             recalcUI();
 
-            // ===================================================
-            // 🔹 BUSCADOR PREDICTIVO DE PRODUCTOS
-            // ===================================================
+            // Datos productos (para buscador)
             const productosData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                 ((IEnumerable<dynamic>)ViewBag.Productos).Select(p => new {
                     idProducto = p.IdProducto,
@@ -495,17 +946,16 @@
             const listaSugerencias = document.getElementById('sugerenciasProductos');
 
             if (inputBusqueda && listaSugerencias) {
-                inputBusqueda.addEventListener('input', function() {
+                inputBusqueda.addEventListener('input', function () {
                     const query = this.value.trim().toLowerCase();
                     listaSugerencias.innerHTML = '';
-                    
+
                     if (!query) {
                         listaSugerencias.style.display = 'none';
                         return;
                     }
 
                     if (!productosData || productosData.length === 0) {
-                        console.warn('No hay datos de productos disponibles');
                         listaSugerencias.style.display = 'none';
                         return;
                     }
@@ -526,8 +976,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="fw-semibold">${p.nombre}</div>
                                 <div class="text-warning fw-bold">${(p.precioVenta || 0).toFixed(2)}</div>
-                            </div>
-                        `;
+                            </div>`;
                         li.addEventListener('click', () => {
                             agregarProducto(p.idProducto, p.nombre, p.precioVenta);
                             listaSugerencias.style.display = 'none';
@@ -539,7 +988,6 @@
                     listaSugerencias.style.display = 'block';
                 });
 
-                // Ocultar sugerencias al hacer clic fuera
                 document.addEventListener('click', (e) => {
                     if (!listaSugerencias.contains(e.target) && e.target !== inputBusqueda) {
                         listaSugerencias.style.display = 'none';
@@ -550,56 +998,57 @@
             function agregarProducto(id, nombre, precio) {
                 const tbody = document.getElementById('tbody-productos');
                 const existe = tbody.querySelector(`tr[data-idproducto="${id}"]`);
-                
+
                 if (existe) {
                     const inputCant = existe.querySelector('.cantidad');
-                    inputCant.value = parseInt(inputCant.value) + 1;
-                    recalcRow(existe); 
+                    inputCant.value = parseInt(inputCant.value || 1) + 1;
+                    recalcRow(existe);
                     recalcUI();
                     mostrarToast(`Cantidad aumentada para "${nombre}"`, 'info');
                     return;
                 }
-                
+
                 const tr = document.createElement('tr');
                 tr.dataset.idproducto = id;
                 tr.innerHTML = `
                     <td class="ps-4">
                         <div class="d-flex align-items-center">
-                            <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-box text-warning"></i>
+                            <div class="kits-pill-icon">
+                                <i class="bi bi-box"></i>
                             </div>
                             <div>
-                                <span class="fw-medium">${nombre}</span>
+                                <span class="kits-product-name">${nombre}</span>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <input class="form-control form-control-sm cantidad text-center" type="number" min="1" value="1" />
+                        <input class="form-control form-control-sm text-center cantidad kits-input-sm"
+                               type="number" min="1" value="1" />
                     </td>
-                    <td class="text-center fw-semibold text-gray-700 precio-unitario">${(precio || 0).toFixed(2)}</td>
-                    <td class="text-center fw-bold text-warning subtotal">${(precio || 0).toFixed(2)}</td>
+                    <td class="text-center kits-price-cell precio-unitario">
+                        ${(precio || 0).toFixed(2)}
+                    </td>
+                    <td class="text-center kits-subtotal-cell subtotal">
+                        ${(precio || 0).toFixed(2)}
+                    </td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar" title="Eliminar producto">
+                        <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar" title="Eliminar producto del kit">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>`;
-                
                 tbody.appendChild(tr);
                 attachRowEvents(tr);
                 recalcUI();
                 mostrarToast(`"${nombre}" agregado al kit`, 'success');
             }
 
-            // 🔹 FUNCIÓN LIMPIAR TODO CON MODAL
+            // Modal limpiar todo
             function mostrarModalLimpiar() {
-                const tbody = document.getElementById('tbody-productos');
-                const filas = tbody.querySelectorAll('tr');
-                
+                const filas = document.querySelectorAll('#tabla-items tbody tr');
                 if (filas.length === 0) {
-                    mostrarToast('El kit ya está vacío', 'info');
+                    mostrarToast('El kit ya está vacío.', 'info');
                     return;
                 }
-
                 const modal = new bootstrap.Modal(document.getElementById('modalLimpiarTodo'));
                 modal.show();
             }
@@ -608,33 +1057,28 @@
                 const tbody = document.getElementById('tbody-productos');
                 tbody.innerHTML = '';
                 recalcUI();
-                mostrarToast('Todos los productos han sido eliminados del kit', 'success');
-                
-                // Cerrar modal
+                mostrarToast('Todos los productos han sido eliminados del kit.', 'success');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalLimpiarTodo'));
                 modal.hide();
             }
 
-            // 🔹 Asignar eventos a los botones de modal
             document.getElementById('btn-limpiar-todo')?.addEventListener('click', mostrarModalLimpiar);
             document.getElementById('btn-confirmar-limpiar')?.addEventListener('click', limpiarTodo);
 
-            // 🔹 MODAL PARA GUARDAR CAMBIOS
+            // Modal guardar
             function mostrarModalGuardar() {
-                // Primero validar campos obligatorios
                 const nombreInput = document.getElementById('Nombre');
                 const descripcionInput = document.getElementById('Descripcion');
-                
                 [nombreInput, descripcionInput].forEach(el => el.classList.remove('is-invalid'));
-                let valido = true;
 
-                if (!nombreInput.value.trim()) { 
-                    nombreInput.classList.add('is-invalid'); 
-                    valido = false; 
+                let valido = true;
+                if (!nombreInput.value.trim()) {
+                    nombreInput.classList.add('is-invalid');
+                    valido = false;
                 }
-                if (!descripcionInput.value.trim()) { 
-                    descripcionInput.classList.add('is-invalid'); 
-                    valido = false; 
+                if (!descripcionInput.value.trim()) {
+                    descripcionInput.classList.add('is-invalid');
+                    valido = false;
                 }
 
                 const items = document.querySelectorAll('#tabla-items tbody tr');
@@ -644,7 +1088,7 @@
                 }
 
                 if (!valido) {
-                    mostrarToast('Por favor, completa los campos obligatorios.', 'warning');
+                    mostrarToast('Revisa los campos obligatorios antes de guardar.', 'warning');
                     return;
                 }
 
@@ -652,23 +1096,9 @@
                 modal.show();
             }
 
-            // 🔹 Asignar eventos a los botones de guardar
             document.getElementById('btn-guardar-lateral')?.addEventListener('click', mostrarModalGuardar);
-            document.getElementById('btn-confirmar-guardar')?.addEventListener('click', guardarCambios);
 
-            // 🔹 Actualizar totales al escribir en descuento
-            const descuentoInput = document.getElementById('DescuentoPct');
-            descuentoInput?.addEventListener('input', recalcUI);
-
-            // 🔹 Si se borra el campo de descuento, restablecer automáticamente a 0
-            descuentoInput?.addEventListener('blur', () => {
-                if (descuentoInput.value.trim() === '' || isNaN(parseFloat(descuentoInput.value))) {
-                    descuentoInput.value = 0;
-                    recalcUI();
-                }
-            });
-
-            // 🔹 Función para guardar cambios
+            // Guardar cambios (se llama desde modal)
             async function guardarCambios() {
                 const nombreInput = document.getElementById('Nombre');
                 const descripcionInput = document.getElementById('Descripcion');
@@ -678,7 +1108,9 @@
                 document.querySelectorAll('#tabla-items tbody tr').forEach(tr => {
                     const idProducto = parseInt(tr.dataset.idproducto) || 0;
                     const cantidad = parseInt(tr.querySelector('.cantidad').value) || 1;
-                    if (idProducto > 0) items.push({ IdProducto: idProducto, Cantidad: cantidad });
+                    if (idProducto > 0) {
+                        items.push({ IdProducto: idProducto, Cantidad: cantidad });
+                    }
                 });
 
                 const descuentoPctInput = parseNumber(document.getElementById('DescuentoPct').value) || 0;
@@ -695,7 +1127,7 @@
 
                 const btnGuardar = document.getElementById('btn-guardar-lateral');
                 const originalText = btnGuardar.innerHTML;
-                
+
                 try {
                     btnGuardar.disabled = true;
                     btnGuardar.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
@@ -713,31 +1145,42 @@
 
                     if (!res.ok) {
                         mostrarToast('Error al guardar los cambios.', 'danger');
-                        return;
-                    }
-
-                    const data = await res.json();
-                    if (data.success) {
-                        mostrarToast('Kit actualizado correctamente. Redirigiendo...', 'success');
-                        setTimeout(() => window.location.href = indexUrl, 1500);
                     } else {
-                        mostrarToast(data.message || 'No se pudo guardar el kit.', 'danger');
+                        const data = await res.json();
+                        if (data.success) {
+                            mostrarToast('Kit actualizado correctamente. Redirigiendo...', 'success');
+                            setTimeout(() => window.location.href = indexUrl, 1000);
+                        } else {
+                            mostrarToast(data.message || 'No se pudo guardar el kit.', 'danger');
+                        }
                     }
-                } catch {
+                } catch (e) {
+                    console.error(e);
                     mostrarToast('Error al conectar con el servidor.', 'danger');
                 } finally {
                     btnGuardar.disabled = false;
                     btnGuardar.innerHTML = originalText;
-                    
-                    // Cerrar modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarGuardar'));
-                    modal.hide();
+                    modal?.hide();
                 }
             }
 
-            // 🔹 Quitar error visual al escribir
-            document.querySelectorAll('#Nombre, #Descripcion').forEach(el => {
-                el.addEventListener('input', () => el.classList.remove('is-invalid'));
+            document.getElementById('btn-confirmar-guardar')?.addEventListener('click', guardarCambios);
+
+            // Actualizar totales al editar descuento
+            const descuentoInput = document.getElementById('DescuentoPct');
+            descuentoInput?.addEventListener('input', recalcUI);
+            descuentoInput?.addEventListener('blur', () => {
+                if (descuentoInput.value.trim() === '' || isNaN(parseFloat(descuentoInput.value))) {
+                    descuentoInput.value = 0;
+                    recalcUI();
+                }
+            });
+
+            // Quitar error al escribir
+            ['Nombre', 'Descripcion'].forEach(id => {
+                const el = document.getElementById(id);
+                el?.addEventListener('input', () => el.classList.remove('is-invalid'));
             });
         })();
     </script>

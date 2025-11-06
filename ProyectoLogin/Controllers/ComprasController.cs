@@ -159,7 +159,7 @@ namespace ProyectoLogin.Controllers
 
             if (!ValidarCompra(compra, detalles))
             {
-                TempData["Error"] = "Debe seleccionar un proveedor válido y agregar productos.";
+                TempData["Error"] = "Debe seleccionar un proveedor válido y agregar al menos un producto.";
                 await CargarDatosVista(compra.IdProveedor);
                 return View(compra);
             }
@@ -482,14 +482,28 @@ namespace ProyectoLogin.Controllers
         // 🔹 MÉTODOS AUXILIARES
         private async Task CargarDatosVista(int? idProveedor)
         {
+            // Proveedores + flag si tienen productos asociados
             ViewBag.Proveedores = await _context.Proveedores
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
+                .Select(p => new
+                {
+                    p.IdProveedor,
+                    p.Nombre,
+                    TieneProductos = _context.ProductosProveedores
+                        .Any(pp => pp.IdProveedor == p.IdProveedor)
+                })
                 .ToListAsync();
 
+            // Unidades disponibles
             ViewBag.Unidades = await _context.UnidadesMedida
                 .Where(u => u.Activo)
-                .Select(u => new { u.IdUnidad, u.Nombre, u.EquivalenciaEnUnidades })
+                .Select(u => new
+                {
+                    u.IdUnidad,
+                    u.Nombre,
+                    u.EquivalenciaEnUnidades
+                })
                 .ToListAsync();
 
             ViewBag.ProveedorSeleccionado = idProveedor ?? 0;

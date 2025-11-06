@@ -2,258 +2,288 @@
 @using System.Security.Claims
 
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
 @{
     ViewData["Title"] = "Editar Cliente";
-
 
     var user = HttpContextAccessor.HttpContext?.User;
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
-@if (isAuth && isAdmin){
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-8 col-xl-6">
-            <!-- CARD PRINCIPAL -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-warning text-black py-3">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-gear fs-4 me-2"></i>
-                        <h4 class="mb-0">Editar Cliente</h4>
-                    </div>
-                </div>
 
-                <div class="card-body p-4">
-                    <!-- Mostrar errores de validación generales -->
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <strong>Errores de validación:</strong>
-                            <ul class="mb-0 mt-1">
-                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+@if (isAuth && isAdmin)
+{
+    <div class="container-fluid cliente-edit-theme py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 col-xl-6">
+
+                <!-- CARD PRINCIPAL -->
+                <div class="card cliente-edit-card">
+                    <div class="card-header cliente-edit-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="cliente-edit-icon">
+                                <i class="bi bi-person-gear"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0 text-white">Editar Cliente</h4>
+                                <small class="cliente-edit-subtitle">
+                                    Actualiza la información manteniendo los datos consistentes para facturación y ventas.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="cliente-edit-status text-end">
+                            <span class="label-estado">Estado</span>
+                            <div>
+                                @if (Model.Activo)
                                 {
-                                    <li>@error.ErrorMessage</li>
+                                    <span class="badge badge-estado badge-estado-activo">
+                                        <i class="bi bi-check-circle me-1"></i>Activo
+                                    </span>
                                 }
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                else
+                                {
+                                    <span class="badge badge-estado badge-estado-inactivo">
+                                        <i class="bi bi-x-circle me-1"></i>Inactivo
+                                    </span>
+                                }
+                            </div>
                         </div>
-                    }
+                    </div>
 
-                    <form asp-action="Edit" method="post" id="clienteForm">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" asp-for="IdCliente" />
+                    <div class="card-body p-4">
 
-                        <!-- INFORMACIÓN BÁSICA -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
+                        <!-- ERRORES DE VALIDACIÓN GENERALES -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger alert-smart-danger alert-dismissible fade show" role="alert">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                                    <div>
+                                        <strong>Hay errores en el formulario.</strong>
+                                        <ul class="mb-0 mt-1 small">
+                                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                            {
+                                                <li>@error.ErrorMessage</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white ms-2"
+                                            data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                                </div>
+                            </div>
+                        }
+
+                        <form asp-action="Edit" method="post" id="clienteForm" novalidate>
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="IdCliente" />
+
+                            <!-- INFORMACIÓN BÁSICA -->
+                            <div class="seccion-form mb-4">
+                                <div class="seccion-titulo">
                                     <i class="bi bi-card-checklist me-2"></i>Información Básica
-                                </h6>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Nit" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-credit-card me-1"></i>NIT
-                                </label>
-                                <input asp-for="Nit" class="form-control"
-                                       placeholder="Ej: 12345678-9"
-                                       required
-                                       pattern="[0-9]+(-[0-9kK])?"
-                                       title="Formato: 12345678-9"
-                                       id="nitInput" />
-                                <span asp-validation-for="Nit" class="text-danger small d-block mt-1"></span>
-                                <div class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Formato: 12345678-9 (el guion se agregará automáticamente)
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Nit" class="form-label form-label-client">
+                                            <i class="bi bi-credit-card me-1"></i>NIT
+                                        </label>
+                                        <input asp-for="Nit"
+                                               class="form-control form-control-client"
+                                               placeholder="Ej: 12345678-9"
+                                               required
+                                               pattern="[0-9]+(-[0-9kK])?"
+                                               title="Formato: 12345678-9"
+                                               id="nitInput" />
+                                        <span asp-validation-for="Nit" class="text-danger small d-block mt-1"></span>
+                                        <div class="form-text form-text-client">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            El guion se ajusta automáticamente al validar el formato.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label form-label-client">
+                                            <i class="bi bi-fingerprint me-1"></i>ID Interno
+                                        </label>
+                                        <div class="form-control form-control-client form-control-readonly">
+                                            @Model.IdCliente
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-person me-1"></i>Estado
-                                </label>
-                                <div class="form-control bg-light border-0">
-                                    @if (Model.Activo)
-                                    {
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>Activo
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-x-circle me-1"></i>Inactivo
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- INFORMACIÓN PERSONAL -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
+                            <!-- INFORMACIÓN PERSONAL -->
+                            <div class="seccion-form mb-4">
+                                <div class="seccion-titulo">
                                     <i class="bi bi-person-lines-fill me-2"></i>Información Personal
-                                </h6>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Nombres" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-person me-1"></i>Nombres
-                                </label>
-                                <input asp-for="Nombres" class="form-control"
-                                       placeholder="Nombres del cliente"
-                                       required
-                                       minlength="2"
-                                       maxlength="100"
-                                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
-                                       title="Solo letras y espacios" />
-                                <span asp-validation-for="Nombres" class="text-danger small d-block mt-1"></span>
-                            </div>
+                                </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Apellidos" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-person me-1"></i>Apellidos
-                                </label>
-                                <input asp-for="Apellidos" class="form-control"
-                                       placeholder="Apellidos del cliente"
-                                       required
-                                       minlength="2"
-                                       maxlength="100"
-                                       pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
-                                       title="Solo letras y espacios" />
-                                <span asp-validation-for="Apellidos" class="text-danger small d-block mt-1"></span>
-                            </div>
-                        </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Nombres" class="form-label form-label-client">
+                                            <i class="bi bi-person me-1"></i>Nombres
+                                        </label>
+                                        <input asp-for="Nombres"
+                                               class="form-control form-control-client"
+                                               placeholder="Nombres del cliente"
+                                               required
+                                               minlength="2"
+                                               maxlength="100"
+                                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                                               title="Solo letras y espacios" />
+                                        <span asp-validation-for="Nombres" class="text-danger small d-block mt-1"></span>
+                                    </div>
 
-                        <!-- INFORMACIÓN DE CONTACTO -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-telephone me-2"></i>Información de Contacto
-                                </h6>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label asp-for="Correo" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-envelope me-1"></i>Correo Electrónico
-                                </label>
-                                <input asp-for="Correo" class="form-control"
-                                       type="email"
-                                       placeholder="cliente@correo.com"
-                                       maxlength="150" />
-                                <span asp-validation-for="Correo" class="text-danger small d-block mt-1"></span>
-                            </div>
-                        </div>
-
-                        <!-- DIRECCIÓN -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-geo-alt me-2"></i>Dirección
-                                </h6>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label asp-for="Direccion" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-house me-1"></i>Dirección Completa
-                                </label>
-                                <textarea asp-for="Direccion" class="form-control"
-                                          rows="3"
-                                          maxlength="250"
-                                          placeholder="Dirección completa del cliente"></textarea>
-                                <span asp-validation-for="Direccion" class="text-danger small d-block mt-1"></span>
-                                <div class="form-text text-muted">
-                                    <span id="direccionContador">0</span>/250 caracteres
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Apellidos" class="form-label form-label-client">
+                                            <i class="bi bi-person me-1"></i>Apellidos
+                                        </label>
+                                        <input asp-for="Apellidos"
+                                               class="form-control form-control-client"
+                                               placeholder="Apellidos del cliente"
+                                               required
+                                               minlength="2"
+                                               maxlength="100"
+                                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                                               title="Solo letras y espacios" />
+                                        <span asp-validation-for="Apellidos" class="text-danger small d-block mt-1"></span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de clientes">
-                                <i class="bi bi-arrow-left me-1"></i>Cancelar
-                            </a>
+                            <!-- CONTACTO -->
+                            <div class="seccion-form mb-4">
+                                <div class="seccion-titulo">
+                                    <i class="bi bi-telephone me-2"></i>Información de Contacto
+                                </div>
 
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary rounded-pill" id="btnSubmit" title="Guardar cambios del cliente">
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label asp-for="Correo" class="form-label form-label-client">
+                                            <i class="bi bi-envelope me-1"></i>Correo Electrónico
+                                        </label>
+                                        <input asp-for="Correo"
+                                               class="form-control form-control-client"
+                                               type="email"
+                                               placeholder="cliente@correo.com"
+                                               maxlength="150" />
+                                        <span asp-validation-for="Correo" class="text-danger small d-block mt-1"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DIRECCIÓN -->
+                            <div class="seccion-form mb-4">
+                                <div class="seccion-titulo">
+                                    <i class="bi bi-geo-alt me-2"></i>Dirección
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Direccion" class="form-label form-label-client">
+                                        <i class="bi bi-house me-1"></i>Dirección Completa
+                                    </label>
+                                    <textarea asp-for="Direccion"
+                                              class="form-control form-control-client"
+                                              rows="3"
+                                              maxlength="250"
+                                              placeholder="Dirección completa del cliente"
+                                              id="Direccion"></textarea>
+                                    <span asp-validation-for="Direccion" class="text-danger small d-block mt-1"></span>
+                                    <div class="form-text form-text-client">
+                                        <span id="direccionContador">0</span>/250 caracteres
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="d-flex justify-content-between align-items-center pt-3 cliente-edit-footer">
+                                <a asp-action="Index"
+                                   class="btn btn-outline-clientes cliente-btn-cancel"
+                                   title="Volver al listado de clientes">
+                                    <i class="bi bi-arrow-left me-1"></i>Cancelar
+                                </a>
+
+                                <button type="submit"
+                                        class="btn btn-clientes-primary cliente-btn-submit"
+                                        id="btnSubmit"
+                                        title="Guardar cambios del cliente">
                                     <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
                                 </button>
                             </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- TARJETA INFORMATIVA -->
-            <div class="card mt-4 border-0 bg-light">
-                <div class="card-body">
-                    <h6 class="card-title text-primary mb-3">
-                        <i class="bi bi-lightbulb me-2"></i>Información Importante
-                    </h6>
-                    <div class="row text-muted small">
-                        <div class="col-12">
-                            <p class="mb-2">
-                                <i class="bi bi-info-circle text-primary me-1"></i>
-                                <strong>NIT:</strong> Es recomendable mantener el NIT actualizado para facturación.
-                            </p>
-                            <p class="mb-2">
-                                <i class="bi bi-telephone text-success me-1"></i>
-                                <strong>Contacto:</strong> La información de contacto facilita la comunicación con el cliente.
-                            </p>
-                            <p class="mb-0">
-                                <i class="bi bi-shield-check text-success me-1"></i>
-                                <strong>Estado:</strong> Los clientes inactivos no aparecerán en las opciones de venta.
-                            </p>
-                        </div>
+                        </form>
                     </div>
                 </div>
+
+                <!-- TARJETA INFORMATIVA -->
+                <div class="card cliente-info-card mt-4">
+                    <div class="card-body">
+                        <h6 class="mb-3 text-accent">
+                            <i class="bi bi-lightbulb me-2"></i>Información Importante
+                        </h6>
+                        <ul class="list-unstyled text-muted small mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-info-circle text-accent me-1"></i>
+                                <strong>NIT:</strong> Mantener el NIT correcto asegura una facturación válida.
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-telephone text-success me-1"></i>
+                                <strong>Contacto:</strong> Un correo actualizado facilita la comunicación con el cliente.
+                            </li>
+                            <li>
+                                <i class="bi bi-shield-check text-success me-1"></i>
+                                <strong>Estado:</strong> Clientes inactivos no se mostrarán en el flujo de ventas.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
-</div>
 }
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('clienteForm');
             const submitBtn = document.getElementById('btnSubmit');
-            const originalBtnText = submitBtn.innerHTML;
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
 
-            // Contador de caracteres para dirección
             const direccionTextarea = document.getElementById('Direccion');
             const contador = document.getElementById('direccionContador');
 
+            // Contador dirección
             if (direccionTextarea && contador) {
-                direccionTextarea.addEventListener('input', function() {
-                    contador.textContent = this.value.length;
+                const updateCount = () => {
+                    const len = direccionTextarea.value.length;
+                    contador.textContent = len;
 
-                    if (this.value.length > 240) {
+                    contador.classList.remove('text-warning', 'text-danger');
+
+                    if (len > 240 && len < 250) {
                         contador.classList.add('text-warning');
-                    } else {
-                        contador.classList.remove('text-warning');
                     }
-
-                    if (this.value.length >= 250) {
+                    if (len >= 250) {
                         contador.classList.add('text-danger');
-                    } else {
-                        contador.classList.remove('text-danger');
                     }
-                });
+                };
 
-                // Inicializar contador
-                contador.textContent = direccionTextarea.value.length;
+                direccionTextarea.addEventListener('input', updateCount);
+                updateCount();
             }
 
-            // Auto-formatear NIT mientras se escribe
+            // NIT: autoformato
             const nitInput = document.getElementById('nitInput');
             if (nitInput) {
-                nitInput.addEventListener('input', function(e) {
-                    // Permitir solo números, K y guion
+                nitInput.addEventListener('input', function () {
                     let value = this.value.replace(/[^0-9kK-]/g, '').toUpperCase();
 
-                    // Si tiene más de 8 dígitos y no tiene guion, agregarlo automáticamente
                     if (value.length > 8 && !value.includes('-')) {
                         value = value.slice(0, 8) + '-' + value.slice(8);
                     }
@@ -261,8 +291,7 @@
                     this.value = value;
                 });
 
-                // También formatear al perder el foco
-                nitInput.addEventListener('blur', function() {
+                nitInput.addEventListener('blur', function () {
                     let value = this.value.replace(/[^0-9kK]/g, '').toUpperCase();
                     if (value.length >= 9) {
                         value = value.slice(0, 8) + '-' + value.slice(8);
@@ -270,8 +299,7 @@
                     this.value = value;
                 });
 
-                // Validar formato al enviar el formulario
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function () {
                     let value = nitInput.value.replace(/[^0-9kK]/g, '').toUpperCase();
                     if (value.length >= 9) {
                         value = value.slice(0, 8) + '-' + value.slice(8);
@@ -280,36 +308,31 @@
                 });
             }
 
-            // Validación en tiempo real
-            const inputs = document.querySelectorAll('input, textarea');
+            // Validación visual en tiempo real
+            const inputs = document.querySelectorAll('#clienteForm input, #clienteForm textarea');
             inputs.forEach(input => {
-                input.addEventListener('blur', function() {
+                input.addEventListener('blur', function () {
                     this.classList.remove('is-valid', 'is-invalid');
-
                     if (this.checkValidity()) {
                         this.classList.add('is-valid');
-                    } else {
+                    } else if (this.value.trim() !== '') {
                         this.classList.add('is-invalid');
                     }
                 });
 
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     if (this.value.trim() !== '') {
                         this.classList.remove('is-invalid');
-                        this.classList.add('is-valid');
                     }
                 });
             });
 
-            // SOLUCIÓN: Validar el formulario antes de deshabilitar el botón
-            form.addEventListener('submit', function(e) {
-                // Primero validar si el formulario es válido
+            // Manejo del submit
+            form.addEventListener('submit', function (e) {
                 if (!form.checkValidity()) {
-                    // Si no es válido, mostrar validaciones y no deshabilitar el botón
                     e.preventDefault();
                     e.stopPropagation();
 
-                    // Mostrar errores de validación
                     inputs.forEach(input => {
                         input.classList.remove('is-valid', 'is-invalid');
                         if (!input.checkValidity()) {
@@ -320,31 +343,34 @@
                     return;
                 }
 
-                // Solo deshabilitar el botón si el formulario es válido
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Procesando...';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Guardando...';
 
-                // Re-habilitar el botón después de 10 segundos por si hay algún error
-                setTimeout(() => {
-                    if (submitBtn.disabled) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalBtnText;
-                    }
-                }, 10000);
+                    setTimeout(() => {
+                        if (submitBtn.disabled) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                    }, 10000);
+                }
             });
 
-            // Restaurar el botón si hay errores del servidor (cuando la página se recarga con errores)
-            if (!@ViewData.ModelState.IsValid.ToString().ToLower()) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
+            // Restaurar botón si la página viene con errores del servidor
+            if (!@ViewData.ModelState.IsValid.ToString().ToLower())
+            {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
             }
 
-            // Focus en el primer campo al cargar
-            const firstInput = document.querySelector('input[type="text"]');
+            // Focus inicial
+            const firstInput = document.querySelector('#clienteForm input[type="text"]');
             if (firstInput) firstInput.focus();
         });
 
-        // Función global para restaurar el botón desde otras partes del código
+        // Función global para restaurar botón (si la usas en otro JS)
         function restaurarBotonSubmit() {
             const submitBtn = document.getElementById('btnSubmit');
             if (submitBtn && submitBtn.disabled) {
@@ -354,3 +380,245 @@
         }
     </script>
 }
+
+<style>
+    :root {
+        --primary-blue: #1C1973;
+        --secondary-blue: #514BF2;
+        --accent-blue: #8B88F2;
+        --dark-bg: #0D0E26;
+        --alt-bg: #081C59;
+        --light-text: #F0F0F7;
+        --muted-text: #A4A5D4;
+        --radius: 0.75rem;
+    }
+
+    .cliente-edit-theme {
+        min-height: 100vh;
+        background: radial-gradient(circle at top left, rgba(81,75,242,0.14), transparent), radial-gradient(circle at top right, rgba(139,136,242,0.08), transparent), linear-gradient(180deg, #0D0E26, #040611);
+        color: var(--light-text);
+    }
+
+    .cliente-edit-card {
+        background: rgba(5, 10, 35, 0.98);
+        border-radius: var(--radius);
+        border: 1px solid rgba(81,75,242,0.35);
+        box-shadow: 0 14px 32px rgba(0,0,0,0.7);
+        overflow: hidden;
+        backdrop-filter: blur(4px);
+    }
+
+    .cliente-edit-header {
+        background: linear-gradient(135deg, var(--alt-bg), var(--primary-blue));
+        padding: 1.1rem 1.4rem;
+        border-bottom: 1px solid rgba(139,136,242,0.35);
+    }
+
+    .cliente-edit-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 0, var(--accent-blue), var(--primary-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.3rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    }
+
+    .cliente-edit-subtitle {
+        color: var(--muted-text);
+        font-size: 0.8rem;
+    }
+
+    .cliente-edit-status .label-estado {
+        font-size: 0.7rem;
+        color: var(--muted-text);
+    }
+
+    .badge-estado {
+        padding: 0.15rem 0.6rem;
+        font-size: 0.72rem;
+        border-radius: 999px;
+    }
+
+    .badge-estado-activo {
+        background-color: rgba(46, 204, 113, 0.18);
+        color: #2ECC71;
+        border: 1px solid rgba(46, 204, 113, 0.6);
+    }
+
+    .badge-estado-inactivo {
+        background-color: rgba(255, 107, 107, 0.18);
+        color: #FF6B6B;
+        border: 1px solid rgba(255, 107, 107, 0.6);
+    }
+
+    .seccion-form {
+        padding: 1rem 0.2rem 0.2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .seccion-titulo {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent-blue);
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.55rem;
+    }
+
+    .form-label-client {
+        font-size: 0.8rem;
+        color: var(--accent-blue);
+        font-weight: 600;
+    }
+
+    .form-control-client {
+        background-color: #030618;
+        border-radius: 0.55rem;
+        border: 1px solid rgba(81,75,242,0.4);
+        color: var(--light-text);
+        font-size: 0.86rem;
+        padding: 0.45rem 0.75rem;
+    }
+
+        .form-control-client:focus {
+            background-color: #030618;
+            color: var(--light-text);
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 0.16rem rgba(81,75,242,0.32);
+        }
+
+    .form-control-readonly {
+        opacity: 0.7;
+        border-style: dashed;
+    }
+
+    .form-text-client {
+        color: var(--muted-text);
+        font-size: 0.75rem;
+    }
+
+    textarea.form-control-client {
+        resize: vertical;
+    }
+
+    .cliente-edit-footer {
+        border-top: 1px solid rgba(255,255,255,0.04);
+        margin-top: 0.3rem;
+    }
+
+    /* ✅ BOTONES VISIBLES */
+
+    /* Botón primario "Guardar cambios" */
+    .btn-clientes-primary {
+        background: var(--secondary-blue);
+        color: #fff !important;
+        border: 1px solid var(--secondary-blue);
+        border-radius: var(--radius);
+        padding: 0.45rem 1.3rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.55);
+        transition: all 0.25s ease;
+    }
+
+        .btn-clientes-primary:hover {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+        }
+
+    /* Botón "Cancelar" */
+    .btn-outline-clientes {
+        border-radius: var(--radius);
+        border: 1px solid var(--accent-blue);
+        color: var(--accent-blue) !important;
+        padding: 0.4rem 1rem;
+        font-weight: 500;
+        background-color: transparent;
+        font-size: 0.8rem;
+        transition: all 0.25s ease;
+    }
+
+        .btn-outline-clientes:hover {
+            background-color: rgba(139,136,242,0.18);
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transform: translateY(-1px);
+        }
+
+    .cliente-btn-cancel {
+        /* solo ajusta tamaño, usa colores de btn-outline-clientes */
+        padding: 0.4rem 1rem;
+    }
+
+    .cliente-btn-submit {
+        /* ya usa btn-clientes-primary */
+        padding: 0.45rem 1.3rem;
+    }
+
+    /* ✅ TARJETA INFORMACIÓN IMPORTANTE LEGIBLE */
+
+    .cliente-info-card {
+        background: rgba(5, 10, 35, 0.98);
+        border-radius: var(--radius);
+        border: 1px solid rgba(81,75,242,0.22);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.7);
+        color: var(--light-text);
+    }
+
+        .cliente-info-card h6 {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .cliente-info-card ul li {
+            color: var(--muted-text);
+        }
+
+        .cliente-info-card i {
+            color: var(--accent-blue);
+        }
+
+        .cliente-info-card strong {
+            color: var(--light-text);
+            font-weight: 600;
+        }
+
+    /* Alertas */
+    .alert-smart-danger {
+        background: radial-gradient(circle at 0 0, rgba(255,107,107,0.18), rgba(5,10,35,0.98));
+        border-left: 4px solid #FF6B6B;
+        color: var(--light-text);
+        font-size: 0.8rem;
+    }
+
+    .text-accent {
+        color: var(--accent-blue) !important;
+    }
+
+    @@media (max-width: 768px) {
+        .cliente-edit-card
+
+    {
+        margin-top: 0.5rem;
+    }
+
+    .cliente-edit-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .cliente-edit-status {
+        align-self: flex-end;
+    }
+
+    }
+</style>
