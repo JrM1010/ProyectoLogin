@@ -742,7 +742,12 @@ namespace ProyectoLogin.Controllers
 
 
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> ReporteAjustesInventario(DateTime? desde, DateTime? hasta, string nombreUsuario, string tipo, bool pdf = false)
+        public async Task<IActionResult> ReporteAjustesInventario(
+    DateTime? desde,
+    DateTime? hasta,
+    string nombreUsuario,
+    string tipo,
+    bool pdf = false)
         {
             var query = _context.MovInventarios
                 .Include(m => m.Producto)
@@ -751,37 +756,55 @@ namespace ProyectoLogin.Controllers
                 .Where(m => m.TipoMovimiento == "Ajuste Manual")
                 .AsQueryable();
 
-            // 🔹 Filtros
+            // 🔹 Filtro por rango de fechas
             if (desde.HasValue)
+            {
                 query = query.Where(m => m.Fecha >= desde.Value);
+            }
 
             if (hasta.HasValue)
-                query = query.Where(m => m.Fecha <= hasta.Value.AddDays(1));
+            {
+                var hastaExclusivo = hasta.Value.AddDays(1);
+                query = query.Where(m => m.Fecha < hastaExclusivo);
+            }
 
-            if (!string.IsNullOrEmpty(nombreUsuario))
-                query = query.Where(m => m.Referencia.Contains(nombreUsuario));
+            // 🔹 Filtro por usuario que realizó el ajuste (usando UsuarioAjuste)
+            if (!string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                query = query.Where(m =>
+                    m.UsuarioAjuste != null &&
+                    m.UsuarioAjuste.Contains(nombreUsuario));
+            }
 
+            // 🔹 Filtro por tipo de ajuste (entrada/salida) basado en el signo de Cantidad
             if (!string.IsNullOrEmpty(tipo))
             {
                 if (tipo == "entrada")
+                {
                     query = query.Where(m => m.Cantidad > 0);
+                }
                 else if (tipo == "salida")
+                {
                     query = query.Where(m => m.Cantidad < 0);
+                }
             }
 
+            // 🔹 Proyección para vista y PDF
             var data = await query
                 .OrderByDescending(m => m.Fecha)
                 .Select(m => new
                 {
                     Fecha = m.Fecha,
                     Producto = m.Producto.Nombre,
-                    Cantidad = m.Cantidad,
+                    Usuario = m.UsuarioAjuste,
+                    // Mostramos siempre cantidad absoluta
+                    Cantidad = Math.Abs(m.Cantidad),
                     Tipo = m.Cantidad > 0 ? "Entrada" : "Salida",
                     Motivo = m.Referencia
                 })
                 .ToListAsync();
 
-            // 🔹 Generar PDF con estilo
+            // 🔹 Generar PDF con estilo (incluye Usuario)
             if (pdf)
             {
                 var pdfBytes = Document.Create(container =>
@@ -792,7 +815,7 @@ namespace ProyectoLogin.Controllers
                         page.Size(PageSizes.A4);
                         page.PageColor(Colors.White);
 
-                        // 🔸 Encabezado
+                        // Encabezado
                         page.Header().Column(header =>
                         {
                             header.Item().Text("SMARTCELL COMPANY - REPORTE DE AJUSTES DE INVENTARIO")
@@ -804,64 +827,99 @@ namespace ProyectoLogin.Controllers
                             header.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         });
 
-                        // 🔸 Contenido principal
+                        // Contenido
                         page.Content().PaddingVertical(5).Column(col =>
                         {
                             col.Item().Table(table =>
                             {
                                 table.ColumnsDefinition(cols =>
                                 {
-                                    cols.ConstantColumn(90);   // Fecha
-                                    cols.RelativeColumn(2);    // Producto
-                                    cols.ConstantColumn(70);   // Cantidad
-                                    cols.ConstantColumn(70);   // Tipo
-                                    cols.RelativeColumn(3);    // Motivo
+                                    cols.ConstantColumn(90);    // Fecha
+                                    cols.RelativeColumn(2);     // Producto
+                                    cols.RelativeColumn(1.5f);  // Usuario
+                                    cols.ConstantColumn(70);    // Cantidad
+                                    cols.ConstantColumn(70);    // Tipo
+                                    cols.RelativeColumn(3);     // Motivo
                                 });
 
                                 // Encabezado de tabla
                                 table.Header(header =>
                                 {
-                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Fecha").Bold().FontColor(Colors.White).FontSize(9);
-                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Producto").Bold().FontColor(Colors.White).FontSize(9);
-                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Cantidad").Bold().FontColor(Colors.White).FontSize(9);
-                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter().Text("Tipo").Bold().FontColor(Colors.White).FontSize(9);
-                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).Text("Motivo").Bold().FontColor(Colors.White).FontSize(9);
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4)
+                                        .Text("Fecha").Bold().FontColor(Colors.White).FontSize(9);
+
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4)
+                                        .Text("Producto").Bold().FontColor(Colors.White).FontSize(9);
+
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4)
+                                        .Text("Usuario").Bold().FontColor(Colors.White).FontSize(9);
+
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter()
+                                        .Text("Cantidad").Bold().FontColor(Colors.White).FontSize(9);
+
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4).AlignCenter()
+                                        .Text("Tipo").Bold().FontColor(Colors.White).FontSize(9);
+
+                                    header.Cell().Background(Colors.Blue.Darken3).Padding(4)
+                                        .Text("Motivo").Bold().FontColor(Colors.White).FontSize(9);
                                 });
 
                                 int i = 0;
                                 foreach (var item in data)
                                 {
                                     var bg = i++ % 2 == 0 ? Colors.White : Colors.Grey.Lighten5;
-                                    table.Cell().Background(bg).Padding(3).Text(item.Fecha.ToString("dd/MM/yyyy HH:mm")).FontSize(9);
-                                    table.Cell().Background(bg).Padding(3).Text(item.Producto).FontSize(9);
-                                    table.Cell().Background(bg).Padding(3).AlignCenter().Text(item.Cantidad.ToString()).FontSize(9);
+
+                                    table.Cell().Background(bg).Padding(3)
+                                        .Text(item.Fecha.ToString("dd/MM/yyyy HH:mm"))
+                                        .FontSize(9);
+
+                                    table.Cell().Background(bg).Padding(3)
+                                        .Text(item.Producto)
+                                        .FontSize(9);
+
+                                    table.Cell().Background(bg).Padding(3)
+                                        .Text(string.IsNullOrWhiteSpace(item.Usuario) ? "-" : item.Usuario)
+                                        .FontSize(9);
+
+                                    table.Cell().Background(bg).Padding(3).AlignCenter()
+                                        .Text(item.Cantidad.ToString())
+                                        .FontSize(9);
+
                                     table.Cell().Background(bg).Padding(3).AlignCenter()
                                         .Text(item.Tipo)
-                                        .FontColor(item.Tipo == "Entrada" ? Colors.Green.Darken2 : Colors.Red.Darken2)
+                                        .FontColor(item.Tipo == "Entrada"
+                                            ? Colors.Green.Darken2
+                                            : Colors.Red.Darken2)
                                         .Bold().FontSize(9);
-                                    table.Cell().Background(bg).Padding(3).Text(item.Motivo ?? "-").FontSize(9);
+
+                                    table.Cell().Background(bg).Padding(3)
+                                        .Text(item.Motivo ?? "-")
+                                        .FontSize(9);
                                 }
                             });
 
-                            // Espacio
-                            col.Item().PaddingTop(10);
-
                             // Resumen
-                            col.Item().AlignRight().Text($"Total de ajustes: {data.Count}")
+                            col.Item().PaddingTop(10);
+                            col.Item().AlignRight()
+                                .Text($"Total de ajustes: {data.Count}")
                                 .FontSize(10).Bold().FontColor(Colors.Green.Darken3);
                         });
 
-                        // 🔸 Pie de página
-                        page.Footer().AlignCenter().Text("Smartcell Company — Sistema de Gestión Comercial")
+                        // Pie
+                        page.Footer().AlignCenter()
+                            .Text("Smartcell Company — Sistema de Gestión Comercial")
                             .FontSize(8).FontColor(Colors.Grey.Darken2);
                     });
                 }).GeneratePdf();
 
-                return File(pdfBytes, "application/pdf", $"ReporteAjustesInventario_{FechaLocal.Ahora():ddMMyyyy_HHmm}.pdf");
+                return File(pdfBytes, "application/pdf",
+                    $"ReporteAjustesInventario_{FechaLocal.Ahora():ddMMyyyy_HHmm}.pdf");
             }
 
+            // Vista normal
             return View("~/Views/Reportes/ReporteAjustesInventario.cshtml", data);
         }
+
 
 
 

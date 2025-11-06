@@ -31,6 +31,9 @@ namespace ProyectoLogin.Models.ModelosProducts
         [Display(Name = "Observación")]
         public string? Observacion { get; set; }
 
+        // 🔹 NUEVO: Usuario que realizó el ajuste
+        public string? UsuarioAjuste { get; set; }
+
         public virtual ProductoCore? Producto { get; set; }
     }
 }

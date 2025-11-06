@@ -75,7 +75,6 @@ namespace ProyectoLogin.Controllers
 
             try
             {
-                // Verificar que el producto existe
                 var producto = await _context.Productos
                     .Include(p => p.Inventario)
                     .FirstOrDefaultAsync(p => p.IdProducto == request.IdProducto && p.Activo);
@@ -85,7 +84,6 @@ namespace ProyectoLogin.Controllers
 
                 var inventario = producto.Inventario;
 
-                // Crear inventario si no existe
                 if (inventario == null)
                 {
                     inventario = new Inventario
@@ -102,7 +100,7 @@ namespace ProyectoLogin.Controllers
                 int stockAnterior = inventario.StockActual;
                 int nuevoStock;
 
-                // Aplicar ajuste según el tipo
+                // 🔹 Aplicar ajuste a inventario
                 if (request.TipoAjuste == "entrada")
                 {
                     inventario.StockActual += request.Cantidad;
@@ -110,7 +108,6 @@ namespace ProyectoLogin.Controllers
                 }
                 else if (request.TipoAjuste == "salida")
                 {
-                    // Validar stock suficiente para salidas
                     if (inventario.StockActual < request.Cantidad)
                     {
                         await transaction.RollbackAsync();
@@ -120,6 +117,7 @@ namespace ProyectoLogin.Controllers
                             message = $"Stock insuficiente. Stock actual: {inventario.StockActual}, solicitado: {request.Cantidad}"
                         });
                     }
+
                     inventario.StockActual -= request.Cantidad;
                     nuevoStock = stockAnterior - request.Cantidad;
                 }
@@ -131,24 +129,35 @@ namespace ProyectoLogin.Controllers
 
                 inventario.FechaUltimaActualizacion = FechaLocal.Ahora();
 
-                // Registrar movimiento en el inventario
+                // 🔹 Info de usuario
+                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                var nombreUsuario =
+                    User.Identity?.Name
+                    ?? User.FindFirst("Username")?.Value
+                    ?? idUsuario.ToString();
+
+                // 🔹 Cantidad con signo para el movimiento
+                var cantidadMovimiento = request.TipoAjuste == "entrada"
+                    ? request.Cantidad           // Entrada: positivo
+                    : -request.Cantidad;         // Salida: negativo
+
+                // 🔹 Registrar movimiento en MovInventario
                 var movimiento = new MovInventario
                 {
                     IdProducto = request.IdProducto,
-                    Cantidad = request.Cantidad,
+                    Cantidad = cantidadMovimiento,
                     Fecha = FechaLocal.Ahora(),
                     TipoMovimiento = "Ajuste Manual",
-                    Referencia = $"Ajuste {request.TipoAjuste} - {request.Motivo}",
-                    Observacion = $"Stock anterior: {stockAnterior}, Nuevo stock: {nuevoStock}. {request.Motivo}"
+                    Referencia = request.Motivo,
+                    Observacion = $"Ajuste {request.TipoAjuste} de {request.Cantidad} unidades. " +
+                                  $"Stock anterior: {stockAnterior}, nuevo stock: {nuevoStock}. Usuario: {nombreUsuario}",
+                    UsuarioAjuste = nombreUsuario
                 };
 
                 _context.MovInventarios.Add(movimiento);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
 
-                // 🔹 Registrar movimiento en la bitácora
-                var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-
+                // 🔹 Registrar en bitácora (igual que antes, pero usando las mismas vars)
                 string tipoAccion = request.TipoAjuste == "entrada" ? "Ajuste de entrada" : "Ajuste de salida";
 
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
@@ -161,14 +170,14 @@ namespace ProyectoLogin.Controllers
                 });
 
                 await _context.SaveChangesAsync();
-
+                await transaction.CommitAsync();
 
                 return Json(new
                 {
                     success = true,
                     message = $"Ajuste realizado correctamente. Nuevo stock: {nuevoStock}",
-                    stockAnterior = stockAnterior,
-                    nuevoStock = nuevoStock
+                    stockAnterior,
+                    nuevoStock
                 });
             }
             catch (Exception ex)
@@ -177,6 +186,7 @@ namespace ProyectoLogin.Controllers
                 return Json(new { success = false, message = $"Error al realizar el ajuste: {ex.Message}" });
             }
         }
+
 
 
         // 🔹 Buscar productos por nombre o código (para autocompletado)

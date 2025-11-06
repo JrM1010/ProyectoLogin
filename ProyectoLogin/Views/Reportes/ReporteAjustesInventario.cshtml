@@ -160,6 +160,7 @@
                                     <tr>
                                         <th>Fecha</th>
                                         <th class="text-start">Producto</th>
+                                        <th class="text-start">Usuario</th>
                                         <th class="text-end">Cantidad</th>
                                         <th>Tipo</th>
                                         <th class="text-start">Motivo</th>
@@ -174,6 +175,9 @@
                                                 <small class="text-muted-small">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</small>
                                             </td>
                                             <td class="text-start text-light fw-semibold">@item.Producto</td>
+                                            <td class="text-start text-muted-small">
+                                                @(string.IsNullOrWhiteSpace((string)item.Usuario) ? "-" : item.Usuario)
+                                            </td>
                                             <td class="text-end">@item.Cantidad</td>
                                             <td class="@(esEntrada ? "text-success fw-bold" : "text-danger fw-bold")">
                                                 @item.Tipo
