@@ -328,6 +328,13 @@
         opacity: 0.6;
     }
 
+    /* Inputs con error */
+    .users-input.is-invalid,
+    .users-select.is-invalid {
+        border-color: var(--users-danger) !important;
+        box-shadow: 0 0 0 0.13rem rgba(255, 107, 107, 0.18);
+    }
+
     /* TARJETA INFO ROLES */
     .users-roles-card {
         margin-top: 1.4rem;
@@ -355,10 +362,6 @@
         gap: 0.4rem;
         margin-bottom: 0.4rem;
     }
-
-        .users-roles-item i {
-            margin-top: 0.03rem;
-        }
 
         .users-roles-item strong {
             font-size: 0.8rem;
@@ -398,6 +401,9 @@
             <div class="users-create-body">
                 <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off" id="registroForm">
                     @Html.AntiForgeryToken()
+
+                    <!-- Contenedor para mostrar errores de validación del lado cliente -->
+                    <div id="validationAlert" style="display:none;"></div>
 
                     <!-- INFORMACIÓN PERSONAL -->
                     <div class="users-block">
@@ -499,7 +505,7 @@
                         </div>
                     </div>
 
-                    <!-- MENSAJES DE ALERTA -->
+                    <!-- MENSAJES DE ALERTA DESDE EL SERVIDOR -->
                     @if (ViewData["Mensaje"] != null)
                     {
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -580,45 +586,83 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            console.log('=== SCRIPT CARGADO ===');
-
             const form = document.getElementById('registroForm');
             const submitBtn = document.getElementById('submitBtn');
+            const validationAlert = document.getElementById('validationAlert');
 
+            // Desactivar validación nativa del navegador
             if (form) {
-                console.log('Formulario encontrado');
-
                 form.setAttribute('novalidate', 'novalidate');
                 form.noValidate = true;
 
                 form.addEventListener('submit', function (e) {
-                    console.log('=== FORMULARIO ENVIANDO ===');
+                    // Limpiar estado anterior
+                    if (validationAlert) {
+                        validationAlert.style.display = 'none';
+                        validationAlert.innerHTML = '';
+                    }
+                    document.querySelectorAll('.users-input, .users-select')
+                        .forEach(el => el.classList.remove('is-invalid'));
 
-                    const nombre = document.querySelector('[name="NombreUsuario"]').value;
-                    const correo = document.querySelector('[name="Correo"]').value;
-                    const clave = document.querySelector('[name="Clave"]').value;
-                    const rol = document.querySelector('[name="IdRol"]').value;
+                    const nombre = document.querySelector('[name="NombreUsuario"]');
+                    const correo = document.querySelector('[name="Correo"]');
+                    const clave = document.querySelector('[name="Clave"]');
+                    const rol = document.querySelector('[name="IdRol"]');
 
-                    console.log('Datos:', { nombre, correo, clave, rol });
+                    const errores = [];
 
-                    if (!nombre || !correo || !clave || !rol) {
-                        console.log('ERROR: Campos vacíos');
-                        alert('Por favor complete todos los campos');
+                    if (!nombre.value.trim()) {
+                        errores.push('El nombre completo es obligatorio.');
+                        nombre.classList.add('is-invalid');
+                    }
+                    if (!correo.value.trim()) {
+                        errores.push('El correo electrónico es obligatorio.');
+                        correo.classList.add('is-invalid');
+                    }
+                    if (!clave.value.trim()) {
+                        errores.push('La contraseña es obligatoria.');
+                        clave.classList.add('is-invalid');
+                    }
+                    if (!rol.value.trim()) {
+                        errores.push('Debe seleccionar un rol para el usuario.');
+                        rol.classList.add('is-invalid');
+                    }
+
+                    if (errores.length > 0) {
                         e.preventDefault();
+
+                        if (validationAlert) {
+                            const lista = errores.map(e => `<li>${e}</li>`).join('');
+                            validationAlert.innerHTML = `
+                                <div class="alert alert-danger d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                    <div>
+                                        <strong>Por favor, revise los siguientes puntos:</strong>
+                                        <ul class="mb-0 mt-1">
+                                            ${lista}
+                                        </ul>
+                                    </div>
+                                </div>`;
+                            validationAlert.style.display = 'block';
+                            validationAlert.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="bi bi-person-plus"></i> Registrar Usuario';
+                        }
                         return;
                     }
 
-                    console.log('Todos los campos llenos - enviando...');
-
+                    // Si todo OK, deshabilitar botón y mostrar estado
                     if (submitBtn) {
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Registrando...';
                     }
                 });
-            } else {
-                console.log('ERROR: Formulario no encontrado');
             }
 
+            // Mostrar / ocultar contraseña
             const togglePassword = document.getElementById('togglePassword');
             const passwordField = document.getElementById('passwordField');
             const passwordIcon = document.getElementById('passwordIcon');

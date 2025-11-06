@@ -4,30 +4,294 @@
     ViewData["Title"] = "Editar Proveedor";
 }
 
-<div class="container mt-4">
+<style>
+    :root {
+        --prov-primary: #163327;
+        --prov-secondary: #245548;
+        --prov-accent: #2ECC71;
+        --prov-accent-soft: rgba(46, 204, 113, 0.14);
+        --prov-bg: #040807;
+        --prov-card: #0b1511;
+        --prov-card-soft: #111d18;
+        --prov-text: #E7FFF5;
+        --prov-muted: #9EB4A7;
+        --prov-border: #1c3429;
+        --prov-radius: 0.9rem;
+        --prov-danger: #ff6b6b;
+    }
+
+    .prov-edit-theme {
+        min-height: 100vh;
+        padding: 2.5rem 1.25rem;
+        background: radial-gradient(circle at top left, rgba(46, 204, 113, 0.05), transparent), radial-gradient(circle at bottom right, rgba(36, 85, 72, 0.10), transparent), linear-gradient(135deg, #020504 0%, #050b08 40%, #020807 100%);
+        color: var(--prov-text);
+    }
+
+    .prov-edit-card-main {
+        background: radial-gradient(circle at top, rgba(46, 204, 113, 0.03), transparent), linear-gradient(180deg, rgba(9, 20, 16, 0.98), #050a07);
+        border-radius: var(--prov-radius);
+        border: 1px solid var(--prov-border);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9);
+        overflow: hidden;
+    }
+
+    .prov-edit-header {
+        padding: 1rem 1.6rem;
+        background: linear-gradient( 135deg, rgba(22, 51, 39, 0.98), rgba(36, 85, 72, 0.98), rgba(5, 10, 7, 1) );
+        border-bottom: 1px solid rgba(46, 204, 113, 0.25);
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .prov-edit-header-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        background: radial-gradient(circle, rgba(46, 204, 113, 0.18), transparent);
+        border: 1px solid rgba(46, 204, 113, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--prov-accent);
+        font-size: 1.4rem;
+    }
+
+    .prov-edit-header h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.22rem;
+        color: var(--prov-text);
+        letter-spacing: 0.01em;
+    }
+
+    .prov-edit-header small {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--prov-muted);
+    }
+
+    .prov-edit-body {
+        padding: 1.7rem 1.6rem 1.4rem;
+    }
+
+    .prov-section-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--prov-accent);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+        .prov-section-label i {
+            font-size: 1rem;
+        }
+
+    .prov-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--prov-text);
+        margin-bottom: 0.15rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+        .prov-label i {
+            color: var(--prov-accent);
+            font-size: 0.9rem;
+        }
+
+        .prov-label .required {
+            color: var(--prov-danger);
+        }
+
+    .prov-input,
+    .prov-input[type="email"],
+    .prov-input[type="text"] {
+        background: rgba(2, 8, 6, 0.98);
+        border-radius: 0.65rem;
+        border: 1px solid var(--prov-border);
+        padding: 0.55rem 0.8rem;
+        font-size: 0.85rem;
+        color: var(--prov-text);
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+        .prov-input::placeholder {
+            color: rgba(158, 180, 167, 0.7);
+        }
+
+        .prov-input:focus {
+            outline: none;
+            border-color: var(--prov-accent);
+            box-shadow: 0 0 0 0.12rem var(--prov-accent-soft);
+            background: #050b08;
+            color: var(--prov-text);
+        }
+
+        .prov-input.is-invalid {
+            border-color: var(--prov-danger);
+        }
+
+        .prov-input.is-valid {
+            border-color: var(--prov-accent);
+        }
+
+    .text-danger.small {
+        font-size: 0.72rem;
+    }
+
+    .prov-help {
+        font-size: 0.72rem;
+        color: var(--prov-muted);
+        margin-top: 0.05rem;
+    }
+
+    .prov-actions {
+        padding-top: 1rem;
+        margin-top: 0.6rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .prov-btn-back {
+        border-radius: 999px;
+        padding: 0.4rem 1rem;
+        font-size: 0.78rem;
+        border: 1px solid rgba(158, 180, 167, 0.85);
+        background: transparent;
+        color: var(--prov-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+        .prov-btn-back:hover {
+            color: var(--prov-accent);
+            border-color: var(--prov-accent);
+            background: rgba(2, 8, 6, 0.95);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+            transform: translateY(-1px);
+        }
+
+    .prov-btn-save {
+        border-radius: 999px;
+        padding: 0.45rem 1.35rem;
+        font-size: 0.8rem;
+        border: none;
+        background: linear-gradient(135deg, var(--prov-accent), #26b864);
+        color: #04110b;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-weight: 600;
+        box-shadow: 0 10px 24px rgba(46, 204, 113, 0.4);
+        transition: all 0.2s ease;
+    }
+
+        .prov-btn-save:hover {
+            background: linear-gradient(135deg, #26b864, #2ECC71);
+            color: var(--prov-text);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.9);
+        }
+
+    .prov-info-card {
+        margin-top: 1.6rem;
+        background: radial-gradient(circle at top, rgba(46, 204, 113, 0.03), transparent), var(--prov-card-soft);
+        border-radius: var(--prov-radius);
+        border: 1px solid var(--prov-border);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.85);
+        color: var(--prov-muted);
+        font-size: 0.78rem;
+    }
+
+        .prov-info-card .card-body {
+            padding: 1.05rem 1.3rem;
+        }
+
+        .prov-info-card h6 {
+            color: var(--prov-accent);
+            font-weight: 600;
+            font-size: 0.86rem;
+            margin-bottom: 0.55rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .prov-info-card p {
+            margin-bottom: 0.35rem;
+        }
+
+    @@media (max-width: 768px) {
+        .prov-edit-body
+
+    {
+        padding: 1.4rem 1.1rem 1.2rem;
+    }
+
+    .prov-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+        .prov-actions > * {
+            width: 100%;
+            justify-content: center;
+        }
+
+    }
+</style>
+
+<div class="container-fluid prov-edit-theme">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 col-xl-6">
             <!-- CARD PRINCIPAL -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-warning text-black py-3">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-building-gear fs-4 me-2"></i>
-                        <h4 class="mb-0">Editar Proveedor</h4>
+            <div class="prov-edit-card-main">
+                <div class="prov-edit-header">
+                    <div class="prov-edit-header-icon">
+                        <i class="bi bi-building-gear"></i>
+                    </div>
+                    <div>
+                        <h4>Editar Proveedor</h4>
+                        <small>Actualiza los datos del proveedor para mantener la información confiable</small>
                     </div>
                 </div>
 
-                <div class="card-body p-4">
+                <div class="prov-edit-body">
                     <form asp-action="Edit" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="IdProveedor" />
 
                         <!-- INFORMACIÓN BÁSICA -->
                         <div class="row mb-4">
-                            <div class="col-12 mb-3">
-                                <label asp-for="Nombre" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-building me-1"></i>Nombre del Proveedor *
+                            <div class="col-12">
+                                <div class="prov-section-label">
+                                    <i class="bi bi-building"></i>
+                                    Información del Proveedor
+                                </div>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <label asp-for="Nombre" class="prov-label">
+                                    <i class="bi bi-building"></i>Nombre del Proveedor
+                                    <span class="required">*</span>
                                 </label>
-                                <input asp-for="Nombre" class="form-control" placeholder="Ingrese el nombre del proveedor" required />
+                                <input asp-for="Nombre"
+                                       class="prov-input"
+                                       placeholder="Ingrese el nombre del proveedor"
+                                       required />
                                 <span asp-validation-for="Nombre" class="text-danger small"></span>
                             </div>
                         </div>
@@ -35,60 +299,80 @@
                         <!-- INFORMACIÓN DE CONTACTO -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-telephone me-2"></i>Información de Contacto
-                                </h6>
+                                <div class="prov-section-label">
+                                    <i class="bi bi-telephone"></i>
+                                    Información de Contacto
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contacto" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-person me-1"></i>Persona de Contacto
+
+                            <div class="col-md-6 mb-2">
+                                <label asp-for="Contacto" class="prov-label">
+                                    <i class="bi bi-person"></i>Persona de Contacto
                                 </label>
-                                <input asp-for="Contacto" class="form-control" placeholder="Nombre del contacto principal" />
+                                <input asp-for="Contacto"
+                                       class="prov-input"
+                                       placeholder="Nombre del contacto principal" />
                                 <span asp-validation-for="Contacto" class="text-danger small"></span>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Telefono" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-phone me-1"></i>Teléfono
+                            <div class="col-md-6 mb-2">
+                                <label asp-for="Telefono" class="prov-label">
+                                    <i class="bi bi-phone"></i>Teléfono
                                 </label>
-                                <input asp-for="Telefono" class="form-control" placeholder="Número de teléfono" />
+                                <input asp-for="Telefono"
+                                       class="prov-input"
+                                       placeholder="Número de teléfono" />
                                 <span asp-validation-for="Telefono" class="text-danger small"></span>
+                                <div class="prov-help">
+                                    Incluye un número actualizado para facilitar la comunicación.
+                                </div>
                             </div>
                         </div>
 
                         <!-- INFORMACIÓN ADICIONAL -->
-                        <div class="row mb-4">
+                        <div class="row mb-3">
                             <div class="col-12">
-                                <h6 class="text-primary mb-3">
-                                    <i class="bi bi-geo-alt me-2"></i>Información Adicional
-                                </h6>
+                                <div class="prov-section-label">
+                                    <i class="bi bi-geo-alt"></i>
+                                    Información Adicional
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-envelope me-1"></i>Correo Electrónico
+
+                            <div class="col-md-6 mb-2">
+                                <label asp-for="Email" class="prov-label">
+                                    <i class="bi bi-envelope"></i>Correo Electrónico
                                 </label>
-                                <input asp-for="Email" class="form-control" type="email" placeholder="correo@proveedor.com" />
+                                <input asp-for="Email"
+                                       class="prov-input"
+                                       type="email"
+                                       placeholder="correo@proveedor.com" />
                                 <span asp-validation-for="Email" class="text-danger small"></span>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Direccion" class="form-label fw-semibold text-primary">
-                                    <i class="bi bi-geo me-1"></i>Dirección
+                            <div class="col-md-6 mb-2">
+                                <label asp-for="Direccion" class="prov-label">
+                                    <i class="bi bi-geo"></i>Dirección
                                 </label>
-                                <input asp-for="Direccion" class="form-control" placeholder="Dirección completa" />
+                                <input asp-for="Direccion"
+                                       class="prov-input"
+                                       placeholder="Dirección completa" />
                                 <span asp-validation-for="Direccion" class="text-danger small"></span>
                             </div>
                         </div>
 
                         <!-- BOTONES DE ACCIÓN -->
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de proveedores">
-                                <i class="bi bi-arrow-left me-1"></i>Cancelar
+                        <div class="prov-actions">
+                            <a asp-action="Index"
+                               class="prov-btn-back"
+                               title="Volver al listado de proveedores">
+                                <i class="bi bi-arrow-left"></i> Volver al listado
                             </a>
 
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary rounded-pill" title="Guardar cambios del proveedor">
-                                    <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
+                                <button type="submit"
+                                        class="prov-btn-save"
+                                        title="Guardar cambios del proveedor">
+                                    <i class="bi bi-check2-circle"></i> Guardar Cambios
                                 </button>
                             </div>
                         </div>
@@ -97,27 +381,24 @@
             </div>
 
             <!-- TARJETA INFORMATIVA -->
-            <div class="card mt-4 border-0 bg-light">
+            <div class="card prov-info-card">
                 <div class="card-body">
-                    <h6 class="card-title text-primary mb-3">
-                        <i class="bi bi-lightbulb me-2"></i>Información Importante
+                    <h6>
+                        <i class="bi bi-lightbulb"></i>
+                        Información Importante
                     </h6>
-                    <div class="row text-muted small">
-                        <div class="col-12">
-                            <p class="mb-2">
-                                <i class="bi bi-asterisk text-danger me-1"></i>
-                                <strong>Campos obligatorios:</strong> Nombre del proveedor, Telefono, Correo electronico.
-                            </p>
-                            <p class="mb-2">
-                                <i class="bi bi-info-circle text-primary me-1"></i>
-                                <strong>Contacto:</strong> Es recomendable incluir al menos un método de contacto.
-                            </p>
-                            <p class="mb-0">
-                                <i class="bi bi-shield-check text-success me-1"></i>
-                                <strong>Datos actualizados:</strong> Mantener la información actualizada facilita la comunicación.
-                            </p>
-                        </div>
-                    </div>
+                    <p>
+                        <i class="bi bi-asterisk text-danger me-1"></i>
+                        <strong>Campos obligatorios:</strong> Asegúrate de que el nombre y datos clave estén correctamente completos.
+                    </p>
+                    <p>
+                        <i class="bi bi-info-circle text-primary me-1"></i>
+                        <strong>Contacto:</strong> Mantener un medio de contacto actualizado mejora la coordinación.
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-shield-check text-success me-1"></i>
+                        <strong>Datos actualizados:</strong> Cualquier cambio impacta en pedidos, crédito y facturación asociados.
+                    </p>
                 </div>
             </div>
         </div>
@@ -128,20 +409,18 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Focus en el primer campo al cargar
-            const firstInput = document.querySelector('input[type="text"]');
-            if (firstInput) firstInput.focus();
-
-            // Validación en tiempo real para campos requeridos
+        document.addEventListener('DOMContentLoaded', function () {
             const nombreInput = document.querySelector('#Nombre');
             if (nombreInput) {
-                nombreInput.addEventListener('blur', function() {
+                nombreInput.focus();
+                nombreInput.addEventListener('blur', function () {
                     const errorSpan = this.nextElementSibling;
                     if (!this.value.trim() && errorSpan && errorSpan.classList.contains('text-danger')) {
                         this.classList.add('is-invalid');
-                    } else {
+                    } else if (this.value.trim()) {
                         this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        setTimeout(() => this.classList.remove('is-valid'), 2000);
                     }
                 });
             }
