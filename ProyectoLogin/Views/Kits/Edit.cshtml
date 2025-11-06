@@ -1,12 +1,21 @@
 ﻿@model ProyectoLogin.Models.Promociones.Kit
+@using System.Security.Claims
 
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Editar Kit";
     var productos = (ViewBag.Productos as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>();
     var detalles = Model?.Detalles ?? Enumerable.Empty<dynamic>();
     var gt = new System.Globalization.CultureInfo("es-GT");
-}
 
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
+
+
+}
+@if (isAuth && isAdmin){
 <div class="container-fluid py-4">
     <!-- HEADER PRINCIPAL -->
     <div class="d-flex justify-content-between align-items-center mb-5">
@@ -286,7 +295,7 @@
         <div id="alertArea" class="mt-4"></div>
     </form>
 </div>
-
+}
 <style>
     .table td, .table th {
         vertical-align: middle;

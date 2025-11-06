@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace ProyectoLogin.Controllers
 {
     // Ajusta roles según tu necesidad; si cualquiera puede crear kits quita el Authorize
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Administrador, Vendedor")]
     public class KitsController : Controller
     {
         private readonly DbPruebaContext _context;
@@ -36,6 +36,7 @@ namespace ProyectoLogin.Controllers
             return View(kits);
         }
 
+        [Authorize(Roles = "Administrador")]
         // GET: /Kits/Create
         public async Task<IActionResult> Create()
         {
@@ -59,6 +60,7 @@ namespace ProyectoLogin.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Administrador")]
         // POST: /Kits/CalcularPrecio
         // Devuelve subtotal, descuento y total — usa precios actuales desde DB (no confía en el cliente)
         [HttpPost]
@@ -119,6 +121,7 @@ namespace ProyectoLogin.Controllers
             });
         }
 
+        [Authorize(Roles = "Administrador")]
         // POST: /Kits/Create
         // Guarda el Kit y sus detalles (usa los precios actuales y los almacena como snapshot)
         [HttpPost]
@@ -226,7 +229,7 @@ namespace ProyectoLogin.Controllers
                 return BadRequest(new { success = false, message = "Error guardando kit: " + ex.Message });
             }
         }
-
+        [Authorize(Roles = "Administrador, Vendedor")]
         // GET: /Kits/Details/5
         public async Task<IActionResult> Details(int id)
         {
@@ -242,7 +245,7 @@ namespace ProyectoLogin.Controllers
         }
 
 
-
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -271,7 +274,7 @@ namespace ProyectoLogin.Controllers
             return Ok(new { success = true });
         }
 
-
+        [Authorize(Roles = "Administrador")]
         // GET: /Kits/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
@@ -303,7 +306,7 @@ namespace ProyectoLogin.Controllers
             return View(kit);
         }
 
-
+        [Authorize(Roles = "Administrador")]
         // POST: /Kits/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]

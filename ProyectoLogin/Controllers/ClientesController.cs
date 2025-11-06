@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
 using ProyectoLogin.Recursos;
@@ -6,6 +7,7 @@ using System;
 
 namespace ProyectoLogin.Controllers
 {
+    [Authorize(Roles = "Administrador, Vendedor")]
     public class ClientesController : Controller
     {
         private readonly Models.DbPruebaContext _context;
@@ -39,6 +41,7 @@ namespace ProyectoLogin.Controllers
             return nit;
         }
 
+        
         // GET: Clientes
         public async Task<IActionResult> Index(string q, int pageActivos = 1, int pageInactivos = 1, int pageSize = 5)
         {
@@ -114,24 +117,16 @@ namespace ProyectoLogin.Controllers
             return View();
         }
 
-        // GET: Clientes/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
 
-            var cliente = await _context.Clientes.AsNoTracking()
-                .FirstOrDefaultAsync(m => m.IdCliente == id);
 
-            if (cliente == null) return NotFound();
-            return View(cliente);
-        }
-
+        
         // GET: Clientes/Create
         public IActionResult Create()
         {
             return View();
         }
 
+        
         // POST: Clientes/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -196,6 +191,8 @@ namespace ProyectoLogin.Controllers
             return View(cliente);
         }
 
+
+        [Authorize(Roles = "Administrador")]
         // GET: Clientes/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -213,6 +210,8 @@ namespace ProyectoLogin.Controllers
             return View(cliente);
         }
 
+
+        [Authorize(Roles = "Administrador")]
         // POST: Clientes/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -281,7 +280,8 @@ namespace ProyectoLogin.Controllers
             return View(cliente);
         }
 
-        // GET: Clientes/Delete/5 (confirmación)
+
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -295,6 +295,7 @@ namespace ProyectoLogin.Controllers
             return View(cliente);
         }
 
+        [Authorize(Roles = "Administrador")]
         // POST: Clientes/Delete/5 (soft-delete)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

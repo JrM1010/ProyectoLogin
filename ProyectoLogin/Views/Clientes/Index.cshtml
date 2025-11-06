@@ -1,4 +1,10 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Cliente>
+
+@using System.Security.Claims
+
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+
 @{
     // Variables de paginación
     var activos = ViewBag.Activos as List<ProyectoLogin.Models.Cliente> ?? new List<ProyectoLogin.Models.Cliente>();
@@ -11,7 +17,17 @@
     var pageInactivos = ViewBag.PageInactivos ?? 1;
     var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
+
 }
+
+
+
+
 
 <div class="container-fluid">
     <!-- HEADER PRINCIPAL -->
@@ -23,9 +39,10 @@
             <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark">
                 <i class="bi bi-arrow-left me-1"></i>Inicio
             </a>
-            <a asp-action="Create" class="btn btn-success rounded-pill" title="Agregar nuevo cliente">
-                <i class="bi bi-person-plus me-1"></i>Nuevo Cliente
-            </a>
+            
+                <a asp-action="Create" class="btn btn-success rounded-pill" title="Agregar nuevo cliente">
+                    <i class="bi bi-person-plus me-1"></i>Nuevo Cliente</a>
+            
         </div>
     </div>
 
@@ -121,8 +138,10 @@
                                 <th>Nombre</th>
                                 <th>Correo</th>
                                 <th>Dirección</th>
+                                @if (isAuth && isAdmin){
                                 <th class="text-center">Acciones</th>
-                            </tr>
+                                }
+                                </tr>
                         </thead>
                         <tbody>
                             @foreach (var c in activos)
@@ -153,20 +172,28 @@
                                     <td>@(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)</td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-1">
-                                            <!-- Editar -->
-                                            <a asp-action="Edit" asp-route-id="@c.IdCliente"
-                                               class="btn btn-outline-warning rounded-circle btn-sm" title="Editar cliente">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-
+                                           
+                                            @if (isAuth && isAdmin)
+                                            {
+                                                <!-- Editar -->
+                                                <a asp-action="Edit" asp-route-id="@c.IdCliente"
+                                                class="btn btn-outline-warning rounded-circle btn-sm" title="Editar cliente">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                            }
+                                            
+                                             
                                             <!-- Desactivar -->
                                             <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
+
+                                                @if (isAuth && isAdmin){
                                                 <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm"
                                                         title="Desactivar cliente"
                                                         onclick="return confirm('¿Estás seguro de desactivar a @c.Nombres @c.Apellidos?')">
                                                     <i class="bi bi-person-dash"></i>
                                                 </button>
+                                                }
                                             </form>
                                         </div>
                                     </td>
@@ -299,6 +326,7 @@
     <!-- CLIENTES INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
     @if (totalInactivos > 0)
     {
+        @if (isAuth && isAdmin){
         <div class="card shadow-sm">
             <div class="card-header bg-secondary text-white d-flex align-items-center">
                 <i class="bi bi-person-x fs-5 me-2"></i>
@@ -481,6 +509,7 @@
                 }
             </div>
         </div>
+        }
     }
 </div>
 

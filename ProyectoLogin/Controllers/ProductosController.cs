@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLogin.Models;
@@ -8,6 +10,7 @@ using ProyectoLogin.Recursos;
 
 namespace ProyectoLogin.Controllers
 {
+    [Authorize(Roles = "Administrador, Vendedor")]
     public class ProductosController : Controller
     {
         private readonly DbPruebaContext _context;
@@ -66,6 +69,7 @@ namespace ProyectoLogin.Controllers
             return View(lista);
         }
 
+        [Authorize(Roles = "Administrador")]
         // GET: Create
         public async Task<IActionResult> Create()
         {
@@ -100,6 +104,7 @@ namespace ProyectoLogin.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Administrador")]
         // POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -238,6 +243,7 @@ namespace ProyectoLogin.Controllers
             return codigo;
         }
 
+        [Authorize(Roles = "Administrador")]
         // GET: Edit
         public async Task<IActionResult> Edit(int id)
         {
@@ -251,6 +257,7 @@ namespace ProyectoLogin.Controllers
             return View(producto);
         }
 
+        [Authorize(Roles = "Administrador")]
         // POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -316,6 +323,7 @@ namespace ProyectoLogin.Controllers
             return View(producto);
         }
 
+        [Authorize(Roles = "Administrador")]
         // ACTIVAR/DESACTIVAR (toggle)
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -329,6 +337,8 @@ namespace ProyectoLogin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
+        [Authorize(Roles = "Administrador")]
         // AGREGAR PRECIO (POST desde Edit o vista parcial)
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -360,6 +370,7 @@ namespace ProyectoLogin.Controllers
 
         // ========== MÉTODOS AJAX PARA CATEGORÍAS ==========
 
+        [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> ObtenerCategorias()
         {
@@ -376,6 +387,7 @@ namespace ProyectoLogin.Controllers
             return Json(categorias);
         }
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> CrearCategoria(string nombre, string descripcion)
         {
@@ -416,6 +428,7 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> EditarCategoria(int id, string nombre, string descripcion)
         {
@@ -454,6 +467,8 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> EliminarCategoria(int id)
         {
@@ -490,6 +505,7 @@ namespace ProyectoLogin.Controllers
 
         // ========== MÉTODOS AJAX PARA MARCAS ==========
 
+        [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> ObtenerMarcas()
         {
@@ -506,6 +522,8 @@ namespace ProyectoLogin.Controllers
             return Json(marcas);
         }
 
+
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> CrearMarca(string nombre)
         {
@@ -540,6 +558,7 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> EditarMarca(int id, string nombre)
         {
@@ -577,6 +596,7 @@ namespace ProyectoLogin.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> EliminarMarca(int id)
         {
@@ -613,6 +633,7 @@ namespace ProyectoLogin.Controllers
 
         // ========== MÉTODOS LEGACY (mantenidos para compatibilidad) ==========
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> CrearCategoriaLegacy(string nombre, string descripcion)
         {
@@ -646,6 +667,7 @@ namespace ProyectoLogin.Controllers
             return RedirectToAction("Create", "Productos");
         }
 
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         public async Task<IActionResult> CrearMarcaLegacy(string nombre)
         {

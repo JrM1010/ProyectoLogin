@@ -1,7 +1,16 @@
 ﻿@model ProyectoLogin.Models.ModelosProducts.ProductoCore
+@using System.Security.Claims
+
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Detalles del Producto";
     var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>;
+
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
 <div class="container-fluid px-4">
@@ -11,9 +20,6 @@
             <h2 class="fw-bold text-primary mb-1">Detalles del Producto</h2>
             <p class="text-muted mb-0">Información completa y precios históricos del producto</p>
         </div>
-        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill d-flex align-items-center">
-            <i class="bi bi-arrow-left me-2"></i>Volver al Listado
-        </a>
     </div>
 
     <div class="row g-4">
@@ -115,10 +121,13 @@
 
                     <!-- Botones de Acción -->
                     <div class="d-flex gap-3 pt-4 mt-4 border-top">
-                        <a asp-action="Edit" asp-route-id="@Model.IdProducto"
-                           class="btn btn-warning rounded-pill px-4 d-flex align-items-center">
-                            <i class="bi bi-pencil-square me-2"></i>Editar Producto
-                        </a>
+                        @if (isAuth && isAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.IdProducto"
+                            class="btn btn-warning rounded-pill px-4 d-flex align-items-center">
+                                <i class="bi bi-pencil-square me-2"></i>Editar Producto
+                            </a>
+                        }
                         <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 d-flex align-items-center">
                             <i class="bi bi-arrow-left me-2"></i>Volver al Listado
                         </a>

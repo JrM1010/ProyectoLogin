@@ -1,5 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
+@using System.Security.Claims
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,6 +18,10 @@
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var user = HttpContextAccessor.HttpContext?.User;
+        bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+        bool isAdmin = user?.IsInRole("Administrador") ?? false;
+        bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
     }
 
 
@@ -45,10 +53,20 @@
                                     <i class="bi bi-gear"></i> Gestión
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="gestionDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Productos" asp-action="Index"><i class="bi bi-box-seam"></i> Productos</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Usuarios"><i class="bi bi-people"></i> Usuarios</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Proveedores" asp-action="Index"><i class="bi bi-truck"></i> Proveedores</a></li>
+                                    @if (isAuth && isAdmin || isEmpleado)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Productos" asp-action="Index"><i class="bi bi-box-seam"></i> Productos</a></li>
+                                    }
+                                    @if (isAuth && isAdmin)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Usuarios"><i class="bi bi-people"></i> Usuarios</a></li>
+                                    }
+                                    @if (isAuth && isAdmin)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Proveedores" asp-action="Index"><i class="bi bi-truck"></i> Proveedores</a></li>
+                                    }@if (isAuth && isAdmin || isEmpleado){
                                     <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index"><i class="bi bi-person-badge"></i> Clientes</a></li>
+                                    }
                                 </ul>
                             </li>
 
@@ -58,32 +76,49 @@
                                     <i class="bi bi-arrow-repeat"></i> Movimientos
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="movimientosDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Compras" asp-action="Index"><i class="bi bi-basket"></i> Compras</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Ventas" asp-action="Index"><i class="bi bi-cart"></i> Ventas</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Kits" asp-action="Index"><i class="bi bi-gift"></i> Promociones</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Utilidades" asp-action="AjustesInventario"><i class="bi bi-tools"></i> Ajustes de Inventario</a></li>
+                                    @if (isAuth && isAdmin)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Compras" asp-action="Index"><i class="bi bi-basket"></i> Compras</a></li>
+                                    }
+                                    @if (isAuth && isAdmin || isEmpleado)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Ventas" asp-action="Index"><i class="bi bi-cart"></i> Ventas</a></li>
+                                    }
+                                    @if (isAuth && isAdmin || isEmpleado)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Kits" asp-action="Index"><i class="bi bi-gift"></i> Promociones</a></li>
+                                    }
+                                    @if (isAuth && isAdmin || isEmpleado){
+                                    
+                                        <li><a class="dropdown-item" asp-controller="Utilidades" asp-action="AjustesInventario"><i class="bi bi-tools"></i> Ajustes de Inventario</a></li>
+                                    }
                                 </ul>
                             </li>
 
                             
                             <!-- Menú REPORTES -->
+                            @if (isAuth && isAdmin){
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-bar-chart"></i> Reportes
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="reportesDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Ventas"><i class="bi bi-cash-stack"></i> Ventas</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Compras"><i class="bi bi-bag"></i> Compras</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="ReporteInventario"><i class="bi bi-box-seam"></i> Inventario</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="ReporteAjustesInventario"><i class="bi bi-tools"></i> Ajustes de Inventario</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Actividades"><i class="bi bi-activity"></i> Actividades</a></li>
+
+                                    
+                                    
+                                        <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Ventas"><i class="bi bi-cash-stack"></i> Ventas</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Compras"><i class="bi bi-bag"></i> Compras</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Reportes" asp-action="ReporteInventario"><i class="bi bi-box-seam"></i> Inventario</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Reportes" asp-action="ReporteAjustesInventario"><i class="bi bi-tools"></i> Ajustes de Inventario</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Reportes" asp-action="Actividades"><i class="bi bi-activity"></i> Actividades</a></li>
+                                    
                                 </ul>
                             </li>
-
+                            }
 
                         </ul>
 
-                        <!-- Usuario y cerrar sesión -->
+                        <!-- Cerrar sesión -->
                         <ul class="navbar-nav ms-auto">
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

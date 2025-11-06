@@ -34,14 +34,7 @@ namespace ProyectoLogin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Registrarse(Usuario modelo)
         {
-            // Cargar roles siempre antes de cualquier retorno de la vista
             ViewBag.Roles = await _context.Roles.OrderBy(r => r.IdRol).ToListAsync();
-
-            // Validación manual para la contraseña en registro
-            if (string.IsNullOrWhiteSpace(modelo.Clave))
-            {
-                ModelState.AddModelError("Clave", "La contraseña es obligatoria");
-            }
 
             if (!ModelState.IsValid)
             {
@@ -51,36 +44,25 @@ namespace ProyectoLogin.Controllers
 
             try
             {
-                // Encriptar la contraseña antes de guardar
-                if (!string.IsNullOrWhiteSpace(modelo.Clave))
-                    modelo.Clave = Utilidades.EncriptarClave(modelo.Clave);
-
-                Usuario usuario_creado = await _usuarioServicio.SaveUsuario(modelo);
-
-                if (usuario_creado != null && usuario_creado.IdUsuario > 0)
+                // Crear nuevo usuario
+                var nuevoUsuario = new Usuario
                 {
-                    TempData["Success"] = "Usuario creado correctamente.";
+                    NombreUsuario = modelo.NombreUsuario.Trim(),
+                    Correo = modelo.Correo.Trim(),
+                    Clave = Utilidades.EncriptarClave(modelo.Clave),
+                    IdRol = modelo.IdRol,
+                    Activo = true
+                };
 
-                    if (User?.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Administrador"))
-                    {
-                        return RedirectToAction("Usuarios", "Admin");
-                    }
+                _context.Usuarios.Add(nuevoUsuario);
+                await _context.SaveChangesAsync();
 
-                    return RedirectToAction("IniciarSesion", "Inicio");
-                }
-
-                ViewData["Mensaje"] = "No se pudo crear el usuario";
-                return View(modelo);
-            }
-            catch (DbUpdateException ex)
-            {
-                // Manejar errores de base de datos (como correos duplicados)
-                ViewData["Mensaje"] = "Error al guardar el usuario. Verifique que el correo no esté en uso.";
-                return View(modelo);
+                TempData["Success"] = "Usuario creado correctamente.";
+                return RedirectToAction("Usuarios", "Admin");
             }
             catch (Exception ex)
             {
-                ViewData["Mensaje"] = "Ocurrió un error inesperado: " + ex.Message;
+                ViewData["Mensaje"] = "Error al crear el usuario: " + ex.Message;
                 return View(modelo);
             }
         }

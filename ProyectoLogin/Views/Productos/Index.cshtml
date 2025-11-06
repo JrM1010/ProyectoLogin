@@ -1,5 +1,7 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoCore>
+@using System.Security.Claims
 
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Productos";
 
@@ -29,6 +31,12 @@
     var pageInactivos = ViewBag.PageInactivos ?? 1;
     var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
+
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
 <div class="container-fluid">
@@ -41,9 +49,12 @@
             <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark me-2">
                 <i class="bi bi-arrow-left me-1"></i>Inicio
             </a>
-            <a class="btn btn-success rounded-pill" asp-action="Create">
-                <i class="bi bi-plus-circle me-1"></i>Nuevo Producto
+            @if (isAuth && isAdmin)
+            {
+                <a class="btn btn-success rounded-pill" asp-action="Create">
+                    <i class="bi bi-plus-circle me-1"></i>Nuevo Producto
             </a>
+            }
         </div>
     </div>
 
@@ -96,8 +107,11 @@
                                 <th>Marca</th>
                                 <th class="text-center">Stock Actual</th>
                                 <th class="text-center">Stock Mínimo</th>
-                                <th class="text-center">Precio Venta</th>
-                                <th class="text-center">Acciones</th>
+                                <th class="text-center">Precio Venta Unitario</th>
+
+                                
+                                    <th class="text-center">Acciones</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -155,13 +169,14 @@
                                                class="btn btn-outline-info rounded-circle btn-sm" title="Ver detalles">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-
-                                            <!-- Editar -->
-                                            <a href="@Url.Action("Edit", new { id = p.IdProducto })"
-                                               class="btn btn-outline-warning rounded-circle btn-sm" title="Editar producto">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-
+                                            @if (isAuth && isAdmin)
+                                            {
+                                                <!-- Editar -->
+                                                <a href="@Url.Action("Edit", new { id = p.IdProducto })"
+                                                class="btn btn-outline-warning rounded-circle btn-sm" title="Editar producto">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                            }@if (isAuth && isAdmin){
                                             <!-- Desactivar -->
                                             <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
@@ -171,6 +186,7 @@
                                                     <i class="bi bi-x-circle"></i>
                                                 </button>
                                             </form>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -299,6 +315,7 @@
         </div>
     </div>
 
+    @if (isAuth && isAdmin){
     <!-- PRODUCTOS INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
     @if (totalInactivos > 0)
     {
@@ -514,6 +531,7 @@
                 }
             </div>
         </div>
+    }
     }
 </div>
 

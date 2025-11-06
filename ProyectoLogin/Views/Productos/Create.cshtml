@@ -1,8 +1,16 @@
 ﻿@model ProyectoLogin.Models.ModelosProducts.ProductoCore
+@using System.Security.Claims
+
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Crear Producto";
-}
 
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
+}
+@if (isAuth && isAdmin){
 <div class="container-fluid px-4">
     <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -307,7 +315,7 @@
         </div>
     </div>
 </div>
-
+}
 <style>
     .is-invalid {
         border-color: #dc3545 !important;

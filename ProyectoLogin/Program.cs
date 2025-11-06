@@ -18,6 +18,7 @@ CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
 
 
 QuestPDF.Settings.License = LicenseType.Community;
+
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -38,6 +39,13 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 //Factura
 builder.Services.AddScoped<FacturaService>();
+
+
+//para permisos de usuario
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthorization(); //Manejar roles y permisos
+
 
 
 builder.Services.AddControllersWithViews(options =>

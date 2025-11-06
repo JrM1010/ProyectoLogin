@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<ProyectoLogin.Models.Promociones.Kit>
+@using System.Security.Claims
+
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @{
     ViewData["Title"] = "Lista de Kits / Promociones";
@@ -9,6 +12,12 @@
     var pageSize = ViewBag.PageSize ?? 10;
     var totalItems = ViewBag.TotalItems ?? Model?.Count() ?? 0;
     var totalPages = ViewBag.TotalPages ?? (int)Math.Ceiling((double)totalItems / pageSize);
+
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
 <div class="container-fluid py-4">
@@ -23,9 +32,12 @@
                 <p class="text-muted mb-0">Gestiona tus promociones y kits de productos</p>
             </div>
         </div>
-        <a asp-action="Create" class="btn btn-primary rounded-pill d-flex align-items-center" title="Crear nuevo kit o promoción">
-            <i class="bi bi-plus-circle me-2"></i>Nuevo Kit / Promoción
-        </a>
+        @if (isAuth && isAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary rounded-pill d-flex align-items-center" title="Crear nuevo kit o promoción">
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Kit / Promoción
+            </a>
+        }
     </div>
 
     <!-- TOAST PARA NOTIFICACIONES -->
@@ -40,7 +52,7 @@
             </div>
         </div>
     </div>
-
+    @if (isAuth && isAdmin){
     <!-- MODAL DE CONFIRMACIÓN PARA ELIMINAR -->
     <div class="modal fade" id="modalEliminarKit" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -70,7 +82,7 @@
             </div>
         </div>
     </div>
-
+    }
     @if (Model != null && Model.Any())
     {
         <!-- ESTADÍSTICAS RÁPIDAS -->
@@ -92,6 +104,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-success shadow-sm h-100 py-2">
                     <div class="card-body">
@@ -111,6 +124,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-warning shadow-sm h-100 py-2">
                     <div class="card-body">
@@ -160,11 +174,6 @@
 
                 <!-- FILTROS RÁPIDOS -->
                 <div class="ms-auto d-flex gap-2">
-                    <select class="form-select form-select-sm" style="width: auto;" id="filtroEstado">
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activos</option>
-                        <option value="inactivo">Inactivos</option>
-                    </select>
                     <select class="form-select form-select-sm" style="width: auto;" id="filtroOrden">
                         <option value="fecha-desc">Más recientes</option>
                         <option value="fecha-asc">Más antiguos</option>
@@ -261,14 +270,15 @@
                                                title="Ver detalles del kit">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-
-                                            <!-- Editar -->
-                                            <a asp-action="Edit" asp-route-id="@kit.IdKit"
-                                               class="btn btn-outline-warning rounded-circle btn-sm"
-                                               title="Editar kit">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-
+                                            @if (isAuth && isAdmin)
+                                            {
+                                                <!-- Editar -->
+                                                <a asp-action="Edit" asp-route-id="@kit.IdKit"
+                                                class="btn btn-outline-warning rounded-circle btn-sm"
+                                                title="Editar kit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                            }@if (isAuth && isAdmin){
                                             <!-- Eliminar -->
                                             <button class="btn btn-outline-danger rounded-circle btn-sm btn-eliminar-kit"
                                                     data-id="@kit.IdKit"
@@ -277,6 +287,7 @@
                                                     title="@(kit.Activo ? "Desactivar kit" : "Activar kit")">
                                                 <i class="bi @(kit.Activo ? "bi-trash" : "bi-arrow-clockwise")"></i>
                                             </button>
+                                            }
                                         </div>
                                     </td>
                                 </tr>

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ProyectoLogin.Controllers
 {
-    [Authorize(Roles = "Administrador,Gerente")]
+    [Authorize(Roles = "Administrador,Vendedor")]
     public class UtilidadesController : Controller  // ← Cambiado el nombre
     {
         private readonly DbPruebaContext _context;

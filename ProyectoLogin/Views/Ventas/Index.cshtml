@@ -1144,18 +1144,250 @@
             document.querySelector("#cambio").value = cambio >= 0 ? formatearMonedaGuatemala(cambio) : "—";
             });
 
-            document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
-                try {
+        // FUNCIÓN PARA VALIDAR MONTO EN TIEMPO REAL
+        function validarMontoEnTiempoReal() {
+            const total = limpiarFormatoMoneda(document.querySelector("#total").value);
+            const metodo = document.getElementById("metodoPago").value || "efectivo";
+            const btnConfirmar = document.getElementById("btnConfirmarCobro");
 
-                    const total = limpiarFormatoMoneda(document.querySelector("#total").value);
-                    const metodo = document.getElementById("metodoPago").value || "efectivo";
+            let montoIngresado = 0;
 
-                    if (!productosSeleccionados.length) {
-                        mostrarMensaje("No hay productos en la venta.", "warning");
-                        return;
-                    }
+            switch (metodo) {
+                case "efectivo":
+                    montoIngresado = parseFloat(document.querySelector("#montoRecibido").value || 0);
+                    break;
+                case "tarjeta":
+                    montoIngresado = parseFloat(document.querySelector("#montoTarjeta").value || 0);
+                    break;
+                case "transferencia":
+                    montoIngresado = parseFloat(document.querySelector("#montoTransferencia").value || 0);
+                    break;
+                case "mixto":
+                    const montoEfectivo = parseFloat(document.querySelector("#montoMixtoEfectivo").value || 0);
+                    const montoTarjeta = parseFloat(document.querySelector("#montoMixtoTarjeta").value || 0);
+                    const montoTransferencia = parseFloat(document.querySelector("#montoMixtoTransferencia").value || 0);
+                    montoIngresado = montoEfectivo + montoTarjeta + montoTransferencia;
+                    break;
+            }
 
-                    const detalles = productosSeleccionados.map(p => {
+            // Cambiar estilo del botón según la validación
+            if (btnConfirmar) {
+                if (montoIngresado >= total) {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.classList.remove("btn-secondary");
+                    btnConfirmar.classList.add("btn-success");
+                } else {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.classList.remove("btn-success");
+                    btnConfirmar.classList.add("btn-secondary");
+                }
+            }
+        }
+
+        // Agregar event listeners para validación en tiempo real
+        document.querySelector("#montoRecibido")?.addEventListener("input", () => {
+            const total = parseFloat(document.querySelector("#total").value.replace(/[Q,]/g, '') || 0);
+            const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
+            const cambio = recibido - total;
+            document.querySelector("#cambio").value = cambio >= 0 ? formatearMonedaGuatemala(cambio) : "—";
+            validarMontoEnTiempoReal();
+        });
+
+        // Agregar listeners similares para los otros campos de monto
+        ["#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(selector => {
+            document.querySelector(selector)?.addEventListener("input", validarMontoEnTiempoReal);
+        });
+
+        document.getElementById("metodoPago")?.addEventListener("change", validarMontoEnTiempoReal);
+
+        function limpiarCamposDespuesVenta() {
+            clienteSeleccionado = null;
+            const nitInput = document.querySelector("#nitCliente");
+            if (nitInput) nitInput.value = "";
+
+            const nombreSpan = document.querySelector("#nombreCliente");
+            const correoSpan = document.querySelector("#correoCliente");
+            const direccionSpan = document.querySelector("#direccionCliente");
+            if (nombreSpan) nombreSpan.innerText = "";
+            if (correoSpan) correoSpan.innerText = "";
+            if (direccionSpan) direccionSpan.innerText = "";
+
+            const totalEl = document.querySelector("#total");
+            if (totalEl) totalEl.value = "Q0.00";
+
+            const busquedaInput = document.querySelector("#busqueda");
+            if (busquedaInput) busquedaInput.value = "";
+
+            document.querySelector("#alertaStock")?.remove();
+
+            const montoRecibido = document.querySelector("#montoRecibido");
+            const cambio = document.querySelector("#cambio");
+            const montoTarjeta = document.querySelector("#montoTarjeta");
+            const montoTransferencia = document.querySelector("#montoTransferencia");
+            const montoMixtoE = document.querySelector("#montoMixtoEfectivo");
+            const montoMixtoT = document.querySelector("#montoMixtoTarjeta");
+            const montoMixtoTr = document.querySelector("#montoMixtoTransferencia");
+
+            if (montoRecibido) montoRecibido.value = "";
+            if (cambio) cambio.value = "";
+            if (montoTarjeta) montoTarjeta.value = "";
+            if (montoTransferencia) montoTransferencia.value = "";
+            if (montoMixtoE) montoMixtoE.value = "";
+            if (montoMixtoT) montoMixtoT.value = "";
+            if (montoMixtoTr) montoMixtoTr.value = "";
+        }
+
+        btnCancelar.addEventListener("click", () => {
+             // Limpiar productos y toda la vista
+             productosSeleccionados = [];
+             renderTabla();
+
+             // Usar la función limpiarFormularioVenta con true para limpiar productos también
+             // (aunque ya los limpiamos arriba, esta función limpia el resto de campos)
+             limpiarFormularioVenta(false); // false porque ya limpiamos productos arriba
+
+             // Limpiar campo de búsqueda de productos
+             const busquedaInput = document.querySelector("#busqueda");
+             if (busquedaInput) busquedaInput.value = "";
+
+             // Remover cualquier sugerencia de búsqueda abierta
+             const cont = document.querySelector(".search-container");
+             if (cont) cont.querySelector(".suggestions-box")?.remove();
+
+             mostrarMensaje("Venta cancelada correctamente.", "info");
+         });
+
+        const opcionNit = document.getElementById("opcionNit");
+        const opcionCF = document.getElementById("opcionCF");
+        const seccionNit = document.getElementById("seccionNit");
+        const seccionCF = document.getElementById("seccionCF");
+
+        opcionNit?.addEventListener("change", () => {
+            if (opcionNit.checked) {
+                seccionNit.classList.remove("d-none");
+                seccionCF.classList.add("d-none");
+                document.getElementById("nitCliente").focus();
+            }
+        });
+
+        opcionCF?.addEventListener("change", () => {
+            if (opcionCF.checked) {
+                seccionCF.classList.remove("d-none");
+                seccionNit.classList.add("d-none");
+                clienteSeleccionado = null;
+                console.log("CF seleccionado. clienteSeleccionado set to null");
+            }
+        });
+
+        // FUNCIÓN MODIFICADA - NO LIMPIA PRODUCTOS POR DEFECTO
+               function limpiarFormularioVenta(limpiarProductos = false) {
+            if (limpiarProductos) {
+                productosSeleccionados = [];
+                renderTabla();
+            }
+
+            // Limpiar solo los campos del cliente y del modal
+            clienteSeleccionado = null;
+
+            const nitInput = document.querySelector("#nitCliente");
+            if (nitInput) nitInput.value = "";
+
+            document.getElementById("datosCliente")?.classList.add("d-none");
+            document.getElementById("formNuevoCliente")?.classList.add("d-none");
+
+            const nombreSpan = document.querySelector("#nombreCliente");
+            const correoSpan = document.querySelector("#correoCliente");
+            const direccionSpan = document.querySelector("#direccionCliente");
+            if (nombreSpan) nombreSpan.innerText = "";
+            if (correoSpan) correoSpan.innerText = "";
+            if (direccionSpan) direccionSpan.innerText = "";
+
+            // Limpiar campo de búsqueda de productos
+            const busquedaInput = document.querySelector("#busqueda");
+            if (busquedaInput) busquedaInput.value = "";
+
+            // Restablecer el modal
+            document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
+            document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
+
+            const metodoPago = document.querySelector("#metodoPago");
+            if (metodoPago) {
+                metodoPago.value = "efectivo";
+                document.querySelectorAll(".metodoPago").forEach(div => div.classList.add("d-none"));
+                document.querySelector("#pagoEfectivo")?.classList.remove("d-none");
+            }
+
+            ["#montoRecibido", "#cambio", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) el.value = "";
+            });
+
+            const btnConfirmar = document.getElementById("btnConfirmarCobro");
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove("d-none");
+            }
+
+            const btnDescargar = document.querySelector("#btnDescargarFactura");
+            if (btnDescargar) {
+                btnDescargar.classList.add("d-none");
+                btnDescargar.onclick = null;
+            }
+        }
+
+        // EVENTO ÚNICO PARA CONFIRMAR COBRO
+        document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
+            try {
+                const total = limpiarFormatoMoneda(document.querySelector("#total").value);
+                const metodo = document.getElementById("metodoPago").value || "efectivo";
+
+                if (!productosSeleccionados.length) {
+                    mostrarMensaje("No hay productos en la venta.", "warning");
+                    return;
+                }
+
+                // VALIDACIÓN DE MONTO
+                let montoIngresado = 0;
+                let montoValido = false;
+
+                switch (metodo) {
+                    case "efectivo":
+                        const montoRecibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
+                        montoIngresado = montoRecibido;
+                        montoValido = montoRecibido >= total;
+                        break;
+
+                    case "tarjeta":
+                        const montoTarjeta = parseFloat(document.querySelector("#montoTarjeta").value || 0);
+                        montoIngresado = montoTarjeta;
+                        montoValido = montoTarjeta >= total;
+                        break;
+
+                    case "transferencia":
+                        const montoTransferencia = parseFloat(document.querySelector("#montoTransferencia").value || 0);
+                        montoIngresado = montoTransferencia;
+                        montoValido = montoTransferencia >= total;
+                        break;
+
+                    case "mixto":
+                        const montoEfectivo = parseFloat(document.querySelector("#montoMixtoEfectivo").value || 0);
+                        const montoTarjetaMixto = parseFloat(document.querySelector("#montoMixtoTarjeta").value || 0);
+                        const montoTransferenciaMixto = parseFloat(document.querySelector("#montoMixtoTransferencia").value || 0);
+                        montoIngresado = montoEfectivo + montoTarjetaMixto + montoTransferenciaMixto;
+                        montoValido = montoIngresado >= total;
+                        break;
+                }
+
+                if (!montoValido) {
+                    const mensaje = metodo === "mixto"
+                        ? `El monto total ingresado (${formatearMonedaGuatemala(montoIngresado)}) es menor al total a pagar (${formatearMonedaGuatemala(total)}). Ingrese un monto igual o mayor.`
+                        : `El monto ingresado (${formatearMonedaGuatemala(montoIngresado)}) es menor al total a pagar (${formatearMonedaGuatemala(total)}). Ingrese un monto igual o mayor.`;
+
+                    mostrarMensaje(mensaje, "warning");
+                    return;
+                }
+
+                const detalles = productosSeleccionados.map(p => {
                     const sub = parseFloat((p.precio * p.cantidad).toFixed(2));
                     return {
                         IdProducto: p.esKit ? null : Number(p.id),
@@ -1166,61 +1398,60 @@
                         Descuento: 0,
                         Subtotal: sub
                     };
-            });
+                });
 
+                const payload = {
+                    IdCliente: clienteSeleccionado ?? null,
+                    MetodoPago: metodo,
+                    Estado: "Completada",
+                    Subtotal: total,
+                    IVA: 0,
+                    Total: total,
+                    Detalles: detalles
+                };
 
-                    const payload = {
-                        IdCliente: clienteSeleccionado ?? null,
-                        MetodoPago: metodo,
-                        Estado: "Completada",
-                        Subtotal: total,
-                        IVA: 0,
-                        Total: total,
-                        Detalles: detalles
-                    };
+                console.log("Venta enviada:", payload);
 
-                    console.log("Venta enviada:", payload);
+                const res = await fetch("/Ventas/GuardarVenta", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
 
-                    const res = await
-                    fetch("/Ventas/GuardarVenta", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
-                    });
+                let data;
+                try { data = await res.json(); } catch { data = { message: await res.text() }; }
 
-                    let data;
-        try { data = await res.json(); } catch { data = { message: await res.text() }; }
+                if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
 
-                    if (!res.ok) throw new Error(data.message || "Error al guardar la venta.");
+                mostrarMensaje(`✅ ${data.message || "Venta registrada correctamente."}`, "success");
 
-                    mostrarMensaje(`✅ ${data.message || "Venta registrada correctamente."}`, "success");
+                // SOLO LIMPIAR LOS PRODUCTOS CUANDO LA VENTA SEA EXITOSA
+                productosSeleccionados = [];
+                renderTabla();
 
-                    document.getElementById("datosCliente")?.classList.add("d-none");
-                    document.getElementById("formNuevoCliente")?.classList.add("d-none");
+                // Limpiar formulario sin productos (ya se limpiaron arriba)
+                limpiarFormularioVenta(false);
 
-                    document.querySelector("#contenidoVentaActiva")?.classList.add("d-none");
-                    document.querySelector("#contenidoVentaFinalizada")?.classList.remove("d-none");
+                document.getElementById("datosCliente")?.classList.add("d-none");
+                document.getElementById("formNuevoCliente")?.classList.add("d-none");
 
-                    const btnConfirmar = document.getElementById("btnConfirmarCobro");
-                    if (btnConfirmar) {
-                        btnConfirmar.disabled = true;
-                        btnConfirmar.classList.add("d-none");
-                    }
+                document.querySelector("#contenidoVentaActiva")?.classList.add("d-none");
+                document.querySelector("#contenidoVentaFinalizada")?.classList.remove("d-none");
 
-                    productosSeleccionados = [];
-                    renderTabla();
+                const btnConfirmar = document.getElementById("btnConfirmarCobro");
+                if (btnConfirmar) {
+                    btnConfirmar.disabled = true;
+                    btnConfirmar.classList.add("d-none");
+                }
 
-                     limpiarCamposDespuesVenta();
+                const idVenta = data.idVenta;
+                const btnDescargar = document.getElementById("btnDescargarFactura");
 
-                            const idVenta = data.idVenta;
-            const btnDescargar = document.getElementById("btnDescargarFactura");
-
-                        if (btnDescargar) {
+                if (btnDescargar) {
                     btnDescargar.classList.remove("d-none");
 
                     btnDescargar.onclick = () => {
                         if (idVenta) {
-
                             window.open(`/Ventas/DescargarFactura?idVenta=${idVenta}`, '_blank');
                         } else {
                             mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
@@ -1230,144 +1461,41 @@
                     btnDescargar.focus();
                 }
 
-            }catch (err) {
+            } catch (err) {
                 console.error("Error guardando venta:", err);
                 mostrarMensaje("Ocurrió un error al intentar guardar la venta. Revisa la consola.", "danger", 6000);
             }
-            });
+        });
 
-                        function limpiarCamposDespuesVenta() {
-                clienteSeleccionado = null;
-                const nitInput = document.querySelector("#nitCliente");
-                if (nitInput) nitInput.value = "";
-
-                const nombreSpan = document.querySelector("#nombreCliente");
-                const correoSpan = document.querySelector("#correoCliente");
-                const direccionSpan = document.querySelector("#direccionCliente");
-                if (nombreSpan) nombreSpan.innerText = "";
-                if (correoSpan) correoSpan.innerText = "";
-                if (direccionSpan) direccionSpan.innerText = "";
-
-                const totalEl = document.querySelector("#total");
-                if (totalEl) totalEl.value = "Q0.00";
-
-                const busquedaInput = document.querySelector("#busqueda");
-                if (busquedaInput) busquedaInput.value = "";
-
-                document.querySelector("#alertaStock")?.remove();
-
-                const montoRecibido = document.querySelector("#montoRecibido");
-                const cambio = document.querySelector("#cambio");
-                const montoTarjeta = document.querySelector("#montoTarjeta");
-                const montoTransferencia = document.querySelector("#montoTransferencia");
-                const montoMixtoE = document.querySelector("#montoMixtoEfectivo");
-                const montoMixtoT = document.querySelector("#montoMixtoTarjeta");
-                const montoMixtoTr = document.querySelector("#montoMixtoTransferencia");
-
-                if (montoRecibido) montoRecibido.value = "";
-                if (cambio) cambio.value = "";
-                if (montoTarjeta) montoTarjeta.value = "";
-                if (montoTransferencia) montoTransferencia.value = "";
-                if (montoMixtoE) montoMixtoE.value = "";
-                if (montoMixtoT) montoMixtoT.value = "";
-                if (montoMixtoTr) montoMixtoTr.value = "";
+        // EVENTO PARA CUANDO SE CIERRA EL MODAL - NO LIMPIA PRODUCTOS
+        document.getElementById('modalCobro')?.addEventListener('hide.bs.modal', function () {
+            // Solo limpiar los campos del modal, no los productos
+            const metodoPago = document.querySelector("#metodoPago");
+            if (metodoPago) {
+                metodoPago.value = "efectivo";
+                document.querySelectorAll(".metodoPago").forEach(div => div.classList.add("d-none"));
+                document.querySelector("#pagoEfectivo")?.classList.remove("d-none");
             }
 
-             btnCancelar.addEventListener("click", () => {
-                 productosSeleccionados = [];
-                 renderTabla();
-                 mostrarMensaje("Venta cancelada correctamente.", "info");
-             });
-
-
-            const opcionNit = document.getElementById("opcionNit");
-            const opcionCF = document.getElementById("opcionCF");
-            const seccionNit = document.getElementById("seccionNit");
-            const seccionCF = document.getElementById("seccionCF");
-
-            opcionNit?.addEventListener("change", () => {
-                if (opcionNit.checked) {
-                    seccionNit.classList.remove("d-none");
-                    seccionCF.classList.add("d-none");
-                    document.getElementById("nitCliente").focus();
-                }
+            ["#montoRecibido", "#cambio", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) el.value = "";
             });
 
-            opcionCF?.addEventListener("change", () => {
-                if (opcionCF.checked) {
-                    seccionCF.classList.remove("d-none");
-                    seccionNit.classList.add("d-none");
-                    clienteSeleccionado = null;
-                    console.log("CF seleccionado. clienteSeleccionado set to null");
-                }
-            });
+            // Restablecer el contenido del modal a la vista activa
+            document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
+            document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
 
-            function limpiarFormularioVenta() {
-                productosSeleccionados = [];
-                renderTabla();
-
-                clienteSeleccionado = null;
-
-                const nitInput = document.querySelector("#nitCliente");
-                if (nitInput) nitInput.value = "";
-
-                const busquedaInput = document.querySelector("#busqueda");
-                if (busquedaInput) busquedaInput.value = "";
-
-                document.getElementById("datosCliente")?.classList.add("d-none");
-                document.getElementById("formNuevoCliente")?.classList.add("d-none");
-
-                const nombreSpan = document.querySelector("#nombreCliente");
-                const correoSpan = document.querySelector("#correoCliente");
-                const direccionSpan = document.querySelector("#direccionCliente");
-                if (nombreSpan) nombreSpan.innerText = "";
-                if (correoSpan) correoSpan.innerText = "";
-                if (direccionSpan) direccionSpan.innerText = "";
-
-                const totalEl = document.querySelector("#total");
-                if (totalEl) totalEl.value = "Q0.00";
-
-                document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
-                document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
-
-                const metodoPago = document.querySelector("#metodoPago");
-                if (metodoPago) {
-                    metodoPago.value = "efectivo";
-                    document.querySelectorAll(".metodoPago").forEach(div => div.classList.add("d-none"));
-                    document.querySelector("#pagoEfectivo")?.classList.remove("d-none");
-                }
-
-                ["#montoRecibido", "#cambio", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(sel => {
-                    const el = document.querySelector(sel);
-                    if (el) el.value = "";
-                });
-
-                const btnConfirmar = document.getElementById("btnConfirmarCobro");
-                if (btnConfirmar) {
-                    btnConfirmar.disabled = false;
-                    btnConfirmar.classList.remove("d-none");
-                }
-
-                const btnDescargar = document.querySelector("#btnDescargarFactura");
-                if (btnDescargar) {
-                    btnDescargar.classList.add("d-none");
-                    btnDescargar.onclick = null;
-                }
-
-                document.querySelector("#alertaStock")?.remove();
-                const cont = document.querySelector(".search-container");
-                if (cont) cont.querySelector(".suggestions-box")?.remove();
+            const btnConfirmar = document.getElementById("btnConfirmarCobro");
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.classList.remove("d-none");
+                btnConfirmar.classList.remove("btn-secondary");
+                btnConfirmar.classList.add("btn-success");
             }
-
-            const modalEl = document.getElementById("modalCobro");
-            if (modalEl) {
-                modalEl.addEventListener('hidden.bs.modal', function () {
-                    limpiarFormularioVenta();
-                });
-            }
+        });
 
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
 }

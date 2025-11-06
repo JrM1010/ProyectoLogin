@@ -17,7 +17,7 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off">
+                    <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off" id="registroForm">
                         @Html.AntiForgeryToken()
 
                         <!-- INFORMACIÓN PERSONAL -->
@@ -131,7 +131,7 @@
                                     <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                                 </button>
 
-                                <button type="submit" class="btn btn-primary rounded-pill" title="Registrar nuevo usuario">
+                                <button type="submit" class="btn btn-primary rounded-pill" title="Registrar nuevo usuario" id="submitBtn">
                                     <i class="bi bi-person-plus me-1"></i>Registrar Usuario
                                 </button>
                             </div>
@@ -172,76 +172,66 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Limpiar cualquier autocompletado que el navegador haya puesto
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                // Forzar limpieza de valores autocompletados
-                if (input.value && input.getAttribute('autocomplete') !== 'off') {
-                    input.value = '';
-                }
-            });
+            console.log('=== SCRIPT CARGADO ===');
 
-            // Focus en el primer campo al cargar
-            const firstInput = document.querySelector('input[type="text"]');
-            if (firstInput) {
-                firstInput.focus();
-                // Asegurarse de que esté vacío
-                if (firstInput.value) {
-                    firstInput.value = '';
-                }
+            const form = document.getElementById('registroForm');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (form) {
+                console.log('Formulario encontrado');
+
+                // ELIMINAR cualquier validación que pueda estar bloqueando el envío
+                form.setAttribute('novalidate', 'novalidate');
+                form.noValidate = true;
+
+                form.addEventListener('submit', function(e) {
+                    console.log('=== FORMULARIO ENVIANDO ===');
+
+                    // VERIFICAR datos
+                    const nombre = document.querySelector('[name="NombreUsuario"]').value;
+                    const correo = document.querySelector('[name="Correo"]').value;
+                    const clave = document.querySelector('[name="Clave"]').value;
+                    const rol = document.querySelector('[name="IdRol"]').value;
+
+                    console.log('Datos:', { nombre, correo, clave, rol });
+
+                    if (!nombre || !correo || !clave || !rol) {
+                        console.log('ERROR: Campos vacíos');
+                        alert('Por favor complete todos los campos');
+                        e.preventDefault();
+                        return;
+                    }
+
+                    console.log('Todos los campos llenos - enviando...');
+
+                    // Cambiar estado del botón
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Registrando...';
+                    }
+
+                    // PERMITIR el envío normal del formulario
+                    // NO usar e.preventDefault();
+                });
+            } else {
+                console.log('ERROR: Formulario no encontrado');
             }
 
-            // Limpiar específicamente el campo de contraseña
-            const passwordField = document.getElementById('passwordField');
-            if (passwordField && passwordField.value) {
-                passwordField.value = '';
-            }
-
-            // Auto-ocultar alertas después de 5 segundos
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                }, 5000);
-            });
-
-            // Funcionalidad para mostrar/ocultar contraseña
+            // Funcionalidad básica para mostrar/ocultar contraseña
             const togglePassword = document.getElementById('togglePassword');
+            const passwordField = document.getElementById('passwordField');
             const passwordIcon = document.getElementById('passwordIcon');
 
             if (togglePassword && passwordField && passwordIcon) {
                 togglePassword.addEventListener('click', function() {
-                    // Cambiar el tipo de input
                     const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordField.setAttribute('type', type);
-
-                    // Cambiar el icono
-                    if (type === 'text') {
-                        passwordIcon.classList.remove('bi-eye');
-                        passwordIcon.classList.add('bi-eye-slash');
-                        togglePassword.setAttribute('title', 'Ocultar contraseña');
-                    } else {
-                        passwordIcon.classList.remove('bi-eye-slash');
-                        passwordIcon.classList.add('bi-eye');
-                        togglePassword.setAttribute('title', 'Mostrar contraseña');
-                    }
+                    passwordIcon.classList.toggle('bi-eye');
+                    passwordIcon.classList.toggle('bi-eye-slash');
                 });
             }
-
-            // Prevenir que el navegador sugiera contraseñas guardadas
-            document.addEventListener('readystatechange', function() {
-                if (document.readyState === 'complete') {
-                    const forms = document.querySelectorAll('form');
-                    forms.forEach(form => {
-                        form.reset();
-                    });
-                }
-            });
         });
     </script>
 }

@@ -1,9 +1,17 @@
 ﻿@model ProyectoLogin.Models.Cliente
+@using System.Security.Claims
 
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Editar Cliente";
-}
 
+
+    var user = HttpContextAccessor.HttpContext?.User;
+    bool isAuth = user?.Identity?.IsAuthenticated ?? false;
+    bool isAdmin = user?.IsInRole("Administrador") ?? false;
+    bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
+}
+@if (isAuth && isAdmin){
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 col-xl-6">
@@ -201,7 +209,7 @@
         </div>
     </div>
 </div>
-
+}
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
