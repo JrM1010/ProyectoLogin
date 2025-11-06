@@ -10,327 +10,791 @@
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
-@if (isAuth && isAdmin){
-<div class="container-fluid px-4">
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-black-50 mb-1">Crear Producto</h2>
-            <p class="text-muted mb-0">Complete la información para registrar un nuevo producto en el sistema</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill d-flex align-items-center">
-            <i class="bi bi-arrow-left me-2"></i>Volver al Listado
-        </a>
-    </div>
 
-    <!-- Alertas Globales -->
-    @if (TempData["SuccessCategoria"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <div>@TempData["SuccessCategoria"]</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    }
-    @if (TempData["ErrorCategoria"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <div>@TempData["ErrorCategoria"]</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <!-- Formulario Principal -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-success text-white py-3">
-            <h5 class="card-title mb-0 d-flex align-items-center">
-                <i class="bi bi-box-seam me-2"></i>Información del Producto
-            </h5>
-        </div>
-        <div class="card-body p-4">
-            <form asp-action="Create" method="post" id="productForm">
-                @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-                <div class="row g-4">
-                    <!-- Columna Izquierda -->
-                    <div class="col-lg-6">
-                        <!-- Nombre del Producto -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Nombre del Producto <span class="text-danger">*</span></label>
-                            <input asp-for="Nombre" class="form-control form-control-lg" placeholder="Ingrese el nombre del producto" />
-                            <span asp-validation-for="Nombre" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Categoría -->
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-semibold">Categoría <span class="text-danger">*</span></label>
-                                <button type="button" class="btn btn-link text-decoration-none p-0" data-bs-toggle="modal" data-bs-target="#modalCategoria">
-                                    <i class="bi bi-plus-circle me-1"></i>Gestionar Categorías
-                                </button>
-                            </div>
-                            <div class="input-group input-group-lg">
-                                <select asp-for="IdCategoria" asp-items="ViewBag.CategoriasSelect" class="form-select" id="IdCategoria">
-                                    <option value="">-- Seleccione una categoría --</option>
-                                </select>
-                            </div>
-                            <span asp-validation-for="IdCategoria" class="text-danger small"></span>
-                        </div>
-
-                        <!-- Marca -->
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-semibold">Marca <span class="text-danger">*</span></label>
-                                <button type="button" class="btn btn-link text-decoration-none p-0" data-bs-toggle="modal" data-bs-target="#modalMarca">
-                                    <i class="bi bi-plus-circle me-1"></i>Gestionar Marcas
-                                </button>
-                            </div>
-                            <div class="input-group input-group-lg">
-                                <select asp-for="IdMarca" asp-items="ViewBag.MarcasSelect" class="form-select" id="IdMarca">
-                                    <option value="">-- Seleccione una marca --</option>
-                                </select>
-                            </div>
-                            <span asp-validation-for="IdMarca" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <!-- Columna Derecha -->
-                    <div class="col-lg-6">
-                        <!-- Proveedor -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Proveedor Principal <span class="text-danger">*</span></label>
-                            <select name="idProveedor" class="form-select form-select-lg" id="idProveedor">
-                                <option value="">-- Seleccione un proveedor --</option>
-                                @foreach (var p in ViewBag.Proveedores)
-                                {
-                                    <option value="@p.IdProveedor">@p.Nombre</option>
-                                }
-                            </select>
-                            <span class="text-danger small" id="proveedorValidation"></span>
-                        </div>
-
-                        <!-- Stock Mínimo -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Stock Mínimo</label>
-                            <input name="stockMinimo" type="number" class="form-control form-control-lg" value="1" min="0" />
-                            <div class="form-text">El sistema generará alertas cuando el stock alcance este nivel</div>
-                        </div>
-
-                        <!-- Código del Producto -->
-                        @if (ViewBag.CodigoGenerado != null)
-                        {
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Código del Producto</label>
-                                <div class="input-group input-group-lg">
-                                    <input type="text" class="form-control" value="@ViewBag.CodigoGenerado" readonly />
-                                    <span class="input-group-text bg-light">
-                                        <i class="bi bi-upc-scan text-muted"></i>
-                                    </span>
-                                </div>
-                                <div class="form-text">Código generado automáticamente</div>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-                <!-- Descripción -->
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Especificaciones del Producto <span class="text-danger">*</span></label>
-                    <textarea asp-for="Descripcion" class="form-control" rows="4" placeholder="Ingrese las especificaciones detalladas del producto..."></textarea>
-                    <span asp-validation-for="Descripcion" class="text-danger small"></span>
-                </div>
-
-                <input type="hidden" asp-for="Activo" value="true" />
-
-                <!-- Botones de Acción -->
-                <div class="d-flex justify-content-end gap-3 pt-3 border-top">
-                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSubmit">
-                        <i class="bi bi-check-lg me-2"></i>Guardar Producto
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Categorías -->
-<div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalCategoriaLabel">
-                    <i class="bi bi-tags me-2"></i>Gestión de Categorías
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Alertas Dinámicas Categorías -->
-                <div id="alertContainerCategoria"></div>
-
-                <!-- Formulario para Crear/Editar Categoría -->
-                <form id="formCategoria">
-                    <input type="hidden" id="idCategoria" name="id" value="">
-                    <div class="mb-3">
-                        <label for="nombreCategoria" class="form-label fw-semibold">Nombre de la Categoría <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="nombreCategoria" name="nombre" required placeholder="Ingrese el nombre de la categoría">
-                    </div>
-                    <div class="mb-3">
-                        <label for="descripcionCategoria" class="form-label fw-semibold">Descripción</label>
-                        <textarea class="form-control" id="descripcionCategoria" name="descripcion" rows="3" placeholder="Descripción opcional de la categoría"></textarea>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success" id="btnGuardarCategoria">
-                            <i class="bi bi-check-lg me-1"></i>Guardar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarEdicion" style="display: none;">
-                            <i class="bi bi-x-lg me-1"></i>Cancelar Edición
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
-                            <i class="bi bi-door-closed me-1"></i>Cerrar
-                        </button>
-                    </div>
-                </form>
-
-                <hr class="my-4">
-
-                <!-- Lista de Categorías Existentes -->
-                <h6 class="fw-semibold mb-3">Categorías Existentes</h6>
-                <div class="table-responsive" style="max-height: 300px;">
-                    <table class="table table-sm table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Descripción</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyCategorias">
-                            @foreach (var categoria in ViewBag.CategoriasLista)
-                            {
-                                <tr data-id="@categoria.IdCategoria">
-                                    <td class="fw-semibold">@categoria.Nombre</td>
-                                    <td class="text-muted">@(categoria.Descripcion ?? "Sin descripción")</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-primary"
-                                                    onclick="editarCategoria(@categoria.IdCategoria, '@categoria.Nombre', '@categoria.Descripcion')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger"
-                                                    onclick="eliminarCategoria(@categoria.IdCategoria, '@categoria.Nombre')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Marcas -->
-<div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalMarcaLabel">
-                    <i class="bi bi-bookmark-star me-2"></i>Gestión de Marcas
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Alertas Dinámicas Marcas -->
-                <div id="alertContainerMarca"></div>
-
-                <!-- Formulario para Crear/Editar Marca -->
-                <form id="formMarca">
-                    <input type="hidden" id="idMarca" name="id" value="">
-                    <div class="mb-3">
-                        <label for="nombreMarca" class="form-label fw-semibold">Nombre de la Marca <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="nombreMarca" name="nombre" required placeholder="Ingrese el nombre de la marca">
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success" id="btnGuardarMarca">
-                            <i class="bi bi-check-lg me-1"></i>Guardar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarEdicionMarca" style="display: none;">
-                            <i class="bi bi-x-lg me-1"></i>Cancelar Edición
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
-                            <i class="bi bi-door-closed me-1"></i>Cerrar
-                        </button>
-                    </div>
-                </form>
-
-                <hr class="my-4">
-
-                <!-- Lista de Marcas Existentes -->
-                <h6 class="fw-semibold mb-3">Marcas Existentes</h6>
-                <div class="table-responsive" style="max-height: 300px;">
-                    <table class="table table-sm table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyMarcas">
-                            @foreach (var marca in ViewBag.MarcasLista)
-                            {
-                                <tr data-id="@marca.IdMarca">
-                                    <td class="fw-semibold">@marca.Nombre</td>
-                                    <td>
-                                        <span class="badge bg-@(marca.Activo ? "success" : "secondary")">
-                                            @(marca.Activo ? "Activa" : "Inactiva")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-outline-primary"
-                                                    onclick="editarMarca(@marca.IdMarca, '@marca.Nombre')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-danger"
-                                                    onclick="eliminarMarca(@marca.IdMarca, '@marca.Nombre')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-}
 <style>
-    .is-invalid {
-        border-color: #dc3545 !important;
-        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    :root {
+        --inventory-primary: #2D2A99;
+        --inventory-secondary: #6361F2;
+        --inventory-accent: #9B99F5;
+        --inventory-bg: #15153A;
+        --inventory-card: #1E1E4D;
+        --light-text: #F0F0F7;
+        --border-radius: 0.75rem;
     }
 
-    .field-validation-error {
+    .inventory-theme {
+        background: linear-gradient(135deg, var(--inventory-bg) 0%, var(--inventory-primary) 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .create-card {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+        .create-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+    .create-card-header {
+        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--inventory-accent);
+    }
+
+    .create-card-body {
+        padding: 2rem;
+    }
+
+    .section-container {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+        .section-container:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--inventory-secondary);
+        }
+
+    .section-title {
+        color: var(--light-text);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--inventory-secondary);
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title i {
+            background: var(--inventory-secondary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+    .form-label {
+        color: var(--light-text);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control-create {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        color: var(--light-text);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+        .form-control-create:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--inventory-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25);
+            color: var(--light-text);
+        }
+
+        .form-control-create::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+    .form-select-create {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid var(--inventory-accent) !important;
+        border-radius: var(--border-radius) !important;
+        color: var(--light-text) !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+        appearance: none !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%239B99F5' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 16px 12px !important;
+    }
+
+        .form-select-create:focus {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: var(--inventory-secondary) !important;
+            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25) !important;
+            color: var(--light-text) !important;
+        }
+
+        .form-select-create option {
+            background: var(--inventory-card) !important;
+            color: var(--light-text) !important;
+            padding: 0.5rem !important;
+        }
+
+            .form-select-create option:checked {
+                background: var(--inventory-secondary) !important;
+                color: white !important;
+            }
+
+    .form-text-create {
+        color: #A0A0CC;
         font-size: 0.875rem;
         margin-top: 0.25rem;
     }
 
-    .text-danger {
-        font-weight: 500;
+    .btn-create-primary {
+        background: var(--inventory-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
     }
+
+        .btn-create-primary:hover {
+            background: var(--inventory-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+    .btn-create-outline {
+        border: 2px solid var(--inventory-accent);
+        background: transparent;
+        color: var(--inventory-accent);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-create-outline:hover {
+            background: var(--inventory-accent);
+            color: var(--inventory-card);
+            transform: translateY(-2px);
+        }
+
+    .btn-manage {
+        background: transparent;
+        border: 1px solid var(--inventory-accent);
+        color: var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+        .btn-manage:hover {
+            background: var(--inventory-accent);
+            color: var(--inventory-card);
+        }
+
+    .required-field::after {
+        content: " *";
+        color: #ff6b6b;
+    }
+
+    .validation-message {
+        color: #ff6b6b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .field-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .field-group:last-child {
+            margin-bottom: 0;
+        }
+
+    .action-buttons {
+        border-top: 1px solid var(--inventory-accent);
+        padding-top: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .alert-create {
+        border-radius: var(--border-radius);
+        border: 1px solid transparent;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        border-color: rgba(40, 167, 69, 0.3);
+        color: #51cf66;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: rgba(220, 53, 69, 0.3);
+        color: #ff6b6b;
+    }
+
+    .code-generated {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 0.75rem 1rem;
+        color: var(--light-text);
+        font-weight: 600;
+    }
+
+    .modal-section-title {
+        color: var(--light-text);
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: var(--border-radius);
+        border-left: 4px solid var(--inventory-secondary);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+        .modal-section-title i {
+            margin: 0;
+        }
+
+    /* ================= MODALES ================= */
+
+    .modal-content {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        color: var(--light-text);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+        border-bottom: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        color: #ffffff;
+    }
+
+    .modal-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-weight: 600;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--inventory-accent);
+    }
+
+    .text-accent {
+        color: var(--inventory-accent) !important;
+    }
+
+    /* Contenedor de tabla en modal */
+    .table-modal-container {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* Tabla del modal */
+    .table-modal {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+        background: transparent;
+        color: #E8E8FF;
+    }
+
+        .table-modal thead th {
+            background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+            color: #FFFFFF;
+            border: none;
+            padding: 0.85rem 1rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .table-modal tbody tr {
+            background: rgba(10, 10, 35, 0.7);
+            transition: all 0.25s ease;
+        }
+
+            .table-modal tbody tr:nth-child(even) {
+                background: rgba(26, 26, 60, 0.9);
+            }
+
+        .table-modal tbody td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid rgba(155, 153, 245, 0.18);
+            color: #D8D8FF;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+
+            /* Nombre destacado */
+            .table-modal tbody td.fw-semibold {
+                color: var(--inventory-accent); /* o #9B99F5 directo si prefieres */
+                font-weight: 700 !important;
+            }
+
+        .table-modal tbody tr:hover {
+            background: rgba(99, 97, 242, 0.22);
+            transform: translateX(3px);
+        }
+
+        .table-modal tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    /* Badges */
+    .badge-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-active {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+    .badge-inactive {
+        background: linear-gradient(135deg, #6c757d, #868e96);
+        color: white;
+    }
+
+    /* Botones acción tabla */
+    .btn-table-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.3s ease;
+        margin: 0 2px;
+        font-size: 0.85rem;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.18);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+
+        .btn-edit:hover {
+            background: #3b82f6;
+            color: white;
+            transform: scale(1.08);
+        }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.18);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.08);
+        }
+
+    /* Scrollbar tablas modal */
+    .table-responsive::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--inventory-accent);
+        border-radius: 4px;
+    }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: var(--inventory-secondary);
+        }
 </style>
+
+@if (isAuth && isAdmin)
+{
+    <div class="container inventory-theme">
+        <!-- Header Principal -->
+        <div class="create-card">
+            <div class="create-card-header">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-plus-circle fs-2 me-3"></i>
+                    <div>
+                        <h2 class="mb-1">Crear Nuevo Producto</h2>
+                        <p class="mb-0 opacity-75">Complete la información para registrar un nuevo producto en el sistema</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="create-card-body">
+                <!-- Alertas Globales -->
+                @if (TempData["SuccessCategoria"] != null)
+                {
+                    <div class="alert-create alert-success d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <div>@TempData["SuccessCategoria"]</div>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                @if (TempData["ErrorCategoria"] != null)
+                {
+                    <div class="alert-create alert-danger d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>@TempData["ErrorCategoria"]</div>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <form asp-action="Create" method="post" id="productForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert-create alert-danger"></div>
+
+                    <!-- SECCIÓN: INFORMACIÓN BÁSICA -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-card-text"></i>
+                            Información Básica del Producto
+                        </h4>
+
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <label class="form-label required-field">Nombre del Producto</label>
+                                    <input asp-for="Nombre" class="form-control-create" placeholder="Ingrese el nombre del producto" />
+                                    <span asp-validation-for="Nombre" class="validation-message"></span>
+                                </div>
+
+                                @if (ViewBag.CodigoGenerado != null)
+                                {
+                                    <div class="field-group">
+                                        <label class="form-label">Código del Producto</label>
+                                        <div class="code-generated d-flex align-items-center justify-content-between">
+                                            <span>@ViewBag.CodigoGenerado</span>
+                                            <i class="bi bi-upc-scan text-muted"></i>
+                                        </div>
+                                        <div class="form-text-create">
+                                            <i class="bi bi-info-circle me-1"></i>Código generado automáticamente para el producto
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <label class="form-label">Stock Mínimo de Seguridad</label>
+                                    <input name="stockMinimo" type="number" class="form-control-create" value="1" min="0" />
+                                    <div class="form-text-create">
+                                        <i class="bi bi-bell me-1"></i>El sistema generará alertas cuando el stock alcance este nivel
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: CLASIFICACIÓN -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-diagram-3"></i>
+                            Clasificación y Categorización
+                        </h4>
+
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label required-field">Categoría del Producto</label>
+                                        <button type="button" class="btn-manage" data-bs-toggle="modal" data-bs-target="#modalCategoria">
+                                            <i class="bi bi-plus-circle me-1"></i>Gestionar Categorías
+                                        </button>
+                                    </div>
+                                    <select asp-for="IdCategoria" asp-items="ViewBag.CategoriasSelect" class="form-select-create" id="IdCategoria">
+                                        <option value="">-- Seleccione una categoría --</option>
+                                    </select>
+                                    <span asp-validation-for="IdCategoria" class="validation-message"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label required-field">Marca del Producto</label>
+                                        <button type="button" class="btn-manage" data-bs-toggle="modal" data-bs-target="#modalMarca">
+                                            <i class="bi bi-plus-circle me-1"></i>Gestionar Marcas
+                                        </button>
+                                    </div>
+                                    <select asp-for="IdMarca" asp-items="ViewBag.MarcasSelect" class="form-select-create" id="IdMarca">
+                                        <option value="">-- Seleccione una marca --</option>
+                                    </select>
+                                    <span asp-validation-for="IdMarca" class="validation-message"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN: PROVEEDOR Y DESCRIPCIÓN -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-truck"></i>
+                            Proveedor y Descripción
+                        </h4>
+
+                        <div class="row g-4">
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <label class="form-label required-field">Proveedor Principal</label>
+                                    <select name="idProveedor" class="form-select-create" id="idProveedor">
+                                        <option value="">-- Seleccione un proveedor --</option>
+                                        @foreach (var p in ViewBag.Proveedores)
+                                        {
+                                            <option value="@p.IdProveedor">@p.Nombre</option>
+                                        }
+                                    </select>
+                                    <span class="validation-message" id="proveedorValidation"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="field-group">
+                                    <label class="form-label required-field">Especificaciones del Producto</label>
+                                    <textarea asp-for="Descripcion" class="form-control-create" rows="4" placeholder="Ingrese las especificaciones detalladas del producto..."></textarea>
+                                    <span asp-validation-for="Descripcion" class="validation-message"></span>
+                                    <div class="form-text-create">
+                                        <i class="bi bi-lightbulb me-1"></i>Describe las características y especificaciones técnicas
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" asp-for="Activo" value="true" />
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="action-buttons">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="Index" class="btn-create-outline">
+                                <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+                            </a>
+
+                            <div class="d-flex gap-3">
+                                <a asp-action="Index" class="btn-create-outline">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn-create-primary" id="btnSubmit">
+                                    <i class="bi bi-check-lg me-2"></i>Guardar Producto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Categorías -->
+    <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCategoriaLabel">
+                        <i class="bi bi-tags"></i>Gestión de Categorías
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="alertContainerCategoria"></div>
+                    <form id="formCategoria">
+                        <input type="hidden" id="idCategoria" name="id" value="">
+                        <div class="mb-3">
+                            <label for="nombreCategoria" class="form-label required-field">Nombre de la Categoría</label>
+                            <input type="text" class="form-control-create" id="nombreCategoria" name="nombre" required placeholder="Ingrese el nombre de la categoría">
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcionCategoria" class="form-label">Descripción</label>
+                            <textarea class="form-control-create" id="descripcionCategoria" name="descripcion" rows="3" placeholder="Descripción opcional de la categoría"></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn-create-primary" id="btnGuardarCategoria">
+                                <i class="bi bi-check-lg me-1"></i>Guardar
+                            </button>
+                            <button type="button" class="btn-create-outline" id="btnCancelarEdicion" style="display: none;">
+                                <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                            </button>
+                            <button type="button" class="btn-create-outline ms-auto" data-bs-dismiss="modal">
+                                <i class="bi bi-door-closed me-1"></i>Cerrar
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <h6 class="modal-section-title">
+                        <i class="bi bi-list-check"></i>
+                        Categorías Existentes
+                    </h6>
+                    <div class="table-modal-container">
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-modal">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th width="120">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyCategorias">
+                                    @foreach (var categoria in ViewBag.CategoriasLista)
+                                    {
+                                        <tr data-id="@categoria.IdCategoria">
+                                            <td class="fw-semibold">@categoria.Nombre</td>
+                                            <td class="text-accent">@(categoria.Descripcion ?? "Sin descripción")</td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button" class="btn-table-action btn-edit"
+                                                            onclick="editarCategoria(@categoria.IdCategoria, '@categoria.Nombre', '@categoria.Descripcion')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-table-action btn-delete"
+                                                            onclick="eliminarCategoria(@categoria.IdCategoria, '@categoria.Nombre')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Marcas -->
+    <div class="modal fade" id="modalMarca" tabindex="-1" aria-labelledby="modalMarcaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMarcaLabel">
+                        <i class="bi bi-bookmark-star"></i>Gestión de Marcas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="alertContainerMarca"></div>
+                    <form id="formMarca">
+                        <input type="hidden" id="idMarca" name="id" value="">
+                        <div class="mb-3">
+                            <label for="nombreMarca" class="form-label required-field">Nombre de la Marca</label>
+                            <input type="text" class="form-control-create" id="nombreMarca" name="nombre" required placeholder="Ingrese el nombre de la marca">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn-create-primary" id="btnGuardarMarca">
+                                <i class="bi bi-check-lg me-1"></i>Guardar
+                            </button>
+                            <button type="button" class="btn-create-outline" id="btnCancelarEdicionMarca" style="display: none;">
+                                <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                            </button>
+                            <button type="button" class="btn-create-outline ms-auto" data-bs-dismiss="modal">
+                                <i class="bi bi-door-closed me-1"></i>Cerrar
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <h6 class="modal-section-title">
+                        <i class="bi bi-list-check"></i>
+                        Marcas Existentes
+                    </h6>
+                    <div class="table-modal-container">
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-modal">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Estado</th>
+                                        <th width="120">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyMarcas">
+                                    @foreach (var marca in ViewBag.MarcasLista)
+                                    {
+                                        <tr data-id="@marca.IdMarca">
+                                            <td class="fw-semibold">@marca.Nombre</td>
+                                            <td>
+                                                <span class="badge-status @(marca.Activo ? "badge-active" : "badge-inactive")">
+                                                    @(marca.Activo ? "Activa" : "Inactiva")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <button type="button" class="btn-table-action btn-edit"
+                                                            onclick="editarMarca(@marca.IdMarca, '@marca.Nombre')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-table-action btn-delete"
+                                                            onclick="eliminarMarca(@marca.IdMarca, '@marca.Nombre')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
@@ -345,36 +809,31 @@
         }, 5000);
 
         // --- VALIDACIONES DEL FORMULARIO PRINCIPAL ---
-        document.getElementById('productForm').addEventListener('submit', function(e) {
+        document.getElementById('productForm').addEventListener('submit', function (e) {
             let isValid = true;
             const submitBtn = document.getElementById('btnSubmit');
 
-            // Deshabilitar botón para evitar múltiples envíos
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Validando...';
 
-            // Validar nombre
             const nombre = document.getElementById('Nombre').value.trim();
             if (!nombre) {
                 mostrarError('Nombre', 'El nombre del producto es obligatorio.');
                 isValid = false;
             }
 
-            // Validar categoría
             const categoria = document.getElementById('IdCategoria').value;
             if (!categoria) {
                 mostrarError('IdCategoria', 'Debe seleccionar una categoría.');
                 isValid = false;
             }
 
-            // Validar marca
             const marca = document.getElementById('IdMarca').value;
             if (!marca) {
                 mostrarError('IdMarca', 'Debe seleccionar una marca.');
                 isValid = false;
             }
 
-            // Validar proveedor
             const proveedor = document.getElementById('idProveedor').value;
             if (!proveedor) {
                 document.getElementById('proveedorValidation').textContent = 'Debe seleccionar un proveedor.';
@@ -383,7 +842,6 @@
                 document.getElementById('proveedorValidation').textContent = '';
             }
 
-            // Validar descripción
             const descripcion = document.getElementById('Descripcion').value.trim();
             if (!descripcion) {
                 mostrarError('Descripcion', 'Las especificaciones del producto son obligatorias.');
@@ -392,13 +850,11 @@
 
             if (!isValid) {
                 e.preventDefault();
-                // Restaurar botón
                 setTimeout(() => {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Guardar Producto';
                 }, 1000);
 
-                // Scroll al primer error
                 const firstError = document.querySelector('.text-danger');
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -414,13 +870,11 @@
                 errorSpan.textContent = mensaje;
             }
 
-            // Resaltar campo con error
             campo.classList.add('is-invalid');
         }
 
-        // Remover estilos de error cuando el usuario empiece a escribir/seleccionar
         document.querySelectorAll('#Nombre, #Descripcion, #IdCategoria, #IdMarca, #idProveedor').forEach(campo => {
-            campo.addEventListener('input', function() {
+            campo.addEventListener('input', function () {
                 this.classList.remove('is-invalid');
                 const errorSpan = this.nextElementSibling || this.parentElement.nextElementSibling;
                 if (errorSpan && errorSpan.classList.contains('text-danger')) {
@@ -432,8 +886,8 @@
             });
         });
 
-        // --- FUNCIONALIDAD DINÁMICA DE CATEGORÍAS ---
-        document.getElementById('formCategoria').addEventListener('submit', function(e) {
+        // --- CATEGORÍAS ---
+        document.getElementById('formCategoria').addEventListener('submit', function (e) {
             e.preventDefault();
             guardarCategoria();
         });
@@ -454,59 +908,59 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarAlertaCategoria(data.message, 'success');
-                    resetFormCategoria();
-                    cargarCategorias();
-                    actualizarSelectCategorias(data.categorias);
-                } else {
-                    mostrarAlertaCategoria(data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                mostrarAlertaCategoria('Error al guardar la categoría', 'danger');
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = idCategoria ?
-                    '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar' :
-                    '<i class="bi bi-check-lg me-1"></i>Guardar';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlertaCategoria(data.message, 'success');
+                        resetFormCategoria();
+                        cargarCategorias();
+                        actualizarSelectCategorias(data.categorias);
+                    } else {
+                        mostrarAlertaCategoria(data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    mostrarAlertaCategoria('Error al guardar la categoría', 'danger');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = idCategoria
+                        ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
+                        : '<i class="bi bi-check-lg me-1"></i>Guardar';
+                });
         }
 
         function cargarCategorias() {
             fetch('/Productos/ObtenerCategorias')
-            .then(response => response.json())
-            .then(categorias => {
-                const tbody = document.getElementById('tbodyCategorias');
-                tbody.innerHTML = '';
+                .then(response => response.json())
+                .then(categorias => {
+                    const tbody = document.getElementById('tbodyCategorias');
+                    tbody.innerHTML = '';
 
-                categorias.forEach(categoria => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-id', categoria.idCategoria);
-                    tr.innerHTML = `
-                        <td class="fw-semibold">${categoria.nombre}</td>
-                        <td class="text-muted">${categoria.descripcion || 'Sin descripción'}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-primary"
-                                        onclick="editarCategoria(${categoria.idCategoria}, '${categoria.nombre}', '${categoria.descripcion || ''}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-danger"
-                                        onclick="eliminarCategoria(${categoria.idCategoria}, '${categoria.nombre}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            })
-            .catch(error => console.error('Error:', error));
+                    categorias.forEach(categoria => {
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-id', categoria.idCategoria);
+                        tr.innerHTML = `
+                            <td class="fw-semibold">${categoria.nombre}</td>
+                            <td class="text-accent">${categoria.descripcion || 'Sin descripción'}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <button type="button" class="btn-table-action btn-edit"
+                                            onclick="editarCategoria(${categoria.idCategoria}, '${categoria.nombre}', '${categoria.descripcion || ''}')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn-table-action btn-delete"
+                                            onclick="eliminarCategoria(${categoria.idCategoria}, '${categoria.nombre}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
         }
 
         function actualizarSelectCategorias(categorias) {
@@ -544,20 +998,20 @@
                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        mostrarAlertaCategoria(data.message, 'success');
-                        cargarCategorias();
-                        actualizarSelectCategorias(data.categorias);
-                    } else {
-                        mostrarAlertaCategoria(data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    mostrarAlertaCategoria('Error al eliminar la categoría', 'danger');
-                    console.error('Error:', error);
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarAlertaCategoria(data.message, 'success');
+                            cargarCategorias();
+                            actualizarSelectCategorias(data.categorias);
+                        } else {
+                            mostrarAlertaCategoria(data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        mostrarAlertaCategoria('Error al eliminar la categoría', 'danger');
+                        console.error('Error:', error);
+                    });
             }
         }
 
@@ -582,14 +1036,12 @@
             alertContainer.appendChild(alert);
 
             setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
+                if (alert.parentNode) alert.remove();
             }, 5000);
         }
 
-        // --- FUNCIONALIDAD DINÁMICA DE MARCAS ---
-        document.getElementById('formMarca').addEventListener('submit', function(e) {
+        // --- MARCAS ---
+        document.getElementById('formMarca').addEventListener('submit', function (e) {
             e.preventDefault();
             guardarMarca();
         });
@@ -610,63 +1062,63 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarAlertaMarca(data.message, 'success');
-                    resetFormMarca();
-                    cargarMarcas();
-                    actualizarSelectMarcas(data.marcas);
-                } else {
-                    mostrarAlertaMarca(data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                mostrarAlertaMarca('Error al guardar la marca', 'danger');
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = idMarca ?
-                    '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar' :
-                    '<i class="bi bi-check-lg me-1"></i>Guardar';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlertaMarca(data.message, 'success');
+                        resetFormMarca();
+                        cargarMarcas();
+                        actualizarSelectMarcas(data.marcas);
+                    } else {
+                        mostrarAlertaMarca(data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    mostrarAlertaMarca('Error al guardar la marca', 'danger');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = idMarca
+                        ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
+                        : '<i class="bi bi-check-lg me-1"></i>Guardar';
+                });
         }
 
         function cargarMarcas() {
             fetch('/Productos/ObtenerMarcas')
-            .then(response => response.json())
-            .then(marcas => {
-                const tbody = document.getElementById('tbodyMarcas');
-                tbody.innerHTML = '';
+                .then(response => response.json())
+                .then(marcas => {
+                    const tbody = document.getElementById('tbodyMarcas');
+                    tbody.innerHTML = '';
 
-                marcas.forEach(marca => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-id', marca.idMarca);
-                    tr.innerHTML = `
-                        <td class="fw-semibold">${marca.nombre}</td>
-                        <td>
-                            <span class="badge bg-${marca.activo ? 'success' : 'secondary'}">
-                                ${marca.activo ? 'Activa' : 'Inactiva'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-primary"
-                                        onclick="editarMarca(${marca.idMarca}, '${marca.nombre}')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-danger"
-                                        onclick="eliminarMarca(${marca.idMarca}, '${marca.nombre}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            })
-            .catch(error => console.error('Error:', error));
+                    marcas.forEach(marca => {
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-id', marca.idMarca);
+                        tr.innerHTML = `
+                            <td class="fw-semibold">${marca.nombre}</td>
+                            <td>
+                                <span class="badge-status ${marca.activo ? 'badge-active' : 'badge-inactive'}">
+                                    ${marca.activo ? 'Activa' : 'Inactiva'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <button type="button" class="btn-table-action btn-edit"
+                                            onclick="editarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn-table-action btn-delete"
+                                            onclick="eliminarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
         }
 
         function actualizarSelectMarcas(marcas) {
@@ -703,20 +1155,20 @@
                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        mostrarAlertaMarca(data.message, 'success');
-                        cargarMarcas();
-                        actualizarSelectMarcas(data.marcas);
-                    } else {
-                        mostrarAlertaMarca(data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    mostrarAlertaMarca('Error al eliminar la marca', 'danger');
-                    console.error('Error:', error);
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            mostrarAlertaMarca(data.message, 'success');
+                            cargarMarcas();
+                            actualizarSelectMarcas(data.marcas);
+                        } else {
+                            mostrarAlertaMarca(data.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        mostrarAlertaMarca('Error al eliminar la marca', 'danger');
+                        console.error('Error:', error);
+                    });
             }
         }
 
@@ -741,13 +1193,11 @@
             alertContainer.appendChild(alert);
 
             setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
+                if (alert.parentNode) alert.remove();
             }, 5000);
         }
 
-        // Botones de cancelar edición
+        // Botones cancelar edición
         document.getElementById('btnCancelarEdicion').addEventListener('click', resetFormCategoria);
         document.getElementById('btnCancelarEdicionMarca').addEventListener('click', resetFormMarca);
     </script>

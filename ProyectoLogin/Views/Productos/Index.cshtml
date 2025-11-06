@@ -3,7 +3,7 @@
 
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
-    ViewData["Title"] = "Productos";
+    ViewData["Title"] = "Inventario - Productos";
 
     var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>
                   ?? Enumerable.Empty<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>();
@@ -32,85 +32,457 @@
     var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
 
-
     var user = HttpContextAccessor.HttpContext?.User;
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="bi bi-boxes text-primary me-2"></i>Gestión de Inventario
-        </h2>
-        <div>
-            <a href="@Url.Action("Index", "Home")" class="btn btn-outline-dark me-2">
-                <i class="bi bi-arrow-left me-1"></i>Inicio
-            </a>
-            @if (isAuth && isAdmin)
-            {
-                <a class="btn btn-success rounded-pill" asp-action="Create">
-                    <i class="bi bi-plus-circle me-1"></i>Nuevo Producto
-            </a>
-            }
+<style>
+    :root {
+        --inventory-primary: #2D2A99;
+        --inventory-secondary: #6361F2;
+        --inventory-accent: #9B99F5;
+        --inventory-bg: #15153A;
+        --inventory-card: #1E1E4D;
+        --light-text: #F0F0F7;
+        --border-radius: 0.75rem;
+        --table-bg: #2A2A5A;
+        --table-header: #3A3A6A;
+        --table-border: #4A4A7A;
+    }
+
+    .inventory-theme {
+        background: linear-gradient(135deg, var(--inventory-bg) 0%, var(--inventory-primary) 100%);
+        min-height: 100vh;
+    }
+
+    .inventory-header {
+        background: var(--inventory-primary);
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--inventory-accent);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .inventory-card {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .inventory-card-header {
+        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--inventory-accent);
+    }
+
+    /* CONTENEDOR TABLA */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--table-bg);
+        color: var(--light-text);
+        table-layout: fixed; /* Garantiza alineación consistente */
+    }
+
+    .custom-table thead {
+        background: var(--table-header);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .custom-table th {
+        padding: 1.25rem 1rem;
+        text-align: left;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: #FFFFFF;
+        border-bottom: 2px solid var(--inventory-secondary);
+        white-space: nowrap;
+    }
+
+    .custom-table th.text-center {
+        text-align: center;
+    }
+
+    .custom-table td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--table-border);
+        vertical-align: middle;
+        background: var(--table-bg);
+        color: #E8E8FF;
+        font-weight: 500;
+    }
+
+    .custom-table td.text-center {
+        text-align: center;
+    }
+
+    .custom-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background: rgba(99, 97, 242, 0.15);
+    }
+
+    .custom-table tbody tr:nth-child(even) {
+        background: rgba(42, 42, 90, 0.8);
+    }
+
+    .custom-table tbody tr:nth-child(even):hover {
+        background: rgba(99, 97, 242, 0.2);
+    }
+
+    /* 🔥 INDICADOR STOCK BAJO SIN DESPLAZAR LA FILA */
+    .stock-low-indicator-row {
+        background: rgba(255, 107, 107, 0.1) !important;
+        box-shadow: inset 4px 0 0 #ff6b6b; /* Barra roja interna al borde izquierdo */
+    }
+
+    /* Eliminar cualquier pseudo-elemento previo que pudiera empujar contenido */
+    .stock-low-indicator-row::before {
+        content: none !important;
+    }
+
+    /* BADGES */
+    .badge-inventory {
+        padding: 0.5rem 0.9rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        display: inline-block;
+    }
+
+    .badge-code {
+        background: linear-gradient(135deg, #6c757d, #495057) !important;
+        color: white !important;
+        border: 1px solid #5a6268 !important;
+    }
+
+    .badge-category {
+        background: linear-gradient(135deg, #17a2b8, #138496) !important;
+        color: white !important;
+        border: 1px solid #117a8b !important;
+    }
+
+    .badge-brand {
+        background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+        color: #212529 !important;
+        border: 1px solid #d39e00 !important;
+    }
+
+    .badge-no-price {
+        background: linear-gradient(135deg, #e9ecef, #dee2e6) !important;
+        color: #6c757d !important;
+        border: 1px solid #ced4da !important;
+    }
+
+    /* BOTONES */
+    .btn-inventory {
+        background: var(--inventory-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-inventory:hover {
+        background: var(--inventory-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+
+    .btn-outline-inventory {
+        border: 2px solid var(--inventory-accent);
+        background: transparent;
+        color: var(--inventory-accent);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-inventory:hover {
+        background: var(--inventory-accent);
+        color: var(--inventory-card);
+        transform: translateY(-2px);
+    }
+
+    .action-btn {
+        width: 2.8rem;
+        height: 2.8rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        margin: 0 0.2rem;
+        font-size: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:hover {
+        transform: scale(1.15) translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border-color: #117a8b;
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        border-color: #d39e00;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border-color: #bd2130;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #218838);
+        border-color: #1e7e34;
+    }
+
+    /* TEXTO */
+    .product-name {
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 0.4rem;
+        font-size: 1rem;
+    }
+
+    .product-code {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        color: #B8B8FF;
+    }
+
+    .stock-indicator {
+        font-weight: 800;
+        font-size: 1.2rem;
+    }
+
+    .stock-low-text {
+        color: #ff6b6b;
+    }
+
+    .stock-normal-text {
+        color: #51cf66;
+    }
+
+    .stock-warning {
+        color: #ffd43b;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .price-value {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #51cf66;
+    }
+
+    .text-muted {
+        color: #A0A0CC !important;
+    }
+
+    .search-card {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-control-inventory {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        color: var(--light-text);
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control-inventory:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--inventory-secondary);
+        box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25);
+        color: var(--light-text);
+    }
+
+    .form-control-inventory::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .pagination-inventory .page-link {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        color: var(--light-text);
+        padding: 0.5rem 0.75rem;
+        margin: 0 0.125rem;
+        border-radius: 0.5rem;
+    }
+
+    .pagination-inventory .page-link:hover {
+        background: var(--inventory-secondary);
+        border-color: var(--inventory-secondary);
+        color: white;
+    }
+
+    .pagination-inventory .page-item.active .page-link {
+        background: var(--inventory-secondary);
+        border-color: var(--inventory-secondary);
+        color: white;
+    }
+
+    .pagination-inventory .page-item.disabled .page-link {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(139, 136, 242, 0.3);
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--light-text);
+        opacity: 0.7;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .stats-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        margin-left: 0.75rem;
+    }
+
+    /* ANCHOS COLUMNAS */
+    .table-col-product { width: 25%; min-width: 200px; }
+    .table-col-code { width: 12%; min-width: 120px; }
+    .table-col-category { width: 12%; min-width: 120px; }
+    .table-col-brand { width: 12%; min-width: 120px; }
+    .table-col-stock { width: 10%; min-width: 100px; }
+    .table-col-minstock { width: 10%; min-width: 100px; }
+    .table-col-price { width: 12%; min-width: 120px; }
+    .table-col-actions { width: 12%; min-width: 150px; }
+</style>
+
+<div class="container-fluid inventory-theme py-4">
+    <!-- Header Principal -->
+    <div class="inventory-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="h3 mb-1">
+                    <i class="bi bi-box-seam me-2"></i>Gestión de Inventario
+                </h1>
+                <p class="mb-0 opacity-75">Administra y controla tu catálogo de productos</p>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-inventory">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Inicio
+                    </a>
+                    @if (isAuth && isAdmin)
+                    {
+                        <a class="btn btn-inventory" asp-action="Create">
+                            <i class="bi bi-plus-circle me-2"></i>Nuevo Producto
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Barra de búsqueda -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3 align-items-center">
-                <div class="col-auto">
-                    <label class="col-form-label">Buscar producto:</label>
+    <!-- Barra de Búsqueda -->
+    <div class="search-card">
+        <form method="get" asp-action="Index" class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="bi bi-search text-white-50"></i>
+                    </span>
+                    <input type="text" name="q" value="@(ViewData["q"] ?? "")"
+                           class="form-control form-control-inventory border-start-0"
+                           placeholder="Buscar por nombre o código del producto..." />
                 </div>
-                <div class="col-auto">
-                    <input type="text" name="q" value="@(ViewData["q"] ?? "")" class="form-control"
-                           style="width: 300px" placeholder="Nombre o código del producto..." />
-                </div>
-                <div class="col-auto">
-                    <input type="hidden" name="pageActivos" value="1" />
-                    <input type="hidden" name="pageInactivos" value="1" />
-                    <button class="btn btn-primary" type="submit">
-                        <i class="bi bi-search me-1"></i>Buscar
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="col-md-4">
+                <input type="hidden" name="pageActivos" value="1" />
+                <input type="hidden" name="pageInactivos" value="1" />
+                <button class="btn btn-inventory w-100" type="submit">
+                    <i class="bi bi-search me-2"></i>Buscar Productos
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- PRODUCTOS ACTIVOS -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-success text-white d-flex align-items-center">
-            <i class="bi bi-box-seam fs-5 me-2"></i>
-            <h5 class="mb-0 me-2">Productos Activos</h5>
-            <span class="badge bg-light text-success fs-6">@totalActivos</span>
+    <div class="inventory-card">
+        <div class="inventory-card-header d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <div class="flex-grow-1">
+                <h4 class="mb-0">Productos Activos</h4>
+                <small class="opacity-75">Productos disponibles para venta</small>
+            </div>
+            <span class="stats-badge">
+                <i class="bi bi-box me-1"></i>@totalActivos productos
+            </span>
         </div>
+
         <div class="card-body p-0">
             @if (!activos.Any())
             {
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-box fs-1 mb-2"></i>
-                    <p class="mb-0">No hay productos activos</p>
+                <div class="empty-state">
+                    <i class="bi bi-box"></i>
+                    <h5 class="mb-2">No hay productos activos</h5>
+                    <p class="mb-0">Comienza agregando nuevos productos al inventario</p>
                 </div>
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
                             <tr>
-                                <th class="ps-3">Nombre</th>
-                                <th>Código</th>
-                                <th>Categoría</th>
-                                <th>Marca</th>
-                                <th class="text-center">Stock Actual</th>
-                                <th class="text-center">Stock Mínimo</th>
-                                <th class="text-center">Precio Venta Unitario</th>
-
-                                
-                                    <th class="text-center">Acciones</th>
+                                <th class="table-col-product">Producto</th>
+                                <th class="table-col-code">Código</th>
+                                <th class="table-col-category">Categoría</th>
+                                <th class="table-col-brand">Marca</th>
+                                <th class="table-col-stock text-center">Stock Actual</th>
+                                <th class="table-col-minstock text-center">Stock Mínimo</th>
+                                <th class="table-col-price text-center">Precio Unitario</th>
+                                <th class="table-col-actions text-center">Acciones</th>
                                 
                             </tr>
                         </thead>
@@ -122,100 +494,101 @@
                                 var stockMin = p.Inventario?.StockMinimo ?? 0;
                                 var isLow = (p.Inventario != null) && (stockActual <= stockMin);
 
-                                <tr class="@(isLow ? "table-warning" : "")">
-                                    <td class="ps-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-box text-primary me-2"></i>
-                                            <div>
-                                                <div class="fw-semibold">@p.Nombre</div>
-                                                @if (isLow)
-                                                {
-                                                    <small class="text-danger">
-                                                        <i class="bi bi-exclamation-triangle"></i> Stock bajo
-                                                    </small>
-                                                }
-                                            </div>
-                                        </div>
+                                <tr class="@(isLow ? "stock-low-indicator-row" : "")">
+                                    <td class="table-col-product">
+                                        <div class="product-name">@p.Nombre</div>
+                                        @if (isLow)
+                                        {
+                                            <small class="stock-warning">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Stock bajo
+                                            </small>
+                                        }
                                     </td>
-                                    <td>
-                                        <span class="badge bg-secondary">@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "Sin código" : p.CodigoBarras)</span>
+                                    <td class="table-col-code">
+                                        <span class="badge badge-inventory badge-code">
+                                            @(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "Sin código" : p.CodigoBarras)
+                                        </span>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-info text-dark">@p.Categoria?.Nombre</span>
+                                    <td class="table-col-category">
+                                        <span class="badge badge-inventory badge-category">@p.Categoria?.Nombre</span>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-warning text-dark">@p.Marca?.Nombre</span>
+                                    <td class="table-col-brand">
+                                        <span class="badge badge-inventory badge-brand">@p.Marca?.Nombre</span>
                                     </td>
-                                    <td class="text-center fw-bold @(isLow ? "text-danger" : "text-success")">
-                                        @stockActual
+                                    <td class="table-col-stock text-center">
+                                        <span class="stock-indicator @(isLow ? "stock-low-text" : "stock-normal-text")">
+                                            @stockActual
+                                        </span>
                                     </td>
-                                    <td class="text-center text-muted">
+                                    <td class="table-col-minstock text-center text-muted">
                                         @stockMin
                                     </td>
-                                    <td class="text-center">
+                                    <td class="table-col-price text-center">
                                         @if (precio != null)
                                         {
-                                            <span class="fw-bold text-success">Q @precio.PrecioVenta.ToString("N2")</span>
+                                            <span class="price-value">Q @precio.PrecioVenta.ToString("N2")</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-light text-muted">Sin precio</span>
+                                            <span class="badge badge-inventory badge-no-price">Sin precio</span>
                                         }
                                     </td>
-                                    <td>
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <!-- Detalles -->
-                                            <a href="@Url.Action("Details", new { id = p.IdProducto })"
-                                               class="btn btn-outline-info rounded-circle btn-sm" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            @if (isAuth && isAdmin)
-                                            {
+                                    
+                                        <td class="table-col-actions text-center">
+                                            <div class="d-flex justify-content-center">
+                                                <!-- Detalles -->
+                                                <a href="@Url.Action("Details", new { id = p.IdProducto })"
+                                                   class="action-btn btn-info" title="Ver detalles">
+                                                    <i class="bi bi-eye text-white"></i>
+                                                </a>
+                                                @if (isAuth && isAdmin)
+                                                {
                                                 <!-- Editar -->
                                                 <a href="@Url.Action("Edit", new { id = p.IdProducto })"
-                                                class="btn btn-outline-warning rounded-circle btn-sm" title="Editar producto">
-                                                    <i class="bi bi-pencil-square"></i>
+                                                   class="action-btn btn-warning" title="Editar producto">
+                                                    <i class="bi bi-pencil text-dark"></i>
                                                 </a>
-                                            }@if (isAuth && isAdmin){
-                                            <!-- Desactivar -->
-                                            <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-danger rounded-circle btn-sm"
-                                                        title="Desactivar producto"
-                                                        onclick="return confirm('¿Estás seguro de desactivar el producto @p.Nombre?')">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </form>
-                                            }
-                                        </div>
-                                    </td>
+                                                }@if (isAuth && isAdmin)
+                                                {
+                                                <!-- Desactivar -->
+                                                <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="action-btn btn-danger"
+                                                            title="Desactivar producto"
+                                                            onclick="return confirm('¿Estás seguro de desactivar el producto @p.Nombre?')">
+                                                        <i class="bi bi-x-circle text-white"></i>
+                                                    </button>
+                                                </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN PRODUCTOS ACTIVOS - DISEÑO DISIMULADO -->
+                <!-- PAGINACIÓN PRODUCTOS ACTIVOS -->
                 @if (totalPagesActivos > 1)
                 {
-                    <div class="p-3 border-top bg-light">
+                    <div class="p-4 border-top" style="border-color: var(--table-border) !important;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="text-muted small">
-                                Página @pageActivos de @totalPagesActivos • 
+                                Página @pageActivos de @totalPagesActivos •
                                 Mostrando @activos.Count() de @totalActivos productos
                             </div>
-                            <div class="pagination-container">
-                                <ul class="pagination pagination-sm mb-0">
-                                    <!-- Flecha anterior -->
+                            <nav>
+                                <ul class="pagination pagination-inventory mb-0">
                                     @if (pageActivos > 1)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos - 1, 
-                                                   pageInactivos = pageInactivos, 
-                                                   pageSize = pageSize 
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", new {
+                                                   q = ViewData["q"],
+                                                   pageActivos = pageActivos - 1,
+                                                   pageInactivos = pageInactivos,
+                                                   pageSize = pageSize
                                                })">
                                                 <i class="bi bi-chevron-left"></i>
                                             </a>
@@ -228,21 +601,14 @@
                                         </li>
                                     }
 
-                                    <!-- Números de página - máximo 5 páginas visibles -->
                                     @{
                                         int startPage = Math.Max(1, pageActivos - 2);
                                         int endPage = Math.Min(totalPagesActivos, pageActivos + 2);
-                                        
+
                                         if (startPage > 1)
                                         {
                                             <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = 1, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">1</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = 1, pageInactivos = pageInactivos, pageSize = pageSize })">1</a>
                                             </li>
                                             if (startPage > 2)
                                             {
@@ -255,13 +621,7 @@
                                         for (int i = startPage; i <= endPage; i++)
                                         {
                                             <li class="page-item @(i == pageActivos ? "active" : "")">
-                                                <a class="page-link"
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = i, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@i</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = i, pageInactivos = pageInactivos, pageSize = pageSize })">@i</a>
                                             </li>
                                         }
 
@@ -274,27 +634,20 @@
                                                 </li>
                                             }
                                             <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = totalPagesActivos, 
-                                                       pageInactivos = pageInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@totalPagesActivos</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = totalPagesActivos, pageInactivos = pageInactivos, pageSize = pageSize })">@totalPagesActivos</a>
                                             </li>
                                         }
                                     }
 
-                                    <!-- Flecha siguiente -->
                                     @if (pageActivos < totalPagesActivos)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos + 1, 
-                                                   pageInactivos = pageInactivos, 
-                                                   pageSize = pageSize 
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", new {
+                                                   q = ViewData["q"],
+                                                   pageActivos = pageActivos + 1,
+                                                   pageInactivos = pageInactivos,
+                                                   pageSize = pageSize
                                                })">
                                                 <i class="bi bi-chevron-right"></i>
                                             </a>
@@ -307,7 +660,7 @@
                                         </li>
                                     }
                                 </ul>
-                            </div>
+                            </nav>
                         </div>
                     </div>
                 }
@@ -315,29 +668,34 @@
         </div>
     </div>
 
-    @if (isAuth && isAdmin){
-    <!-- PRODUCTOS INACTIVOS - SOLO SE MUESTRA SI HAY AL MENOS UNO -->
-    @if (totalInactivos > 0)
+    <!-- PRODUCTOS INACTIVOS -->
+    @if (isAuth && isAdmin && totalInactivos > 0)
     {
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white d-flex align-items-center">
-                <i class="bi bi-box-x fs-5 me-2"></i>
-                <h5 class="mb-0 me-2">Productos Inactivos</h5>
-                <span class="badge bg-light text-secondary fs-6">@totalInactivos</span>
+        <div class="inventory-card">
+            <div class="inventory-card-header d-flex align-items-center">
+                <i class="bi bi-x-circle fs-4 me-3"></i>
+                <div class="flex-grow-1">
+                    <h4 class="mb-0">Productos Inactivos</h4>
+                    <small class="opacity-75">Productos deshabilitados temporalmente</small>
+                </div>
+                <span class="stats-badge">
+                    <i class="bi bi-archive me-1"></i>@totalInactivos productos
+                </span>
             </div>
+
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
                             <tr>
-                                <th class="ps-3">Nombre</th>
-                                <th>Código</th>
-                                <th>Categoría</th>
-                                <th>Marca</th>
-                                <th class="text-center">Stock Actual</th>
-                                <th class="text-center">Stock Mínimo</th>
-                                <th class="text-center">Precio Venta</th>
-                                <th class="text-center">Acciones</th>
+                                <th class="table-col-product">Producto</th>
+                                <th class="table-col-code">Código</th>
+                                <th class="table-col-category">Categoría</th>
+                                <th class="table-col-brand">Marca</th>
+                                <th class="table-col-stock text-center">Stock Actual</th>
+                                <th class="table-col-minstock text-center">Stock Mínimo</th>
+                                <th class="table-col-price text-center">Precio Unitario</th>
+                                <th class="table-col-actions text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -348,61 +706,57 @@
                                 var stockMin = p.Inventario?.StockMinimo ?? 0;
                                 var isLow = (p.Inventario != null) && (stockActual <= stockMin);
 
-                                <tr class="text-muted">
-                                    <td class="ps-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-box me-2"></i>
-                                            <div>
-                                                <div class="fw-semibold">@p.Nombre</div>
-                                                @if (isLow)
-                                                {
-                                                    <small class="text-danger">
-                                                        <i class="bi bi-exclamation-triangle"></i> Stock bajo
-                                                    </small>
-                                                }
-                                            </div>
-                                        </div>
+                                <tr class="text-muted @(isLow ? "stock-low-indicator-row" : "")">
+                                    <td class="table-col-product">
+                                        <div class="product-name" style="color: #A0A0CC;">@p.Nombre</div>
+                                        @if (isLow)
+                                        {
+                                            <small class="stock-warning">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Stock bajo
+                                            </small>
+                                        }
                                     </td>
-                                    <td>
-                                        <span class="badge bg-light text-muted">@(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "Sin código" : p.CodigoBarras)</span>
+                                    <td class="table-col-code">
+                                        <span class="badge badge-inventory badge-code">
+                                            @(string.IsNullOrWhiteSpace(p.CodigoBarras) ? "Sin código" : p.CodigoBarras)
+                                        </span>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-light text-muted">@p.Categoria?.Nombre</span>
+                                    <td class="table-col-category">
+                                        <span class="badge badge-inventory badge-category">@p.Categoria?.Nombre</span>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-light text-muted">@p.Marca?.Nombre</span>
+                                    <td class="table-col-brand">
+                                        <span class="badge badge-inventory badge-brand">@p.Marca?.Nombre</span>
                                     </td>
-                                    <td class="text-center @(isLow ? "text-danger fw-bold" : "")">
-                                        @stockActual
+                                    <td class="table-col-stock text-center">
+                                        <span class="@(isLow ? "text-danger fw-bold" : "text-muted")">@stockActual</span>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="table-col-minstock text-center text-muted">
                                         @stockMin
                                     </td>
-                                    <td class="text-center">
+                                    <td class="table-col-price text-center">
                                         @if (precio != null)
                                         {
                                             <span class="text-muted">Q @precio.PrecioVenta.ToString("N2")</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-light text-muted">Sin precio</span>
+                                            <span class="badge badge-inventory badge-no-price">Sin precio</span>
                                         }
                                     </td>
-                                    <td>
-                                        <div class="d-flex justify-content-center gap-1">
+                                    <td class="table-col-actions text-center">
+                                        <div class="d-flex justify-content-center">
                                             <!-- Detalles -->
                                             <a href="@Url.Action("Details", new { id = p.IdProducto })"
-                                               class="btn btn-outline-info rounded-circle btn-sm" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
+                                               class="action-btn btn-info" title="Ver detalles">
+                                                <i class="bi bi-eye text-white"></i>
                                             </a>
-
                                             <!-- Activar -->
                                             <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-outline-success rounded-circle btn-sm"
+                                                <button type="submit" class="action-btn btn-success"
                                                         title="Activar producto"
                                                         onclick="return confirm('¿Estás seguro de activar el producto @p.Nombre?')">
-                                                    <i class="bi bi-check2-circle"></i>
+                                                    <i class="bi bi-check2-circle text-white"></i>
                                                 </button>
                                             </form>
                                         </div>
@@ -413,27 +767,26 @@
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN PRODUCTOS INACTIVOS - DISEÑO DISIMULADO -->
+                <!-- PAGINACIÓN PRODUCTOS INACTIVOS -->
                 @if (totalPagesInactivos > 1)
                 {
-                    <div class="p-3 border-top bg-light">
+                    <div class="p-4 border-top" style="border-color: var(--table-border) !important;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="text-muted small">
-                                Página @pageInactivos de @totalPagesInactivos • 
+                                Página @pageInactivos de @totalPagesInactivos •
                                 Mostrando @inactivos.Count() de @totalInactivos productos
                             </div>
-                            <div class="pagination-container">
-                                <ul class="pagination pagination-sm mb-0">
-                                    <!-- Flecha anterior -->
+                            <nav>
+                                <ul class="pagination pagination-inventory mb-0">
                                     @if (pageInactivos > 1)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos, 
-                                                   pageInactivos = pageInactivos - 1, 
-                                                   pageSize = pageSize 
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", new {
+                                                   q = ViewData["q"],
+                                                   pageActivos = pageActivos,
+                                                   pageInactivos = pageInactivos - 1,
+                                                   pageSize = pageSize
                                                })">
                                                 <i class="bi bi-chevron-left"></i>
                                             </a>
@@ -446,21 +799,14 @@
                                         </li>
                                     }
 
-                                    <!-- Números de página - máximo 5 páginas visibles -->
                                     @{
                                         int startPageInactivos = Math.Max(1, pageInactivos - 2);
                                         int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
-                                        
+
                                         if (startPageInactivos > 1)
                                         {
                                             <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = 1, 
-                                                       pageSize = pageSize 
-                                                   })">1</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = 1, pageSize = pageSize })">1</a>
                                             </li>
                                             if (startPageInactivos > 2)
                                             {
@@ -473,13 +819,7 @@
                                         for (int i = startPageInactivos; i <= endPageInactivos; i++)
                                         {
                                             <li class="page-item @(i == pageInactivos ? "active" : "")">
-                                                <a class="page-link"
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = i, 
-                                                       pageSize = pageSize 
-                                                   })">@i</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = i, pageSize = pageSize })">@i</a>
                                             </li>
                                         }
 
@@ -492,27 +832,20 @@
                                                 </li>
                                             }
                                             <li class="page-item">
-                                                <a class="page-link" 
-                                                   href="@Url.Action("Index", new { 
-                                                       q = ViewData["q"], 
-                                                       pageActivos = pageActivos, 
-                                                       pageInactivos = totalPagesInactivos, 
-                                                       pageSize = pageSize 
-                                                   })">@totalPagesInactivos</a>
+                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = totalPagesInactivos, pageSize = pageSize })">@totalPagesInactivos</a>
                                             </li>
                                         }
                                     }
 
-                                    <!-- Flecha siguiente -->
                                     @if (pageInactivos < totalPagesInactivos)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link" 
-                                               href="@Url.Action("Index", new { 
-                                                   q = ViewData["q"], 
-                                                   pageActivos = pageActivos, 
-                                                   pageInactivos = pageInactivos + 1, 
-                                                   pageSize = pageSize 
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", new {
+                                                   q = ViewData["q"],
+                                                   pageActivos = pageActivos,
+                                                   pageInactivos = pageInactivos + 1,
+                                                   pageSize = pageSize
                                                })">
                                                 <i class="bi bi-chevron-right"></i>
                                             </a>
@@ -525,13 +858,12 @@
                                         </li>
                                     }
                                 </ul>
-                            </div>
+                            </nav>
                         </div>
                     </div>
                 }
             </div>
         </div>
-    }
     }
 </div>
 
@@ -543,56 +875,3 @@
         });
     </script>
 }
-
-<style>
-    .table td {
-        vertical-align: middle;
-    }
-
-    .btn-sm {
-        padding: 0.375rem 0.5rem;
-    }
-
-    .card-header {
-        border-bottom: none;
-    }
-
-    .badge {
-        font-size: 0.75em;
-    }
-
-    /* Estilos para la paginación disimulada */
-    .pagination-container {
-        background: transparent;
-    }
-
-    .pagination-sm .page-link {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        border: 1px solid #dee2e6;
-        color: #6c757d;
-        background: white;
-    }
-
-    .pagination-sm .page-item.active .page-link {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-    }
-
-    .pagination-sm .page-link:hover {
-        background-color: #e9ecef;
-        border-color: #dee2e6;
-        color: #495057;
-    }
-
-    .pagination-sm .page-item.disabled .page-link {
-        color: #adb5bd;
-        background-color: white;
-        border-color: #dee2e6;
-    }
-
-    .bg-light {
-        background-color: #f8f9fa !important;
-    }
-</style>

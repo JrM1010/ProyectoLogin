@@ -10,151 +10,541 @@
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
-@if (isAuth && isAdmin){
-<div class="container mt-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-warning text-black py-3">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-pencil-square fs-4 me-2"></i>
-                <h4 class="mb-0">Editar Producto</h4>
+
+<style>
+    :root {
+        --inventory-primary: #2D2A99;
+        --inventory-secondary: #6361F2;
+        --inventory-accent: #9B99F5;
+        --inventory-bg: #15153A;
+        --inventory-card: #1E1E4D;
+        --light-text: #F0F0F7;
+        --border-radius: 0.75rem;
+    }
+
+    .inventory-theme {
+        background: linear-gradient(135deg, var(--inventory-bg) 0%, var(--inventory-primary) 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .edit-card {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .edit-card-header {
+        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--inventory-accent);
+    }
+
+    .edit-card-body {
+        padding: 2rem;
+    }
+
+    .form-label {
+        color: var(--light-text);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control-edit {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        color: var(--light-text);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+        .form-control-edit:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--inventory-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25);
+            color: var(--light-text);
+        }
+
+        .form-control-edit::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+    /* 🔥 CORRECCIÓN CRÍTICA: Selects con texto visible */
+    .form-select-edit {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid var(--inventory-accent) !important;
+        border-radius: var(--border-radius) !important;
+        color: var(--light-text) !important;
+        padding: 0.75rem 1rem !important;
+        transition: all 0.3s ease !important;
+        appearance: none !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%239B99F5' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 16px 12px !important;
+    }
+
+        .form-select-edit:focus {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: var(--inventory-secondary) !important;
+            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25) !important;
+            color: var(--light-text) !important;
+        }
+
+        /* 🔥 CORRECCIÓN: Opciones del select con fondo oscuro */
+        .form-select-edit option {
+            background: var(--inventory-card) !important;
+            color: var(--light-text) !important;
+            padding: 0.5rem !important;
+        }
+
+            .form-select-edit option:checked {
+                background: var(--inventory-secondary) !important;
+                color: white !important;
+            }
+
+            .form-select-edit option:hover {
+                background: var(--inventory-accent) !important;
+                color: var(--inventory-card) !important;
+            }
+
+    .form-text-edit {
+        color: #A0A0CC;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .text-success {
+        color: #51cf66 !important;
+    }
+
+    .text-warning {
+        color: #ffd43b !important;
+    }
+
+    .btn-edit-primary {
+        background: var(--inventory-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+        .btn-edit-primary:hover {
+            background: var(--inventory-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+    .btn-edit-outline {
+        border: 2px solid var(--inventory-accent);
+        background: transparent;
+        color: var(--inventory-accent);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-edit-outline:hover {
+            background: var(--inventory-accent);
+            color: var(--inventory-card);
+            transform: translateY(-2px);
+        }
+
+    .form-check-input-edit {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--inventory-accent);
+        width: 3rem;
+        height: 1.5rem;
+    }
+
+        .form-check-input-edit:checked {
+            background-color: var(--inventory-secondary);
+            border-color: var(--inventory-secondary);
+        }
+
+    .form-check-label-edit {
+        color: var(--light-text);
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    .validation-message {
+        color: #ff6b6b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #ff6b6b;
+    }
+
+    /* 🔥 MEJORA: Secciones mejor identificadas */
+    .section-container {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+        .section-container:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--inventory-secondary);
+        }
+
+    .section-title {
+        color: var(--light-text);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--inventory-secondary);
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title i {
+            background: var(--inventory-secondary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+    .section-description {
+        color: #A0A0CC;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        padding-left: 2.75rem;
+    }
+
+    .code-warning {
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+        .code-warning i {
+            color: #ff6b6b;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+    .field-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .field-group:last-child {
+            margin-bottom: 0;
+        }
+</style>
+
+@if (isAuth && isAdmin)
+{
+    <div class="container inventory-theme">
+        <div class="edit-card">
+            <!-- Header -->
+            <div class="edit-card-header">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-pencil-square fs-2 me-3"></i>
+                    <div>
+                        <h2 class="mb-1">Editar Producto</h2>
+                        <p class="mb-0 opacity-75">Actualiza la información del producto en el inventario</p>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="card-body p-4">
-            <form asp-action="Edit" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="IdProducto" />
+            <!-- Body -->
+            <div class="edit-card-body">
+                <form id="editForm" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="IdProducto" />
 
-                <!-- DATOS BÁSICOS -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary">Nombre del producto</label>
-                        <input asp-for="Nombre" class="form-control" placeholder="Ej. Iphone 7" />
-                        <span asp-validation-for="Nombre" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary">Código de Producto</label>
-                        <input asp-for="CodigoBarras" class="form-control" placeholder="Ej. 1234567890" />
-                        <span asp-validation-for="CodigoBarras" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- DETALLES -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <label class="form-label fw-bold text-primary">Especificaciones</label>
-                        <textarea asp-for="Descripcion" class="form-control" rows="3"
-                                  placeholder="Describe las especificaciones del producto..."></textarea>
-                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- CATEGORÍA Y MARCA -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary">Categoría</label>
-                        <select asp-for="IdCategoria" class="form-select"
-                                asp-items="@(new SelectList(ViewBag.Categorias, "IdCategoria", "Nombre"))">
-                            <option value="">Seleccione una categoría</option>
-                        </select>
-                        <span asp-validation-for="IdCategoria" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary">Marca</label>
-                        <select asp-for="IdMarca" class="form-select"
-                                asp-items="@(new SelectList(ViewBag.Marcas, "IdMarca", "Nombre"))">
-                            <option value="">Seleccione una marca</option>
-                        </select>
-                        <span asp-validation-for="IdMarca" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <!-- STOCK MÍNIMO -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary">Stock mínimo</label>
-                        <input name="stockMinimo" type="number" class="form-control"
-                               value="@(ViewBag.Inventario?.StockMinimo ?? 0)" min="0" />
-                        <div class="form-text text-muted">
-                            <i class="bi bi-info-circle me-1"></i>El sistema alertará cuando el stock llegue a este nivel
+                    <!-- Alerta de código requerido -->
+                    <div class="code-warning" id="codeWarning" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <strong>¡Atención!</strong> El código de producto es obligatorio para guardar los cambios.
                         </div>
                     </div>
-                </div>
 
-                <!-- ESTADO -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" asp-for="Activo" />
-                            <label class="form-check-label fw-bold text-primary">
-                                <i class="bi bi-power me-1"></i>Producto activo
-                            </label>
-                        </div>
-                        <div class="form-text text-muted">
-                            @if (Model.Activo)
-                            {
-                                <span class="text-success">
-                                    <i class="bi bi-check-circle me-1"></i>El producto está visible en el sistema
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="text-warning">
-                                    <i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto en el sistema
-                                </span>
-                            }
+                    <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-card-text"></i>
+                            Información Básica del Producto
+                        </h4>
+                        <p class="section-description">
+                            Datos fundamentales para identificar y clasificar el producto en el sistema.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 field-group">
+                                <label class="form-label required-field">Nombre del Producto</label>
+                                <input asp-for="Nombre" class="form-control-edit" placeholder="Ej. iPhone 14 Pro Max 256GB" />
+                                <span asp-validation-for="Nombre" class="validation-message"></span>
+                                <div class="form-text-edit">
+                                    <i class="bi bi-tag me-1"></i>Nombre comercial completo del producto
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 field-group">
+                                <label class="form-label required-field">Código de Identificación</label>
+                                <input asp-for="CodigoBarras" id="codigoBarras" class="form-control-edit"
+                                       placeholder="Ej. 1234567890123" required />
+                                <span asp-validation-for="CodigoBarras" class="validation-message"></span>
+                                <div class="form-text-edit">
+                                    <i class="bi bi-upc-scan me-1"></i>Código único para identificación y escaneo
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- BOTONES DE ACCIÓN -->
-                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill" title="Volver al listado de productos">
-                        <i class="bi bi-arrow-left me-1"></i>Volver al listado
-                    </a>
+                    <!-- SECCIÓN 2: DESCRIPCIÓN Y CARACTERÍSTICAS -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-file-text"></i>
+                            Descripción y Especificaciones
+                        </h4>
+                        <p class="section-description">
+                            Detalles técnicos y características que ayudan a describir el producto.
+                        </p>
 
-                    <div class="d-flex gap-2">
-                        <a asp-action="Details" asp-route-id="@Model.IdProducto"
-                           class="btn btn-outline-info rounded-pill" title="Ver detalles del producto">
-                            <i class="bi bi-eye me-1"></i>Ver Detalles
+                        <div class="field-group">
+                            <label class="form-label">Especificaciones Detalladas</label>
+                            <textarea asp-for="Descripcion" class="form-control-edit" rows="4"
+                                      placeholder="Describe las características técnicas, funcionalidades, especificaciones y detalles importantes del producto..."></textarea>
+                            <span asp-validation-for="Descripcion" class="validation-message"></span>
+                            <div class="form-text-edit">
+                                <i class="bi bi-lightbulb me-1"></i>Incluye información relevante para clientes y equipo de ventas
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: CLASIFICACIÓN Y CATEGORIZACIÓN -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-diagram-3"></i>
+                            Clasificación y Categorización
+                        </h4>
+                        <p class="section-description">
+                            Organiza el producto dentro de las categorías y marcas del sistema.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 field-group">
+                                <label class="form-label required-field">Categoría Principal</label>
+                                <select asp-for="IdCategoria" class="form-select-edit"
+                                        asp-items="@(new SelectList(ViewBag.Categorias, "IdCategoria", "Nombre"))" required>
+                                    <option value="">Seleccione una categoría</option>
+                                </select>
+                                <span asp-validation-for="IdCategoria" class="validation-message"></span>
+                                <div class="form-text-edit">
+                                    <i class="bi bi-folder me-1"></i>Grupo al que pertenece el producto
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 field-group">
+                                <label class="form-label required-field">Marca del Producto</label>
+                                <select asp-for="IdMarca" class="form-select-edit"
+                                        asp-items="@(new SelectList(ViewBag.Marcas, "IdMarca", "Nombre"))" required>
+                                    <option value="">Seleccione una marca</option>
+                                </select>
+                                <span asp-validation-for="IdMarca" class="validation-message"></span>
+                                <div class="form-text-edit">
+                                    <i class="bi bi-trophy me-1"></i>Fabricante o marca comercial
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 4: GESTIÓN DE INVENTARIO -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-clipboard-data"></i>
+                            Control de Inventario
+                        </h4>
+                        <p class="section-description">
+                            Configuración de parámetros para la gestión eficiente del stock.
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 field-group">
+                                <label class="form-label">Stock Mínimo de Seguridad</label>
+                                <input name="stockMinimo" type="number" class="form-control-edit"
+                                       value="@(ViewBag.Inventario?.StockMinimo ?? 0)" min="0" />
+                                <div class="form-text-edit">
+                                    <i class="bi bi-bell me-1"></i>Se generarán alertas cuando el stock alcance este nivel
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 5: ESTADO Y VISIBILIDAD -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-eye"></i>
+                            Estado y Visibilidad
+                        </h4>
+                        <p class="section-description">
+                            Controla la disponibilidad y visibilidad del producto en el sistema.
+                        </p>
+
+                        <div class="field-group">
+                            <div class="form-check form-switch d-flex align-items-center">
+                                <input class="form-check-input-edit" type="checkbox" role="switch" asp-for="Activo" id="activoSwitch" />
+                                <label class="form-check-label-edit" for="activoSwitch">
+                                    <i class="bi bi-power me-1"></i>Producto activo en el sistema
+                                </label>
+                            </div>
+                            <div class="form-text-edit" id="estadoMensaje">
+                                @if (Model.Activo)
+                                {
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle me-1"></i>El producto está visible y disponible para venta
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-warning">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto y no disponible para venta
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="d-flex justify-content-between align-items-center pt-4 border-top" style="border-color: var(--inventory-accent) !important;">
+                        <a asp-action="Index" class="btn-edit-outline">
+                            <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
                         </a>
 
-                        <button type="submit" class="btn btn-primary rounded-pill" title="Guardar cambios">
-                            <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
-                        </button>
+                        <div class="d-flex gap-3">
+                            <a asp-action="Details" asp-route-id="@Model.IdProducto"
+                               class="btn-edit-outline">
+                                <i class="bi bi-eye me-2"></i>Ver Detalles
+                            </a>
+
+                            <button type="submit" id="submitButton" class="btn-edit-primary">
+                                <i class="bi bi-check2-circle me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 }
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Focus en el primer campo al cargar
+            const form = document.getElementById('editForm');
+            const codigoInput = document.getElementById('codigoBarras');
+            const codeWarning = document.getElementById('codeWarning');
+            const submitButton = document.getElementById('submitButton');
+            const activoSwitch = document.getElementById('activoSwitch');
+            const estadoMensaje = document.getElementById('estadoMensaje');
+
+            // Focus en el primer campo
             const firstInput = document.querySelector('input[type="text"]');
             if (firstInput) firstInput.focus();
 
-            // Actualizar mensaje de estado en tiempo real
-            const activoSwitch = document.querySelector('#Activo');
-            const estadoMensaje = document.querySelector('.form-text.text-muted span');
+            // Validación de código en tiempo real
+            function validateCode() {
+                const codigo = codigoInput.value.trim();
+                if (codigo === '') {
+                    codeWarning.style.display = 'flex';
+                    codigoInput.style.borderColor = '#ff6b6b';
+                    return false;
+                } else {
+                    codeWarning.style.display = 'none';
+                    codigoInput.style.borderColor = 'var(--inventory-accent)';
+                    return true;
+                }
+            }
 
+            // Validar al escribir
+            codigoInput.addEventListener('input', validateCode);
+
+            // Validar al enviar formulario
+            form.addEventListener('submit', function(e) {
+                if (!validateCode()) {
+                    e.preventDefault();
+
+                    // Efecto visual de error
+                    codigoInput.style.transform = 'translateX(10px)';
+                    setTimeout(() => {
+                        codigoInput.style.transform = 'translateX(0)';
+                    }, 300);
+
+                    // Scroll al campo problemático
+                    codigoInput.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    codigoInput.focus();
+                }
+            });
+
+            // Actualizar mensaje de estado en tiempo real
             if (activoSwitch && estadoMensaje) {
                 activoSwitch.addEventListener('change', function() {
                     if (this.checked) {
-                        estadoMensaje.innerHTML = '<i class="bi bi-check-circle me-1"></i>El producto está visible en el sistema';
-                        estadoMensaje.className = 'text-success';
+                        estadoMensaje.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>El producto está visible y disponible para venta</span>';
                     } else {
-                        estadoMensaje.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto en el sistema';
-                        estadoMensaje.className = 'text-warning';
+                        estadoMensaje.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>El producto está oculto y no disponible para venta</span>';
                     }
                 });
             }
+
+            // Efectos de focus en campos
+            const formControls = document.querySelectorAll('.form-control-edit, .form-select-edit');
+            formControls.forEach(control => {
+                control.addEventListener('focus', function() {
+                    this.style.borderColor = 'var(--inventory-secondary)';
+                    this.style.transform = 'translateY(-2px)';
+                });
+
+                control.addEventListener('blur', function() {
+                    this.style.borderColor = 'var(--inventory-accent)';
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Validación inicial
+            validateCode();
         });
     </script>
 }

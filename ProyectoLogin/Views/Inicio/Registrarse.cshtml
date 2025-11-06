@@ -4,77 +4,473 @@
     ViewData["Title"] = "Registrar Usuario";
 }
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-xl-6 col-lg-8 col-md-10">
-            <!-- CARD PRINCIPAL -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-success text-white py-3">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-plus fs-4 me-2"></i>
-                        <h4 class="mb-0">Registrar Nuevo Usuario</h4>
-                    </div>
+<style>
+    :root {
+        /* Paleta del módulo de Usuarios */
+        --users-primary: #123B5D;
+        --users-secondary: #1F6F8B;
+        --users-accent: #27C1A6;
+        --users-accent-soft: rgba(39, 193, 166, 0.18);
+        --users-bg: #0B1724;
+        --users-card: #111F33;
+        --users-card-soft: #172739;
+        --users-text: #E6F4FF;
+        --users-muted: #8FA3BF;
+        --users-radius: 0.9rem;
+        --users-border: #27415D;
+        --users-danger: #ff6b6b;
+        --users-success: #35D399;
+    }
+
+    .users-create-theme {
+        min-height: 100vh;
+        padding: 2.5rem 1rem;
+        background: radial-gradient(circle at top left, rgba(39, 193, 166, 0.06), transparent), radial-gradient(circle at bottom right, rgba(31, 111, 139, 0.18), transparent), linear-gradient(135deg, var(--users-bg) 0%, #020817 100%);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .users-create-wrapper {
+        max-width: 780px;
+        width: 100%;
+    }
+
+    /* CARD PRINCIPAL */
+    .users-create-card {
+        background: var(--users-card);
+        border-radius: var(--users-radius);
+        border: 1px solid var(--users-border);
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.6);
+        overflow: hidden;
+    }
+
+    .users-create-header {
+        padding: 1.3rem 1.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, var(--users-primary) 0%, var(--users-secondary) 60%, #0f172a 100%);
+        border-bottom: 1px solid rgba(39, 193, 166, 0.28);
+        color: var(--users-text);
+    }
+
+    .users-create-header-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 16px;
+        background: rgba(3, 10, 23, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: var(--users-accent);
+    }
+
+    .users-create-header h4 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+    }
+
+    .users-create-subtitle {
+        margin: 0;
+        font-size: 0.8rem;
+        color: rgba(230, 244, 255, 0.85);
+    }
+
+    .users-create-body {
+        padding: 1.9rem 1.7rem 1.6rem;
+        color: var(--users-text);
+    }
+
+    /* TITULOS DE SECCIONES */
+    .users-section-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--users-accent);
+        margin-bottom: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+
+        .users-section-title i {
+            font-size: 1rem;
+        }
+
+    /* BLOQUES */
+    .users-block {
+        background: var(--users-card-soft);
+        border-radius: var(--users-radius);
+        border: 1px solid var(--users-border);
+        padding: 1.1rem 1rem 0.4rem;
+        margin-bottom: 1.4rem;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+    }
+
+    .users-form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--users-text);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+        .users-form-label i {
+            color: var(--users-accent);
+        }
+
+    .users-input,
+    .users-select,
+    .users-input-group-text {
+        background: rgba(9, 20, 33, 0.98);
+        border-radius: 0.7rem;
+        border: 1px solid var(--users-border);
+        padding: 0.6rem 0.9rem;
+        font-size: 0.9rem;
+        color: var(--users-text);
+        transition: all 0.22s ease;
+    }
+
+    .users-input-group-text {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        border-right: none;
+        border-radius: 0.7rem 0 0 0.7rem;
+        color: var(--users-accent);
+        background: #07111d;
+    }
+
+    .users-input {
+        border-radius: 0 0.7rem 0.7rem 0;
+        flex: 1;
+    }
+
+        .users-input::placeholder {
+            color: rgba(143, 163, 191, 0.6);
+        }
+
+        .users-input:focus,
+        .users-select:focus {
+            outline: none;
+            border-color: var(--users-accent);
+            box-shadow: 0 0 0 0.13rem rgba(39, 193, 166, 0.25);
+            background: #0b1724;
+            color: var(--users-text);
+        }
+
+    .users-select {
+        width: 100%;
+        border-radius: 0 0.7rem 0.7rem 0;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2327C1A6' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.9rem center;
+        background-size: 14px 10px;
+    }
+
+        .users-select option {
+            background: #020817;
+            color: var(--users-text);
+        }
+
+    .users-password-toggle {
+        border-radius: 0.7rem;
+        border: 1px solid var(--users-border);
+        background: #07111d;
+        color: var(--users-muted);
+        padding: 0.45rem 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+        .users-password-toggle:hover {
+            background: var(--users-accent-soft);
+            color: var(--users-accent);
+        }
+
+    .text-danger.small {
+        font-size: 0.75rem;
+        margin-top: 0.15rem;
+    }
+
+    .users-help-text {
+        font-size: 0.76rem;
+        color: var(--users-muted);
+        margin-top: 0.25rem;
+    }
+
+        .users-help-text i {
+            color: var(--users-accent);
+            margin-right: 0.2rem;
+        }
+
+        .users-help-text ul {
+            margin-top: 0.2rem;
+            margin-bottom: 0;
+            padding-left: 1.2rem;
+        }
+
+        .users-help-text li {
+            margin-bottom: 0.1rem;
+        }
+
+    /* ALERTAS */
+    .alert {
+        border-radius: 0.75rem;
+        padding: 0.6rem 0.9rem;
+        font-size: 0.82rem;
+        margin-top: 0.4rem;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+    }
+
+    .alert-danger {
+        background: rgba(255, 107, 107, 0.06);
+        border-color: rgba(255, 107, 107, 0.75);
+        color: var(--users-danger);
+    }
+
+    .alert-warning {
+        background: rgba(255, 193, 7, 0.06);
+        border-color: rgba(255, 193, 7, 0.75);
+        color: #ffc107;
+    }
+
+    .alert .btn-close {
+        filter: invert(1);
+    }
+
+    /* BOTONES */
+    .users-actions {
+        padding-top: 1rem;
+        margin-top: 0.9rem;
+        border-top: 1px solid var(--users-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn-users-back {
+        border-radius: 999px;
+        padding: 0.5rem 1.3rem;
+        font-size: 0.8rem;
+        border: 1px solid var(--users-muted);
+        color: var(--users-muted);
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.22s ease;
+        text-decoration: none;
+    }
+
+        .btn-users-back:hover {
+            background: rgba(6, 13, 25, 0.98);
+            color: var(--users-text);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+            transform: translateY(-1px);
+        }
+
+    .btn-users-reset {
+        border-radius: 999px;
+        padding: 0.5rem 1.2rem;
+        font-size: 0.8rem;
+        border: 1px solid #ffc107;
+        color: #ffc107;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.22s ease;
+    }
+
+        .btn-users-reset:hover {
+            background: rgba(255, 193, 7, 0.12);
+            color: #ffe08a;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
+            transform: translateY(-1px);
+        }
+
+    .btn-users-submit {
+        border-radius: 999px;
+        padding: 0.55rem 1.6rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: none;
+        background: var(--users-accent);
+        color: #020817;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        box-shadow: 0 10px 24px rgba(39, 193, 166, 0.45);
+        transition: all 0.22s ease;
+    }
+
+        .btn-users-submit:hover {
+            background: #20a98f;
+            color: #E6F4FF;
+            transform: translateY(-1px);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+        }
+
+    .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* TARJETA INFO ROLES */
+    .users-roles-card {
+        margin-top: 1.4rem;
+        background: radial-gradient(circle at top left, rgba(39,193,166,0.16), transparent), #050814;
+        border-radius: var(--users-radius);
+        border: 1px solid var(--users-border);
+        padding: 1rem 1.2rem;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+        color: var(--users-text);
+    }
+
+        .users-roles-card h6 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.7rem;
+            color: var(--users-accent);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+    .users-roles-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+    }
+
+        .users-roles-item i {
+            margin-top: 0.03rem;
+        }
+
+        .users-roles-item strong {
+            font-size: 0.8rem;
+            color: var(--users-text);
+        }
+
+        .users-roles-item p {
+            font-size: 0.76rem;
+            color: var(--users-muted);
+            margin: 0;
+        }
+
+    @@media (max-width: 576px) {
+        .users-create-body
+
+    {
+        padding: 1.5rem 1.2rem 1.2rem;
+    }
+
+    }
+</style>
+
+<div class="users-create-theme">
+    <div class="users-create-wrapper">
+        <!-- CARD PRINCIPAL -->
+        <div class="users-create-card">
+            <div class="users-create-header">
+                <div class="users-create-header-icon">
+                    <i class="bi bi-person-plus"></i>
                 </div>
+                <div>
+                    <h4>Registrar Nuevo Usuario</h4>
+                    <p class="users-create-subtitle">Crea una nueva cuenta con credenciales y permisos adecuados</p>
+                </div>
+            </div>
 
-                <div class="card-body p-4">
-                    <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off" id="registroForm">
-                        @Html.AntiForgeryToken()
+            <div class="users-create-body">
+                <form asp-controller="Inicio" asp-action="Registrarse" method="post" autocomplete="off" id="registroForm">
+                    @Html.AntiForgeryToken()
 
-                        <!-- INFORMACIÓN PERSONAL -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-success mb-3">
-                                    <i class="bi bi-person-badge me-2"></i>Información Personal
-                                </h6>
-                            </div>
+                    <!-- INFORMACIÓN PERSONAL -->
+                    <div class="users-block">
+                        <div class="users-section-title">
+                            <i class="bi bi-person-badge"></i>Información Personal
+                        </div>
+                        <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label asp-for="NombreUsuario" class="form-label fw-semibold">Nombre Completo</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                <label asp-for="NombreUsuario" class="users-form-label">
+                                    <i class="bi bi-person"></i>Nombre Completo
+                                </label>
+                                <div class="d-flex align-items-stretch">
+                                    <span class="users-input-group-text">
                                         <i class="bi bi-person"></i>
                                     </span>
-                                    <input class="form-control" type="text" asp-for="NombreUsuario"
-                                           placeholder="Ejemplo: Juan Pérez" autocomplete="new-name" />
+                                    <input class="users-input"
+                                           type="text"
+                                           asp-for="NombreUsuario"
+                                           placeholder="Ejemplo: Juan Pérez"
+                                           autocomplete="new-name" />
                                 </div>
                                 <span asp-validation-for="NombreUsuario" class="text-danger small"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Correo" class="form-label fw-semibold">Correo Electrónico</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                <label asp-for="Correo" class="users-form-label">
+                                    <i class="bi bi-envelope"></i>Correo Electrónico
+                                </label>
+                                <div class="d-flex align-items-stretch">
+                                    <span class="users-input-group-text">
                                         <i class="bi bi-envelope"></i>
                                     </span>
-                                    <input class="form-control" type="email" asp-for="Correo"
-                                           placeholder="usuario@correo.com" autocomplete="new-email" />
+                                    <input class="users-input"
+                                           type="email"
+                                           asp-for="Correo"
+                                           placeholder="usuario@correo.com"
+                                           autocomplete="new-email" />
                                 </div>
                                 <span asp-validation-for="Correo" class="text-danger small"></span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- SEGURIDAD Y ROL -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <h6 class="text-success mb-3">
-                                    <i class="bi bi-shield-lock me-2"></i>Seguridad y Permisos
-                                </h6>
-                            </div>
+                    <!-- SEGURIDAD Y ROL -->
+                    <div class="users-block">
+                        <div class="users-section-title">
+                            <i class="bi bi-shield-lock"></i>Seguridad y Permisos
+                        </div>
+                        <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Clave" class="form-label fw-semibold">Contraseña</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                <label asp-for="Clave" class="users-form-label">
+                                    <i class="bi bi-key"></i>Contraseña
+                                </label>
+                                <div class="d-flex align-items-stretch">
+                                    <span class="users-input-group-text">
                                         <i class="bi bi-key"></i>
                                     </span>
-                                    <input class="form-control" type="password" asp-for="Clave" id="passwordField"
-                                           placeholder="Ingrese una contraseña segura" autocomplete="new-password" />
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <input class="users-input"
+                                           type="password"
+                                           asp-for="Clave"
+                                           id="passwordField"
+                                           placeholder="Ingrese una contraseña segura"
+                                           autocomplete="new-password" />
+                                    <button class="users-password-toggle"
+                                            type="button"
+                                            id="togglePassword">
                                         <i class="bi bi-eye" id="passwordIcon"></i>
                                     </button>
                                 </div>
-                                <!-- Información sobre requisitos de contraseña -->
-                                <div class="form-text text-muted small">
-                                    <i class="bi bi-info-circle me-1"></i>La contraseña debe cumplir con:
-                                    <ul class="mb-0 mt-1 ps-3">
+                                <div class="users-help-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    La contraseña debe cumplir con:
+                                    <ul>
                                         <li>Mínimo 8 caracteres</li>
                                         <li>Al menos una letra mayúscula</li>
                                         <li>Al menos un número</li>
@@ -85,12 +481,15 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="IdRol" class="form-label fw-semibold">Rol del Usuario</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
+                                <label asp-for="IdRol" class="users-form-label">
+                                    <i class="bi bi-shield-check"></i>Rol del Usuario
+                                </label>
+                                <div class="d-flex align-items-stretch">
+                                    <span class="users-input-group-text">
                                         <i class="bi bi-shield-check"></i>
                                     </span>
-                                    <select class="form-control" asp-for="IdRol"
+                                    <select class="users-select"
+                                            asp-for="IdRol"
                                             asp-items="@(new SelectList(ViewBag.Roles as IEnumerable<ProyectoLogin.Models.Rol>, "IdRol", "NombreRol"))">
                                         <option value="">-- Seleccione un rol --</option>
                                     </select>
@@ -98,82 +497,89 @@
                                 <span asp-validation-for="IdRol" class="text-danger small"></span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- MENSAJES DE ALERTA -->
-                        @if (ViewData["Mensaje"] != null)
-                        {
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                @ViewData["Mensaje"]
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        }
-
-                        <!-- Mostrar errores de validación del modelo -->
-                        @if (!ViewData.ModelState.IsValid)
-                        {
-                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                Por favor, corrija los errores en el formulario.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        }
-
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-
-                            <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-secondary rounded-pill" title="Volver a la gestión de usuarios">
-                                <i class="bi bi-arrow-left me-1"></i>Volver a Usuarios
-                            </a>
-
-                            <div class="d-flex gap-2">
-                                <button type="reset" class="btn btn-outline-warning rounded-pill" title="Limpiar formulario">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                                </button>
-
-                                <button type="submit" class="btn btn-primary rounded-pill" title="Registrar nuevo usuario" id="submitBtn">
-                                    <i class="bi bi-person-plus me-1"></i>Registrar Usuario
-                                </button>
-                            </div>
+                    <!-- MENSAJES DE ALERTA -->
+                    @if (ViewData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            @ViewData["Mensaje"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    </form>
-                </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Por favor, corrija los errores en el formulario.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="users-actions">
+                        <a asp-controller="Admin" asp-action="Usuarios"
+                           class="btn-users-back"
+                           title="Volver a la gestión de usuarios">
+                            <i class="bi bi-arrow-left"></i>
+                            Volver a Usuarios
+                        </a>
+
+                        <div class="d-flex gap-2">
+                            <button type="reset"
+                                    class="btn-users-reset"
+                                    title="Limpiar formulario">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Limpiar
+                            </button>
+
+                            <button type="submit"
+                                    class="btn-users-submit"
+                                    title="Registrar nuevo usuario"
+                                    id="submitBtn">
+                                <i class="bi bi-person-plus"></i>
+                                Registrar Usuario
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- TARJETA INFORMATIVA DE ROLES -->
-            <div class="card mt-4 border-0 bg-light">
-                <div class="card-body">
-                    <h6 class="card-title text-primary mb-3">
-                        <i class="bi bi-info-circle me-2"></i>Información sobre Roles
-                    </h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-start mb-2">
-                                <i class="bi bi-shield-check text-success me-2 mt-1"></i>
-                                <div>
-                                    <strong>Administrador</strong>
-                                    <p class="text-muted small mb-0">Acceso completo a todas las funcionalidades del sistema</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start mb-2">
-                                <i class="bi bi-cart-check text-primary me-2 mt-1"></i>
-                                <div>
-                                    <strong>Vendedor</strong>
-                                    <p class="text-muted small mb-0">Gestión de ventas, clientes e inventario</p>
-                                </div>
-                            </div>
+        <!-- TARJETA INFORMATIVA DE ROLES -->
+        <div class="users-roles-card">
+            <h6>
+                <i class="bi bi-info-circle"></i>
+                Información sobre Roles
+            </h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="users-roles-item">
+                        <i class="bi bi-shield-check text-success"></i>
+                        <div>
+                            <strong>Administrador</strong>
+                            <p>Acceso completo a todas las funcionalidades del sistema.</p>
                         </div>
-
+                    </div>
+                    <div class="users-roles-item">
+                        <i class="bi bi-cart-check text-primary"></i>
+                        <div>
+                            <strong>Vendedor</strong>
+                            <p>Gestión de ventas, clientes e inventario.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('=== SCRIPT CARGADO ===');
 
             const form = document.getElementById('registroForm');
@@ -182,14 +588,12 @@
             if (form) {
                 console.log('Formulario encontrado');
 
-                // ELIMINAR cualquier validación que pueda estar bloqueando el envío
                 form.setAttribute('novalidate', 'novalidate');
                 form.noValidate = true;
 
-                form.addEventListener('submit', function(e) {
+                form.addEventListener('submit', function (e) {
                     console.log('=== FORMULARIO ENVIANDO ===');
 
-                    // VERIFICAR datos
                     const nombre = document.querySelector('[name="NombreUsuario"]').value;
                     const correo = document.querySelector('[name="Correo"]').value;
                     const clave = document.querySelector('[name="Clave"]').value;
@@ -206,26 +610,21 @@
 
                     console.log('Todos los campos llenos - enviando...');
 
-                    // Cambiar estado del botón
                     if (submitBtn) {
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Registrando...';
                     }
-
-                    // PERMITIR el envío normal del formulario
-                    // NO usar e.preventDefault();
                 });
             } else {
                 console.log('ERROR: Formulario no encontrado');
             }
 
-            // Funcionalidad básica para mostrar/ocultar contraseña
             const togglePassword = document.getElementById('togglePassword');
             const passwordField = document.getElementById('passwordField');
             const passwordIcon = document.getElementById('passwordIcon');
 
             if (togglePassword && passwordField && passwordIcon) {
-                togglePassword.addEventListener('click', function() {
+                togglePassword.addEventListener('click', function () {
                     const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordField.setAttribute('type', type);
                     passwordIcon.classList.toggle('bi-eye');

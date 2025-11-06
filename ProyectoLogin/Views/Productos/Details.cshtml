@@ -6,270 +6,519 @@
     ViewData["Title"] = "Detalles del Producto";
     var precios = ViewBag.Precios as IEnumerable<ProyectoLogin.Models.ModelosProducts.ProductoPrecio>;
 
-
     var user = HttpContextAccessor.HttpContext?.User;
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
-<div class="container-fluid px-4">
-    <!-- Encabezado -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-primary mb-1">Detalles del Producto</h2>
-            <p class="text-muted mb-0">Información completa y precios históricos del producto</p>
-        </div>
-    </div>
+<style>
+    :root {
+        --inventory-primary: #2D2A99;
+        --inventory-secondary: #6361F2;
+        --inventory-accent: #9B99F5;
+        --inventory-bg: #15153A;
+        --inventory-card: #1E1E4D;
+        --light-text: #F0F0F7;
+        --border-radius: 0.75rem;
+    }
 
-    <div class="row g-4">
-        <!-- Información del Producto -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary text-white py-3">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-info-circle me-2"></i>Información del Producto
-                    </h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <!-- Nombre -->
-                        <div class="col-12">
-                            <label class="form-label fw-semibold text-muted mb-1">Nombre del Producto</label>
-                            <div class="fs-5 fw-bold text-dark">@Model.Nombre</div>
-                        </div>
+    .inventory-theme {
+        background: linear-gradient(135deg, var(--inventory-bg) 0%, var(--inventory-primary) 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
 
-                        <!-- Código -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-muted mb-1">Código de Producto</label>
-                            <div class="d-flex align-items-center">
-                                @if (!string.IsNullOrEmpty(Model.CodigoBarras))
-                                {
-                                    <span class="badge bg-secondary fs-6">@Model.CodigoBarras</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </div>
-                        </div>
+    .details-card {
+        background: var(--inventory-card);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
 
-                        <!-- Estado -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-muted mb-1">Estado</label>
-                            <div>
-                                @if (Model.Activo)
-                                {
-                                    <span class="badge bg-success fs-6">
-                                        <i class="bi bi-check-circle me-1"></i>Activo
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger fs-6">
-                                        <i class="bi bi-x-circle me-1"></i>Inactivo
-                                    </span>
-                                }
-                            </div>
-                        </div>
+        .details-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
 
-                        <!-- Categoría -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-muted mb-1">Categoría</label>
-                            <div>
-                                @if (Model.Categoria != null)
-                                {
-                                    <span class="badge bg-info text-dark fs-6">@Model.Categoria.Nombre</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </div>
-                        </div>
+    .details-card-header {
+        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--inventory-accent);
+    }
 
-                        <!-- Marca -->
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-muted mb-1">Marca</label>
-                            <div>
-                                @if (Model.Marca != null)
-                                {
-                                    <span class="badge bg-warning text-dark fs-6">@Model.Marca.Nombre</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </div>
-                        </div>
+    .details-card-body {
+        padding: 2rem;
+    }
 
-                        <!-- Descripción -->
-                        <div class="col-12">
-                            <label class="form-label fw-semibold text-muted mb-1">Descripción</label>
-                            <div class="border rounded p-3 bg-light">
-                                @if (!string.IsNullOrEmpty(Model.Descripcion))
-                                {
-                                    <p class="mb-0 text-dark">@Model.Descripcion</p>
-                                }
-                                else
-                                {
-                                    <p class="mb-0 text-muted">Sin descripción</p>
-                                }
-                            </div>
-                        </div>
-                    </div>
+    .section-container {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
 
-                    <!-- Botones de Acción -->
-                    <div class="d-flex gap-3 pt-4 mt-4 border-top">
-                        @if (isAuth && isAdmin)
-                        {
-                            <a asp-action="Edit" asp-route-id="@Model.IdProducto"
-                            class="btn btn-warning rounded-pill px-4 d-flex align-items-center">
-                                <i class="bi bi-pencil-square me-2"></i>Editar Producto
-                            </a>
-                        }
-                        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 d-flex align-items-center">
-                            <i class="bi bi-arrow-left me-2"></i>Volver al Listado
-                        </a>
-                    </div>
+        .section-container:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--inventory-secondary);
+        }
+
+    .section-title {
+        color: var(--light-text);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--inventory-secondary);
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title i {
+            background: var(--inventory-secondary);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+    .info-label {
+        color: #A0A0CC;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .info-value {
+        color: var(--light-text);
+        font-weight: 500;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-details {
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+
+    .badge-active {
+        background: linear-gradient(135deg, #51cf66, #40c057);
+        color: white;
+        border-color: #2f9e44;
+    }
+
+    .badge-inactive {
+        background: linear-gradient(135deg, #ff6b6b, #fa5252);
+        color: white;
+        border-color: #e03131;
+    }
+
+    .badge-code {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+        border-color: #5a6268;
+    }
+
+    .badge-category {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        border-color: #117a8b;
+    }
+
+    .badge-brand {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: #212529;
+        border-color: #d39e00;
+    }
+
+    .description-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--inventory-accent);
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        color: var(--light-text);
+        line-height: 1.6;
+    }
+
+    .btn-details-primary {
+        background: var(--inventory-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-details-primary:hover {
+            background: var(--inventory-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+    .btn-details-outline {
+        border: 2px solid var(--inventory-accent);
+        background: transparent;
+        color: var(--inventory-accent);
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-details-outline:hover {
+            background: var(--inventory-accent);
+            color: var(--inventory-card);
+            transform: translateY(-2px);
+        }
+
+    /* Tabla de precios */
+    .prices-table {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        border: 1px solid var(--inventory-accent);
+    }
+
+        .prices-table thead th {
+            background: var(--inventory-primary);
+            color: white;
+            border: none;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .prices-table tbody td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(139, 136, 242, 0.2);
+            color: var(--light-text);
+            vertical-align: middle;
+        }
+
+        .prices-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .prices-table tbody tr:hover {
+            background: rgba(99, 97, 242, 0.1);
+        }
+
+    .price-buy {
+        color: #A0A0CC;
+        font-weight: 500;
+    }
+
+    .price-sell {
+        color: #51cf66;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #A0A0CC;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+    .action-buttons {
+        border-top: 1px solid var(--inventory-accent);
+        padding-top: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .field-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .field-group:last-child {
+            margin-bottom: 0;
+        }
+</style>
+
+<div class="container inventory-theme">
+    <!-- Header Principal -->
+    <div class="details-card">
+        <div class="details-card-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-eye fs-2 me-3"></i>
+                <div>
+                    <h2 class="mb-1">Detalles del Producto</h2>
+                    <p class="mb-0 opacity-75">Información completa y precios históricos del producto</p>
                 </div>
             </div>
         </div>
 
-        <!-- Precios Históricos -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-warning text-dark py-3">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-tags me-2"></i>Precios Históricos
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    @if (precios != null && precios.Any())
-                    {
-                        <div class="table-responsive" style="max-height: 400px;">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light sticky-top">
-                                    <tr>
-                                        <th class="ps-3">Precio Compra</th>
-                                        <th>Precio Venta</th>
-                                        <th>Fecha Inicio</th>
-                                        <th>Fecha Fin</th>
-                                        <th class="text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var p in precios)
+        <div class="details-card-body">
+            <div class="row g-4">
+                <!-- Columna de Información del Producto -->
+                <div class="col-lg-6">
+                    <!-- SECCIÓN: INFORMACIÓN BÁSICA -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-card-text"></i>
+                            Información Básica
+                        </h4>
+
+                        <div class="row g-3">
+                            <!-- Nombre del Producto -->
+                            <div class="col-12 field-group">
+                                <label class="info-label">Nombre del Producto</label>
+                                <div class="info-value" style="font-size: 1.2rem; font-weight: 700;">
+                                    @Model.Nombre
+                                </div>
+                            </div>
+
+                            <!-- Código y Estado -->
+                            <div class="col-md-6 field-group">
+                                <label class="info-label">Código de Producto</label>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(Model.CodigoBarras))
                                     {
-                                        <tr>
-                                            <td class="ps-3">
-                                                <span class="fw-semibold text-muted">Q @p.PrecioCompra.ToString("N2")</span>
-                                            </td>
-                                            <td>
-                                                <span class="fw-bold text-success">Q @p.PrecioVenta.ToString("N2")</span>
-                                            </td>
-                                            <td>
-                                                <span class="text-dark">@p.FechaInicio.ToString("dd/MM/yyyy")</span>
-                                            </td>
-                                            <td>
-                                                @if (p.FechaFin.HasValue)
-                                                {
-                                                    <span class="text-muted">@p.FechaFin.Value.ToString("dd/MM/yyyy")</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">-</span>
-                                                }
-                                            </td>
-                                            <td class="text-center">
-                                                @if (p.Activo)
-                                                {
-                                                    <span class="badge bg-success">
-                                                        <i class="bi bi-check-circle me-1"></i>Activo
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">
-                                                        <i class="bi bi-clock me-1"></i>Histórico
-                                                    </span>
-                                                }
-                                            </td>
-                                        </tr>
+                                        <span class="badge-details badge-code">
+                                            <i class="bi bi-upc-scan me-1"></i>@Model.CodigoBarras
+                                        </span>
                                     }
-                                </tbody>
-                            </table>
+                                    else
+                                    {
+                                        <span class="text-muted">No asignado</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 field-group">
+                                <label class="info-label">Estado del Producto</label>
+                                <div class="info-value">
+                                    @if (Model.Activo)
+                                    {
+                                        <span class="badge-details badge-active">
+                                            <i class="bi bi-check-circle me-1"></i>Activo
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-details badge-inactive">
+                                            <i class="bi bi-x-circle me-1"></i>Inactivo
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Categoría y Marca -->
+                            <div class="col-md-6 field-group">
+                                <label class="info-label">Categoría</label>
+                                <div class="info-value">
+                                    @if (Model.Categoria != null)
+                                    {
+                                        <span class="badge-details badge-category">
+                                            <i class="bi bi-folder me-1"></i>@Model.Categoria.Nombre
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin categoría</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 field-group">
+                                <label class="info-label">Marca</label>
+                                <div class="info-value">
+                                    @if (Model.Marca != null)
+                                    {
+                                        <span class="badge-details badge-brand">
+                                            <i class="bi bi-trophy me-1"></i>@Model.Marca.Nombre
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin marca</span>
+                                    }
+                                </div>
+                            </div>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-tags fs-1 mb-3"></i>
-                            <p class="mb-0 fs-5">No hay precios registrados</p>
-                            <small class="text-muted">Los precios aparecerán aquí una vez que sean agregados</small>
+                    </div>
+
+                    <!-- SECCIÓN: DESCRIPCIÓN -->
+                    <div class="section-container">
+                        <h4 class="section-title">
+                            <i class="bi bi-file-text"></i>
+                            Descripción y Especificaciones
+                        </h4>
+
+                        <div class="field-group">
+                            <div class="description-box">
+                                @if (!string.IsNullOrEmpty(Model.Descripcion))
+                                {
+                                    @Model.Descripcion
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>No hay descripción disponible para este producto.
+                                    </span>
+                                }
+                            </div>
                         </div>
-                    }
+                    </div>
+                </div>
+
+                <!-- Columna de Precios Históricos -->
+                <div class="col-lg-6">
+                    <!-- SECCIÓN: PRECIOS HISTÓRICOS -->
+                    <div class="section-container h-100">
+                        <h4 class="section-title">
+                            <i class="bi bi-graph-up"></i>
+                            Historial de Precios
+                        </h4>
+
+                        @if (precios != null && precios.Any())
+                        {
+                            <div class="prices-table">
+                                <div class="table-responsive" style="max-height: 400px;">
+                                    <table class="table table-borderless mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-4">Precio Compra</th>
+                                                <th>Precio Venta</th>
+                                                <th>Fecha Inicio</th>
+                                                <th>Fecha Fin</th>
+                                                <th class="text-center">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var p in precios)
+                                            {
+                                                <tr>
+                                                    <td class="ps-4">
+                                                        <span class="price-buy">Q @p.PrecioCompra.ToString("N2")</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="price-sell">Q @p.PrecioVenta.ToString("N2")</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="info-value">@p.FechaInicio.ToString("dd/MM/yyyy")</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (p.FechaFin.HasValue)
+                                                        {
+                                                            <span class="text-muted">@p.FechaFin.Value.ToString("dd/MM/yyyy")</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">-</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if (p.Activo)
+                                                        {
+                                                            <span class="badge-details badge-active">
+                                                                <i class="bi bi-check-circle me-1"></i>Activo
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge-details" style="background: #6c757d; color: white;">
+                                                                <i class="bi bi-clock me-1"></i>Histórico
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="bi bi-tags"></i>
+                                <h5 class="mb-2">No hay precios registrados</h5>
+                                <p class="mb-0 text-muted">Los precios aparecerán aquí una vez que sean agregados al producto</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="action-buttons">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a asp-action="Index" class="btn-details-outline">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+                    </a>
+
+                    <div class="d-flex gap-3">
+                        @if (isAuth && isAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.IdProducto" class="btn-details-primary">
+                                <i class="bi bi-pencil-square me-2"></i>Editar Producto
+                            </a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .card {
-        border: none;
-        transition: transform 0.2s ease-in-out;
-    }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
-
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #495057;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        background-color: #f8f9fa;
-    }
-
-    .table td {
-        vertical-align: middle;
-        padding: 1rem 0.75rem;
-    }
-
-    .badge {
-        font-size: 0.75em;
-        padding: 0.5em 0.75em;
-    }
-
-    .form-label {
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .sticky-top {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-</style>
-
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Efectos visuales para las cards
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
+            // Efectos de hover en las secciones
+            const sections = document.querySelectorAll('.section-container');
+            sections.forEach(section => {
+                section.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
                 });
-                card.addEventListener('mouseleave', function() {
-                    this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.08)';
+                section.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
                 });
             });
+
+            // Efecto de scroll suave en la tabla de precios
+            const pricesTable = document.querySelector('.table-responsive');
+            if (pricesTable) {
+                pricesTable.addEventListener('mouseenter', function() {
+                    this.style.overflowY = 'auto';
+                });
+                pricesTable.addEventListener('mouseleave', function() {
+                    this.style.overflowY = 'hidden';
+                });
+            }
         });
     </script>
 }
