@@ -12,8 +12,8 @@ using ProyectoLogin.Models;
 namespace ProyectoLogin.Migrations
 {
     [DbContext(typeof(DbPruebaContext))]
-    [Migration("20251106174730_añadirusuarioareportedeajustesinv")]
-    partial class añadirusuarioareportedeajustesinv
+    [Migration("20251107002155_reseteoBD")]
+    partial class reseteoBD
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

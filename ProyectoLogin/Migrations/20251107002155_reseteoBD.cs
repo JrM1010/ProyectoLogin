@@ -57,7 +57,7 @@ namespace ProyectoLogin.Migrations
                     Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DescuentoPct = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
-                    Total = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
+                    Total = table.Column<decimal>(type: "decimal(18,2)", precision: 10, scale: 2, nullable: false),
                     Activo = table.Column<bool>(type: "bit", nullable: false),
                     FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -243,7 +243,8 @@ namespace ProyectoLogin.Migrations
                     Cantidad = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     TipoMovimiento = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Referencia = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Observacion = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                    Observacion = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    UsuarioAjuste = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -266,6 +267,9 @@ namespace ProyectoLogin.Migrations
                     PrecioCompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PrecioBase = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IVACompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecioVentaUnidad = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecioVentaPaquete = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    PrecioVentaCaja = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     MargenGanancia = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     PrecioVentaSinIVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PrecioVenta = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
@@ -273,7 +277,8 @@ namespace ProyectoLogin.Migrations
                     FechaFin = table.Column<DateTime>(type: "datetime", nullable: true),
                     Activo = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     UsuarioRegistro = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    OrigenCambio = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
+                    OrigenCambio = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ProductoCoreIdProducto = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -284,6 +289,11 @@ namespace ProyectoLogin.Migrations
                         principalTable: "ProductoCore",
                         principalColumn: "IdProducto",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductoPrecio_ProductoCore_ProductoCoreIdProducto",
+                        column: x => x.ProductoCoreIdProducto,
+                        principalTable: "ProductoCore",
+                        principalColumn: "IdProducto");
                 });
 
             migrationBuilder.CreateTable(
@@ -436,6 +446,7 @@ namespace ProyectoLogin.Migrations
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Total = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UtilidadTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     MetodoPago = table.Column<string>(type: "varchar(50)", nullable: true),
                     Estado = table.Column<string>(type: "varchar(30)", nullable: true, defaultValue: "Completada")
                 },
@@ -507,6 +518,7 @@ namespace ProyectoLogin.Migrations
                     Descuento = table.Column<decimal>(type: "decimal(18,2)", nullable: false, defaultValue: 0m),
                     Subtotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     IdUnidad = table.Column<int>(type: "int", nullable: true),
+                    PrecioCompraVenta = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Utilidad = table.Column<decimal>(type: "decimal(18,2)", nullable: false, defaultValue: 0m)
                 },
                 constraints: table =>
@@ -631,6 +643,11 @@ namespace ProyectoLogin.Migrations
                 name: "IX_ProductoPrecio_IdProducto",
                 table: "ProductoPrecio",
                 column: "IdProducto");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductoPrecio_ProductoCoreIdProducto",
+                table: "ProductoPrecio",
+                column: "ProductoCoreIdProducto");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductoProveedor_IdProducto",
