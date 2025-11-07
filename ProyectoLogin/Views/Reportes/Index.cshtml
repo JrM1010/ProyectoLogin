@@ -2,158 +2,336 @@
     ViewData["Title"] = "Reportes";
 }
 
-<div class="container mt-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0 fw-bold">
-                <i class="bi bi-clipboard-data"></i> @ViewData["Title"]
-            </h4>
+<div class="container-fluid py-4 reportes-index-page">
+    <!-- HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div class="d-flex align-items-center">
+            <div class="reports-icon-main me-3">
+                <i class="bi bi-clipboard-data fs-3"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-white">Centro de Reportes</h1>
+                <p class="mb-0 text-muted-small">
+                    Accede a los reportes clave de ventas, compras, inventario y actividad de usuarios desde un solo panel.
+                </p>
+            </div>
         </div>
 
-        <div class="card-body bg-light">
-            <p class="text-muted mb-4">
-                Selecciona uno de los siguientes módulos de reportes para visualizar o descargar información detallada del sistema.
-            </p>
+        <a asp-controller="Home" asp-action="Index"
+           class="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-arrow-left-circle"></i>
+            Volver al Inicio
+        </a>
+    </div>
 
-            <div class="row g-4">
+    <!-- TARJETA PRINCIPAL -->
+    <div class="card reports-main-card shadow-sm border-0">
+        <div class="card-header reports-main-header border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="reports-icon-soft">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-semibold text-white">Módulos de Reportes</h5>
+                    <small class="text-muted-small">
+                        Elige un módulo para filtrar, analizar y descargar información detallada.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-4 pb-4 pt-3">
+            <div class="row g-3 g-md-4">
                 <!-- Reporte de Ventas -->
-                <div class="col-md-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Ventas" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 report-card">
-                            <div class="card-body text-center py-4">
-                                <div class="icon-container bg-primary bg-opacity-10 text-primary mb-3">
-                                    <i class="bi bi-receipt fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-primary">Reporte de Ventas</h6>
-                                <p class="text-muted small mb-0">Consulta las ventas registradas por fecha y usuario.</p>
+                        <div class="report-card-item h-100">
+                            <div class="report-card-icon ventas">
+                                <i class="bi bi-receipt"></i>
+                            </div>
+                            <div class="report-card-content">
+                                <h6 class="report-card-title">Reporte de Ventas</h6>
+                                <p class="report-card-text">
+                                    Analiza ventas por fecha, cliente, método de pago y utilidad generada.
+                                </p>
+                                <span class="report-card-link">
+                                    Ver detalle <i class="bi bi-arrow-right-short"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
                 </div>
 
                 <!-- Reporte de Compras -->
-                <div class="col-md-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Compras" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 report-card">
-                            <div class="card-body text-center py-4">
-                                <div class="icon-container bg-success bg-opacity-10 text-success mb-3">
-                                    <i class="bi bi-cart4 fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-success">Reporte de Compras</h6>
-                                <p class="text-muted small mb-0">Visualiza las compras por proveedor y período.</p>
+                        <div class="report-card-item h-100">
+                            <div class="report-card-icon compras">
+                                <i class="bi bi-cart4"></i>
+                            </div>
+                            <div class="report-card-content">
+                                <h6 class="report-card-title">Reporte de Compras</h6>
+                                <p class="report-card-text">
+                                    Consulta compras por proveedor, fechas y totales consolidados.
+                                </p>
+                                <span class="report-card-link">
+                                    Ver detalle <i class="bi bi-arrow-right-short"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
                 </div>
 
                 <!-- Reporte de Inventario -->
-                <div class="col-md-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="ReporteInventario" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 report-card">
-                            <div class="card-body text-center py-4">
-                                <div class="icon-container bg-warning bg-opacity-10 text-warning mb-3">
-                                    <i class="bi bi-box-seam fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-warning">Reporte de Inventario</h6>
-                                <p class="text-muted small mb-0">Consulta el stock actual y la categoría de productos.</p>
+                        <div class="report-card-item h-100">
+                            <div class="report-card-icon inventario">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <div class="report-card-content">
+                                <h6 class="report-card-title">Reporte de Inventario</h6>
+                                <p class="report-card-text">
+                                    Visualiza existencias, mínimos, valor total y categorización de productos.
+                                </p>
+                                <span class="report-card-link">
+                                    Ver detalle <i class="bi bi-arrow-right-short"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
                 </div>
 
                 <!-- Reporte de Ajustes de Inventario -->
-                <div class="col-md-6 col-lg-4">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="ReporteAjustesInventario" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 report-card">
-                            <div class="card-body text-center py-4">
-                                <div class="icon-container bg-info bg-opacity-10 text-info mb-3">
-                                    <i class="bi bi-box-arrow-up-right fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-info">Ajustes de Inventario</h6>
-                                <p class="text-muted small mb-0">Visualiza los movimientos y ajustes del inventario.</p>
+                        <div class="report-card-item h-100">
+                            <div class="report-card-icon ajustes">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </div>
+                            <div class="report-card-content">
+                                <h6 class="report-card-title">Ajustes de Inventario</h6>
+                                <p class="report-card-text">
+                                    Revisa entradas, salidas y motivos de ajustes manuales del inventario.
+                                </p>
+                                <span class="report-card-link">
+                                    Ver detalle <i class="bi bi-arrow-right-short"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
                 </div>
 
-                <!-- Reporte de Actividades -->
-                <div class="col-md-6 col-lg-4">
+                <!-- Reporte de Actividades de Usuarios -->
+                <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Actividades" class="text-decoration-none">
-                        <div class="card border-0 shadow-sm h-100 report-card">
-                            <div class="card-body text-center py-4">
-                                <div class="icon-container bg-danger bg-opacity-10 text-danger mb-3">
-                                    <i class="bi bi-list-check fs-1"></i>
-                                </div>
-                                <h6 class="fw-bold text-danger">Actividades de Usuarios</h6>
-                                <p class="text-muted small mb-0">Revisa el historial de acciones realizadas por los usuarios.</p>
+                        <div class="report-card-item h-100">
+                            <div class="report-card-icon actividades">
+                                <i class="bi bi-list-check"></i>
+                            </div>
+                            <div class="report-card-content">
+                                <h6 class="report-card-title">Actividades de Usuarios</h6>
+                                <p class="report-card-text">
+                                    Consulta el historial de acciones realizadas en el sistema por cada usuario.
+                                </p>
+                                <span class="report-card-link">
+                                    Ver detalle <i class="bi bi-arrow-right-short"></i>
+                                </span>
                             </div>
                         </div>
                     </a>
                 </div>
-            </div>
-
-            <!-- Botón inferior de retorno -->
-            <div class="text-center mt-5">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary btn-lg shadow-sm">
-                    <i class="bi bi-arrow-left-circle"></i> Volver al Inicio 
-                </a>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .report-card {
-        border-radius: 1rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        background-color: #fff;
-    }
-
-        .report-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+@section Styles {
+    <style>
+        :root {
+            --primary-blue: #1C1973;
+            --secondary-blue: #514BF2;
+            --accent-blue: #8B88F2;
+            --dark-bg: #0D0E26;
+            --alt-bg: #081C59;
+            --light-text: #F0F0F7;
+            --muted-text: #9ba4c4;
+            --border-soft: rgba(139, 136, 242, 0.22);
+            --card-bg: #0F122F;
+            --card-bg-soft: #151838;
         }
 
-    .icon-container {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-        background-color: rgba(0, 123, 255, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .report-card:hover .icon-container {
-        transform: scale(1.1);
-    }
-
-    .card-header {
-        border-top-left-radius: 1rem !important;
-        border-top-right-radius: 1rem !important;
-    }
-
-    .card {
-        border-radius: 1rem;
-    }
-
-    .btn-light {
-        color: #0d6efd;
-        border: none;
-        font-weight: 600;
-    }
-
-        .btn-light:hover {
-            background-color: #f8f9fa;
-            color: #0a58ca;
+        .reportes-index-page {
+            color: var(--light-text);
         }
 
-    .btn-outline-primary {
-        border-radius: 50px;
-        padding: 10px 25px;
-        font-weight: 600;
-    }
-</style>
+        .text-muted-small {
+            color: var(--muted-text) !important;
+            font-size: 0.86rem;
+        }
+
+        .reports-icon-main {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 20% 0, var(--secondary-blue), transparent), rgba(12, 18, 58, 0.96);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+        }
+
+        .reports-icon-soft {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: rgba(81, 75, 242, 0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+
+        .reports-main-card {
+            background: linear-gradient(150deg, #0D0E26, #111433);
+            border-radius: 1.1rem;
+            border: 1px solid var(--border-soft);
+        }
+
+        .reports-main-header {
+            padding: 1rem 1.5rem 0.4rem 1.5rem;
+            background: transparent;
+        }
+
+        .report-card-item {
+            display: flex;
+            gap: 0.85rem;
+            padding: 0.95rem 1rem;
+            border-radius: 0.9rem;
+            background: rgba(10, 13, 40, 0.98);
+            border: 1px solid rgba(139, 136, 242, 0.14);
+            transition: all 0.22s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .report-card-item::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 0 0, rgba(81, 75, 242, 0.09), transparent);
+                opacity: 0;
+                transition: opacity 0.25s ease-in-out;
+                pointer-events: none;
+            }
+
+            .report-card-item:hover::before {
+                opacity: 1;
+            }
+
+            .report-card-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+                border-color: rgba(139, 136, 242, 0.3);
+            }
+
+        .report-card-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            background: rgba(81, 75, 242, 0.12);
+            transition: all 0.22s ease-in-out;
+        }
+
+        .report-card-item:hover .report-card-icon {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .report-card-icon.ventas {
+            color: #4cd137;
+            background: rgba(76, 209, 55, 0.08);
+        }
+
+        .report-card-icon.compras {
+            color: #00cec9;
+            background: rgba(0, 206, 201, 0.08);
+        }
+
+        .report-card-icon.inventario {
+            color: #f1c40f;
+            background: rgba(241, 196, 15, 0.08);
+        }
+
+        .report-card-icon.ajustes {
+            color: #0984e3;
+            background: rgba(9, 132, 227, 0.08);
+        }
+
+        .report-card-icon.actividades {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.08);
+        }
+
+        .report-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .report-card-title {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 0;
+        }
+
+        .report-card-text {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--muted-text);
+        }
+
+        .report-card-link {
+            margin-top: 0.25rem;
+            font-size: 0.78rem;
+            color: var(--accent-blue);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.1rem;
+        }
+
+            .report-card-link i {
+                font-size: 1rem;
+            }
+
+        .btn-outline-light {
+            border-color: rgba(240, 240, 247, 0.45);
+        }
+
+            .btn-outline-light:hover {
+                background-color: var(--light-text);
+                color: #111433;
+            }
+
+        @@media (max-width: 576px) {
+            .reports-main-card
+
+        {
+            padding-top: 0.15rem;
+        }
+
+        .report-card-item {
+            padding: 0.85rem 0.85rem;
+        }
+
+        }
+    </style>
+}

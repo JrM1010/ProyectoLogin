@@ -8,82 +8,339 @@
     int proveedorSeleccionado = ViewBag.ProveedorSeleccionado is int v ? v : 0;
 }
 
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-primary">🛒 Registrar Compra</h2>
-        <p class="text-muted">Complete la información del proveedor y los productos adquiridos.</p>
-    </div>
+@section Styles {
+    <style>
+        :root {
+            --c-primary: #3036A6;
+            --c-primary-light: #5F6AF5;
+            --c-primary-soft: #8F9CFF;
+            --c-dark-1: #161B3A;
+            --c-dark-2: #1F2650;
+            --c-dark-3: #1E2546;
+            --c-dark-4: #242C54;
+            --c-bg-soft: #F7F8FF;
+            --c-border-soft: #3C4AA5;
+            --c-accent-success: #23d19c;
+            --c-accent-warning: #f6c23e;
+            --c-accent-danger: #ff6b6b;
+            --c-text-main: #F7F8FF;
+            --c-text-muted: #C3C7F5;
+            --c-radius: 0.75rem;
+            --c-shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.35);
+        }
 
-    <!-- 🔹 Selección de proveedor -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <label for="proveedorSelect" class="form-label fw-semibold">Proveedor</label>
-            <select id="proveedorSelect" name="IdProveedor" class="form-select">
-                <option value="">-- Seleccione proveedor --</option>
-                @foreach (var p in proveedores)
-                {
-                    bool tieneProductos = p.TieneProductos;
-                    bool seleccionado = proveedorSeleccionado == (int)p.IdProveedor;
+        .compras-wrapper {
+            max-width: 1200px;
+        }
 
-                    if (seleccionado)
-                    {
-                        <option value="@p.IdProveedor"
-                                data-tiene-productos="@(tieneProductos ? "true" : "false")"
-                                selected>
-                            @p.Nombre @(tieneProductos ? "" : " (sin productos)")
-                        </option>
-                    }
-                    else
-                    {
-                        <option value="@p.IdProveedor"
-                                data-tiene-productos="@(tieneProductos ? "true" : "false")">
-                            @p.Nombre @(tieneProductos ? "" : " (sin productos)")
-                        </option>
-                    }
-                }
-            </select>
-            <small class="text-muted">
-                Solo se permiten compras con proveedores que tengan productos asociados.
-            </small>
+        .compras-header {
+            padding: 1.75rem 2rem 1.25rem;
+            border-radius: var(--c-radius);
+            background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.12), transparent), radial-gradient(circle at top right, rgba(35, 209, 156, 0.06), transparent), var(--c-dark-2);
+            border: 1px solid rgba(143, 156, 255, 0.25);
+            box-shadow: var(--c-shadow-soft);
+        }
 
+            .compras-header h2 {
+                color: var(--c-primary-soft);
+                margin-bottom: 0.25rem;
+            }
+
+            .compras-header p {
+                color: var(--c-text-muted);
+                margin-bottom: 0;
+            }
+
+        .card-compras {
+            background: linear-gradient(to bottom, rgba(36, 44, 84, 0.98), rgba(22, 27, 58, 0.98));
+            border-radius: var(--c-radius);
+            border: 1px solid rgba(63, 74, 165, 0.45);
+            box-shadow: var(--c-shadow-soft);
+            color: var(--c-text-main);
+        }
+
+            .card-compras .form-label {
+                color: var(--c-primary-soft);
+                font-weight: 600;
+            }
+
+        .compras-select,
+        .compras-input {
+            background-color: var(--c-dark-3);
+            border-color: var(--c-border-soft);
+            color: var(--c-text-main);
+            border-radius: 0.5rem;
+        }
+
+            .compras-select::placeholder,
+            .compras-input::placeholder {
+                color: rgba(195, 199, 245, 0.5);
+            }
+
+            .compras-select:focus,
+            .compras-input:focus {
+                background-color: var(--c-dark-3);
+                color: var(--c-text-main);
+                border-color: var(--c-primary-light);
+                box-shadow: 0 0 0 0.15rem rgba(95, 106, 245, 0.35);
+            }
+
+        .compras-help {
+            color: var(--c-text-muted);
+            font-size: 0.8rem;
+        }
+
+        #cardCodigoCompra {
+            background: var(--c-dark-1);
+            border-color: rgba(143, 156, 255, 0.35);
+        }
+
+            #cardCodigoCompra .form-label {
+                color: var(--c-primary-soft);
+            }
+
+            #cardCodigoCompra input {
+                background-color: var(--c-dark-3);
+                color: var(--c-primary-soft);
+                font-weight: 600;
+                letter-spacing: 0.06em;
+                text-align: center;
+                border-color: rgba(143, 156, 255, 0.4);
+            }
+
+        .table-compras thead {
+            background: linear-gradient(to right, var(--c-dark-2), var(--c-dark-3));
+            color: var(--c-primary-soft);
+            border-bottom: 1px solid rgba(95, 106, 245, 0.5);
+        }
+
+            .table-compras thead th {
+                font-weight: 600;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                border: none;
+            }
+
+        .table-compras tbody tr {
+            background-color: var(--c-dark-1);
+            color: var(--c-text-main);
+            transition: all 0.18s ease;
+        }
+
+            .table-compras tbody tr:nth-child(even) {
+                background-color: var(--c-dark-3);
+            }
+
+            .table-compras tbody tr:hover {
+                background-color: var(--c-dark-4);
+                transform: translateY(-1px);
+            }
+
+        .table-compras td,
+        .table-compras th {
+            border-color: rgba(60, 74, 165, 0.28) !important;
+        }
+
+        .precioVentaSinIvaInput,
+        .precioVentaConIvaInput {
+            background-color: var(--c-dark-3) !important;
+            color: var(--c-primary-soft) !important;
+            border-color: rgba(95, 106, 245, 0.35) !important;
+            font-size: 0.78rem;
+        }
+
+        .descuentoInput {
+            border-color: rgba(246, 194, 62, 0.65);
+        }
+
+        .btn-add-product {
+            border-radius: 999px;
+        }
+
+            .btn-add-product i {
+                margin-right: 0.25rem;
+            }
+
+        .card-totales {
+            background: radial-gradient(circle at top, rgba(95, 106, 245, 0.14), transparent), var(--c-dark-1);
+            border-radius: var(--c-radius);
+            border: 1px solid rgba(95, 106, 245, 0.35);
+            box-shadow: var(--c-shadow-soft);
+            color: var(--c-text-main);
+        }
+
+            .card-totales label {
+                color: var(--c-primary-soft);
+            }
+
+        #subtotal,
+        #iva {
+            background-color: var(--c-dark-3);
+            color: var(--c-text-main);
+            border-color: rgba(143, 156, 255, 0.25);
+        }
+
+        #total {
+            background-color: var(--c-dark-3);
+            color: var(--c-accent-success);
+            border-color: var(--c-accent-success);
+            font-weight: 700;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 999px;
+            border-color: rgba(143, 156, 255, 0.35);
+            color: var(--c-primary-soft);
+        }
+
+            .btn-outline-secondary:hover {
+                background-color: var(--c-dark-3);
+                color: var(--c-primary-soft);
+            }
+
+        .btn-success {
+            background: linear-gradient(to right, var(--c-accent-success), #20b887);
+            border: none;
+            border-radius: 999px;
+            font-weight: 600;
+            box-shadow: 0 6px 16px rgba(35, 209, 156, 0.35);
+            color: #0b132b;
+        }
+
+            .btn-success:hover {
+                background: linear-gradient(to right, #20b887, var(--c-accent-success));
+                box-shadow: 0 8px 20px rgba(35, 209, 156, 0.45);
+                transform: translateY(-1px);
+            }
+
+        .btn-outline-danger.btn-sm {
+            border-radius: 999px;
+            border-color: rgba(255, 107, 107, 0.65);
+            color: var(--c-accent-danger);
+        }
+
+            .btn-outline-danger.btn-sm:hover {
+                background-color: rgba(255, 107, 107, 0.12);
+                color: var(--c-accent-danger);
+            }
+
+        .text-muted {
+            color: var(--c-text-muted) !important;
+        }
+
+        @@media (max-width: 768px) {
+            .compras-header {
+                padding: 1.25rem 1.25rem 1rem;
+            }
+
+            .card-compras,
+            .card-totales {
+                padding: 1rem;
+            }
+
+            .table-compras th,
+            .table-compras td {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.4rem;
+            }
+        }
+    </style>
+}
+
+<div class="container compras-wrapper mt-4">
+    <!-- Header -->
+    <div class="compras-header mb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-basket2-fill me-2 text-primary"></i>
+                Registrar Compra
+            </h2>
+            <p class="mb-0">Selecciona un proveedor con productos asociados y registra los detalles de la compra.</p>
+        </div>
+        <div class="text-md-end">
+            <span class="badge rounded-pill bg-opacity-10"
+                  style="background-color: rgba(95,106,245,.18); color: var(--c-primary-soft);">
+                <i class="bi bi-shield-lock me-1"></i> Módulo de Compras
+            </span>
         </div>
     </div>
 
-    <!-- 🔹 Formulario principal -->
-    <form asp-action="Create" method="post" onsubmit="return bloquearBotonGuardar(this)">
+    <!-- Contenedor de alertas -->
+    <div id="alertContainer" class="mb-3">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        }
+    </div>
+
+    <!-- Selección de proveedor -->
+    <div class="card card-compras mb-4">
+        <div class="card-body">
+            <label for="proveedorSelect" class="form-label">Proveedor</label>
+            <select id="proveedorSelect" name="IdProveedor" class="form-select compras-select">
+                <option value="">-- Seleccione proveedor --</option>
+                @foreach (var p in proveedores)
+                {
+                    var seleccionado = proveedorSeleccionado == (int)p.IdProveedor;
+                    if (seleccionado)
+                    {
+                        <option value="@p.IdProveedor" selected="selected">@p.Nombre</option>
+                    }
+                    else
+                    {
+                        <option value="@p.IdProveedor">@p.Nombre</option>
+                    }
+                }
+            </select>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <i class="bi bi-info-circle text-primary"></i>
+                <small class="compras-help">
+                    Solo se muestran proveedores que ya tienen productos asociados a su catálogo.
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario principal -->
+    <form asp-action="Create" method="post" id="formCompra">
         @Html.AntiForgeryToken()
 
-        <!-- Hidden que se sincroniza con el select -->
         <input type="hidden" name="IdProveedor" id="IdProveedorHidden" value="@(proveedorSeleccionado)" />
 
-        <!-- 🔹 Código de compra -->
         @if (ViewBag.NumeroDocumento != null)
         {
-            <div class="card shadow-sm border-0 mb-4">
+            <div id="cardCodigoCompra" class="card card-compras mb-4">
                 <div class="card-body">
-                    <label class="form-label fw-semibold">Código de compra</label>
+                    <label class="form-label">Código de compra</label>
                     <input type="text"
                            name="NumeroDocumento"
                            value="@ViewBag.NumeroDocumento"
-                           class="form-control bg-light"
+                           class="form-control compras-input text-center"
                            readonly />
                 </div>
             </div>
         }
 
-        <!-- 🔸 Tabla de detalles -->
-        <div class="card shadow border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Detalles de la compra</h5>
-                <button type="button" id="btnAgregar" class="btn btn-light btn-sm fw-semibold">
-                    + Agregar producto
+        <!-- Detalles -->
+        <div class="card card-compras">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                 style="background: linear-gradient(to right, var(--c-dark-2), var(--c-dark-3)); border-bottom: 1px solid rgba(95,106,245,0.5);">
+                <h5 class="mb-0" style="color: var(--c-primary-soft);">
+                    <i class="bi bi-list-check me-2"></i> Detalles de la compra
+                </h5>
+                <button type="button" id="btnAgregar" class="btn btn-light btn-sm fw-semibold btn-add-product">
+                    <i class="bi bi-plus-circle"></i> Agregar producto
                 </button>
             </div>
 
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped align-middle mb-0" id="tablaDetalles">
-                        <thead class="table-light text-center">
+                    <table class="table table-hover table-striped align-middle mb-0 table-compras" id="tablaDetalles">
+                        <thead class="text-center">
                             <tr>
                                 <th>Producto</th>
                                 <th>Unidad</th>
@@ -100,38 +357,47 @@
                 </div>
             </div>
 
-            <!-- Template oculto -->
+            <!-- Template fila -->
             <template id="filaTemplate">
                 <tr>
                     <td>
-                        <select class="form-select productoSelect" required>
+                        <select class="form-select compras-select productoSelect" required>
                             <option value="">--Seleccione--</option>
                         </select>
                     </td>
                     <td>
-                        <select class="form-select unidadSelect" required>
+                        <select class="form-select compras-select unidadSelect" required>
                             <option value="">--Seleccione--</option>
                         </select>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control cantidadInput" min="1" step="1" value="1" required />
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control precioInput" required />
                     </td>
                     <td>
                         <input type="number"
-                               class="form-control descuentoInput text-end"
+                               class="form-control compras-input cantidadInput"
+                               min="1"
+                               step="1"
+                               value="1"
+                               required />
+                    </td>
+                    <td>
+                        <input type="number"
+                               step="0.01"
+                               class="form-control compras-input precioInput"
+                               min="0.01"
+                               required />
+                    </td>
+                    <td>
+                        <input type="number"
+                               class="form-control compras-input descuentoInput text-end"
                                min="0" max="100" step="1" value="0" />
                     </td>
                     <td>
                         <input type="text"
-                               class="form-control precioVentaSinIvaInput text-end bg-light"
+                               class="form-control precioVentaSinIvaInput text-end"
                                readonly />
                     </td>
                     <td>
                         <input type="text"
-                               class="form-control precioVentaConIvaInput text-end bg-light"
+                               class="form-control precioVentaConIvaInput text-end"
                                readonly />
                     </td>
                     <td class="text-center">
@@ -145,8 +411,8 @@
             </template>
         </div>
 
-        <!-- 🔸 Totales -->
-        <div class="card shadow-sm border-0 mt-4">
+        <!-- Totales -->
+        <div class="card card-totales mt-4">
             <div class="card-body">
                 <div class="row justify-content-end">
                     <div class="col-md-5 col-lg-4">
@@ -155,7 +421,7 @@
                             <input type="text"
                                    id="subtotal"
                                    name="Subtotal"
-                                   class="form-control text-end bg-light"
+                                   class="form-control text-end"
                                    readonly />
                         </div>
                         <div class="mb-3">
@@ -163,7 +429,7 @@
                             <input type="text"
                                    id="iva"
                                    name="IVA"
-                                   class="form-control text-end bg-light"
+                                   class="form-control text-end"
                                    readonly />
                         </div>
                         <div>
@@ -171,7 +437,7 @@
                             <input type="text"
                                    id="total"
                                    name="Total"
-                                   class="form-control text-end fw-bold fs-5 text-success bg-light"
+                                   class="form-control text-end fw-bold fs-5"
                                    readonly />
                         </div>
                     </div>
@@ -179,12 +445,12 @@
             </div>
         </div>
 
-        <!-- 🔸 Botones -->
+        <!-- Botones -->
         <div class="text-end mt-4">
             <a asp-action="Index" class="btn btn-outline-secondary me-2 px-4">
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
-            <button type="submit" class="btn btn-success px-4">
+            <button type="submit" class="btn btn-success px-4" id="btnGuardar">
                 <i class="bi bi-save"></i> Guardar Compra
             </button>
         </div>
@@ -194,32 +460,41 @@
 <script id="__dataJson__" type="application/json">
     @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(new
     {
-        Productos = productos,
-        Unidades = unidades
-    }))
+            Productos = productos,
+                Unidades = unidades
+        }))
 </script>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", () =>
-        {
-            // ---- Datos desde servidor ----
+        document.addEventListener("DOMContentLoaded", () => {
             let productos = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(productos));
             let unidadesGlobales = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(unidades));
 
-            // ---- Helpers ----
+            const alertContainer = document.getElementById("alertContainer");
             const getTablaBody = () => document.getElementById("detallesBody");
             const getFilaTemplate = () => document.getElementById("filaTemplate");
-            const getProveedorSelect = () => document.getElementById("proveedorSelect");
-            const proveedorSelect = getProveedorSelect();
+            const proveedorSelect = document.getElementById("proveedorSelect");
             const btnAgregar = document.getElementById("btnAgregar");
             const hiddenProveedor = document.getElementById("IdProveedorHidden");
+            const form = document.getElementById("formCompra");
+            const btnGuardar = document.getElementById("btnGuardar");
+
+            function showAlert(message, type = "danger") {
+                if (!alertContainer) {
+                    window.alert(message);
+                    return;
+                }
+                alertContainer.innerHTML = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>`;
+                alertContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
 
             function proveedorValidoSeleccionado() {
-                if (!proveedorSelect) return false;
-                const opt = proveedorSelect.options[proveedorSelect.selectedIndex];
-                if (!opt || !proveedorSelect.value) return false;
-                return opt.dataset.tieneProductos === "true";
+                return proveedorSelect && proveedorSelect.value;
             }
 
             function syncHiddenProveedor() {
@@ -227,12 +502,11 @@
                 hiddenProveedor.value = proveedorSelect.value || 0;
             }
 
-            // Estado inicial botón "Agregar producto"
             if (btnAgregar) {
-                btnAgregar.disabled = !proveedorValidoSeleccionado();
+                btnAgregar.disabled = !proveedorValidoSeleccionado() || productos.length === 0;
             }
+            syncHiddenProveedor();
 
-            // ---- Crear fila ----
             function crearFila(index) {
                 const filaTemplate = getFilaTemplate();
                 const clone = filaTemplate.content.cloneNode(true);
@@ -261,7 +535,6 @@
                 return clone;
             }
 
-            // ---- Reindexar ----
             function reindexar() {
                 const tablaBody = getTablaBody();
                 if (!tablaBody) return;
@@ -274,7 +547,6 @@
                 });
             }
 
-            // ---- Formateo ----
             function formatear(valor) {
                 return valor.toLocaleString("es-GT", {
                     minimumFractionDigits: 2,
@@ -282,25 +554,23 @@
                 });
             }
 
-            // ---- Calcular precios de venta ----
             function calcularPreciosVenta(fila) {
                 const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
                 const descuentoPct = parseFloat(fila.querySelector(".descuentoInput")?.value) || 0;
                 const unidadSelect = fila.querySelector(".unidadSelect");
                 const unidadOption = unidadSelect?.selectedOptions[0];
-
                 const factor = parseFloat(unidadOption?.dataset.factor) || 1;
 
-                let margenGanancia = 0.25; // default
+                let margenGanancia = 0.25;
                 if (unidadOption) {
                     const unidadNombre = unidadOption.textContent.toLowerCase();
                     if (unidadNombre.includes("paquete")) margenGanancia = 0.15;
                     else if (unidadNombre.includes("caja")) margenGanancia = 0.10;
                 }
 
-                const precioConDescuento = precio * (1 - (descuentoPct / 100));
+                const descuentoClamped = Math.min(Math.max(descuentoPct, 0), 100);
+                const precioConDescuento = precio * (1 - (descuentoClamped / 100));
                 const precioBase = precioConDescuento / 1.12;
-
                 const precioVentaSinIVA = (precioBase * factor) * (1 + margenGanancia);
                 const precioVentaConIVA = precioVentaSinIVA * 1.12;
 
@@ -308,7 +578,6 @@
                 fila.querySelector(".precioVentaConIvaInput").value = formatear(precioVentaConIVA);
             }
 
-            // ---- Totales ----
             function recalcularTotales() {
                 const tablaBody = getTablaBody();
                 if (!tablaBody) return;
@@ -322,8 +591,7 @@
                     const factor = parseFloat(unidadOption?.dataset.factor) || 1;
 
                     let descuentoPct = parseFloat(fila.querySelector(".descuentoInput")?.value) || 0;
-                    if (descuentoPct < 0) descuentoPct = 0;
-                    if (descuentoPct > 100) descuentoPct = 100;
+                    descuentoPct = Math.min(Math.max(descuentoPct, 0), 100);
 
                     const precioConDescuento = precio * (1 - (descuentoPct / 100));
                     const precioBase = precioConDescuento / 1.12;
@@ -342,14 +610,14 @@
                 document.getElementById("total").value = formatear(total);
             }
 
-            // ---- Agregar fila (con validación de proveedor) ----
+            // Agregar fila
             document.addEventListener("click", (e) => {
                 const btn = e.target.closest("#btnAgregar, .btn-add-product");
                 if (!btn) return;
                 e.preventDefault();
 
-                if (!proveedorValidoSeleccionado()) {
-                    alert("Debes seleccionar un proveedor con productos asociados antes de agregar productos.");
+                if (!proveedorValidoSeleccionado() || productos.length === 0) {
+                    showAlert("Debes seleccionar un proveedor antes de agregar productos.", "warning");
                     return;
                 }
 
@@ -364,7 +632,7 @@
                 ultimaFila.querySelector(".productoSelect")?.focus();
             });
 
-            // ---- Quitar fila ----
+            // Quitar fila
             document.addEventListener("click", (e) => {
                 const btnQuitar = e.target.closest(".btnQuitar");
                 if (!btnQuitar) return;
@@ -374,37 +642,52 @@
                 recalcularTotales();
             });
 
-            // ---- Producto -> cargar unidades ----
+            // Cambios en selects
             document.addEventListener("change", (e) => {
                 const sel = e.target;
-                if (!sel.classList.contains("productoSelect")) return;
 
-                const productoId = parseInt(sel.value);
-                const producto = productos.find(p => p.IdProducto === productoId);
-                const unidadSelect = sel.closest("tr").querySelector(".unidadSelect");
-                unidadSelect.innerHTML = '<option value="">--Seleccione--</option>';
+                if (sel.classList.contains("productoSelect")) {
+                    const productoId = parseInt(sel.value);
+                    const producto = productos.find(p => p.IdProducto === productoId);
+                    const unidadSelect = sel.closest("tr").querySelector(".unidadSelect");
+                    unidadSelect.innerHTML = '<option value="">--Seleccione--</option>';
 
-                const unidades = (producto?.Unidades?.length)
-                    ? producto.Unidades
-                    : unidadesGlobales;
+                    const unidades = (producto?.Unidades?.length)
+                        ? producto.Unidades
+                        : unidadesGlobales;
 
-                unidades.forEach(u => {
-                    const opt = document.createElement("option");
-                    const factor = u.EquivalenciaEnUnidades || u.FactorConversion || 1;
-                    opt.value = u.IdUnidad ?? "";
-                    opt.textContent = `${u.Nombre}${factor > 1 ? ` (x${factor})` : ""}`;
-                    opt.dataset.factor = factor;
-                    unidadSelect.appendChild(opt);
-                });
+                    unidades.forEach(u => {
+                        const opt = document.createElement("option");
+                        const factor = u.EquivalenciaEnUnidades || u.FactorConversion || 1;
+                        opt.value = u.IdUnidad ?? "";
+                        opt.textContent = `${u.Nombre}${factor > 1 ? ` (x${factor})` : ""}`;
+                        opt.dataset.factor = factor;
+                        unidadSelect.appendChild(opt);
+                    });
 
-                recalcularTotales();
+                    recalcularTotales();
+                }
+
+                if (sel.classList.contains("unidadSelect")) {
+                    recalcularTotales();
+                }
             });
 
-            // ---- Eventos de cálculo ----
+            // Inputs: cantidad/precio/descuento
             document.addEventListener("input", (e) => {
                 if (e.target.classList.contains("cantidadInput")) {
-                    e.target.value = Math.floor(e.target.value || 0);
+                    let val = parseInt(e.target.value) || 0;
+                    if (val < 1) val = 1;
+                    e.target.value = val;
                 }
+
+                if (e.target.classList.contains("descuentoInput")) {
+                    let d = parseFloat(e.target.value) || 0;
+                    if (d < 0) d = 0;
+                    if (d > 100) d = 100;
+                    e.target.value = d;
+                }
+
                 if (
                     e.target.classList.contains("precioInput") ||
                     e.target.classList.contains("cantidadInput") ||
@@ -414,108 +697,119 @@
                 }
             });
 
-            document.addEventListener("change", (e) => {
-                if (e.target.classList.contains("unidadSelect")) {
-                    recalcularTotales();
-                }
-            });
-
-            // ---- Cambio de proveedor: validar y recargar datos ----
+            // Cambio de proveedor -> recarga server-side (esto se mantiene igual)
             if (proveedorSelect) {
-                proveedorSelect.addEventListener("change", async (e) => {
-                    const sel = e.target;
-                    const opcion = sel.options[sel.selectedIndex];
-                    const id = sel.value;
-
-                    // limpiar detalle siempre que cambie proveedor
+                proveedorSelect.addEventListener("change", (e) => {
+                    const id = e.target.value;
                     const tablaBody = getTablaBody();
                     if (tablaBody) tablaBody.innerHTML = "";
                     recalcularTotales();
 
                     if (!id) {
-                        // sin proveedor
-                        if (btnAgregar) btnAgregar.disabled = true;
                         if (hiddenProveedor) hiddenProveedor.value = 0;
+                        if (btnAgregar) btnAgregar.disabled = true;
+                        window.location.href = '/Compras/Create';
                         return;
                     }
 
-                    const tieneProductos = opcion.dataset.tieneProductos === "true";
-                    if (!tieneProductos) {
-                        alert("Este proveedor no tiene productos asociados. Asigna productos antes de registrar compras.");
-                        sel.value = "";
-                        if (btnAgregar) btnAgregar.disabled = true;
-                        if (hiddenProveedor) hiddenProveedor.value = 0;
-                        return;
-                    }
-
-                    // proveedor válido
                     if (hiddenProveedor) hiddenProveedor.value = id;
-                    if (btnAgregar) btnAgregar.disabled = false;
-
-                    // Recargar datos desde el servidor (manteniendo tu comportamiento)
-                    try {
-                        const url = `/Compras/Create?idProveedor=${encodeURIComponent(id)}`;
-                        const response = await fetch(url, {
-                            headers: { "X-Requested-With": "XMLHttpRequest" }
-                        });
-
-                        if (!response.ok) throw new Error("Error al cargar datos del proveedor");
-
-                        const html = await response.text();
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, "text/html");
-
-                        const scriptJSON = doc.querySelector("#__dataJson__");
-                        if (scriptJSON) {
-                            const data = JSON.parse(scriptJSON.textContent);
-                            productos = data.Productos || [];
-                            unidadesGlobales = data.Unidades || [];
-                        }
-                    } catch (err) {
-                        console.error("Error al actualizar el proveedor:", err);
-                        alert("Error al actualizar los productos del proveedor seleccionado.");
-                    }
+                    window.location.href = `/Compras/Create?idProveedor=${encodeURIComponent(id)}`;
                 });
             }
 
-            // ---- Validación antes de enviar ----
-            document.querySelector("form[asp-action='Create']")?.addEventListener("submit", (e) => {
-
-                if (!proveedorValidoSeleccionado()) {
+            // Envío AJAX del formulario (sin recargar en errores)
+            if (form) {
+                form.addEventListener("submit", async (e) => {
                     e.preventDefault();
-                    alert("Debe seleccionar un proveedor con productos asociados antes de guardar la compra.");
-                    return;
-                }
 
-                const tablaBody = getTablaBody();
-                if (!tablaBody) return;
+                    const tablaBody = getTablaBody();
 
-                tablaBody.querySelectorAll("tr").forEach(fila => {
-                    const idProd = fila.querySelector(".productoSelect")?.value;
-                    const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
-                    const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
-                    if (!idProd || cantidad <= 0 || precio <= 0) {
-                        fila.remove();
+                    // Validación cliente: proveedor
+                    if (!proveedorValidoSeleccionado()) {
+                        showAlert("Debe seleccionar un proveedor antes de guardar la compra.", "warning");
+                        return;
                     }
+
+                    // Limpieza de filas inválidas
+                    if (tablaBody) {
+                        tablaBody.querySelectorAll("tr").forEach(fila => {
+                            const idProd = fila.querySelector(".productoSelect")?.value;
+                            const cantidad = parseFloat(fila.querySelector(".cantidadInput")?.value) || 0;
+                            const precio = parseFloat(fila.querySelector(".precioInput")?.value) || 0;
+                            if (!idProd || cantidad < 1 || precio <= 0) {
+                                fila.remove();
+                            }
+                        });
+
+                        reindexar();
+
+                        if (tablaBody.children.length === 0) {
+                            showAlert("Debe agregar al menos un producto válido antes de guardar la compra.", "warning");
+                            return;
+                        }
+                    }
+
+                    // Enviar por AJAX
+                    await enviarFormularioAjax(form);
                 });
+            }
 
-                reindexar();
+            async function enviarFormularioAjax(form) {
+                if (!form) return;
 
-                if (tablaBody.children.length === 0) {
-                    e.preventDefault();
-                    alert("Debe agregar al menos un producto válido antes de guardar la compra.");
-                    return;
+                const submitBtn = btnGuardar;
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Guardando...';
                 }
-            });
 
-            // ---- Evitar doble envío ----
-            window.bloquearBotonGuardar = function (form) {
-                const boton = form.querySelector("button[type='submit']");
-                if (boton) {
-                    boton.disabled = true;
-                    boton.innerText = "Guardando...";
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: formData
+                    });
+
+                    const isJson = response.headers.get("content-type")?.includes("application/json");
+
+                    if (!response.ok) {
+                        let msg = "Error al registrar la compra. Intente nuevamente.";
+                        if (isJson) {
+                            const data = await response.json();
+                            if (data?.message) msg = data.message;
+                        }
+                        showAlert(msg, "danger");
+                    } else if (isJson) {
+                        const data = await response.json();
+                        if (data.success && data.redirectUrl) {
+                            window.location.href = data.redirectUrl;
+                            return;
+                        }
+                        if (!data.success) {
+                            showAlert(data.message || "Error al registrar la compra.", "danger");
+                        }
+                    } else {
+                        // Fallback por si el servidor devuelve HTML (no debería para AJAX)
+                        showAlert("Respuesta inesperada del servidor.", "danger");
+                    }
+                } catch (err) {
+                    showAlert("Error de comunicación con el servidor. Intente nuevamente.", "danger");
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="bi bi-save"></i> Guardar Compra';
+                    }
                 }
-                return true;
+            }
+
+            // Por compatibilidad, si alguien llama esto en otro lado:
+            window.bloquearBotonGuardar = function () {
+                // Ahora manejamos todo por JS arriba, así que retornamos false para evitar doble submit.
+                return false;
             };
         });
     </script>

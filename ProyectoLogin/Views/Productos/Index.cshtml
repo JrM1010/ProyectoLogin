@@ -94,7 +94,7 @@
         border-collapse: collapse;
         background: var(--table-bg);
         color: var(--light-text);
-        table-layout: fixed; /* Garantiza alineación consistente */
+        table-layout: fixed;
     }
 
     .custom-table thead {
@@ -152,10 +152,9 @@
     /* 🔥 INDICADOR STOCK BAJO SIN DESPLAZAR LA FILA */
     .stock-low-indicator-row {
         background: rgba(255, 107, 107, 0.1) !important;
-        box-shadow: inset 4px 0 0 #ff6b6b; /* Barra roja interna al borde izquierdo */
+        box-shadow: inset 4px 0 0 #ff6b6b;
     }
 
-    /* Eliminar cualquier pseudo-elemento previo que pudiera empujar contenido */
     .stock-low-indicator-row::before {
         content: none !important;
     }
@@ -396,6 +395,23 @@
     .table-col-minstock { width: 10%; min-width: 100px; }
     .table-col-price { width: 12%; min-width: 120px; }
     .table-col-actions { width: 12%; min-width: 150px; }
+
+    /* Modal de confirmación */
+    .modal-inventory .modal-content {
+        background: #18183A;
+        color: #F0F0F7;
+        border-radius: 1rem;
+        border: 1px solid var(--inventory-accent);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-inventory .modal-header {
+        border-bottom-color: rgba(155, 153, 245, 0.25);
+    }
+
+    .modal-inventory .modal-footer {
+        border-top-color: rgba(155, 153, 245, 0.18);
+    }
 </style>
 
 <div class="container-fluid inventory-theme py-4">
@@ -483,7 +499,6 @@
                                 <th class="table-col-minstock text-center">Stock Mínimo</th>
                                 <th class="table-col-price text-center">Precio Unitario</th>
                                 <th class="table-col-actions text-center">Acciones</th>
-                                
                             </tr>
                         </thead>
                         <tbody>
@@ -533,36 +548,35 @@
                                             <span class="badge badge-inventory badge-no-price">Sin precio</span>
                                         }
                                     </td>
-                                    
-                                        <td class="table-col-actions text-center">
-                                            <div class="d-flex justify-content-center">
-                                                <!-- Detalles -->
-                                                <a href="@Url.Action("Details", new { id = p.IdProducto })"
-                                                   class="action-btn btn-info" title="Ver detalles">
-                                                    <i class="bi bi-eye text-white"></i>
-                                                </a>
-                                                @if (isAuth && isAdmin)
-                                                {
+                                    <td class="table-col-actions text-center">
+                                        <div class="d-flex justify-content-center">
+                                            <!-- Detalles -->
+                                            <a href="@Url.Action("Details", new { id = p.IdProducto })"
+                                               class="action-btn btn-info" title="Ver detalles">
+                                                <i class="bi bi-eye text-white"></i>
+                                            </a>
+                                            @if (isAuth && isAdmin)
+                                            {
                                                 <!-- Editar -->
                                                 <a href="@Url.Action("Edit", new { id = p.IdProducto })"
                                                    class="action-btn btn-warning" title="Editar producto">
                                                     <i class="bi bi-pencil text-dark"></i>
                                                 </a>
-                                                }@if (isAuth && isAdmin)
-                                                {
-                                                <!-- Desactivar -->
+
+                                                <!-- Desactivar (con modal) -->
                                                 <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="action-btn btn-danger"
-                                                            title="Desactivar producto"
-                                                            onclick="return confirm('¿Estás seguro de desactivar el producto @p.Nombre?')">
+                                                    <button type="button"
+                                                            class="action-btn btn-danger btn-confirm-toggle"
+                                                            data-product-name="@p.Nombre"
+                                                            data-action="desactivar"
+                                                            title="Desactivar producto">
                                                         <i class="bi bi-x-circle text-white"></i>
                                                     </button>
                                                 </form>
-                                                }
-                                            </div>
-                                        </td>
-                                    
+                                            }
+                                        </div>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -608,7 +622,8 @@
                                         if (startPage > 1)
                                         {
                                             <li class="page-item">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = 1, pageInactivos = pageInactivos, pageSize = pageSize })">1</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = 1, pageInactivos = pageInactivos, pageSize = pageSize })">1</a>
                                             </li>
                                             if (startPage > 2)
                                             {
@@ -621,7 +636,8 @@
                                         for (int i = startPage; i <= endPage; i++)
                                         {
                                             <li class="page-item @(i == pageActivos ? "active" : "")">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = i, pageInactivos = pageInactivos, pageSize = pageSize })">@i</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = i, pageInactivos = pageInactivos, pageSize = pageSize })">@i</a>
                                             </li>
                                         }
 
@@ -634,7 +650,8 @@
                                                 </li>
                                             }
                                             <li class="page-item">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = totalPagesActivos, pageInactivos = pageInactivos, pageSize = pageSize })">@totalPagesActivos</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = totalPagesActivos, pageInactivos = pageInactivos, pageSize = pageSize })">@totalPagesActivos</a>
                                             </li>
                                         }
                                     }
@@ -750,12 +767,14 @@
                                                class="action-btn btn-info" title="Ver detalles">
                                                 <i class="bi bi-eye text-white"></i>
                                             </a>
-                                            <!-- Activar -->
+                                            <!-- Activar (con modal) -->
                                             <form asp-action="ToggleActivo" asp-route-id="@p.IdProducto" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="action-btn btn-success"
-                                                        title="Activar producto"
-                                                        onclick="return confirm('¿Estás seguro de activar el producto @p.Nombre?')">
+                                                <button type="button"
+                                                        class="action-btn btn-success btn-confirm-toggle"
+                                                        data-product-name="@p.Nombre"
+                                                        data-action="activar"
+                                                        title="Activar producto">
                                                     <i class="bi bi-check2-circle text-white"></i>
                                                 </button>
                                             </form>
@@ -806,7 +825,8 @@
                                         if (startPageInactivos > 1)
                                         {
                                             <li class="page-item">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = 1, pageSize = pageSize })">1</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = 1, pageSize = pageSize })">1</a>
                                             </li>
                                             if (startPageInactivos > 2)
                                             {
@@ -819,7 +839,8 @@
                                         for (int i = startPageInactivos; i <= endPageInactivos; i++)
                                         {
                                             <li class="page-item @(i == pageInactivos ? "active" : "")">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = i, pageSize = pageSize })">@i</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = i, pageSize = pageSize })">@i</a>
                                             </li>
                                         }
 
@@ -832,7 +853,8 @@
                                                 </li>
                                             }
                                             <li class="page-item">
-                                                <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = totalPagesInactivos, pageSize = pageSize })">@totalPagesInactivos</a>
+                                                <a class="page-link"
+                                                   href="@Url.Action("Index", new { q = ViewData["q"], pageActivos = pageActivos, pageInactivos = totalPagesInactivos, pageSize = pageSize })">@totalPagesInactivos</a>
                                             </li>
                                         }
                                     }
@@ -867,11 +889,97 @@
     }
 </div>
 
+<!-- MODAL DE CONFIRMACIÓN (reemplaza los confirm feos del navegador) -->
+<div class="modal fade modal-inventory" id="confirmToggleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmToggleTitle">
+                    Confirmar acción
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmToggleText" class="mb-0">
+                    ¿Deseas continuar con esta acción?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button"
+                        class="btn btn-inventory"
+                        id="btnConfirmToggle">
+                    Sí, continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
+
+            const modalEl = document.getElementById('confirmToggleModal');
+            let confirmModal = null;
+            if (modalEl && window.bootstrap) {
+                confirmModal = new bootstrap.Modal(modalEl);
+            }
+
+            const titleEl = document.getElementById('confirmToggleTitle');
+            const textEl = document.getElementById('confirmToggleText');
+            const btnConfirm = document.getElementById('btnConfirmToggle');
+            let formToSubmit = null;
+
+            document.querySelectorAll('.btn-confirm-toggle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const form = btn.closest('form');
+                    if (!form) return;
+
+                    const productName = btn.getAttribute('data-product-name') || 'este producto';
+                    const action = btn.getAttribute('data-action') || 'actualizar';
+
+                    const verb = action === 'desactivar' ? 'Desactivar' : 'Activar';
+                    const description = action === 'desactivar'
+                        ? 'El producto dejará de estar disponible para nuevas ventas, pero no se eliminará del sistema.'
+                        : 'El producto volverá a estar disponible para ventas y operaciones.';
+
+                    if (titleEl) titleEl.textContent = verb + ' producto';
+                    if (textEl) {
+                        textEl.innerHTML = `<strong>${productName}</strong><br>${description}`;
+                    }
+
+                    formToSubmit = form;
+
+                    if (confirmModal) {
+                        confirmModal.show();
+                    } else {
+                        // Fallback por si no carga Bootstrap JS
+                        if (confirm(`¿${verb} ${productName}?`)) {
+                            form.submit();
+                        }
+                    }
+                });
+            });
+
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', () => {
+                    if (formToSubmit) {
+                        formToSubmit.submit();
+                        formToSubmit = null;
+                    }
+                    if (confirmModal) {
+                        confirmModal.hide();
+                    }
+                });
+            }
         });
     </script>
 }

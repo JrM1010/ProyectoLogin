@@ -3,96 +3,402 @@
     ViewData["Title"] = "Detalle de Compra";
 }
 
-<div class="card shadow-sm mt-3">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0"><i class="bi bi-receipt"></i> Detalle de Compra #@Model.IdCompra</h4>
-        <a class="btn btn-light btn-sm" href="@Url.Action("Index", "Compras", new { estado = Model.Estado })">
-            <i class="bi bi-arrow-left-circle"></i> Volver
-        </a>
+<style>
+    :root {
+        --c-primary: #3036A6;
+        --c-primary-light: #5F6AF5;
+        --c-primary-soft: #8F9CFF;
+        --c-dark-1: #161B3A;
+        --c-dark-2: #1F2650;
+        --c-dark-3: #1E2546;
+        --c-dark-4: #242C54;
+        --c-bg-soft: #F7F8FF;
+        --c-border-soft: #3C4AA5;
+        --c-accent-success: #23d19c;
+        --c-accent-warning: #f6c23e;
+        --c-accent-info: #36c9f4;
+        --c-accent-danger: #ff6b6b;
+        --c-text-main: #F7F8FF;
+        --c-text-muted: #C3C7F5;
+        --c-radius: 0.75rem;
+        --c-shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+
+    .compras-wrapper {
+        max-width: 1200px;
+    }
+
+    .compras-header {
+        padding: 1.75rem 2rem 1.25rem;
+        border-radius: var(--c-radius);
+        background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.12), transparent), radial-gradient(circle at top right, rgba(35, 209, 156, 0.06), transparent), var(--c-dark-2);
+        border: 1px solid rgba(143, 156, 255, 0.25);
+        box-shadow: var(--c-shadow-soft);
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+        .compras-header h2 {
+            color: var(--c-primary-soft);
+            margin-bottom: 0.25rem;
+        }
+
+        .compras-header p {
+            color: var(--c-text-muted);
+            margin-bottom: 0;
+        }
+
+    .card-detalle {
+        background: linear-gradient(to bottom, rgba(36, 44, 84, 0.98), rgba(22, 27, 58, 0.98));
+        border-radius: var(--c-radius);
+        border: 1px solid rgba(63, 74, 165, 0.45);
+        box-shadow: var(--c-shadow-soft);
+        color: var(--c-text-main);
+    }
+
+        .card-detalle .card-header {
+            background: linear-gradient(to right, var(--c-dark-2), var(--c-dark-3));
+            border-bottom: 1px solid rgba(95, 106, 245, 0.5);
+            color: var(--c-primary-soft);
+            border-radius: var(--c-radius) var(--c-radius) 0 0 !important;
+        }
+
+    .detalle-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--c-text-muted);
+        margin-bottom: 0.1rem;
+    }
+
+    .detalle-valor {
+        font-size: 0.95rem;
+        color: var(--c-text-main);
+        font-weight: 500;
+    }
+
+    .badge-estado {
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .estado-pendiente {
+        background-color: rgba(246, 194, 62, 0.12);
+        color: var(--c-accent-warning);
+        border: 1px solid rgba(246, 194, 62, 0.4);
+    }
+
+    .estado-confirmada {
+        background-color: rgba(54, 201, 244, 0.10);
+        color: var(--c-accent-info);
+        border: 1px solid rgba(54, 201, 244, 0.4);
+    }
+
+    .estado-completada {
+        background-color: rgba(35, 209, 156, 0.10);
+        color: var(--c-accent-success);
+        border: 1px solid rgba(35, 209, 156, 0.4);
+    }
+
+    .table-detalle {
+        margin-bottom: 0;
+        font-size: 0.82rem;
+        color: var(--c-text-main);
+    }
+
+        .table-detalle thead {
+            background: linear-gradient(to right, var(--c-dark-2), var(--c-dark-3));
+            color: var(--c-primary-soft);
+            border-bottom: 1px solid rgba(95, 106, 245, 0.5);
+        }
+
+            .table-detalle thead th {
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                border: none;
+                white-space: nowrap;
+                font-size: 0.75rem;
+            }
+
+        .table-detalle tbody tr {
+            background-color: var(--c-dark-1);
+            transition: all 0.18s ease;
+        }
+
+            .table-detalle tbody tr:nth-child(even) {
+                background-color: var(--c-dark-3);
+            }
+
+            .table-detalle tbody tr:hover {
+                background-color: var(--c-dark-4);
+                transform: translateY(-1px);
+            }
+
+        .table-detalle td,
+        .table-detalle th {
+            border-color: rgba(60, 74, 165, 0.25) !important;
+            vertical-align: middle;
+        }
+
+    .text-muted-soft {
+        color: var(--c-text-muted) !important;
+    }
+
+    .totales-box {
+        margin-top: 1.5rem;
+        padding: 1rem 1.25rem;
+        border-radius: var(--c-radius);
+        background: radial-gradient(circle at top right, rgba(95,106,245,0.16), transparent), rgba(16, 22, 54, 0.98);
+        border: 1px solid rgba(95, 106, 245, 0.45);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        color: var(--c-text-main);
+    }
+
+        .totales-box p {
+            margin-bottom: 0.15rem;
+            font-size: 0.9rem;
+        }
+
+        .totales-box strong {
+            color: var(--c-primary-soft);
+        }
+
+        .totales-box .total-label {
+            font-size: 1rem;
+            color: var(--c-primary-soft);
+        }
+
+        .totales-box .total-valor {
+            font-size: 1.1rem;
+            color: var(--c-accent-success);
+            font-weight: 700;
+        }
+
+    .btn-outline-light-soft {
+        border-radius: 999px;
+        border-color: rgba(143, 156, 255, 0.35);
+        color: var(--c-primary-soft);
+        background-color: transparent;
+    }
+
+        .btn-outline-light-soft:hover {
+            background-color: var(--c-dark-3);
+            color: var(--c-primary-soft);
+        }
+
+    @@media (max-width: 768px) {
+        .compras-header
+
+    {
+        padding: 1.25rem 1.25rem 1rem;
+    }
+
+    .table-detalle th,
+    .table-detalle td {
+        font-size: 0.72rem;
+        padding: 0.3rem 0.35rem;
+    }
+
+    }
+</style>
+
+<div class="container compras-wrapper">
+    <!-- Header -->
+    <div class="compras-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-receipt-cutoff me-2 text-primary"></i> Detalle de Compra
+            </h2>
+            <p class="mb-0">
+                Visualice la información completa de la compra, su proveedor y productos asociados.
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a class="btn btn-outline-light-soft"
+               href="@Url.Action("Index", "Compras", new { estado = Model.Estado })">
+                <i class="bi bi-arrow-left-circle me-1"></i> Volver al listado
+            </a>
+
+            @{
+                var estadoClass = Model.Estado == "Pendiente"
+                ? "estado-pendiente"
+                : Model.Estado == "Confirmada"
+                ? "estado-confirmada"
+                : "estado-completada";
+            }
+            <span class="badge-estado @estadoClass">
+                <i class="bi bi-circle-fill me-1" style="font-size: 0.55rem;"></i>
+                @Model.Estado
+            </span>
+        </div>
     </div>
 
-    <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <h5 class="text-secondary">Información del Proveedor</h5>
-                <p class="mb-1"><strong>Nombre:</strong> @Model.Proveedor?.Nombre</p>
-                <p class="mb-1"><strong>Teléfono:</strong> @Model.Proveedor?.Telefono</p>
-                <p class="mb-1"><strong>Correo:</strong> @Model.Proveedor?.Email</p>
+    <!-- Card Detalle -->
+    <div class="card card-detalle mb-4">
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div class="mb-2 mb-md-0">
+                <h5 class="mb-0">
+                    <i class="bi bi-receipt me-2"></i>
+                    Compra #@Model.IdCompra
+                    <span class="text-primary-soft">| Doc: @Model.NumeroDocumento</span>
+                </h5>
             </div>
-            <div class="col-md-6">
-                <h5 class="text-secondary">Detalles de la Compra</h5>
-                <p class="mb-1"><strong>Fecha:</strong> @Model.FechaCompra.ToString("dd/MM/yyyy HH:mm")</p>
-                <p class="mb-1">
-                    <strong>Estado:</strong>
-                    <span class="badge bg-@(Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Confirmada" ? "info" : "success")">
-                        @Model.Estado
-                    </span>
-                </p>
-                <p class="mb-1"><strong>Método de Pago:</strong> @Model.MetodoPago</p>
-                @if (!string.IsNullOrEmpty(Model.Observaciones))
+            <div class="small text-muted-soft">
+                <i class="bi bi-calendar3 me-1"></i>
+                @Model.FechaCompra.ToString("dd/MM/yyyy HH:mm")
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Info proveedor + compra -->
+            <div class="row g-4 mb-3">
+                <div class="col-md-6">
+                    <div class="mb-2">
+                        <div class="detalle-label">
+                            <i class="bi bi-building me-1"></i>Proveedor
+                        </div>
+                        <div class="detalle-valor">
+                            @Model.Proveedor?.Nombre
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="detalle-label">
+                            <i class="bi bi-telephone me-1"></i>Teléfono
+                        </div>
+                        <div class="detalle-valor">
+                            @(string.IsNullOrWhiteSpace(Model.Proveedor?.Telefono) ? "—" : Model.Proveedor.Telefono)
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="detalle-label">
+                            <i class="bi bi-envelope me-1"></i>Correo
+                        </div>
+                        <div class="detalle-valor">
+                            @(string.IsNullOrWhiteSpace(Model.Proveedor?.Email) ? "—" : Model.Proveedor.Email)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-2">
+                        <div class="detalle-label">
+                            <i class="bi bi-receipt me-1"></i>Número de Documento
+                        </div>
+                        <div class="detalle-valor">
+                            @Model.NumeroDocumento
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="detalle-label">
+                            <i class="bi bi-flag me-1"></i>Estado
+                        </div>
+                        <div>
+                            <span class="badge-estado @estadoClass">
+                                <i class="bi bi-circle-fill me-1" style="font-size: 0.55rem;"></i>
+                                @Model.Estado
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Observaciones))
+                    {
+                        <div class="mt-2">
+                            <div class="detalle-label">
+                                <i class="bi bi-chat-text me-1"></i>Observaciones
+                            </div>
+                            <div class="detalle-valor">
+                                @Model.Observaciones
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <hr class="border-secondary" />
+
+            <!-- Productos -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0" style="color: var(--c-primary-soft);">
+                    <i class="bi bi-bag-check me-2"></i>Productos Comprados
+                </h6>
+                @if (Model.Detalles != null && Model.Detalles.Any())
                 {
-                    <p class="mb-1"><strong>Observaciones:</strong> @Model.Observaciones</p>
+                    <span class="text-muted-soft small">
+                        @Model.Detalles.Count() ítem(s)
+                    </span>
                 }
             </div>
-        </div>
 
-        <hr />
-
-        <h5 class="text-secondary mb-3">Productos Comprados</h5>
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Código</th>
-                        <th>Producto</th>
-                        <th>Unidad</th>
-                        <th class="text-end">Cantidad</th>
-                        <th class="text-end">Precio Unitario</th>
-                        <th class="text-end">Descuento</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Detalles != null && Model.Detalles.Any())
-                    {
-                        foreach (var item in Model.Detalles)
+            <div class="table-responsive">
+                <table class="table table-detalle align-middle">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Unidad</th>
+                            <th class="text-end">Cantidad</th>
+                            <th class="text-end">Precio Unitario</th>
+                            <th class="text-end">Descuento</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Detalles != null && Model.Detalles.Any())
+                        {
+                            foreach (var item in Model.Detalles)
+                            {
+                                <tr>
+                                    <td class="text-muted-soft">
+                                        @(!string.IsNullOrWhiteSpace(item.Producto?.CodigoBarras)
+                                                                        ? item.Producto.CodigoBarras
+                                                                        : "—")
+                                                                          </td>
+                                                                          <td>@item.Producto?.Nombre</td>
+                                                                          <td>@item.UnidadMedida?.Nombre</td>
+                                                                          <td class="text-end">@("Q" + @item.Cantidad.ToString("N2"))</td>
+                                                                          <td class="text-end">@("Q" + @item.PrecioUnitario.ToString("N2"))</td>
+                                                                          <td class="text-end">
+                                        @(item.Descuento > 0
+                                                                        ? (item.Descuento * 100).ToString("N0") + "%"
+                                                                        : "-")
+                            </td>
+                            <td class="text-end">@("Q" + @item.Subtotal.ToString("N2"))</td>
+                        </tr>
+                            }
+                        }
+                        else
                         {
                             <tr>
-                                <td>@item.Producto?.CodigoBarras</td>
-                                <td>@item.Producto?.Nombre</td>
-                                <td>@item.UnidadMedida?.Nombre</td>
-                                <td class="text-end">@item.Cantidad.ToString("N0")</td>
-                                <td class="text-end">Q@(item.PrecioUnitario.ToString("N2"))</td>
-                                <td class="text-end">
-                                    @(item.Descuento > 0 ? (item.Descuento * 100).ToString("N0") + "%" : "-")
+                                <td colspan="7" class="text-center text-muted-soft py-3">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    No hay productos registrados en esta compra.
                                 </td>
-                                <td class="text-end">Q@(item.Subtotal.ToString("N2"))</td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">No hay productos registrados en esta compra.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="mt-4 d-flex flex-column align-items-end">
-            <p class="mb-1 fs-6">
-                <strong>Subtotal:</strong>
-                <span class="text-dark">Q@(Model.Subtotal.ToString("#,##0.00"))</span>
-            </p>
-            <p class="mb-1 fs-6">
-                <strong>IVA (12%):</strong>
-                <span class="text-dark">Q@(Model.IVA.ToString("#,##0.00"))</span>
-            </p>
-            <h5 class="text-primary">
-                <strong>Total:</strong>
-                <span class="fw-bold">Q@(Model.Total.ToString("#,##0.00"))</span>
-            </h5>
+            <!-- Totales -->
+            <div class="d-flex justify-content-end">
+                <div class="totales-box">
+                    <p class="mb-1">
+                        <strong>Subtotal:</strong>
+                        <span class="ms-1">@("Q" + @Model.Subtotal.ToString("#,##0.00"))</span>
+                    </p>
+                    <p class="mb-1">
+                        <strong>IVA (12%):</strong>
+                        <span class="ms-1">@("Q" + @Model.IVA.ToString("#,##0.00"))</span>
+                    </p>
+                    <div class="mt-1">
+                        <span class="total-label me-1"><strong>Total:</strong></span>
+                        <span class="total-valor">@("Q" + @Model.Total.ToString("#,##0.00"))</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

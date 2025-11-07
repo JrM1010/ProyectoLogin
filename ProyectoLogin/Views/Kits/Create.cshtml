@@ -5,183 +5,209 @@
     var productos = ViewBag.Productos as IEnumerable<dynamic> ?? new List<dynamic>();
     var proveedores = ViewBag.Proveedores as IEnumerable<dynamic> ?? null;
 
-
     var user = HttpContextAccessor.HttpContext?.User;
     bool isAuth = user?.Identity?.IsAuthenticated ?? false;
     bool isAdmin = user?.IsInRole("Administrador") ?? false;
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
-
 }
-@if (isAuth && isAdmin){
-<div class="container-fluid py-4">
-    <!-- HEADER PRINCIPAL -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
-        <div class="d-flex align-items-center">
-            <div class="bg-gradient-success rounded-circle p-3 me-3">
-                <i class="bi bi-plus-circle text-white fs-4"></i>
+@if (isAuth && isAdmin)
+{
+    <div class="container-fluid kits-create-theme py-4">
+        <!-- HEADER PRINCIPAL -->
+        <div class="kits-header mb-5">
+            <div class="kits-header-left">
+                <div class="kits-header-icon">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <div>
+                    <h1>Crear Kit / Promoción</h1>
+                    <p>Crea una nueva promoción agrupando productos con precios y descuentos personalizados.</p>
+                </div>
             </div>
-            <div>
-                <h1 class="h3 mb-1 text-gray-800">Crear Kit / Promoción</h1>
-                <p class="text-muted mb-0">Crea una nueva promoción o kit de productos</p>
-            </div>
+            <a asp-action="Index"
+               class="btn-kits-outline d-flex align-items-center"
+               title="Volver al listado de kits">
+                <i class="bi bi-arrow-left me-2"></i>Volver a Kits
+            </a>
         </div>
-        <a asp-action="Index" class="btn btn-outline-secondary d-flex align-items-center rounded-pill" title="Volver al listado de kits">
-            <i class="bi bi-arrow-left me-2"></i>Volver a Kits
-        </a>
-    </div>
 
-    <!-- MODAL DE CONFIRMACIÓN PARA LIMPIAR TODO -->
-    <div class="modal fade" id="modalLimpiarTodo" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirmar acción</h5>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="text-center mb-3">
-                        <i class="bi bi-trash display-4 text-warning mb-3"></i>
-                        <h4 class="text-gray-800 mb-2">¿Eliminar todos los productos?</h4>
-                        <p class="text-muted">Esta acción eliminará todos los productos del kit y no se puede deshacer.</p>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-warning text-white rounded-pill px-4" id="btn-confirmar-limpiar">
-                        <i class="bi bi-check-circle me-2"></i>Sí, limpiar todo
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE CONFIRMACIÓN PARA GUARDAR -->
-    <div class="modal fade" id="modalConfirmarGuardar" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-success text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-check-circle fs-4 me-2"></i>
-                        <h5 class="modal-title mb-0">Confirmar creación</h5>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="text-center mb-3">
-                        <i class="bi bi-plus-circle display-4 text-success mb-3"></i>
-                        <h4 class="text-gray-800 mb-2">¿Crear nuevo kit?</h4>
-                        <p class="text-muted">Se creará una nueva promoción con los productos y configuración actual.</p>
-                        <div class="alert alert-light mt-3">
-                            <div class="d-flex justify-content-between">
-                                <span>Productos:</span>
-                                <strong id="modal-productos-count">0</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Total:</span>
-                                <strong id="modal-total">Q0.00</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-success rounded-pill px-4" id="btn-confirmar-guardar">
-                        <i class="bi bi-save me-2"></i>Sí, crear kit
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TOAST PARA NOTIFICACIONES -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-        <div id="toastNotificacion" class="toast align-items-center text-white border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi me-2"></i>
-                    <span id="toast-message">Operación completada</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    </div>
-
-    <form id="form-crear-kit" method="post" novalidate>
-        @Html.AntiForgeryToken()
-
-        <div class="row">
-            <div class="col-lg-8">
-                <!-- INFORMACIÓN BÁSICA DEL KIT -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-gradient-success text-white py-3 border-0">
+        <!-- MODAL LIMPIAR TODO -->
+        <div class="modal fade" id="modalLimpiarTodo" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-kits">
+                    <div class="modal-header modal-kits-warning">
                         <div class="d-flex align-items-center">
-                            <i class="bi bi-tags fs-5 me-3"></i>
-                            <h5 class="mb-0 fw-semibold">Información Básica del Kit</h5>
+                            <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
+                            <h5 class="modal-title mb-0">Confirmar acción</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-trash display-5 text-warning mb-3"></i>
+                            <h4 class="mb-2">¿Eliminar todos los productos?</h4>
+                            <p class="text-muted mb-0">
+                                Esta acción eliminará todos los productos del kit y no se puede deshacer.
+                            </p>
                         </div>
                     </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <!-- 🔹 Nombre -->
-                            <div class="col-md-6">
-                                <label for="nombre" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-fonts text-success me-1"></i>Nombre del Kit *
-                                </label>
-                                <input id="nombre" name="Nombre" class="form-control" placeholder="Ej. Pack Auriculares + Cargador" required />
-                                <div class="invalid-feedback">El nombre del kit es obligatorio y no puede estar vacío.</div>
-                                <div class="form-text text-muted">Nombre descriptivo para identificar el kit o promoción</div>
-                            </div>
-
-                            <!-- 🔹 Descuento -->
-                            <div class="col-md-6">
-                                <label for="descuentoPct" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-percent text-success me-1"></i>Descuento (opcional)
-                                </label>
-                                <div class="input-group">
-                                    <input id="descuentoPct" class="form-control" type="number" min="0" max="100" step="1" value="0" />
-                                    <span class="input-group-text bg-success bg-opacity-10 text-success border-success">%</span>
-                                </div>
-                                <div class="form-text text-muted">Porcentaje de descuento aplicado al total del kit (0-100%)</div>
-                            </div>
-
-                            <!-- 🔹 Descripción -->
-                            <div class="col-12">
-                                <label for="descripcion" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-chat-text text-success me-1"></i>Descripción *
-                                </label>
-                                <textarea id="descripcion" name="Descripcion" class="form-control" rows="3" required placeholder="Descripción breve o condiciones de la promoción"></textarea>
-                                <div class="invalid-feedback">La descripción del kit es obligatoria.</div>
-                            </div>
-                        </div>
+                    <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-warning text-white rounded-pill px-4" id="btn-confirmar-limpiar">
+                            <i class="bi bi-check-circle me-2"></i>Sí, limpiar todo
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- PRODUCTOS DEL KIT -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-light d-flex align-items-center py-3 border-0">
-                        <i class="bi bi-search text-success me-2 fs-5"></i>
-                        <h5 class="mb-0 fw-semibold text-gray-800 me-3">Buscar y Agregar Productos</h5>
-                        <div class="position-relative ms-auto" style="width:320px;">
-                            <input type="text" id="searchProducto" class="form-control rounded-pill" placeholder="Buscar producto..." autocomplete="off" />
-                            <ul id="suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; border-radius: 0.5rem;"></ul>
+        <!-- MODAL CONFIRMAR GUARDAR -->
+        <div class="modal fade" id="modalConfirmarGuardar" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-kits">
+                    <div class="modal-header modal-kits-success">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle fs-4 me-2"></i>
+                            <h5 class="modal-title mb-0">Confirmar creación</h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-plus-circle display-5 text-success mb-3"></i>
+                            <h4 class="mb-2">¿Crear nuevo kit?</h4>
+
+                            <div class="kits-modal-summary">
+                                <div class="d-flex justify-content-between">
+                                    <span>Productos:</span>
+                                    <strong id="modal-productos-count">0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Total:</span>
+                                    <strong id="modal-total">Q0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success rounded-pill px-4" id="btn-confirmar-guardar">
+                            <i class="bi bi-save me-2"></i>Sí, crear kit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICACIONES -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100;">
+            <div id="toastNotificacion" class="toast toast-kits align-items-center border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi me-2"></i>
+                        <span id="toast-message">Operación completada</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <form id="form-crear-kit" method="post" novalidate>
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="col-lg-8">
+                    <!-- INFORMACIÓN BÁSICA -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header-gradient">
+                            <i class="bi bi-tags fs-5 me-2"></i>
+                            <h5 class="mb-0">Información básica del kit</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="row g-3">
+                                <!-- Nombre -->
+                                <div class="col-md-6">
+                                    <label for="nombre" class="form-label kits-label">
+                                        <i class="bi bi-fonts me-1"></i>Nombre del Kit *
+                                    </label>
+                                    <input id="nombre"
+                                           name="Nombre"
+                                           class="form-control kits-input"
+                                           placeholder="Ej. Pack Auriculares + Cargador"
+                                           required />
+                                    <div class="invalid-feedback">El nombre del kit es obligatorio.</div>
+                                    <div class="kits-help-text">
+                                        Nombre descriptivo para identificar el kit o promoción.
+                                    </div>
+                                </div>
+
+                                <!-- Descuento -->
+                                <div class="col-md-6">
+                                    <label for="descuentoPct" class="form-label kits-label">
+                                        <i class="bi bi-percent me-1"></i>Descuento (opcional)
+                                    </label>
+                                    <div class="input-group">
+                                        <input id="descuentoPct"
+                                               class="form-control kits-input"
+                                               type="number"
+                                               min="0" max="100" step="1" value="0" />
+                                        <span class="input-group-text kits-input-addon">%</span>
+                                    </div>
+                                    <div class="kits-help-text">
+                                        Porcentaje de descuento aplicado al total del kit (0-100%).
+                                    </div>
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="col-12">
+                                    <label for="descripcion" class="form-label kits-label">
+                                        <i class="bi bi-chat-text me-1"></i>Descripción *
+                                    </label>
+                                    <textarea id="descripcion"
+                                          name="Descripcion"
+                                          class="form-control kits-input"
+                                          rows="3"
+                                          required
+                                          placeholder="Descripción breve o condiciones de la promoción"></textarea>
+                                    <div class="invalid-feedback">La descripción del kit es obligatoria.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card-body">
-                        @if (proveedores != null)
-                        {
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-gray-700">
-                                        <i class="bi bi-building text-success me-1"></i>Filtrar por Proveedor
+                    <!-- PRODUCTOS DEL KIT -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-search fs-5 text-kits-accent"></i>
+                                <h5 class="mb-0">Buscar y agregar productos</h5>
+                            </div>
+                            <div class="kits-search-wrapper ms-auto">
+                                <input type="text"
+                                       id="searchProducto"
+                                       class="form-control kits-input rounded-pill"
+                                       placeholder="Buscar producto para agregar..."
+                                       autocomplete="off" />
+                                <ul id="suggestions"
+                                    class="list-group position-absolute w-100 shadow-lg kits-suggestions"
+                                    style="display:none;"></ul>
+                            </div>
+                        </div>
+
+                        <div class="kits-card-body p-0">
+                            @if (proveedores != null)
+                            {
+                                <div class="px-3 pt-3">
+                                    <label class="form-label kits-label">
+                                        <i class="bi bi-building me-1"></i>Filtrar por proveedor
                                     </label>
-                                    <select id="filterProveedor" class="form-select">
+                                    <select id="filterProveedor" class="form-select kits-input">
                                         <option value="">— Todos los proveedores —</option>
                                         @foreach (var pv in proveedores)
                                         {
@@ -189,217 +215,629 @@
                                         }
                                     </select>
                                 </div>
+                            }
+
+                            <div class="table-responsive mt-3">
+                                <table id="tablaItems" class="table kits-table align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Producto</th>
+                                            <th class="text-center" style="width:120px;">Cantidad</th>
+                                            <th class="text-center" style="width:140px;">Precio Unitario</th>
+                                            <th class="text-center" style="width:140px;">Subtotal</th>
+                                            <th class="text-center" style="width:100px;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-productos">
+                                        <!-- productos dinámicos -->
+                                    </tbody>
+                                    <tfoot class="kits-tfoot">
+                                        <tr>
+                                            <td colspan="3" class="text-end">Subtotal:</td>
+                                            <td id="subtotalCell" class="text-center">Q0.00</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end">Descuento:</td>
+                                            <td id="descuentoCell" class="text-center">Q0.00</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr class="kits-total-row">
+                                            <td colspan="3" class="text-end">Total:</td>
+                                            <td id="totalCell" class="text-center">Q0.00</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
-                        }
 
-                        <div class="table-responsive">
-                            <table id="tablaItems" class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4 fw-semibold text-gray-700">Producto</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:120px;">Cantidad</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:140px;">Precio Unitario</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:140px;">Subtotal</th>
-                                        <th class="text-center fw-semibold text-gray-700" style="width:100px;">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-productos">
-                                    <!-- Los productos se agregarán dinámicamente aquí -->
-                                </tbody>
-                                <tfoot class="table-group-divider">
-                                    <tr class="fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Subtotal:</td>
-                                        <td id="subtotalCell" class="text-center text-success">Q0.00</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Descuento:</td>
-                                        <td id="descuentoCell" class="text-center text-warning">Q0.00</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="table-success fw-bold">
-                                        <td colspan="3" class="text-end ps-4">Total:</td>
-                                        <td id="totalCell" class="text-center text-success">Q0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <div class="d-flex gap-2 mt-3 px-3 pb-3">
+                                <button type="button"
+                                        id="btn-limpiar-todo"
+                                        class="btn-kits-outline-alt d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-trash me-2"></i>Limpiar todo
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="d-flex gap-2 mt-3">
-                            <button type="button" id="btn-limpiar-todo" class="btn btn-outline-warning d-flex align-items-center">
-                                <i class="bi bi-trash me-2"></i>Limpiar Todo
-                            </button>
+                <!-- COLUMNA DERECHA -->
+                <div class="col-lg-4">
+                    <!-- RESUMEN -->
+                    <div class="kits-card mb-4">
+                        <div class="kits-card-header">
+                            <i class="bi bi-clipboard-check me-2 text-kits-accent"></i>
+                            <h5 class="mb-0">Resumen del kit</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="kits-resumen-row">
+                                <span>Productos agregados</span>
+                                <span id="countItems" class="badge kits-badge">0</span>
+                            </div>
+                            <div class="kits-resumen-row">
+                                <span>Subtotal</span>
+                                <span id="resSubtotal" class="kits-resumen-value">Q0.00</span>
+                            </div>
+                            <div class="kits-resumen-row">
+                                <span>Descuento</span>
+                                <span id="resDescuentoPct" class="kits-resumen-value">0%</span>
+                            </div>
+                            <div class="kits-resumen-row kits-resumen-total">
+                                <span>Total final</span>
+                                <span id="resTotal" class="kits-resumen-total-value">Q0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACCIONES -->
+                    <div class="kits-card">
+                        <div class="kits-card-header">
+                            <i class="bi bi-lightning-charge me-2 text-kits-accent"></i>
+                            <h5 class="mb-0">Acciones rápidas</h5>
+                        </div>
+                        <div class="kits-card-body">
+                            <div class="d-grid gap-2">
+                                <button type="button"
+                                        id="btn-guardar-lateral"
+                                        class="btn-kits-primary d-flex align-items-center justify-content-center"
+                                        disabled>
+                                    <i class="bi bi-plus-circle me-2"></i>Crear kit
+                                </button>
+                                <button type="button"
+                                        id="btn-limpiar-rapido"
+                                        class="btn-kits-outline-alt d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-trash me-2"></i>Limpiar todo
+                                </button>
+                                <a asp-action="Index"
+                                   class="btn-kits-cancel d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <p class="kits-hint mt-3 mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Al guardar se almacenan los precios actuales de cada producto. El cálculo final se valida en el servidor.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- PANEL LATERAL -->
-            <div class="col-lg-4">
-                <!-- RESUMEN DEL KIT -->
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-light py-3 border-0">
-                        <h5 class="mb-0 fw-semibold text-gray-800">
-                            <i class="bi bi-clipboard-check text-success me-2"></i>Resumen del Kit
-                        </h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Productos agregados:</span>
-                            <span id="countItems" class="badge bg-success rounded-pill fs-6">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Subtotal:</span>
-                            <span id="resSubtotal" class="fw-bold text-success">Q0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <span class="text-muted">Descuento:</span>
-                            <span id="resDescuentoPct" class="fw-bold text-success">0%</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted fw-semibold">Total final:</span>
-                            <span id="resTotal" class="fw-bold fs-5 text-success">Q0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ACCIONES RÁPIDAS -->
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-light py-3 border-0">
-                        <h5 class="mb-0 fw-semibold text-gray-800">
-                            <i class="bi bi-lightning text-success me-2"></i>Acciones Rápidas
-                        </h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-grid gap-2">
-                            <button type="button" id="btn-guardar-lateral" class="btn btn-success text-white d-flex align-items-center justify-content-center" disabled>
-                                <i class="bi bi-plus-circle me-2"></i>Crear Kit
-                            </button>
-                            <button type="button" id="btn-limpiar-rapido" class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
-                                <i class="bi bi-trash me-2"></i>Limpiar Todo
-                            </button>
-                            <a asp-action="Index" class="btn btn-outline-danger d-flex align-items-center justify-content-center">
-                                <i class="bi bi-x-circle me-2"></i>Cancelar
-                            </a>
-                        </div>
-
-                        <div class="alert alert-info mt-3 mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <small>Al guardar, se almacenan los precios actuales de cada producto. El cálculo final será verificado en el servidor.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 }
 <style>
-    .table td, .table th {
-        vertical-align: middle;
+    :root {
+        --kits-primary: #3036A6;
+        --kits-secondary: #5F6AF5;
+        --kits-accent: #8F9CFF;
+        --kits-bg: #161B3A;
+        --kits-alt-bg: #1F2650;
+        --kits-card: #1E2546;
+        --kits-card-soft: #242C54;
+        --kits-text: #F7F8FF;
+        --kits-muted: #C3C7F5;
+        --kits-border: #3C4AA5;
+        --kits-success: #23d19c;
+        --kits-warning: #f6c23e;
+        --kits-danger: #ff6b6b;
+        --kits-radius: 0.85rem;
     }
 
-    .btn-eliminar {
-        padding: .25rem .5rem;
-        transition: all 0.15s ease-in-out;
+    .kits-create-theme {
+        background: radial-gradient(circle at top left, rgba(95,106,245,0.20), transparent), radial-gradient(circle at top right, rgba(143,156,255,0.16), transparent), var(--kits-bg);
+        min-height: 100vh;
+        color: var(--kits-text);
     }
 
-        .btn-eliminar:hover {
-            transform: scale(1.1);
-        }
-
-    /* Estilos del buscador predictivo */
-    #suggestions {
-        max-height: 250px;
-        overflow-y: auto;
-        z-index: 1050;
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
+    /* HEADER */
+    .kits-header {
+        background: linear-gradient(135deg, var(--kits-primary), var(--kits-alt-bg));
+        border-radius: var(--kits-radius);
+        padding: 1.5rem 2rem;
+        border: 1px solid rgba(143,156,255,0.45);
+        box-shadow: 0 8px 26px rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        color: var(--kits-text);
     }
 
-        #suggestions li {
-            cursor: pointer;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
-            border-bottom: 1px solid #dee2e6;
-            transition: all 0.15s ease-in-out;
-        }
-
-            #suggestions li:first-child {
-                border-top: none;
-                border-top-left-radius: 0.5rem;
-                border-top-right-radius: 0.5rem;
-            }
-
-            #suggestions li:last-child {
-                border-bottom: none;
-                border-bottom-left-radius: 0.5rem;
-                border-bottom-right-radius: 0.5rem;
-            }
-
-            #suggestions li:hover {
-                background-color: #d1f2eb;
-                border-color: #a3e4d7;
-            }
-
-    .card-header {
-        border-bottom: none;
+    .kits-header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
-    .badge {
-        font-size: 0.75rem;
+    .kits-header-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--kits-secondary), var(--kits-primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.4);
     }
 
-    .bg-gradient-success {
-        background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    .kits-header h1 {
+        margin: 0;
+        font-size: 1.7rem;
+        font-weight: 700;
     }
 
-    .card {
-        border-radius: 0.5rem;
+    .kits-header p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--kits-muted);
     }
 
-    .btn {
-        border-radius: 0.375rem;
-        transition: all 0.15s ease-in-out;
+    /* BOTONES */
+    .btn-kits-primary,
+    .btn-kits-outline,
+    .btn-kits-outline-alt,
+    .btn-kits-cancel {
+        border-radius: 999px;
+        padding: 0.55rem 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-width: 1px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
     }
 
-        .btn:hover {
+    .btn-kits-primary {
+        background: var(--kits-secondary);
+        border-color: var(--kits-accent);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+        .btn-kits-primary:hover {
+            background: var(--kits-primary);
             transform: translateY(-1px);
         }
 
-    .form-control:focus {
-        border-color: #1cc88a;
-        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25);
+    .btn-kits-outline {
+        background: transparent;
+        border-color: var(--kits-accent);
+        color: var(--kits-accent);
     }
 
-    /* Animaciones personalizadas */
-    @@keyframes slideInDown {
-        from
+        .btn-kits-outline:hover {
+            background: var(--kits-accent);
+            color: var(--kits-bg);
+            transform: translateY(-1px);
+        }
 
-    {
-        transform: translate3d(0, -100%, 0);
-        opacity: 0;
+    .btn-kits-outline-alt {
+        background: transparent;
+        border-color: rgba(255,255,255,0.22);
+        color: var(--kits-muted);
     }
 
-    to {
-        transform: translate3d(0, 0, 0);
+        .btn-kits-outline-alt:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--kits-text);
+            transform: translateY(-1px);
+        }
+
+    .btn-kits-cancel {
+        background: transparent;
+        border-color: var(--kits-danger);
+        color: var(--kits-danger);
+    }
+
+        .btn-kits-cancel:hover {
+            background: var(--kits-danger);
+            color: var(--kits-bg);
+            transform: translateY(-1px);
+        }
+
+    /* CARDS */
+    .kits-card {
+        background: var(--kits-card);
+        border-radius: var(--kits-radius);
+        border: 1px solid rgba(60,74,165,0.9);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+        overflow: hidden;
+    }
+
+    .kits-card-header-gradient {
+        padding: 0.9rem 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, rgba(95,106,245,0.98), rgba(48,54,166,0.98));
+        color: var(--kits-text);
+        border-bottom: 1px solid rgba(143,156,255,0.5);
+        font-weight: 600;
+    }
+
+    .kits-card-header {
+        padding: 0.8rem 1.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        background: rgba(25,31,77,0.98);
+        color: var(--kits-text);
+        border-bottom: 1px solid rgba(60,74,165,0.9);
+    }
+
+    .kits-card-body {
+        padding: 1rem 1.3rem 1.2rem;
+        color: var(--kits-text);
+        font-size: 0.9rem;
+        background: var(--kits-card-soft);
+    }
+
+    .kits-label {
+        color: var(--kits-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .kits-input {
+        background-color: rgba(20,26,70,0.98);
+        border: 1px solid rgba(143,156,255,0.45);
+        color: var(--kits-text);
+        border-radius: 0.55rem;
+        font-size: 0.9rem;
+    }
+
+        .kits-input:focus {
+            background-color: rgba(26,34,90,1);
+            border-color: var(--kits-secondary);
+            box-shadow: 0 0 0 0.18rem rgba(95,106,245,0.32);
+            color: var(--kits-text);
+        }
+
+        .kits-input::placeholder,
+        textarea.kits-input::placeholder,
+        .kits-input::-webkit-input-placeholder,
+        textarea.kits-input::-webkit-input-placeholder,
+        .kits-input:-ms-input-placeholder,
+        textarea.kits-input:-ms-input-placeholder,
+        .kits-input::-ms-input-placeholder,
+        textarea.kits-input::-ms-input-placeholder {
+            color: rgba(247,248,255,0.9);
+            opacity: 1;
+        }
+
+    .kits-input-addon {
+        background: rgba(95,106,245,0.16);
+        border-color: rgba(143,156,255,0.5);
+        color: var(--kits-accent);
+        font-weight: 600;
+    }
+
+    .kits-help-text {
+        color: var(--kits-muted);
+        font-size: 0.75rem;
+    }
+
+    /* SEARCH */
+    .kits-search-wrapper {
+        position: relative;
+        width: 320px;
+        max-width: 100%;
+    }
+
+        .kits-search-wrapper .kits-input {
+            background: radial-gradient(circle at top left, rgba(95,106,245,0.18), rgba(20,26,70,1));
+            border: 1px solid rgba(143,156,255,0.8);
+            color: var(--kits-text) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            padding-left: 2.4rem;
+        }
+
+            .kits-search-wrapper .kits-input::placeholder {
+                color: rgba(247,248,255,0.92);
+                opacity: 1;
+            }
+
+        .kits-search-wrapper::before {
+            content: "\f52a";
+            font-family: "bootstrap-icons";
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: var(--kits-accent);
+            opacity: 0.95;
+            pointer-events: none;
+        }
+
+    .kits-suggestions {
+        top: 100%;
+        left: 0;
+        margin-top: 0.25rem;
+        background-color: #1A2145;
+        border-radius: 0.7rem;
+        border: 1px solid rgba(143,156,255,0.8);
+        max-height: 260px;
+        overflow-y: auto;
+        box-shadow: 0 10px 22px rgba(0,0,0,0.5);
+        z-index: 1100;
+    }
+
+        .kits-suggestions .list-group-item {
+            background-color: #1A2145;
+            color: var(--kits-text);
+            border: none;
+            border-bottom: 1px solid rgba(60,74,165,0.7);
+            font-size: 0.86rem;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+        }
+
+            .kits-suggestions .list-group-item:last-child {
+                border-bottom: none;
+            }
+
+            .kits-suggestions .list-group-item:hover {
+                background-color: rgba(95,106,245,0.35);
+                color: #fff;
+            }
+
+    /* TABLA */
+    .kits-card-body.p-0 {
+        background: var(--kits-card-soft);
+    }
+
+    .kits-table {
+        background-color: var(--kits-card-soft) !important;
+        color: var(--kits-text) !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .kits-table > :not(caption) > * > * {
+            background-color: transparent !important;
+            color: var(--kits-text) !important;
+        }
+
+        .kits-table thead {
+            background-color: #202856 !important;
+        }
+
+            .kits-table thead th {
+                border-bottom: 1px solid rgba(60,74,165,0.98) !important;
+                color: var(--kits-muted) !important;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                padding: 0.65rem 0.7rem;
+                white-space: nowrap;
+            }
+
+        .kits-table tbody tr {
+            background-color: #1E2546 !important;
+            transition: all 0.18s ease;
+        }
+
+            .kits-table tbody tr:nth-child(even) {
+                background-color: #242C54 !important;
+            }
+
+            .kits-table tbody tr:hover {
+                background-color: rgba(95,106,245,0.25) !important;
+            }
+
+        .kits-table td {
+            border-bottom: 1px solid #343E73 !important;
+            padding: 0.6rem 0.7rem;
+            font-size: 0.86rem;
+        }
+
+    .kits-tfoot td {
+        border-top: 1px solid rgba(60,74,165,0.98) !important;
+        font-size: 0.82rem;
+        color: var(--kits-muted) !important;
+        background-color: #1E2546 !important;
+    }
+
+    .kits-total-row td {
+        background-color: #262F63 !important;
+        color: var(--kits-warning) !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .kits-modal-summary {
+        background-color: #20264A;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(143,156,255,0.4);
+        color: var(--kits-text);
+        font-size: 0.85rem;
+    }
+
+    .kits-table input.cantidad {
+        background-color: #181E40 !important;
+        border-color: rgba(143,156,255,0.6) !important;
+        color: var(--kits-text) !important;
+        border-radius: 0.45rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-eliminar {
+        padding: 0.2rem 0.35rem;
+        font-size: 0.8rem;
+        border-color: rgba(255,107,107,0.9);
+        color: #ff6b6b;
+        transition: all 0.15s ease;
+        background: transparent;
+    }
+
+        .btn-eliminar i {
+            color: #ff6b6b;
+        }
+
+        .btn-eliminar:hover {
+            background-color: #ff6b6b;
+            color: #1E2546;
+            transform: scale(1.1) translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+    .kits-resumen-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.3rem 0;
+        border-bottom: 1px solid rgba(44,54,104,0.95);
+        font-size: 0.86rem;
+        color: var(--kits-muted);
+    }
+
+        .kits-resumen-row:last-child {
+            border-bottom: none;
+        }
+
+    .kits-badge {
+        background: rgba(95,106,245,0.24);
+        color: var(--kits-accent);
+        border-radius: 999px;
+        padding: 0.15rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .kits-resumen-value {
+        color: var(--kits-text);
+        font-weight: 500;
+    }
+
+    .kits-resumen-total {
+        margin-top: 0.4rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(60,74,165,0.98);
+    }
+
+    .kits-resumen-total-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--kits-success);
+    }
+
+    .kits-hint {
+        font-size: 0.75rem;
+        color: var(--kits-muted);
+    }
+
+    .toast-kits {
+        background-color: #1E2546;
+        color: var(--kits-text);
+        border-radius: 0.8rem;
+        border: 1px solid rgba(143,156,255,0.6);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        font-size: 0.85rem;
+    }
+
+        .toast-kits .btn-close-white {
+            filter: invert(1);
+        }
+
+    .toast {
+        animation: kits-slide-in 0.25s ease-out;
+    }
+
+    @@keyframes kits-slide-in {
+        from {
+            transform: translate3d(100%, -20%, 0);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate3d(0, 0, 0);
+            opacity: 1;
+        }
+    }
+
+    .modal-kits {
+        background-color: #1E2546;
+        color: var(--kits-text);
+        border-radius: 0.9rem;
+        border: 1px solid rgba(143,156,255,0.5);
+    }
+
+    .modal-kits-warning {
+        background: linear-gradient(135deg, #B2871A, #f6c23e);
+        color: #fff;
+        border-top-left-radius: 0.9rem;
+        border-top-right-radius: 0.9rem;
+        border-bottom: none;
+    }
+
+    .modal-kits-success {
+        background: linear-gradient(135deg, #14a368, #23d19c);
+        color: #fff;
+        border-top-left-radius: 0.9rem;
+        border-top-right-radius: 0.9rem;
+        border-bottom: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        .kits-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    /* Placeholders blancos para inputs y textarea del módulo de Kits */
+    .kits-input::placeholder,
+    textarea.kits-input::placeholder {
+        color: rgba(247, 248, 255, 0.9) !important;
         opacity: 1;
     }
 
+    .kits-input::-webkit-input-placeholder,
+    textarea.kits-input::-webkit-input-placeholder {
+        color: rgba(247, 248, 255, 0.9) !important;
     }
 
-    .toast {
-        animation: slideInDown 0.3s ease-out;
+    .kits-input:-ms-input-placeholder,
+    textarea.kits-input:-ms-input-placeholder {
+        color: rgba(247, 248, 255, 0.9) !important;
+    }
+
+    .kits-input::-ms-input-placeholder,
+    textarea.kits-input::-ms-input-placeholder {
+        color: rgba(247, 248, 255, 0.9) !important;
     }
 </style>
+
+
 
 @section Scripts {
     <script>
         (function () {
-            // Variables globales
             const items = [];
             const createUrl = '@Url.Action("Create", "Kits")';
             const indexUrl = '@Url.Action("Index", "Kits")';
@@ -408,65 +846,57 @@
             const parseNumber = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
             const formatMoney = v => 'Q' + parseNumber(v).toFixed(2);
 
-            // 🔹 Sistema de notificaciones Toast
             function mostrarToast(mensaje, tipo = 'success') {
                 const toast = document.getElementById('toastNotificacion');
                 const toastMessage = document.getElementById('toast-message');
                 const toastIcon = toast.querySelector('.bi');
 
-                // Configurar color y icono según tipo
                 const config = {
-                    success: { bg: 'bg-success', icon: 'bi-check-circle' },
-                    warning: { bg: 'bg-warning', icon: 'bi-exclamation-triangle' },
-                    danger: { bg: 'bg-danger', icon: 'bi-x-circle' },
-                    info: { bg: 'bg-info', icon: 'bi-info-circle' }
+                    success: { icon: 'bi-check-circle', color: '#1cc88a' },
+                    warning: { icon: 'bi-exclamation-triangle', color: '#f6c23e' },
+                    danger: { icon: 'bi-x-circle', color: '#ff6b6b' },
+                    info: { icon: 'bi-info-circle', color: '#8B88F2' }
                 };
 
-                const { bg, icon } = config[tipo] || config.success;
+                const { icon, color } = config[tipo] || config.success;
 
-                toast.className = `toast align-items-center text-white ${bg} border-0`;
+                toast.className = 'toast toast-kits align-items-center border-0';
                 toastIcon.className = `bi ${icon} me-2`;
+                toastIcon.style.color = color;
                 toastMessage.textContent = mensaje;
 
                 const bsToast = new bootstrap.Toast(toast);
                 bsToast.show();
             }
 
-            // 🔹 Calcular totales
             function calcularTotales() {
                 const subtotal = items.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
                 let descuentoPct = parseFloat(document.getElementById('descuentoPct').value) || 0;
 
-                // Convertir porcentaje si es mayor a 1
                 if (descuentoPct > 1 && descuentoPct <= 100) {
                     descuentoPct /= 100;
                 }
-
                 descuentoPct = Math.min(Math.max(descuentoPct, 0), 1);
+
                 const descuento = subtotal * descuentoPct;
                 const total = subtotal - descuento;
 
-                // Actualizar tabla
                 document.getElementById('subtotalCell').textContent = formatMoney(subtotal);
                 document.getElementById('descuentoCell').textContent = formatMoney(descuento);
                 document.getElementById('totalCell').textContent = formatMoney(total);
 
-                // Actualizar panel lateral
                 document.getElementById('countItems').textContent = items.length;
                 document.getElementById('resSubtotal').textContent = formatMoney(subtotal);
                 document.getElementById('resDescuentoPct').textContent = ((parseFloat(document.getElementById('descuentoPct').value) || 0)) + '%';
                 document.getElementById('resTotal').textContent = formatMoney(total);
 
-                // Actualizar modal de confirmación
                 document.getElementById('modal-productos-count').textContent = items.length;
                 document.getElementById('modal-total').textContent = formatMoney(total);
 
-                // Habilitar/deshabilitar botón de guardar
                 const btnGuardar = document.getElementById('btn-guardar-lateral');
                 btnGuardar.disabled = items.length === 0 || total <= 0;
             }
 
-            // 🔹 Renderizar items en la tabla
             function renderItems() {
                 const tbody = document.getElementById('tbody-productos');
                 tbody.innerHTML = '';
@@ -476,57 +906,56 @@
                     tr.innerHTML = `
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
-                                <div class="bg-success bg-opacity-10 rounded p-2 me-3">
-                                    <i class="bi bi-box text-success"></i>
+                                <div class="kits-pill-icon">
+                                    <i class="bi bi-box"></i>
                                 </div>
                                 <div>
-                                    <span class="fw-medium">${item.nombre}</span>
+                                    <span class="kits-product-name">${item.nombre}</span>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <input class="form-control form-control-sm cantidad text-center" type="number" min="1" value="${item.cantidad}" data-index="${index}" />
+                            <input class="form-control form-control-sm cantidad text-center"
+                                   type="number" min="1" value="${item.cantidad}" data-index="${index}" />
                         </td>
-                        <td class="text-center fw-semibold text-gray-700">${formatMoney(item.precio)}</td>
-                        <td class="text-center fw-bold text-success">${formatMoney(item.precio * item.cantidad)}</td>
+                        <td class="text-center kits-price-cell">${formatMoney(item.precio)}</td>
+                        <td class="text-center kits-subtotal-cell">${formatMoney(item.precio * item.cantidad)}</td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar" data-index="${index}" title="Eliminar producto">
+                            <button class="btn btn-sm btn-outline-danger rounded-circle btn-eliminar"
+                                    data-index="${index}" title="Eliminar producto">
                                 <i class="bi bi-trash"></i>
                             </button>
-                        </td>
-                    `;
+                        </td>`;
                     tbody.appendChild(tr);
                 });
 
-                // Asignar eventos a los elementos recién creados
                 document.querySelectorAll('.cantidad').forEach(input => {
-                    input.addEventListener('change', function() {
+                    input.addEventListener('change', function () {
                         const index = parseInt(this.dataset.index);
                         const newCantidad = Math.max(1, parseInt(this.value) || 1);
                         items[index].cantidad = newCantidad;
                         calcularTotales();
-                        renderItems(); // Re-render para actualizar subtotales
+                        renderItems();
                     });
                 });
 
                 document.querySelectorAll('.btn-eliminar').forEach(btn => {
-                    btn.addEventListener('click', function() {
+                    btn.addEventListener('click', function () {
                         const index = parseInt(this.dataset.index);
-                        const productoNombre = items[index].nombre;
+                        const nombre = items[index].nombre;
                         items.splice(index, 1);
                         calcularTotales();
                         renderItems();
-                        mostrarToast(`"${productoNombre}" eliminado del kit`, 'info');
+                        mostrarToast(`"${nombre}" eliminado del kit`, 'info');
                     });
                 });
             }
 
-            // 🔹 Buscar productos
             function debounce(fn, ms) {
-                let timeout;
+                let t;
                 return (...args) => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => fn(...args), ms);
+                    clearTimeout(t);
+                    t = setTimeout(() => fn(...args), ms);
                 };
             }
 
@@ -537,95 +966,85 @@
                 }
 
                 const proveedorId = document.getElementById('filterProveedor')?.value || '';
-
                 try {
                     let url = `${buscarUrl}?term=${encodeURIComponent(termino)}`;
-                    if (proveedorId) {
-                        url += `&proveedorId=${proveedorId}`;
-                    }
+                    if (proveedorId) url += `&proveedorId=${proveedorId}`;
 
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Error en la búsqueda');
-
-                    const data = await response.json();
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('Error en la búsqueda');
+                    const data = await res.json();
                     mostrarSugerencias(Array.isArray(data) ? data : (data.results || []));
-                } catch (error) {
-                    console.error('Error buscando productos:', error);
+                } catch (e) {
+                    console.error(e);
                     document.getElementById('suggestions').style.display = 'none';
                 }
             }
 
             function mostrarSugerencias(productos) {
-                const suggestionsBox = document.getElementById('suggestions');
-                suggestionsBox.innerHTML = '';
+                const box = document.getElementById('suggestions');
+                box.innerHTML = '';
 
                 if (!productos.length) {
-                    suggestionsBox.style.display = 'none';
+                    box.style.display = 'none';
                     return;
                 }
 
-                const productosMostrar = productos.slice(0, 5);
-
-                productosMostrar.forEach(producto => {
+                productos.slice(0, 10).forEach(p => {
                     const li = document.createElement('li');
                     li.className = 'list-group-item list-group-item-action';
                     li.innerHTML = `
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="flex-grow-1">
-                                <div class="fw-semibold">${producto.text}</div>
+                                <div class="fw-semibold">${p.text}</div>
                                 <div class="small text-muted">
-                                    <i class="bi bi-box me-1"></i>Stock: ${producto.stock ?? 'N/A'}
-                                    ${producto.tipo === 'kit' ? '<span class="badge bg-info ms-2">KIT</span>' : ''}
+                                    <i class="bi bi-box me-1"></i>Stock: ${p.stock ?? 'N/D'}
+                                    ${p.tipo === 'kit' ? '<span class="badge bg-info ms-2">KIT</span>' : ''}
                                 </div>
                             </div>
                             <div class="text-end">
-                                <div class="fw-bold text-success">${formatMoney(producto.precio || 0)}</div>
+                                <div class="fw-bold text-success">${formatMoney(p.precio || 0)}</div>
                                 <div class="small text-muted">Agregar</div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
 
                     li.addEventListener('click', () => {
-                        const precioNum = parseFloat(producto.precio) || 0;
-                        if (precioNum <= 0) {
-                            mostrarToast('El producto no tiene precio válido.', 'warning');
+                        const precio = parseFloat(p.precio) || 0;
+                        if (precio <= 0) {
+                            mostrarToast('El producto no tiene un precio válido.', 'warning');
                             return;
                         }
 
-                        // Verificar si el producto ya existe
-                        const productoExistente = items.find(item => item.idProducto === producto.id);
-                        if (productoExistente) {
-                            productoExistente.cantidad += 1;
-                            mostrarToast(`Cantidad aumentada para "${producto.text}"`, 'info');
+                        const existente = items.find(i => i.idProducto === p.id);
+                        if (existente) {
+                            existente.cantidad += 1;
+                            mostrarToast(`Cantidad aumentada para "${p.text}"`, 'info');
                         } else {
                             items.push({
-                                idProducto: producto.id,
-                                nombre: producto.text,
+                                idProducto: p.id,
+                                nombre: p.text,
                                 cantidad: 1,
-                                precio: precioNum
+                                precio
                             });
-                            mostrarToast(`"${producto.text}" agregado al kit`, 'success');
+                            mostrarToast(`"${p.text}" agregado al kit`, 'success');
                         }
 
                         calcularTotales();
                         renderItems();
-                        document.getElementById('suggestions').style.display = 'none';
+                        box.style.display = 'none';
                         document.getElementById('searchProducto').value = '';
                     });
 
-                    suggestionsBox.appendChild(li);
+                    box.appendChild(li);
                 });
 
-                suggestionsBox.style.display = 'block';
+                box.style.display = 'block';
             }
 
-            // 🔹 FUNCIÓN LIMPIAR TODO CON MODAL
             function mostrarModalLimpiar() {
-                if (items.length === 0) {
-                    mostrarToast('El kit ya está vacío', 'info');
+                if (!items.length) {
+                    mostrarToast('El kit ya está vacío.', 'info');
                     return;
                 }
-
                 const modal = new bootstrap.Modal(document.getElementById('modalLimpiarTodo'));
                 modal.show();
             }
@@ -634,42 +1053,27 @@
                 items.length = 0;
                 calcularTotales();
                 renderItems();
-                mostrarToast('Todos los productos han sido eliminados del kit', 'success');
-
-                // Cerrar modal
+                mostrarToast('Todos los productos han sido eliminados del kit.', 'success');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('modalLimpiarTodo'));
-                modal.hide();
+                modal?.hide();
             }
 
-            // 🔹 VALIDAR FORMULARIO
             function validarFormulario() {
-                const nombreInput = document.getElementById('nombre');
-                const descripcionInput = document.getElementById('descripcion');
-
+                const nombre = document.getElementById('nombre');
+                const descripcion = document.getElementById('descripcion');
                 let valido = true;
 
-                // Resetear estados de validación
-                [nombreInput, descripcionInput].forEach(el => {
-                    el.classList.remove('is-invalid', 'is-valid');
-                });
+                [nombre, descripcion].forEach(el => el.classList.remove('is-invalid', 'is-valid'));
 
-                // Validar campos obligatorios
-                if (!nombreInput.value.trim()) {
-                    nombreInput.classList.add('is-invalid');
-                    valido = false;
-                } else {
-                    nombreInput.classList.add('is-valid');
-                }
+                if (!nombre.value.trim()) {
+                    nombre.classList.add('is-invalid'); valido = false;
+                } else nombre.classList.add('is-valid');
 
-                if (!descripcionInput.value.trim()) {
-                    descripcionInput.classList.add('is-invalid');
-                    valido = false;
-                } else {
-                    descripcionInput.classList.add('is-valid');
-                }
+                if (!descripcion.value.trim()) {
+                    descripcion.classList.add('is-invalid'); valido = false;
+                } else descripcion.classList.add('is-valid');
 
-                // Validar productos
-                if (items.length === 0) {
+                if (!items.length) {
                     mostrarToast('Agrega al menos un producto al kit.', 'warning');
                     valido = false;
                 }
@@ -677,45 +1081,33 @@
                 return valido;
             }
 
-            // 🔹 MODAL PARA GUARDAR CAMBIOS
             function mostrarModalGuardar() {
-                if (!validarFormulario()) {
-                    return;
-                }
-
+                if (!validarFormulario()) return;
                 const modal = new bootstrap.Modal(document.getElementById('modalConfirmarGuardar'));
                 modal.show();
             }
 
-            // 🔹 Función para guardar cambios
             async function guardarCambios() {
-                const nombreInput = document.getElementById('nombre');
-                const descripcionInput = document.getElementById('descripcion');
-                let descuentoPctInput = parseFloat(document.getElementById('descuentoPct').value) || 0;
-
-                // Convertir porcentaje si es necesario
-                if (descuentoPctInput > 1 && descuentoPctInput <= 100) {
-                    descuentoPctInput /= 100;
-                }
+                const nombre = document.getElementById('nombre').value.trim();
+                const descripcion = document.getElementById('descripcion').value.trim();
+                let descuentoPct = parseFloat(document.getElementById('descuentoPct').value) || 0;
+                if (descuentoPct > 1 && descuentoPct <= 100) descuentoPct /= 100;
 
                 const payload = {
-                    Nombre: nombreInput.value.trim(),
-                    Descripcion: descripcionInput.value.trim(),
-                    DescuentoPct: descuentoPctInput,
-                    Items: items.map(item => ({
-                        IdProducto: item.idProducto,
-                        Cantidad: item.cantidad
-                    }))
+                    Nombre: nombre,
+                    Descripcion: descripcion,
+                    DescuentoPct: descuentoPct,
+                    Items: items.map(i => ({ IdProducto: i.idProducto, Cantidad: i.cantidad }))
                 };
 
-                const btnGuardar = document.getElementById('btn-guardar-lateral');
-                const originalText = btnGuardar.innerHTML;
+                const btn = document.getElementById('btn-guardar-lateral');
+                const original = btn.innerHTML;
 
                 try {
-                    btnGuardar.disabled = true;
-                    btnGuardar.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creando...';
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Creando...';
 
-                    const response = await fetch(createUrl, {
+                    const res = await fetch(createUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -725,60 +1117,50 @@
                         body: JSON.stringify(payload)
                     });
 
-                    const data = await response.json();
+                    const data = await res.json();
 
                     if (data.success) {
                         mostrarToast('Kit creado correctamente. Redirigiendo...', 'success');
                         setTimeout(() => {
                             if (data.idKit) {
-                                window.location.href = `@Url.Action("Details", "Kits")/${data.idKit}`;
+                                window.location.href = '@Url.Action("Details", "Kits")/' + data.idKit;
                             } else {
                                 window.location.href = indexUrl;
                             }
-                        }, 1500);
+                        }, 1200);
                     } else {
                         mostrarToast(data.message || 'No se pudo crear el kit.', 'danger');
                     }
-                } catch (error) {
-                    console.error('Error:', error);
+                } catch (e) {
+                    console.error(e);
                     mostrarToast('Error al conectar con el servidor.', 'danger');
                 } finally {
-                    btnGuardar.disabled = false;
-                    btnGuardar.innerHTML = originalText;
-
-                    // Cerrar modal
+                    btn.disabled = false;
+                    btn.innerHTML = original;
                     const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarGuardar'));
-                    if (modal) modal.hide();
+                    modal?.hide();
                 }
             }
 
-            // 🔹 INICIALIZACIÓN
             function inicializar() {
-                // Eventos de búsqueda
                 const searchInput = document.getElementById('searchProducto');
                 const debouncedBuscar = debounce(buscarProductos, 300);
+                searchInput.addEventListener('input', e => debouncedBuscar(e.target.value));
 
-                searchInput.addEventListener('input', (e) => debouncedBuscar(e.target.value));
-
-                // Ocultar sugerencias al hacer clic fuera
-                document.addEventListener('click', (e) => {
-                    const suggestionsBox = document.getElementById('suggestions');
-                    if (suggestionsBox && !suggestionsBox.contains(e.target) && e.target !== searchInput) {
-                        suggestionsBox.style.display = 'none';
+                document.addEventListener('click', e => {
+                    const box = document.getElementById('suggestions');
+                    if (box && !box.contains(e.target) && e.target !== searchInput) {
+                        box.style.display = 'none';
                     }
                 });
 
-                // Evento de filtro de proveedor
                 const filterProveedor = document.getElementById('filterProveedor');
                 if (filterProveedor) {
                     filterProveedor.addEventListener('change', () => {
-                        if (searchInput.value.trim()) {
-                            buscarProductos(searchInput.value);
-                        }
+                        if (searchInput.value.trim()) buscarProductos(searchInput.value);
                     });
                 }
 
-                // Eventos de los botones
                 document.getElementById('btn-limpiar-todo').addEventListener('click', mostrarModalLimpiar);
                 document.getElementById('btn-limpiar-rapido').addEventListener('click', mostrarModalLimpiar);
                 document.getElementById('btn-confirmar-limpiar').addEventListener('click', limpiarTodo);
@@ -786,30 +1168,25 @@
                 document.getElementById('btn-guardar-lateral').addEventListener('click', mostrarModalGuardar);
                 document.getElementById('btn-confirmar-guardar').addEventListener('click', guardarCambios);
 
-                // Evento de descuento
                 document.getElementById('descuentoPct').addEventListener('input', calcularTotales);
-                document.getElementById('descuentoPct').addEventListener('blur', function() {
+                document.getElementById('descuentoPct').addEventListener('blur', function () {
                     if (this.value.trim() === '' || isNaN(parseFloat(this.value))) {
                         this.value = 0;
                         calcularTotales();
                     }
                 });
 
-                // Quitar error visual al escribir
-                document.querySelectorAll('#nombre, #descripcion').forEach(el => {
-                    el.addEventListener('input', function() {
+                ['nombre', 'descripcion'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.addEventListener('input', function () {
                         this.classList.remove('is-invalid');
-                        if (this.value.trim()) {
-                            this.classList.add('is-valid');
-                        }
+                        if (this.value.trim()) this.classList.add('is-valid');
                     });
                 });
 
-                // Inicializar cálculos
                 calcularTotales();
             }
 
-            // Ejecutar inicialización cuando el DOM esté listo
             document.addEventListener('DOMContentLoaded', inicializar);
         })();
     </script>

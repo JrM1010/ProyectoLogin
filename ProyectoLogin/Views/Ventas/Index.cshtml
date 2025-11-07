@@ -18,7 +18,7 @@
                     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
                         <div class="search-container flex-grow-1">
                             <input type="text" id="busqueda" class="form-control form-control-sm"
-                                   placeholder="Buscar producto o Promocion..." autocomplete="off" />
+                                   placeholder="Buscar producto o Promoción..." autocomplete="off" />
                         </div>
                     </div>
 
@@ -29,7 +29,7 @@
                                 <tr class="text-uppercase small">
                                     <th style="width: 35%;">Producto/Promoción</th>
                                     <th>Precio</th>
-                                    <th>Presentacion</th>
+                                    <th>Presentación</th>
                                     <th>Cantidad</th>
                                     <th>Desc. %</th>
                                     <th>Acción</th>
@@ -134,7 +134,7 @@
 <!-- MODAL DE PAGO -->
 <div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content shadow-lg venta-modal">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="bi bi-cash-stack"></i> Finalizar Venta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -143,7 +143,7 @@
 
                 <div id="contenidoVentaActiva">
                     <h5 class="text-center">Total a pagar: <strong class="text-success fs-4" id="totalCobro">Q0.00</strong></h5>
-                    <div class="text-center text-muted small mb-3">IVA incluido</div>
+                    <div class="text-muted small text-center mb-3">IVA incluido</div>
                     <hr>
 
                     <!-- Selección de método de pago -->
@@ -193,7 +193,7 @@
                 <div id="contenidoVentaFinalizada" class="text-center d-none">
                     <h4 class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Venta Completada</h4>
                     <p class="text-muted mb-4">La información de pago ha sido guardada. Descargue Factura.</p>
-                    <button id="btnDescargarFactura" class="btn btn-outline-primary">
+                    <button id="btnDescargarFactura" class="btn btn-outline-primary d-none">
                         <i class="bi bi-file-earmark-arrow-down"></i> Descargar factura
                     </button>
                 </div>
@@ -202,7 +202,9 @@
 
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button class="btn btn-success" id="btnConfirmarCobro"><i class="bi bi-check2-circle"></i> Confirmar Pago</button>
+                <button class="btn btn-success" id="btnConfirmarCobro">
+                    <i class="bi bi-check2-circle"></i> Confirmar Pago
+                </button>
             </div>
         </div>
     </div>
@@ -211,19 +213,20 @@
 <!-- MODAL PARA SELECCIÓN DE UNIDAD -->
 <div class="modal fade" id="modalUnidad" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
+        <div class="modal-content venta-modal-unidad">
             <div class="modal-header bg-info text-white">
                 <h5 class="modal-title">Seleccionar Presentación</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="contenidoUnidades">
-                <!-- Las opciones de unidad se cargarán aquí dinámicamente -->
+                <!-- Opciones de unidad dinámicas -->
             </div>
         </div>
     </div>
 </div>
 
 <style>
+    /* Mantengo la estética base que ya tenías aquí */
     body {
         background-color: #f8f9fa;
     }
@@ -265,14 +268,17 @@
         max-height: 250px;
         overflow-y: auto;
         margin-top: 2px;
+        border-radius: 0.5rem;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
     }
 
         .suggestions-box button {
             border: none;
-            background: #fff;
+            background: transparent;
             width: 100%;
             text-align: left;
             padding: 8px 12px;
+            font-size: 0.9rem;
         }
 
             .suggestions-box button:hover {
@@ -291,21 +297,26 @@
     .unidad-option {
         padding: 10px;
         border: 1px solid #dee2e6;
-        border-radius: 5px;
-        margin-bottom: 5px;
+        border-radius: 6px;
+        margin-bottom: 6px;
         cursor: pointer;
         transition: all 0.2s;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
     }
 
         .unidad-option:hover {
-            background-color: #f8f9fa;
-            border-color: #007bff;
+            background-color: #eef3ff;
+            border-color: #514BF2;
         }
 
         .unidad-option.selected {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
+            background-color: #514BF2;
+            color: #fff;
+            border-color: #514BF2;
         }
 
     .precio-unidad {
@@ -313,57 +324,168 @@
         color: #28a745;
     }
 
+    /* ALERTAS ESTÉTICAS SIN GRADIENTE */
+    #centroAlertas {
+        position: fixed;
+        right: 1.75rem;
+        bottom: 1.75rem;
+        z-index: 1080;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        pointer-events: none;
+    }
+
+    .venta-alert {
+        pointer-events: auto;
+        border-radius: 0.75rem;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.82rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        background-color: #0D0E26; /* Fondo sólido */
+        color: #F0F0F7;
+        border: 1px solid rgba(139, 136, 242, 0.28);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+        cursor: pointer;
+    }
+
+        .venta-alert:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+        }
+
+        .venta-alert i {
+            font-size: 1rem;
+            margin-top: 2px;
+        }
+
+    .venta-alert-success {
+        border-left: 4px solid #23d19c;
+    }
+
+    .venta-alert-danger {
+        border-left: 4px solid #ff6b6b;
+    }
+
+    .venta-alert-warning {
+        border-left: 4px solid #f6c23e;
+    }
+
+    .venta-alert-info {
+        border-left: 4px solid #8B88F2;
+    }
+
+    /* MODALES: buen contraste con el layout */
+    .venta-modal,
+    .venta-modal-unidad {
+        border-radius: 0.9rem;
+        border: 1px solid rgba(139, 136, 242, 0.35);
+        background-color: #0D0E26;
+        color: #F0F0F7;
+    }
+
+        .venta-modal .modal-header,
+        .venta-modal-unidad .modal-header {
+            border-bottom-color: rgba(139, 136, 242, 0.2);
+        }
+
+        .venta-modal .modal-footer {
+            border-top-color: rgba(139, 136, 242, 0.15);
+        }
+
+        .venta-modal .form-control,
+        .venta-modal .form-select {
+            background-color: #11133F;
+            color: #F0F0F7;
+            border-color: rgba(139, 136, 242, 0.5);
+        }
+
+            .venta-modal .form-control::placeholder {
+                color: #9ba4c4;
+            }
+
+        .venta-modal label,
+        .venta-modal h5,
+        .venta-modal p,
+        .venta-modal small {
+            color: #F0F0F7;
+        }
+
+        .venta-modal .text-muted {
+            color: #9ba4c4 !important;
+        }
+
+        .venta-modal-unidad .modal-body {
+            color: #F0F0F7;
+        }
+
+        .venta-modal-unidad .unidad-option {
+            background-color: #11133F;
+            border-color: rgba(139, 136, 242, 0.45);
+            color: #F0F0F7;
+        }
+
+            .venta-modal-unidad .unidad-option:hover {
+                background-color: #1E2546;
+                border-color: #514BF2;
+            }
+
+        .venta-modal-unidad .precio-unidad {
+            color: #23d19c;
+        }
 </style>
+
 
 @section Scripts {
     <script>
-         const tablaBody = document.querySelector("#tablaProductos tbody");
-         const inputBusqueda = document.querySelector("#busqueda");
-         const btnCobrar = document.querySelector("#btnCobrar");
-         const btnCancelar = document.querySelector("#btnCancelar");
+        const tablaBody = document.querySelector("#tablaProductos tbody");
+        const inputBusqueda = document.querySelector("#busqueda");
+        const btnCobrar = document.querySelector("#btnCobrar");
+        const btnCancelar = document.querySelector("#btnCancelar");
 
-         let productosSeleccionados = [];
-         let ultimosResultados = [];
-         let clienteSeleccionado = null;
-         let productoSeleccionadoParaUnidad = null;
+        let productosSeleccionados = [];
+        let ultimosResultados = [];
+        let clienteSeleccionado = null;
+        let productoSeleccionadoParaUnidad = null;
 
-         function setValueIfExists(selector, value) {
-             const el = document.querySelector(selector);
-             if (el) el.value = value;
-         }
+        function setValueIfExists(selector, value) {
+            const el = document.querySelector(selector);
+            if (el) el.value = value;
+        }
 
-         function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
-             let contenedor = document.getElementById("centroAlertas");
-             if (!contenedor) {
-                 contenedor = document.createElement("div");
-                 contenedor.id = "centroAlertas";
-                 contenedor.style.position = "fixed";
-                 contenedor.style.bottom = "20px";
-                 contenedor.style.left = "20px";
-                 contenedor.style.zIndex = "1055";
-                 contenedor.style.display = "flex";
-                 contenedor.style.flexDirection = "column";
-                 contenedor.style.gap = "8px";
-                 document.body.appendChild(contenedor);
-             }
+        // ALERTAS ESTÉTICAS (misma firma, solo mejora visual)
+        function mostrarMensaje(texto, tipo = "info", duracion = 3000) {
+            let contenedor = document.getElementById("centroAlertas");
+            if (!contenedor) {
+                contenedor = document.createElement("div");
+                contenedor.id = "centroAlertas";
+                document.body.appendChild(contenedor);
+            }
 
-             const alerta = document.createElement("div");
-             alerta.className = `alert alert-${tipo} shadow-sm border-0 fade show`;
-             alerta.style.minWidth = "260px";
-             alerta.style.maxWidth = "320px";
-             alerta.style.padding = "10px 14px";
-             alerta.style.fontSize = "0.9rem";
-             alerta.style.cursor = "pointer";
-             alerta.style.borderRadius = "10px";
-             alerta.innerHTML = `<strong>${texto}</strong>`;
+            const iconos = {
+                success: "bi-check-circle-fill",
+                danger: "bi-x-circle-fill",
+                warning: "bi-exclamation-triangle-fill",
+                info: "bi-info-circle-fill"
+            };
 
-             alerta.addEventListener("click", () => alerta.remove());
-             contenedor.appendChild(alerta);
+            const alerta = document.createElement("div");
+            alerta.className = `venta-alert venta-alert-${tipo}`;
+            alerta.innerHTML = `
+                <i class="bi ${iconos[tipo] || iconos.info}"></i>
+                <div>${texto}</div>
+            `;
 
-             if (duracion > 0) {
-                 setTimeout(() => alerta.remove(), duracion);
-             }
-         }
+            alerta.addEventListener("click", () => alerta.remove());
+            contenedor.appendChild(alerta);
+
+            if (duracion > 0) {
+                setTimeout(() => alerta.remove(), duracion);
+            }
+        }
 
         function parseFactorUnidad(unidad) {
             let raw = unidad?.FactorConversion ?? unidad?.factorConversion ?? unidad?.factor ?? unidad?.Factor ?? unidad?.factor_default ?? unidad?.FactorDefault ?? unidad?.cantidadPorPresentacion;
@@ -376,14 +498,14 @@
             return Math.max(1, Math.round(n));
         }
 
-         function mostrarModalUnidades(producto) {
+        function mostrarModalUnidades(producto) {
             const contenidoUnidades = document.getElementById("contenidoUnidades");
             contenidoUnidades.innerHTML = '';
 
             const unidades = producto.preciosPorUnidad || producto.unidades || [];
 
             if (!unidades.length) {
-                contenidoUnidades.innerHTML = '<p class="text-muted">No hay presentaciones disponibles</p>';
+                contenidoUnidades.innerHTML = '<p class="text-muted mb-0">No hay presentaciones disponibles</p>';
                 return;
             }
 
@@ -396,10 +518,8 @@
                 const div = document.createElement("div");
                 div.className = "unidad-option";
                 div.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${nombre}</strong>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div><strong>${nombre}</strong></div>
                         <div class="precio-unidad">${formatearMonedaGuatemala(precioVenta)}</div>
                     </div>
                 `;
@@ -467,63 +587,63 @@
             renderTabla();
         }
 
-         inputBusqueda.addEventListener("keyup", async (e) => {
-             const term = e.target.value.trim();
-             const contenedor = inputBusqueda.closest(".search-container");
-             if (term.length < 2) {
-                 const prev = contenedor.querySelector(".suggestions-box");
-                 if (prev) prev.remove();
-                 return;
-             }
+        inputBusqueda.addEventListener("keyup", async (e) => {
+            const term = e.target.value.trim();
+            const contenedor = inputBusqueda.closest(".search-container");
+            if (term.length < 2) {
+                const prev = contenedor.querySelector(".suggestions-box");
+                if (prev) prev.remove();
+                return;
+            }
 
-             const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
-             const data = await resp.json();
-             ultimosResultados = data.results || [];
-             mostrarSugerencias(ultimosResultados, contenedor);
-         });
+            const resp = await fetch(`/Ventas/BuscarProducto?term=${encodeURIComponent(term)}`);
+            const data = await resp.json();
+            ultimosResultados = data.results || [];
+            mostrarSugerencias(ultimosResultados, contenedor);
+        });
 
-         inputBusqueda.addEventListener("keydown", (e) => {
-             if (e.key === "Enter") {
-                 e.preventDefault();
-                 if (ultimosResultados.length > 0) {
-                     const producto = ultimosResultados[0];
-                     if (producto.preciosPorUnidad && producto.preciosPorUnidad.length > 1) {
-                         mostrarModalUnidades(producto);
-                     } else {
-                         seleccionarProducto(producto);
-                     }
-                     const contenedor = inputBusqueda.closest(".search-container");
-                     const lista = contenedor.querySelector(".suggestions-box");
-                     if (lista) lista.remove();
-                 }
-             }
-         });
+        inputBusqueda.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (ultimosResultados.length > 0) {
+                    const producto = ultimosResultados[0];
+                    if (producto.preciosPorUnidad && producto.preciosPorUnidad.length > 1) {
+                        mostrarModalUnidades(producto);
+                    } else {
+                        seleccionarProducto(producto);
+                    }
+                    const contenedor = inputBusqueda.closest(".search-container");
+                    const lista = contenedor.querySelector(".suggestions-box");
+                    if (lista) lista.remove();
+                }
+            }
+        });
 
-         function formatearNumeroGuatemala(numero) {
-             if (numero === null || numero === undefined || isNaN(numero)) {
-                 return "0.00";
-             }
-             const num = typeof numero === 'string' ? parseFloat(numero) : numero;
-             return num.toLocaleString('en-US', {
-                 minimumFractionDigits: 2,
-                 maximumFractionDigits: 2
-             });
-         }
+        function formatearNumeroGuatemala(numero) {
+            if (numero === null || numero === undefined || isNaN(numero)) {
+                return "0.00";
+            }
+            const num = typeof numero === 'string' ? parseFloat(numero) : numero;
+            return num.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
 
-         function formatearMonedaGuatemala(monto) {
-             return `Q${formatearNumeroGuatemala(monto)}`;
-         }
+        function formatearMonedaGuatemala(monto) {
+            return `Q${formatearNumeroGuatemala(monto)}`;
+        }
 
-         function limpiarFormatoMoneda(valor) {
-             if (!valor) return 0;
-             return parseFloat(
-                 valor.toString()
-                     .replace(/[Q,\s]/g, '')
-                     .replace(/[^\d.-]/g, '')
-             ) || 0;
-         }
+        function limpiarFormatoMoneda(valor) {
+            if (!valor) return 0;
+            return parseFloat(
+                valor.toString()
+                    .replace(/[Q,\s]/g, '')
+                    .replace(/[^\d.-]/g, '')
+            ) || 0;
+        }
 
-                 function mostrarSugerencias(lista, contenedor) {
+        function mostrarSugerencias(lista, contenedor) {
             const prev = contenedor.querySelector(".suggestions-box");
             if (prev) prev.remove();
             if (!lista.length) return;
@@ -546,22 +666,27 @@
                 item.type = "button";
 
                 let precioTexto = formatearMonedaGuatemala(p.precio);
-                const tieneMultiplesUnidades = (p.preciosPorUnidad && p.preciosPorUnidad.length > 1) ||
-                                             (p.unidades && p.unidades.length > 1);
+                const tieneMultiplesUnidades =
+                    (p.preciosPorUnidad && p.preciosPorUnidad.length > 1) ||
+                    (p.unidades && p.unidades.length > 1);
 
                 if (tieneMultiplesUnidades) {
                     precioTexto = `<span class="text-primary">Múltiples presentaciones</span>`;
                 }
 
                 item.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div>
-                        <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
-                        <br>
-                        ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
-                    </div>
-                    <span>${precioTexto}</span>
-                </div>`;
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div>
+                            <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
+                            <br>
+                            ${
+                                !esKit
+                                    ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>`
+                                    : '<small class="text-primary">Promoción especial</small>'
+                            }
+                        </div>
+                        <span>${precioTexto}</span>
+                    </div>`;
 
                 item.onclick = () => {
                     if (tieneMultiplesUnidades) {
@@ -583,7 +708,7 @@
             }, { once: true });
         }
 
-                function seleccionarProducto(prod) {
+        function seleccionarProducto(prod) {
             const esKit = prod.tipo === "kit";
 
             if (esKit) {
@@ -604,8 +729,7 @@
                 }
                 mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
 
-            }
-            else {
+            } else {
                 const stockBase = prod.stock ?? 0;
                 if (stockBase <= 0) {
                     mostrarMensaje(`❌ El producto "${prod.text}" no tiene existencias.`, "danger");
@@ -706,8 +830,7 @@
                             </button>
                         </td>
                     `;
-                }
-                else {
+                } else {
                     let unidadActual = (p.unidades || []).find(u =>
                         (u.IdUnidad ?? u.idUnidad) == p.idUnidadSeleccionada
                     );
@@ -727,8 +850,8 @@
                             p.factorConversion = parseFloat(primeraUnidadValida.FactorConversion || primeraUnidadValida.factorConversion || 1);
                             p.descuento = 0;
                         } else {
-                                    p.idUnidadSeleccionada = p.unidades?.[0]?.IdUnidad ?? p.unidades?.[0]?.idUnidad ?? null;
-                                    unidadActual = p.unidades?.[0] ?? null;
+                            p.idUnidadSeleccionada = p.unidades?.[0]?.IdUnidad ?? p.unidades?.[0]?.idUnidad ?? null;
+                            unidadActual = p.unidades?.[0] ?? null;
                             if (unidadActual) {
                                 p.precio = parseFloat(unidadActual.PrecioVenta || unidadActual.precioVenta || unidadActual.Precio || unidadActual.precio || 0);
                                 p.unidadNombre = unidadActual.Nombre || unidadActual.nombre || "Unidad";
@@ -738,11 +861,10 @@
                         }
                     }
 
-                            const factor = parseFloat(p.factorConversion) || 1;
-                            const stockBase = Number(p.stockBase ?? p.stock ?? 0);
-                            const disponiblesEnUnidad = Math.floor(stockBase / factor);
-                            const unidadesNecesarias = Math.ceil((p.cantidad || 0) * factor);
-                            const subtotal = (parseFloat(p.precio) || 0) * (p.cantidad || 0);
+                    const factor = parseFloat(p.factorConversion) || 1;
+                    const stockBase = Number(p.stockBase ?? p.stock ?? 0);
+                    const disponiblesEnUnidad = Math.floor(stockBase / factor);
+                    const subtotal = (parseFloat(p.precio) || 0) * (p.cantidad || 0);
 
                     let badgeStock = "";
                     if (stockBase <= 0) {
@@ -752,29 +874,29 @@
                     }
 
                     const opcionesUnidades = (p.unidades || []).map(u => {
-                            const id = u.IdUnidad ?? u.idUnidad ?? u.Id ?? u.id ?? "";
-                            const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
-                            const factorU = parseFloat(u.FactorConversion ?? u.factorConversion ?? u.EquivalenciaEnUnidades ?? 1) || 1;
-                            const disponibles = Math.floor(stockBase / factorU);
+                        const id = u.IdUnidad ?? u.idUnidad ?? u.Id ?? u.id ?? "";
+                        const nombre = u.Nombre ?? u.nombre ?? "Sin nombre";
+                        const factorU = parseFloat(u.FactorConversion ?? u.factorConversion ?? u.EquivalenciaEnUnidades ?? 1) || 1;
+                        const disponibles = Math.floor(stockBase / factorU);
 
-                            const precioUnidad = parseFloat(u.PrecioVenta ?? u.precioVenta ?? u.Precio ?? u.precio) || (parseFloat(p.precio) || 0);
+                        const precioUnidad = parseFloat(u.PrecioVenta ?? u.precioVenta ?? u.Precio ?? u.precio) || (parseFloat(p.precio) || 0);
 
-                            const disabled = (disponibles < 1) ? "disabled" : "";
-                            const selected = (String(id) === String(p.idUnidadSeleccionada)) ? "selected" : "";
-                            const alertaStock = (disponibles < 1) ? " (Sin stock)" : "";
+                        const disabled = (disponibles < 1) ? "disabled" : "";
+                        const selected = (String(id) === String(p.idUnidadSeleccionada)) ? "selected" : "";
+                        const alertaStock = (disponibles < 1) ? " (Sin stock)" : "";
 
-                            return `<option value="${id}" ${selected} ${disabled}>
-                                        ${nombre} - ${formatearMonedaGuatemala(precioUnidad)}${alertaStock}
-                                    </option>`;
-                        }).join("");
+                        return `<option value="${id}" ${selected} ${disabled}>
+                                    ${nombre} - ${formatearMonedaGuatemala(precioUnidad)}${alertaStock}
+                                </option>`;
+                    }).join("");
 
                     tr.innerHTML = `
                         <td class="text-start">
                             ${p.nombre} ${badgeStock}
                             <div class="small text-muted">${p.unidadNombre}</div>
-                            ${stockBase > 0 ?
-                                `<div class="small text-success">Disponible: ${disponiblesEnUnidad} ${p.unidadNombre}</div>` :
-                                `<div class="small text-danger">❌ Sin stock disponible</div>`}
+                            ${stockBase > 0
+                                ? `<div class="small text-success">Disponible: ${disponiblesEnUnidad} ${p.unidadNombre}</div>`
+                                : `<div class="small text-danger">❌ Sin stock disponible</div>`}
                         </td>
                         <td>${formatearMonedaGuatemala(p.precio)}</td>
                         <td>
@@ -801,9 +923,9 @@
                                         onclick="cambiarCantidadProducto(${i}, 1)"
                                         ${disponiblesEnUnidad < 1 ? 'disabled' : ''}>+</button>
                             </div>
-                            ${disponiblesEnUnidad < 1 ?
-                              '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>' :
-                              `<div class="text-success small mt-1">✅ Disponible: ${disponiblesEnUnidad}</div>`}
+                            ${disponiblesEnUnidad < 1
+                                ? '<div class="text-danger small mt-1">❌ Sin stock en esta presentación</div>'
+                                : `<div class="text-success small mt-1">✅ Disponible: ${disponiblesEnUnidad}</div>`}
                         </td>
                         <td>
                             <input type="text"
@@ -837,6 +959,8 @@
 
             if (!unidadSeleccionada) {
                 restaurarSelectUnidad(index, unidadAnterior);
+
+
                 return;
             }
 
@@ -866,14 +990,14 @@
             renderTabla();
         }
 
-         function restaurarSelectUnidad(index, valorAnterior) {
-             setTimeout(() => {
-                 const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
-                 if (select) {
-                     select.value = valorAnterior;
-                 }
-             }, 0);
-         }
+        function restaurarSelectUnidad(index, valorAnterior) {
+            setTimeout(() => {
+                const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
+                if (select) {
+                    select.value = valorAnterior;
+                }
+            }, 0);
+        }
 
         function cambiarCantidadProducto(index, delta) {
             const producto = productosSeleccionados[index];
@@ -943,7 +1067,7 @@
             if (totEl) totEl.value = formatearMonedaGuatemala(total);
         }
 
-            document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
+        document.getElementById("btnBuscarCliente").addEventListener("click", async function () {
             const nit = document.getElementById("nitCliente").value.trim();
             const nitLimpio = nit.replace(/[^0-9a-zA-Z]/g, "");
             if (!nit) {
@@ -953,8 +1077,6 @@
 
             const res = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
             const data = await res.json();
-
-            console.log("Respuesta BuscarClientePorNit:", data);
 
             if (data.encontrado) {
                 clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.cliente?.id ?? data?.cliente?.Id ?? data?.idCliente ?? data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
@@ -970,91 +1092,83 @@
                 document.getElementById("datosCliente").classList.remove("d-none");
                 document.getElementById("formNuevoCliente").classList.add("d-none");
                 mostrarMensaje("Cliente encontrado correctamente.", "success");
-
-                console.log("clienteSeleccionado asignado:", clienteSeleccionado);
             } else {
                 clienteSeleccionado = null;
                 document.getElementById("formNuevoCliente").classList.remove("d-none");
                 document.getElementById("datosCliente").classList.add("d-none");
                 mostrarMensaje("Cliente no encontrado. Complete los datos para registrarlo.", "info");
-                console.log("Cliente no encontrado. clienteSeleccionado=", clienteSeleccionado);
             }
         });
 
-            document.getElementById("nitCliente").addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    document.getElementById("btnBuscarCliente").click();
-                }
+        document.getElementById("nitCliente").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("btnBuscarCliente").click();
+            }
+        });
+
+        document.getElementById("nitCliente").addEventListener("input", function () {
+            const nit = this.value.trim();
+            if (!nit) {
+                document.getElementById("datosCliente").classList.add("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
+                clienteSeleccionado = null;
+            }
+        });
+
+        document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
+            const nuevo = {
+                nit: document.getElementById("nitCliente").value.trim(),
+                nombres: document.getElementById("nuevoNombre").value,
+                apellidos: document.getElementById("nuevoApellido").value,
+                correo: document.getElementById("nuevoCorreo").value,
+                direccion: document.getElementById("nuevoDireccion").value,
+                telefono: "N/A"
+            };
+
+            const res = await fetch("/Ventas/RegistrarClienteRapido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(nuevo)
             });
 
-            document.getElementById("nitCliente").addEventListener("input", function () {
-                const nit = this.value.trim();
-                if (!nit) {
-                    document.getElementById("datosCliente").classList.add("d-none");
-                    document.getElementById("formNuevoCliente").classList.add("d-none");
-                    clienteSeleccionado = null;
-                }
-            });
+            if (res.ok) {
+                const data = await res.json();
 
-            document.getElementById("btnGuardarCliente").addEventListener("click", async function () {
-                const nuevo = {
-                    nit: document.getElementById("nitCliente").value.trim(),
-                    nombres: document.getElementById("nuevoNombre").value,
-                    apellidos: document.getElementById("nuevoApellido").value,
-                    correo: document.getElementById("nuevoCorreo").value,
-                    direccion: document.getElementById("nuevoDireccion").value,
-                    telefono: "N/A"
-                };
+                clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ??
+                    data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
 
-                const res = await fetch("/Ventas/RegistrarClienteRapido", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(nuevo)
-                });
+                const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
+                const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
+                const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
+                const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
 
-                console.log("Respuesta RegistrarClienteRapido (raw):", res);
+                document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
+                document.getElementById("correoCliente").innerText = correo;
+                document.getElementById("direccionCliente").innerText = direccion;
+                document.getElementById("datosCliente").classList.remove("d-none");
+                document.getElementById("formNuevoCliente").classList.add("d-none");
 
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log("RegistrarClienteRapido -> data:", data);
+                mostrarMensaje("Cliente registrado correctamente.", "success");
+            } else {
+                const err = await res.text();
+                mostrarMensaje("Error al registrar cliente: " + err, "danger", 0);
+            }
+        });
 
-                    clienteSeleccionado = data?.cliente?.idCliente ?? data?.cliente?.IdCliente ?? data?.idCliente ??
-                                          data?.IdCliente ?? data?.id ?? data?.Id ?? data?.clienteId ?? null;
+        const metodoPago = document.getElementById("metodoPago");
+        const seccionesPago = document.querySelectorAll(".metodoPago");
+        const totalInput = document.querySelector("#total");
+        const totalCobro = document.querySelector("#totalCobro");
 
-                    const nombres = data?.cliente?.nombres ?? data?.nombres ?? data?.Nombres ?? "";
-                    const apellidos = data?.cliente?.apellidos ?? data?.apellidos ?? data?.Apellidos ?? "";
-                    const correo = data?.cliente?.correo ?? data?.correo ?? data?.Correo ?? "";
-                    const direccion = data?.cliente?.direccion ?? data?.direccion ?? data?.Direccion ?? "";
+        metodoPago.addEventListener("change", () => {
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            const id = `#pago${metodoPago.value.charAt(0).toUpperCase() + metodoPago.value.slice(1)}`;
+            const el = document.querySelector(id);
+            if (el) el.classList.remove("d-none");
+        });
 
-                    document.getElementById("nombreCliente").innerText = `${nombres} ${apellidos}`.trim();
-                    document.getElementById("correoCliente").innerText = correo;
-                    document.getElementById("direccionCliente").innerText = direccion;
-                    document.getElementById("datosCliente").classList.remove("d-none");
-                    document.getElementById("formNuevoCliente").classList.add("d-none");
-
-                    mostrarMensaje("Cliente registrado correctamente.", "success");
-                    console.log("clienteSeleccionado (post-registro):", clienteSeleccionado);
-                } else {
-                    const err = await res.text();
-                    mostrarMensaje("Error al registrar cliente: " + err, "danger", 0);
-                    console.error("Error RegistrarClienteRapido:", err);
-                }
-            });
-
-            const metodoPago = document.getElementById("metodoPago");
-            const seccionesPago = document.querySelectorAll(".metodoPago");
-            const totalInput = document.querySelector("#total");
-            const totalCobro = document.querySelector("#totalCobro");
-
-            metodoPago.addEventListener("change", () => {
-                seccionesPago.forEach(div => div.classList.add("d-none"));
-                const id = `#pago${metodoPago.value.charAt(0).toUpperCase() + metodoPago.value.slice(1)}`;
-                const el = document.querySelector(id);
-                if (el) el.classList.remove("d-none");
-            });
-
-            btnCobrar.addEventListener("click", async () => {
+        btnCobrar.addEventListener("click", async () => {
             if (!productosSeleccionados.length) {
                 mostrarMensaje("No hay productos en la venta. Agrega al menos uno antes de cobrar.", "warning");
                 const tabla = document.getElementById("tablaProductos");
@@ -1075,7 +1189,6 @@
                     const data = await resp.json();
                     return data || { encontrado: false };
                 } catch (err) {
-                    console.error("Error en buscarClientePorNitAuto:", err);
                     return { encontrado: false };
                 }
             }
@@ -1119,32 +1232,32 @@
                 }
             }
 
-                const total = parseFloat(totalInput.value.replace(/[Q,]/g, '') || 0);
-                      totalCobro.textContent = formatearMonedaGuatemala(total);
-                metodoPago.value = "efectivo";
-                seccionesPago.forEach(div => div.classList.add("d-none"));
-                const el = document.querySelector("#pagoEfectivo");
-                if (el) el.classList.remove("d-none");
+            const total = parseFloat(totalInput.value.replace(/[Q,]/g, '') || 0);
+            totalCobro.textContent = formatearMonedaGuatemala(total);
+            metodoPago.value = "efectivo";
+            seccionesPago.forEach(div => div.classList.add("d-none"));
+            const el = document.querySelector("#pagoEfectivo");
+            if (el) el.classList.remove("d-none");
 
-                setValueIfExists("#montoRecibido", "");
-                setValueIfExists("#cambio", "");
-                setValueIfExists("#montoTarjeta", "");
-                setValueIfExists("#montoTransferencia", "");
-                setValueIfExists("#montoMixtoEfectivo", "");
-                setValueIfExists("#montoMixtoTarjeta", "");
-                setValueIfExists("#montoMixtoTransferencia", "");
+            setValueIfExists("#montoRecibido", "");
+            setValueIfExists("#cambio", "");
+            setValueIfExists("#montoTarjeta", "");
+            setValueIfExists("#montoTransferencia", "");
+            setValueIfExists("#montoMixtoEfectivo", "");
+            setValueIfExists("#montoMixtoTarjeta", "");
+            setValueIfExists("#montoMixtoTransferencia", "");
 
-                new bootstrap.Modal(document.getElementById("modalCobro")).show();
-            });
+            new bootstrap.Modal(document.getElementById("modalCobro")).show();
+        });
 
-            document.querySelector("#montoRecibido")?.addEventListener("input", () => {
-                const total = parseFloat(document.querySelector("#total").value.replace(/[Q,]/g, '') || 0);
-                const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
-                const cambio = recibido - total;
+        document.querySelector("#montoRecibido")?.addEventListener("input", () => {
+            const total = parseFloat(document.querySelector("#total").value.replace(/[Q,]/g, '') || 0);
+            const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
+            const cambio = recibido - total;
             document.querySelector("#cambio").value = cambio >= 0 ? formatearMonedaGuatemala(cambio) : "—";
-            });
+        });
 
-        // FUNCIÓN PARA VALIDAR MONTO EN TIEMPO REAL
+        // Validación visual en tiempo real (respeta tu lógica)
         function validarMontoEnTiempoReal() {
             const total = limpiarFormatoMoneda(document.querySelector("#total").value);
             const metodo = document.getElementById("metodoPago").value || "efectivo";
@@ -1170,123 +1283,29 @@
                     break;
             }
 
-            // Cambiar estilo del botón según la validación
             if (btnConfirmar) {
                 if (montoIngresado >= total) {
-                    btnConfirmar.disabled = false;
                     btnConfirmar.classList.remove("btn-secondary");
                     btnConfirmar.classList.add("btn-success");
                 } else {
-                    btnConfirmar.disabled = false;
                     btnConfirmar.classList.remove("btn-success");
                     btnConfirmar.classList.add("btn-secondary");
                 }
             }
         }
 
-        // Agregar event listeners para validación en tiempo real
-        document.querySelector("#montoRecibido")?.addEventListener("input", () => {
-            const total = parseFloat(document.querySelector("#total").value.replace(/[Q,]/g, '') || 0);
-            const recibido = parseFloat(document.querySelector("#montoRecibido").value || 0);
-            const cambio = recibido - total;
-            document.querySelector("#cambio").value = cambio >= 0 ? formatearMonedaGuatemala(cambio) : "—";
-            validarMontoEnTiempoReal();
-        });
-
-        // Agregar listeners similares para los otros campos de monto
-        ["#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(selector => {
+        ["#montoRecibido", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(selector => {
             document.querySelector(selector)?.addEventListener("input", validarMontoEnTiempoReal);
         });
 
         document.getElementById("metodoPago")?.addEventListener("change", validarMontoEnTiempoReal);
 
-        function limpiarCamposDespuesVenta() {
-            clienteSeleccionado = null;
-            const nitInput = document.querySelector("#nitCliente");
-            if (nitInput) nitInput.value = "";
-
-            const nombreSpan = document.querySelector("#nombreCliente");
-            const correoSpan = document.querySelector("#correoCliente");
-            const direccionSpan = document.querySelector("#direccionCliente");
-            if (nombreSpan) nombreSpan.innerText = "";
-            if (correoSpan) correoSpan.innerText = "";
-            if (direccionSpan) direccionSpan.innerText = "";
-
-            const totalEl = document.querySelector("#total");
-            if (totalEl) totalEl.value = "Q0.00";
-
-            const busquedaInput = document.querySelector("#busqueda");
-            if (busquedaInput) busquedaInput.value = "";
-
-            document.querySelector("#alertaStock")?.remove();
-
-            const montoRecibido = document.querySelector("#montoRecibido");
-            const cambio = document.querySelector("#cambio");
-            const montoTarjeta = document.querySelector("#montoTarjeta");
-            const montoTransferencia = document.querySelector("#montoTransferencia");
-            const montoMixtoE = document.querySelector("#montoMixtoEfectivo");
-            const montoMixtoT = document.querySelector("#montoMixtoTarjeta");
-            const montoMixtoTr = document.querySelector("#montoMixtoTransferencia");
-
-            if (montoRecibido) montoRecibido.value = "";
-            if (cambio) cambio.value = "";
-            if (montoTarjeta) montoTarjeta.value = "";
-            if (montoTransferencia) montoTransferencia.value = "";
-            if (montoMixtoE) montoMixtoE.value = "";
-            if (montoMixtoT) montoMixtoT.value = "";
-            if (montoMixtoTr) montoMixtoTr.value = "";
-        }
-
-        btnCancelar.addEventListener("click", () => {
-             // Limpiar productos y toda la vista
-             productosSeleccionados = [];
-             renderTabla();
-
-             // Usar la función limpiarFormularioVenta con true para limpiar productos también
-             // (aunque ya los limpiamos arriba, esta función limpia el resto de campos)
-             limpiarFormularioVenta(false); // false porque ya limpiamos productos arriba
-
-             // Limpiar campo de búsqueda de productos
-             const busquedaInput = document.querySelector("#busqueda");
-             if (busquedaInput) busquedaInput.value = "";
-
-             // Remover cualquier sugerencia de búsqueda abierta
-             const cont = document.querySelector(".search-container");
-             if (cont) cont.querySelector(".suggestions-box")?.remove();
-
-             mostrarMensaje("Venta cancelada correctamente.", "info");
-         });
-
-        const opcionNit = document.getElementById("opcionNit");
-        const opcionCF = document.getElementById("opcionCF");
-        const seccionNit = document.getElementById("seccionNit");
-        const seccionCF = document.getElementById("seccionCF");
-
-        opcionNit?.addEventListener("change", () => {
-            if (opcionNit.checked) {
-                seccionNit.classList.remove("d-none");
-                seccionCF.classList.add("d-none");
-                document.getElementById("nitCliente").focus();
-            }
-        });
-
-        opcionCF?.addEventListener("change", () => {
-            if (opcionCF.checked) {
-                seccionCF.classList.remove("d-none");
-                seccionNit.classList.add("d-none");
-                clienteSeleccionado = null;
-                console.log("CF seleccionado. clienteSeleccionado set to null");
-            }
-        });
-
-        // FUNCIÓN MODIFICADA - NO LIMPIA PRODUCTOS POR DEFECTO
-               function limpiarFormularioVenta(limpiarProductos = false) {
+        function limpiarFormularioVenta(limpiarProductos = false) {
             if (limpiarProductos) {
                 productosSeleccionados = [];
                 renderTabla();
             }
 
-            // Limpiar solo los campos del cliente y del modal
             clienteSeleccionado = null;
 
             const nitInput = document.querySelector("#nitCliente");
@@ -1302,11 +1321,9 @@
             if (correoSpan) correoSpan.innerText = "";
             if (direccionSpan) direccionSpan.innerText = "";
 
-            // Limpiar campo de búsqueda de productos
             const busquedaInput = document.querySelector("#busqueda");
             if (busquedaInput) busquedaInput.value = "";
 
-            // Restablecer el modal
             document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
             document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
 
@@ -1326,6 +1343,8 @@
             if (btnConfirmar) {
                 btnConfirmar.disabled = false;
                 btnConfirmar.classList.remove("d-none");
+                btnConfirmar.classList.remove("btn-secondary");
+                btnConfirmar.classList.add("btn-success");
             }
 
             const btnDescargar = document.querySelector("#btnDescargarFactura");
@@ -1335,7 +1354,42 @@
             }
         }
 
-        // EVENTO ÚNICO PARA CONFIRMAR COBRO
+        btnCancelar.addEventListener("click", () => {
+            productosSeleccionados = [];
+            renderTabla();
+
+            limpiarFormularioVenta(false);
+
+            const busquedaInput = document.querySelector("#busqueda");
+            if (busquedaInput) busquedaInput.value = "";
+
+            const cont = document.querySelector(".search-container");
+            if (cont) cont.querySelector(".suggestions-box")?.remove();
+
+            mostrarMensaje("Venta cancelada correctamente.", "info");
+        });
+
+        const opcionNit = document.getElementById("opcionNit");
+        const opcionCF = document.getElementById("opcionCF");
+        const seccionNit = document.getElementById("seccionNit");
+        const seccionCF = document.getElementById("seccionCF");
+
+        opcionNit?.addEventListener("change", () => {
+            if (opcionNit.checked) {
+                seccionNit.classList.remove("d-none");
+                seccionCF.classList.add("d-none");
+                document.getElementById("nitCliente").focus();
+            }
+        });
+
+        opcionCF?.addEventListener("change", () => {
+            if (opcionCF.checked) {
+                seccionCF.classList.remove("d-none");
+                seccionNit.classList.add("d-none");
+                clienteSeleccionado = null;
+            }
+        });
+
         document.querySelector("#btnConfirmarCobro").addEventListener("click", async () => {
             try {
                 const total = limpiarFormatoMoneda(document.querySelector("#total").value);
@@ -1346,7 +1400,6 @@
                     return;
                 }
 
-                // VALIDACIÓN DE MONTO
                 let montoIngresado = 0;
                 let montoValido = false;
 
@@ -1356,19 +1409,16 @@
                         montoIngresado = montoRecibido;
                         montoValido = montoRecibido >= total;
                         break;
-
                     case "tarjeta":
                         const montoTarjeta = parseFloat(document.querySelector("#montoTarjeta").value || 0);
                         montoIngresado = montoTarjeta;
                         montoValido = montoTarjeta >= total;
                         break;
-
                     case "transferencia":
                         const montoTransferencia = parseFloat(document.querySelector("#montoTransferencia").value || 0);
                         montoIngresado = montoTransferencia;
                         montoValido = montoTransferencia >= total;
                         break;
-
                     case "mixto":
                         const montoEfectivo = parseFloat(document.querySelector("#montoMixtoEfectivo").value || 0);
                         const montoTarjetaMixto = parseFloat(document.querySelector("#montoMixtoTarjeta").value || 0);
@@ -1410,8 +1460,6 @@
                     Detalles: detalles
                 };
 
-                console.log("Venta enviada:", payload);
-
                 const res = await fetch("/Ventas/GuardarVenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1425,11 +1473,8 @@
 
                 mostrarMensaje(`✅ ${data.message || "Venta registrada correctamente."}`, "success");
 
-                // SOLO LIMPIAR LOS PRODUCTOS CUANDO LA VENTA SEA EXITOSA
                 productosSeleccionados = [];
                 renderTabla();
-
-                // Limpiar formulario sin productos (ya se limpiaron arriba)
                 limpiarFormularioVenta(false);
 
                 document.getElementById("datosCliente")?.classList.add("d-none");
@@ -1449,7 +1494,6 @@
 
                 if (btnDescargar) {
                     btnDescargar.classList.remove("d-none");
-
                     btnDescargar.onclick = () => {
                         if (idVenta) {
                             window.open(`/Ventas/DescargarFactura?idVenta=${idVenta}`, '_blank');
@@ -1457,7 +1501,6 @@
                             mostrarMensaje("No se pudo obtener el ID de la venta para descargar la factura.", "danger");
                         }
                     };
-
                     btnDescargar.focus();
                 }
 
@@ -1467,9 +1510,7 @@
             }
         });
 
-        // EVENTO PARA CUANDO SE CIERRA EL MODAL - NO LIMPIA PRODUCTOS
         document.getElementById('modalCobro')?.addEventListener('hide.bs.modal', function () {
-            // Solo limpiar los campos del modal, no los productos
             const metodoPago = document.querySelector("#metodoPago");
             if (metodoPago) {
                 metodoPago.value = "efectivo";
@@ -1482,7 +1523,6 @@
                 if (el) el.value = "";
             });
 
-            // Restablecer el contenido del modal a la vista activa
             document.querySelector("#contenidoVentaActiva")?.classList.remove("d-none");
             document.querySelector("#contenidoVentaFinalizada")?.classList.add("d-none");
 
@@ -1494,8 +1534,9 @@
                 btnConfirmar.classList.add("btn-success");
             }
         });
-
     </script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 }
+

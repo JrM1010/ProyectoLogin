@@ -92,59 +92,59 @@
                         <i class="bi bi-credit-card me-1"></i>Forma de pago
                     </label>
                     <select name="formaPago" class="form-select input-dark">
-    @{
-        var formaPago = Context.Request.Query["formaPago"].ToString();
-    }
+                    @{
+                        var formaPago = Context.Request.Query["formaPago"].ToString();
+                    }
 
-    @* Opción: Todas *@
-    @if (string.IsNullOrEmpty(formaPago))
-    {
-        <option value="" selected>Todas</option>
-    }
-    else
-    {
-        <option value="">Todas</option>
-    }
+                    @* Opción: Todas *@
+                    @if (string.IsNullOrEmpty(formaPago))
+                    {
+                        <option value="" selected>Todas</option>
+                    }
+                    else
+                    {
+                        <option value="">Todas</option>
+                    }
 
-    @* Efectivo *@
-    @if (formaPago == "Efectivo")
-    {
-        <option value="Efectivo" selected>Efectivo</option>
-    }
-    else
-    {
-        <option value="Efectivo">Efectivo</option>
-    }
+                    @* Efectivo *@
+                    @if (formaPago == "Efectivo")
+                    {
+                        <option value="Efectivo" selected>Efectivo</option>
+                    }
+                    else
+                    {
+                        <option value="Efectivo">Efectivo</option>
+                    }
 
-    @* Tarjeta *@
-    @if (formaPago == "Tarjeta")
-    {
-        <option value="Tarjeta" selected>Tarjeta</option>
-    }
-    else
-    {
-        <option value="Tarjeta">Tarjeta</option>
-    }
+                    @* Tarjeta *@
+                    @if (formaPago == "Tarjeta")
+                    {
+                        <option value="Tarjeta" selected>Tarjeta</option>
+                    }
+                    else
+                    {
+                        <option value="Tarjeta">Tarjeta</option>
+                    }
 
-    @* Transferencia *@
-    @if (formaPago == "Transferencia")
-    {
-        <option value="Transferencia" selected>Transferencia</option>
-    }
-    else
-    {
-        <option value="Transferencia">Transferencia</option>
-    }
+                    @* Transferencia *@
+                    @if (formaPago == "Transferencia")
+                    {
+                        <option value="Transferencia" selected>Transferencia</option>
+                    }
+                    else
+                    {
+                        <option value="Transferencia">Transferencia</option>
+                    }
 
-    @* Mixto *@
-    @if (formaPago == "Mixto")
-    {
-        <option value="Mixto" selected>Mixto</option>
-    }
-    else
-    {
-        <option value="Mixto">Mixto</option>
-    }
+                    @* Mixto *@
+                    @if (formaPago == "Mixto")
+                    {
+                        <option value="Mixto" selected>Mixto</option>
+                    }
+                    else
+                    {
+                        <option value="Mixto">Mixto</option>
+                    }
 </select>
                 </div>
 
@@ -542,6 +542,9 @@
             }
         })();
     </script>
+}
+
+@section styles {
 
     <style>
         :root {

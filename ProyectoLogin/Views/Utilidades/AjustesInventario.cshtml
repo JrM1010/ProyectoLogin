@@ -2,24 +2,30 @@
     ViewData["Title"] = "Ajuste de Inventario";
 }
 
-<div class="container-fluid py-4">
-    <!-- HEADER PRINCIPAL -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+<div class="container-fluid py-4 ajustes-page">
+    <!-- HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
-            <div class="bg-gradient-info rounded-circle p-3 me-3">
-                <i class="bi bi-box-arrow-in-down text-white fs-4"></i>
+            <div class="ajustes-icon-main me-3">
+                <i class="bi bi-sliders fs-3"></i>
             </div>
             <div>
-                <h1 class="h3 mb-1 text-gray-800">Ajuste Manual de Inventario</h1>
-                <p class="text-muted mb-0">Gestiona el stock de tus productos mediante ajustes manuales</p>
+                <h1 class="h3 mb-1 fw-bold text-white">Ajuste Manual de Inventario</h1>
+                <p class="mb-0 text-muted-small">
+                    Busca un producto, aplica ajustes de entrada o salida y revisa el historial reciente.
+                </p>
             </div>
         </div>
-        <button type="button" class="btn btn-outline-secondary rounded-pill d-flex align-items-center" id="btnLimpiarTodo">
-            <i class="bi bi-arrow-clockwise me-2"></i>Limpiar Todo
+
+        <button type="button"
+                class="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 shadow-sm"
+                id="btnLimpiarTodo">
+            <i class="bi bi-arrow-clockwise"></i>
+            Limpiar Todo
         </button>
     </div>
 
-    <!-- TOAST PARA NOTIFICACIONES -->
+    <!-- TOAST NOTIFICACIONES -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
         <div id="toastNotificacion" class="toast align-items-center text-white border-0" role="alert">
             <div class="d-flex">
@@ -32,184 +38,207 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <!-- TARJETA PRINCIPAL -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-gradient-info text-white py-3 border-0">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-sliders fs-5 me-3"></i>
-                        <h5 class="mb-0 fw-semibold">Ajuste de Stock</h5>
+    <!-- CARD PRINCIPAL -->
+    <div class="card ajustes-main-card shadow-sm border-0">
+        <!-- ENCABEZADO CARD -->
+        <div class="card-header ajustes-main-header border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="ajustes-icon-soft">
+                    <i class="bi bi-funnel"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-semibold text-white">Gestión de Ajustes</h5>
+                    <small class="text-muted-small">
+                        Localiza el producto, define el tipo de ajuste, la cantidad y el motivo.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body px-4 pb-4 pt-3">
+            <!-- BUSCADOR DE PRODUCTO -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="form-group position-relative">
+                        <label for="buscarProducto" class="form-label fw-semibold text-label">
+                            <i class="bi bi-search me-1"></i> Buscar producto
+                        </label>
+                        <div class="input-group input-group-dark">
+                            <span class="input-group-text">
+                                <i class="bi bi-upc-scan"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control input-dark"
+                                   id="buscarProducto"
+                                   placeholder="Código de barras, nombre o referencia..."
+                                   autocomplete="off" />
+                            <button class="btn btn-primary-custom" type="button" id="btnBuscar">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                        <div class="form-text text-muted-small">
+                            Escribe al menos 2 caracteres para ver sugerencias de productos.
+                        </div>
+
+                        <!-- LISTA SUGERENCIAS -->
+                        <ul id="sugerenciasProductos"
+                            class="list-group sugerencias-dropdown shadow-sm"
+                            style="display:none;">
+                        </ul>
                     </div>
                 </div>
-                <div class="card-body p-4">
-                    <!-- BÚSQUEDA DE PRODUCTO -->
-                    <div class="row mb-4">
-                        <div class="col-lg-8">
-                            <div class="form-group position-relative">
-                                <label for="buscarProducto" class="form-label fw-semibold text-gray-700">
-                                    <i class="bi bi-search text-info me-1"></i>Buscar Producto
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="bi bi-upc-scan text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control border-start-0" id="buscarProducto"
-                                           placeholder="Ingrese código de barras o nombre del producto..."
-                                           autocomplete="off">
-                                    <button class="btn btn-info text-white" type="button" id="btnBuscar">
-                                        <i class="bi bi-search me-1"></i> Buscar
-                                    </button>
-                                </div>
-                                <div class="form-text text-muted">
-                                    Puedes buscar por código de barras, nombre del producto o referencia
-                                </div>
+            </div>
 
-                                <!-- LISTA DE SUGERENCIAS -->
-                                <ul id="sugerenciasProductos" class="list-group position-absolute w-100 shadow-sm"
-                                    style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto;
-                                           border-radius: 0.5rem; top: 100%; left: 0;"></ul>
-                            </div>
+            <!-- INFO PRODUCTO -->
+            <div id="productoInfo" class="card producto-card border-0 mb-4" style="display:none;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-info-circle text-accent"></i>
+                            <h6 class="mb-0 fw-semibold text-white">Información del producto</h6>
                         </div>
+                        <span class="badge bg-success rounded-pill" id="infoEstado">Disponible</span>
                     </div>
-
-                    <!-- INFORMACIÓN DEL PRODUCTO -->
-                    <div id="productoInfo" class="card border-0 bg-light mb-4" style="display:none;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 fw-semibold text-gray-800">
-                                    <i class="bi bi-info-circle text-info me-2"></i>Información del Producto
-                                </h6>
-                                <span class="badge bg-info rounded-pill" id="infoEstado">Disponible</span>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted">Nombre</label>
-                                    <div class="fw-medium text-gray-800" id="infoNombre">-</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small fw-semibold text-muted">Código</label>
-                                    <div class="fw-medium text-gray-800" id="infoCodigo">-</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small fw-semibold text-muted">Categoría</label>
-                                    <div class="fw-medium text-gray-800" id="infoCategoria">-</div>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small fw-semibold text-muted">Marca</label>
-                                    <div class="fw-medium text-gray-800" id="infoMarca">-</div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-semibold text-muted">Stock Actual</label>
-                                    <div class="fw-bold fs-5 text-info" id="infoStock">0</div>
-                                </div>
-                            </div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small text-label">Nombre</label>
+                            <div class="fw-semibold text-white" id="infoNombre">-</div>
                         </div>
-                    </div>
-
-                    <!-- FORMULARIO DE AJUSTE -->
-                    <div id="formAjuste" style="display:none;">
-                        <form id="formAjusteStock" novalidate>
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" id="idProducto" name="IdProducto" />
-
-                            <div class="card border-0 bg-light">
-                                <div class="card-body">
-                                    <h6 class="mb-3 fw-semibold text-gray-800">
-                                        <i class="bi bi-pencil-square text-info me-2"></i>Detalles del Ajuste
-                                    </h6>
-
-                                    <div class="row g-3">
-                                        <!-- TIPO DE AJUSTE -->
-                                        <div class="col-md-3">
-                                            <label for="tipoAjuste" class="form-label fw-semibold text-gray-700">
-                                                <i class="bi bi-arrow-left-right text-info me-1"></i>Tipo de Ajuste *
-                                            </label>
-                                            <select class="form-select" id="tipoAjuste" name="TipoAjuste" required>
-                                                <option value="">Seleccionar...</option>
-                                                <option value="entrada">Entrada (+)</option>
-                                                <option value="salida">Salida (-)</option>
-                                            </select>
-                                            <div class="invalid-feedback">Selecciona el tipo de ajuste</div>
-                                        </div>
-
-                                        <!-- CANTIDAD -->
-                                        <div class="col-md-3">
-                                            <label for="cantidad" class="form-label fw-semibold text-gray-700">
-                                                <i class="bi bi-hash text-info me-1"></i>Cantidad *
-                                            </label>
-                                            <div class="input-group">
-                                                <button type="button" class="btn btn-outline-info" id="btnMenos">
-                                                    <i class="bi bi-dash"></i>
-                                                </button>
-                                                <input type="number" class="form-control text-center" id="cantidad"
-                                                       name="Cantidad" min="1" value="1" required>
-                                                <button type="button" class="btn btn-outline-info" id="btnMas">
-                                                    <i class="bi bi-plus"></i>
-                                                </button>
-                                            </div>
-                                            <div class="invalid-feedback">La cantidad debe ser mayor a 0</div>
-                                        </div>
-
-                                        <!-- MOTIVO -->
-                                        <div class="col-md-6">
-                                            <label for="motivo" class="form-label fw-semibold text-gray-700">
-                                                <i class="bi bi-chat-text text-info me-1"></i>Motivo del Ajuste *
-                                            </label>
-                                            <input type="text" class="form-control" id="motivo"
-                                                   name="Motivo" placeholder="Ej: Ajuste por conteo físico, Devolución, etc." required>
-                                            <div class="invalid-feedback">Ingresa el motivo del ajuste</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- BOTONES DE ACCIÓN -->
-                                    <div class="row mt-4">
-                                        <div class="col-12">
-                                            <div class="d-flex gap-2">
-                                                <button type="submit" class="btn btn-success rounded-pill d-flex align-items-center">
-                                                    <i class="bi bi-check-circle me-2"></i>Aplicar Ajuste
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary rounded-pill d-flex align-items-center" id="btnLimpiar">
-                                                    <i class="bi bi-broom me-2"></i>Limpiar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- HISTORIAL DE AJUSTES -->
-                    <div id="historialAjustes" class="mt-4" style="display:none;">
-                        <div class="card border-0">
-                            <div class="card-header bg-light border-0">
-                                <h6 class="mb-0 fw-semibold text-gray-800">
-                                    <i class="bi bi-clock-history text-info me-2"></i>Últimos Ajustes
-                                </h6>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="ps-4 fw-semibold text-gray-700">Fecha</th>
-                                                <th class="fw-semibold text-gray-700">Cantidad</th>
-                                                <th class="fw-semibold text-gray-700">Tipo</th>
-                                                <th class="fw-semibold text-gray-700">Referencia</th>
-                                                <th class="fw-semibold text-gray-700">Observación</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tbodyHistorial"></tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-label">Código</label>
+                            <div class="fw-semibold text-muted-small" id="infoCodigo">-</div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-label">Categoría</label>
+                            <div class="fw-semibold text-muted-small" id="infoCategoria">-</div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-label">Marca</label>
+                            <div class="fw-semibold text-muted-small" id="infoMarca">-</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-label">Stock actual</label>
+                            <div class="fw-bold fs-5 text-accent" id="infoStock">0</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <!-- FORMULARIO DE AJUSTE -->
+            <div id="formAjuste" style="display:none;">
+                <form id="formAjusteStock" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="idProducto" name="IdProducto" />
+
+                    <div class="card ajuste-card border-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-pencil-square text-accent"></i>
+                                <h6 class="mb-0 fw-semibold text-white">Detalles del ajuste</h6>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- TIPO -->
+                                <div class="col-md-3">
+                                    <label for="tipoAjuste" class="form-label fw-semibold text-label">
+                                        <i class="bi bi-arrow-left-right me-1"></i>Tipo de ajuste *
+                                    </label>
+                                    <select class="form-select input-dark" id="tipoAjuste" name="TipoAjuste" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="entrada">Entrada (+)</option>
+                                        <option value="salida">Salida (-)</option>
+                                    </select>
+                                    <div class="invalid-feedback">Selecciona el tipo de ajuste.</div>
+                                </div>
+
+                                <!-- CANTIDAD -->
+                                <div class="col-md-3">
+                                    <label for="cantidad" class="form-label fw-semibold text-label">
+                                        <i class="bi bi-hash me-1"></i>Cantidad *
+                                    </label>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-soft" id="btnMenos">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number"
+                                               class="form-control text-center input-dark"
+                                               id="cantidad"
+                                               name="Cantidad"
+                                               min="1"
+                                               value="1"
+                                               required />
+                                        <button type="button" class="btn btn-outline-soft" id="btnMas">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">La cantidad debe ser mayor a 0.</div>
+                                </div>
+
+                                <!-- MOTIVO -->
+                                <div class="col-md-6">
+                                    <label for="motivo" class="form-label fw-semibold text-label">
+                                        <i class="bi bi-chat-text me-1"></i>Motivo del ajuste *
+                                    </label>
+                                    <input type="text"
+                                           class="form-control input-dark"
+                                           id="motivo"
+                                           name="Motivo"
+                                           placeholder="Ej: Ajuste por conteo físico, devolución, merma, etc."
+                                           required />
+                                    <div class="invalid-feedback">Ingresa el motivo del ajuste.</div>
+                                </div>
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="row mt-4">
+                                <div class="col-12 d-flex flex-wrap gap-2">
+                                    <button type="submit"
+                                            class="btn btn-success-custom rounded-pill d-flex align-items-center gap-2">
+                                        <i class="bi bi-check-circle"></i>
+                                        Aplicar Ajuste
+                                    </button>
+
+                                    <button type="button"
+                                            class="btn btn-outline-soft rounded-pill d-flex align-items-center gap-2"
+                                            id="btnLimpiar">
+                                        <i class="bi bi-broom"></i>
+                                        Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- HISTORIAL AJUSTES -->
+            <div id="historialAjustes" class="mt-4" style="display:none;">
+                <div class="card historial-card border-0">
+                    <div class="card-header bg-transparent border-0 d-flex align-items-center gap-2 pb-2">
+                        <i class="bi bi-clock-history text-accent"></i>
+                        <h6 class="mb-0 fw-semibold text-white">Últimos ajustes del producto</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover align-middle mb-0 ajustes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th>Tipo</th>
+                                        <th class="text-start">Referencia</th>
+                                        <th class="text-start">Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyHistorial"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- /card-body -->
+    </div> <!-- /card -->
 </div>
 
 @section Scripts {
@@ -220,7 +249,7 @@
             let sugerenciaSeleccionada = -1;
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // 🔹 Sistema de notificaciones Toast
+            // 🔹 Toast
             function mostrarToast(mensaje, tipo = 'success') {
                 const toast = document.getElementById('toastNotificacion');
                 const toastMessage = document.getElementById('toast-message');
@@ -243,7 +272,7 @@
                 bsToast.show();
             }
 
-            // 🔹 Buscador Predictivo
+            // 🔹 Debounce para sugerencias
             function debounce(fn, ms) {
                 let timeout;
                 return (...args) => {
@@ -253,8 +282,10 @@
             }
 
             async function buscarSugerencias(termino) {
+                const lista = document.getElementById('sugerenciasProductos');
+
                 if (termino.length < 2) {
-                    document.getElementById('sugerenciasProductos').style.display = 'none';
+                    lista.style.display = 'none';
                     return;
                 }
 
@@ -262,20 +293,19 @@
                     const response = await fetch(`/Utilidades/SugerirProductos?term=${encodeURIComponent(termino)}`);
                     const data = await response.json();
 
-                    const lista = document.getElementById('sugerenciasProductos');
                     lista.innerHTML = '';
 
                     if (data.success && data.productos && data.productos.length > 0) {
                         data.productos.forEach(producto => {
                             const li = document.createElement('li');
-                            li.className = 'list-group-item list-group-item-action';
+                            li.className = 'list-group-item list-group-item-action sugerencia-item';
                             li.innerHTML = `
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="fw-semibold">${producto.nombre}</div>
-                                        <small class="text-muted">${producto.codigo}</small>
+                                        <div class="fw-semibold text-white">${producto.nombre}</div>
+                                        <small class="text-muted-small">${producto.codigo}</small>
                                     </div>
-                                    <span class="badge bg-info rounded-pill">${producto.stock} en stock</span>
+                                    <span class="badge bg-accent-soft">${producto.stock} en stock</span>
                                 </div>
                             `;
                             li.addEventListener('click', () => {
@@ -292,12 +322,12 @@
                     }
                 } catch (error) {
                     console.error('Error buscando sugerencias:', error);
-                    document.getElementById('sugerenciasProductos').style.display = 'none';
+                    lista.style.display = 'none';
                 }
             }
 
-            // 🔹 Navegación con teclado
-            document.getElementById('buscarProducto').addEventListener('keydown', function(e) {
+            // 🔹 Navegación con teclado en sugerencias
+            document.getElementById('buscarProducto').addEventListener('keydown', function (e) {
                 const sugerencias = document.querySelectorAll('#sugerenciasProductos li');
                 if (!sugerencias.length) return;
 
@@ -324,7 +354,7 @@
                 });
             });
 
-            // 🔹 Buscar producto
+            // 🔹 Buscar producto manual
             async function buscarProducto() {
                 const term = document.getElementById('buscarProducto').value.trim();
                 if (!term) {
@@ -349,6 +379,7 @@
                 }
             }
 
+            // 🔹 Buscar producto por ID (desde sugerencias)
             async function buscarProductoPorId(idProducto) {
                 try {
                     const response = await fetch(`/Utilidades/BuscarProducto?term=${idProducto}`);
@@ -359,7 +390,7 @@
                         productoActual = data.producto;
                     } else {
                         mostrarToast(data.message || 'Producto no encontrado', 'warning');
-                    ocultarProducto();
+                        ocultarProducto();
                     }
                 } catch (error) {
                     console.error('Error buscando producto por ID:', error);
@@ -367,6 +398,7 @@
                 }
             }
 
+            // 🔹 Mostrar / ocultar producto
             function mostrarProducto(producto) {
                 document.getElementById('infoNombre').textContent = producto.nombre;
                 document.getElementById('infoCodigo').textContent = producto.codigoBarras || '-';
@@ -388,7 +420,7 @@
                 productoActual = null;
             }
 
-            // 🔹 Controles de cantidad
+            // 🔹 Controles cantidad
             document.getElementById('btnMas').addEventListener('click', () => {
                 const input = document.getElementById('cantidad');
                 let val = parseInt(input.value) || 0;
@@ -405,7 +437,7 @@
                 }
             });
 
-            document.getElementById('cantidad').addEventListener('input', function() {
+            document.getElementById('cantidad').addEventListener('input', function () {
                 let val = parseInt(this.value) || 0;
                 if (val < 1) {
                     this.value = 1;
@@ -414,7 +446,7 @@
             });
 
             // 🔹 Aplicar ajuste
-            document.getElementById('formAjusteStock').addEventListener('submit', async function(e) {
+            document.getElementById('formAjusteStock').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
                 if (!productoActual) {
@@ -422,7 +454,6 @@
                     return;
                 }
 
-                // Validar formulario
                 const form = this;
                 if (!form.checkValidity()) {
                     form.classList.add('was-validated');
@@ -434,7 +465,6 @@
                 const tipoAjuste = document.getElementById('tipoAjuste').value;
                 const motivo = document.getElementById('motivo').value.trim();
 
-                // Validaciones adicionales
                 if (tipoAjuste === 'salida' && cantidad > productoActual.stockActual) {
                     mostrarToast(`No puede retirar ${cantidad} unidades. Stock disponible: ${productoActual.stockActual}`, 'danger');
                     return;
@@ -447,7 +477,7 @@
                     Motivo: motivo
                 };
 
-                const btnSubmit = this.querySelector('button[type="submit"]');
+                const btnSubmit = form.querySelector('button[type="submit"]');
                 const originalText = btnSubmit.innerHTML;
 
                 try {
@@ -470,7 +500,7 @@
                         productoActual.stockActual = data.nuevoStock;
                         document.getElementById('infoStock').textContent = data.nuevoStock;
                         limpiarFormulario();
-                        cargarHistorial(formData.IdProducto);
+                        buscarProductoPorId(formData.IdProducto); // recarga info + historial
                     } else {
                         mostrarToast(data.message, 'danger');
                     }
@@ -494,14 +524,16 @@
 
                     if (data.success && data.movimientos && data.movimientos.length > 0) {
                         data.movimientos.forEach(mov => {
-                            const tipoClass = mov.tipo === 'Entrada' ? 'bg-success' : 'bg-danger';
+                            const tipoClass = mov.tipo === 'Entrada' ? 'text-success' : 'text-danger';
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td class="ps-4">${mov.fecha}</td>
-                                <td><span class="badge ${tipoClass} rounded-pill">${mov.cantidad}</span></td>
-                                <td>${mov.tipo}</td>
-                                <td>${mov.referencia}</td>
-                                <td>${mov.observacion}</td>
+                                <td>${mov.fecha}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-dark-soft ${tipoClass} fw-semibold">${mov.cantidad}</span>
+                                </td>
+                                <td class="${tipoClass} fw-semibold">${mov.tipo}</td>
+                                <td class="text-start text-muted-small">${mov.referencia || '-'}</td>
+                                <td class="text-start text-muted-small">${mov.observacion || '-'}</td>
                             `;
                             tbody.appendChild(row);
                         });
@@ -530,47 +562,34 @@
                 ocultarProducto();
             }
 
-            // 🔹 Inicialización
+            // 🔹 Inicializar eventos
             function inicializar() {
-                // Eventos de búsqueda
                 const searchInput = document.getElementById('buscarProducto');
                 const debouncedBuscar = debounce(buscarSugerencias, 300);
 
-                searchInput.addEventListener('input', (e) => debouncedBuscar(e.target.value));
+                searchInput.addEventListener('input', e => debouncedBuscar(e.target.value));
                 document.getElementById('btnBuscar').addEventListener('click', buscarProducto);
 
-                searchInput.addEventListener('keypress', function(e) {
+                searchInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
+                        e.preventDefault();
                         buscarProducto();
                     }
                 });
 
-                // Ocultar sugerencias al hacer clic fuera
-                document.addEventListener('click', function(e) {
-                    if (!document.getElementById('sugerenciasProductos').contains(e.target) &&
+                document.addEventListener('click', function (e) {
+                    const lista = document.getElementById('sugerenciasProductos');
+                    if (lista.style.display === 'block' &&
+                        !lista.contains(e.target) &&
                         e.target !== searchInput) {
-                        document.getElementById('sugerenciasProductos').style.display = 'none';
+                        lista.style.display = 'none';
                     }
                 });
 
-                // Botones de limpieza
                 document.getElementById('btnLimpiar').addEventListener('click', limpiarFormulario);
                 document.getElementById('btnLimpiarTodo').addEventListener('click', limpiarFormulario);
-
-                // Validación en tiempo real
-                document.querySelectorAll('#formAjusteStock input, #formAjusteStock select').forEach(element => {
-                    element.addEventListener('input', function() {
-                        if (this.checkValidity()) {
-                            this.classList.remove('is-invalid');
-                            this.classList.add('is-valid');
-                        } else {
-                            this.classList.remove('is-valid');
-                        }
-                    });
-                });
             }
 
-            // Ejecutar cuando el DOM esté listo
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', inicializar);
             } else {
@@ -578,89 +597,214 @@
             }
         })();
     </script>
+}
 
+@section Styles {
     <style>
-        .table td, .table th {
-            vertical-align: middle;
+        :root {
+            --primary-blue: #3036A6;
+            --secondary-blue: #5F6AF5;
+            --accent-blue: #8F9CFF;
+            --dark-bg: #161B3A;
+            --alt-bg: #1F2650;
+            --light-text: #F7F8FF;
+            --muted-text: #C3C7F5;
+            --border-soft: rgba(143, 156, 255, 0.32);
+            --card-bg: #1E2546;
+            --card-bg-soft: #242C54;
         }
 
-        .btn-sm {
-            padding: 0.375rem 0.5rem;
+        .ajustes-page {
+            color: var(--light-text);
+        }
+
+        .text-muted-small {
+            color: var(--muted-text) !important;
+            font-size: 0.85rem;
+        }
+
+        .text-label {
+            color: var(--muted-text);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .text-accent {
+            color: var(--accent-blue) !important;
+        }
+
+        .ajustes-icon-main {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 20% 0, var(--secondary-blue), transparent), rgba(22, 27, 74, 0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+        }
+
+        .ajustes-icon-soft {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: rgba(95, 106, 245, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+        }
+
+        .ajustes-main-card {
+            background: linear-gradient(145deg, #181E40, #1E2546);
+            border-radius: 1.1rem;
+            border: 1px solid var(--border-soft);
+        }
+
+        .ajustes-main-header {
+            padding: 1rem 1.5rem 0.4rem 1.5rem;
+            background: transparent;
+        }
+
+        .producto-card,
+        .ajuste-card,
+        .historial-card {
+            background-color: var(--card-bg);
+            border-radius: 0.9rem;
+            border: 1px solid rgba(143, 156, 255, 0.24);
+        }
+
+        .input-group-dark .input-group-text {
+            background-color: #181E40;
+            border-color: rgba(143, 156, 255, 0.35);
+            color: var(--muted-text);
+        }
+
+        .input-dark,
+        .input-dark:focus,
+        .input-dark:active {
+            background-color: #181E40;
+            border: 1px solid rgba(143, 156, 255, 0.35);
+            color: var(--light-text);
+            box-shadow: none;
+        }
+
+            .input-dark::placeholder {
+                color: rgba(195, 199, 245, 0.7);
+            }
+
+        .btn-primary-custom {
+            background: var(--secondary-blue);
+            border-color: var(--secondary-blue);
+            color: #fff;
+            font-weight: 500;
+            border-radius: 999px;
+        }
+
+            .btn-primary-custom:hover {
+                background: #454FEA;
+                border-color: #454FEA;
+            }
+
+        .btn-success-custom {
+            background: #23d19c;
+            border-color: #23d19c;
+            color: #fff;
+            font-weight: 500;
+        }
+
+            .btn-success-custom:hover {
+                background: #1aae7f;
+                border-color: #1aae7f;
+            }
+
+        .btn-outline-soft {
+            border-color: rgba(143, 156, 255, 0.55);
+            color: var(--muted-text);
+            background: transparent;
+        }
+
+            .btn-outline-soft:hover {
+                background: rgba(95, 106, 245, 0.16);
+                color: var(--light-text);
+            }
+
+        .badge.bg-accent-soft {
+            background: rgba(95, 106, 245, 0.18);
+            color: var(--accent-blue);
+            font-size: 0.7rem;
+        }
+
+        .sugerencias-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 260px;
+            overflow-y: auto;
+            border-radius: 0.65rem;
+            background-color: #181E40;
+            border: 1px solid rgba(143, 156, 255, 0.35);
+            z-index: 1050;
+        }
+
+        .sugerencia-item {
+            background-color: transparent;
+            border: none;
+            padding: 0.55rem 0.8rem;
+            color: var(--light-text);
+        }
+
+            .sugerencia-item:hover,
+            .sugerencia-item.active {
+                background: radial-gradient(circle at 0 0, rgba(95, 106, 245, 0.18), transparent);
+            }
+
+        .ajustes-table thead tr {
+            background-color: #202856;
+        }
+
+        .ajustes-table thead th {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-text);
+            border-bottom-color: rgba(143, 156, 255, 0.35);
+        }
+
+        .ajustes-table tbody tr {
             transition: all 0.15s ease-in-out;
         }
 
-            .btn-sm:hover {
+            .ajustes-table tbody tr:hover {
+                background: radial-gradient(circle at 0 0, rgba(95, 106, 245, 0.18), transparent);
                 transform: translateY(-1px);
             }
 
-        .card-header {
-            border-bottom: none;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-        }
-
-        .bg-gradient-info {
-            background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
-        }
-
-        .form-control:focus {
-            border-color: #36b9cc;
-            box-shadow: 0 0 0 0.2rem rgba(54, 185, 204, 0.25);
-        }
-
-        /* Estilos del buscador predictivo */
-        #sugerenciasProductos {
-            border: 1px solid #dee2e6;
-            border-radius: 0.5rem;
-        }
-
-            #sugerenciasProductos li {
-                cursor: pointer;
-                border-radius: 0;
-                border-left: none;
-                border-right: none;
-                border-bottom: 1px solid #dee2e6;
-                transition: all 0.15s ease-in-out;
-            }
-
-                #sugerenciasProductos li:first-child {
-                    border-top: none;
-                    border-top-left-radius: 0.5rem;
-                    border-top-right-radius: 0.5rem;
-                }
-
-                #sugerenciasProductos li:last-child {
-                    border-bottom: none;
-                    border-bottom-left-radius: 0.5rem;
-                    border-bottom-right-radius: 0.5rem;
-                }
-
-                #sugerenciasProductos li:hover,
-                #sugerenciasProductos li.active {
-                    background-color: #d1ecf1;
-                    border-color: #bee5eb;
-                }
-
-        /* Animaciones personalizadas */
-        @@keyframes slideInDown {
-            from
-
-        {
-            transform: translate3d(0, -100%, 0);
-            opacity: 0;
-        }
-
-        to {
-            transform: translate3d(0, 0, 0);
-            opacity: 1;
-        }
-
+        .badge.bg-dark-soft {
+            background-color: #1E2546;
+            border-radius: 999px;
         }
 
         .toast {
             animation: slideInDown 0.3s ease-out;
         }
+
+        @@keyframes slideInDown {
+            from {
+                transform: translate3d(0, -100%, 0);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate3d(0, 0, 0);
+                opacity: 1;
+            }
+        }
     </style>
+
+
 }

@@ -11,54 +11,451 @@
     var elementosPorPagina = ViewBag.ElementosPorPagina ?? 10;
 }
 
-<div class="container-fluid py-4">
-    <!-- Encabezado principal -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">
-            <i class="bi bi-basket2"></i> Compras - <span class="text-dark">@estadoActual</span>
-        </h2>
-        <a href="@Url.Action("Create")" class="btn btn-success shadow-sm rounded-pill px-4">
-            <i class="bi bi-plus-circle"></i> Nueva Compra
+@section Styles {
+    <style>
+        :root {
+            --compras-primary: #3036A6;
+            --compras-primary-soft: #3C4AA5;
+            --compras-secondary: #5F6AF5;
+            --compras-accent: #8F9CFF;
+            --compras-bg-dark: #161B3A;
+            --compras-bg-elevated: #1F2650;
+            --compras-bg-soft: #242C54;
+            --compras-border-soft: rgba(143, 156, 255, 0.22);
+            --compras-text-main: #F7F8FF;
+            --compras-text-muted: #C3C7F5;
+            --compras-success: #23d19c;
+            --compras-warning: #f6c23e;
+            --compras-danger: #ff6b6b;
+            --compras-radius: 0.85rem;
+            --compras-shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.45);
+            --compras-transition: all 0.22s ease;
+        }
+
+        .compras-page {
+            min-height: 100vh;
+            padding: 1.5rem 0 1rem;
+            color: var(--compras-text-main);
+        }
+
+        /* HEADER */
+        .compras-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .compras-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .compras-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 30% 0, var(--compras-accent), transparent), linear-gradient(135deg, var(--compras-primary), var(--compras-bg-soft));
+            box-shadow: var(--compras-shadow-soft);
+        }
+
+        .compras-title {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: var(--compras-text-main);
+        }
+
+        .compras-subtitle {
+            font-size: 0.85rem;
+            color: var(--compras-text-muted);
+            margin: 0;
+        }
+
+        .compras-pill-estado {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.15rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            background-color: rgba(95, 106, 245, 0.16);
+            color: var(--compras-accent);
+        }
+
+        .btn-compras-new {
+            border-radius: 999px;
+            padding: 0.55rem 1.4rem;
+            font-weight: 600;
+            border: none;
+            background: linear-gradient(135deg, var(--compras-secondary), var(--compras-accent));
+            color: #0b0f26;
+            box-shadow: var(--compras-shadow-soft);
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: var(--compras-transition);
+            text-decoration: none;
+        }
+
+            .btn-compras-new:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+                color: #0b0f26;
+            }
+
+        /* CARD BASE */
+        .compras-card {
+            background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.12), transparent), radial-gradient(circle at bottom right, rgba(36, 44, 84, 0.9), #0D0E26);
+            border-radius: var(--compras-radius);
+            border: 1px solid var(--compras-border-soft);
+            box-shadow: var(--compras-shadow-soft);
+        }
+
+        .compras-card-body {
+            padding: 1.25rem 1.25rem 1rem;
+        }
+
+        /* FILTROS */
+        .compras-estado-group .btn {
+            border-radius: 999px;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.9rem;
+            border: 1px solid transparent;
+            color: var(--compras-text-muted);
+            background-color: transparent;
+            transition: var(--compras-transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+            .compras-estado-group .btn.compras-estado-outline {
+                border-color: rgba(143, 156, 255, 0.3);
+            }
+
+            .compras-estado-group .btn.active,
+            .compras-estado-group .btn:hover {
+                background: linear-gradient(135deg, var(--compras-primary-soft), var(--compras-secondary));
+                color: var(--compras-text-main);
+                border-color: transparent;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+            }
+
+        .compras-search .form-control {
+            background-color: rgba(15, 18, 48, 0.98);
+            border-radius: 999px 0 0 999px;
+            border: 1px solid rgba(143, 156, 255, 0.32);
+            color: var(--compras-text-main);
+            font-size: 0.84rem;
+        }
+
+            .compras-search .form-control::placeholder {
+                color: var(--compras-text-muted);
+            }
+
+        .compras-search .btn-search {
+            border-radius: 0 999px 999px 0;
+            border: 1px solid rgba(143, 156, 255, 0.32);
+            background-color: var(--compras-primary-soft);
+            color: var(--compras-text-main);
+            transition: var(--compras-transition);
+        }
+
+            .compras-search .btn-search:hover {
+                background-color: var(--compras-secondary);
+            }
+
+        .compras-search .btn-clear {
+            border-radius: 999px;
+            border-color: rgba(255, 107, 107, 0.55);
+            color: var(--compras-danger);
+            font-size: 0.78rem;
+            transition: var(--compras-transition);
+            background-color: transparent;
+        }
+
+            .compras-search .btn-clear:hover {
+                background-color: rgba(255, 107, 107, 0.16);
+                color: var(--compras-danger);
+            }
+
+        /* ALERTAS */
+        .alert-compras {
+            background: rgba(36, 44, 84, 0.98);
+            border-radius: var(--compras-radius);
+            border: 1px solid var(--compras-border-soft);
+            color: var(--compras-text-main);
+            box-shadow: var(--compras-shadow-soft);
+            font-size: 0.82rem;
+        }
+
+            .alert-compras .badge {
+                background-color: var(--compras-secondary);
+            }
+
+        .alert-success-compras {
+            background: linear-gradient(135deg, rgba(35, 209, 156, 0.16), rgba(15, 18, 48, 0.98));
+            border-color: rgba(35, 209, 156, 0.3);
+        }
+
+        .alert-error-compras {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.16), rgba(15, 18, 48, 0.98));
+            border-color: rgba(255, 107, 107, 0.35);
+        }
+
+        /* TABLA */
+        .compras-card table.table {
+            background-color: transparent !important;
+            color: var(--compras-text-main) !important;
+        }
+
+            .compras-card table.table thead {
+                background: linear-gradient(90deg, #3036A6, #1E2546) !important;
+                color: var(--compras-text-main) !important;
+                border-bottom: 1px solid var(--compras-border-soft) !important;
+            }
+
+                .compras-card table.table thead th {
+                    font-size: 0.78rem;
+                    font-weight: 600;
+                    letter-spacing: 0.03em;
+                    text-transform: uppercase;
+                    border: 0 !important;
+                }
+
+            .compras-card table.table tbody tr {
+                background-color: rgba(14, 18, 40, 0.98) !important;
+                color: var(--compras-text-main) !important;
+                border-bottom: 1px solid rgba(143, 156, 255, 0.08) !important;
+                transition: var(--compras-transition);
+            }
+
+                .compras-card table.table tbody tr:hover {
+                    background-color: rgba(36, 44, 84, 0.98) !important;
+                    transform: translateY(-1px);
+                }
+
+            .compras-card table.table tbody td {
+                font-size: 0.82rem;
+                border: 0 !important;
+            }
+
+            .compras-card table.table tbody tr.row-pendiente {
+                background-color: rgba(246, 194, 62, 0.06) !important;
+            }
+
+                .compras-card table.table tbody tr.row-pendiente:hover {
+                    background-color: rgba(246, 194, 62, 0.12) !important;
+                }
+
+            .compras-card table.table tbody tr.row-confirmada {
+                background-color: rgba(143, 156, 255, 0.06) !important;
+            }
+
+                .compras-card table.table tbody tr.row-confirmada:hover {
+                    background-color: rgba(143, 156, 255, 0.14) !important;
+                }
+
+            .compras-card table.table tbody tr.row-completada {
+                background: linear-gradient(90deg, rgba(8, 40, 32, 1), rgba(16, 60, 54, 1)) !important;
+                color: var(--compras-text-main) !important;
+            }
+
+                .compras-card table.table tbody tr.row-completada td {
+                    color: var(--compras-text-main) !important;
+                }
+
+                .compras-card table.table tbody tr.row-completada:hover {
+                    background: linear-gradient(90deg, rgba(10, 52, 42, 1), rgba(20, 76, 68, 1)) !important;
+                }
+
+        /* BADGES */
+        .badge-estado {
+            padding: 0.25rem 0.7rem;
+            font-size: 0.72rem;
+            border-radius: 999px;
+        }
+
+        .badge-estado-pendiente {
+            background-color: rgba(246, 194, 62, 0.16);
+            color: var(--compras-warning);
+            border: 1px solid rgba(246, 194, 62, 0.55);
+        }
+
+        .badge-estado-confirmada {
+            background-color: rgba(143, 156, 255, 0.16);
+            color: var(--compras-accent);
+            border: 1px solid rgba(143, 156, 255, 0.6);
+        }
+
+        .badge-estado-completada {
+            background-color: rgba(35, 209, 156, 0.18);
+            color: var(--compras-success);
+            border: 1px solid rgba(35, 209, 156, 0.65);
+        }
+
+        .badge-estado-otro {
+            background-color: rgba(108, 117, 125, 0.15);
+            color: #d1d5db;
+            border: 1px solid rgba(108, 117, 125, 0.4);
+        }
+
+        /* BOTONES ACCIÓN */
+        .btn-accion-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border: 1px solid rgba(143, 156, 255, 0.5);
+            background-color: transparent;
+            color: var(--compras-text-muted);
+            transition: var(--compras-transition);
+        }
+
+            .btn-accion-circle:hover {
+                box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+            }
+
+        .btn-accion-view:hover {
+            background-color: rgba(143, 156, 255, 0.3);
+            color: var(--compras-accent);
+        }
+
+        .btn-accion-edit:hover {
+            background-color: rgba(246, 194, 62, 0.3);
+            color: var(--compras-warning);
+        }
+
+        .btn-accion-confirm:hover {
+            background-color: rgba(35, 209, 156, 0.3);
+            color: var(--compras-success);
+        }
+
+        .btn-accion-cancel:hover {
+            background-color: rgba(255, 107, 107, 0.25);
+            color: var(--compras-danger);
+        }
+
+        .btn-accion-complete:hover {
+            background-color: rgba(95, 106, 245, 0.32);
+            color: var(--compras-accent);
+        }
+
+        /* PAGINACIÓN */
+        .pagination .page-link {
+            background-color: #0D0E26;
+            border-color: rgba(143, 156, 255, 0.3);
+            color: var(--compras-text-muted);
+            border-radius: 0.45rem;
+            font-size: 0.78rem;
+            transition: var(--compras-transition);
+        }
+
+            .pagination .page-link:hover {
+                background-color: var(--compras-primary-soft);
+                color: var(--compras-text-main);
+            }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--compras-secondary), var(--compras-accent));
+            color: #0b0f26;
+            border-color: transparent;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background-color: rgba(8, 10, 26, 0.95);
+            color: #4b5563;
+        }
+
+        .compras-info-paginacion {
+            font-size: 0.75rem;
+            color: var(--compras-text-muted);
+        }
+
+        /* Quitar fondo blanco por defecto */
+        .compras-card table.table > :not(caption) > * > * {
+            background-color: transparent !important;
+            color: var(--compras-text-main) !important;
+        }
+
+        .compras-card table.table tbody tr {
+            background-color: rgba(14, 18, 40, 0.98) !important;
+        }
+    </style>
+}
+
+<div class="container-fluid compras-page">
+    <!-- HEADER -->
+    <div class="compras-header">
+        <div class="compras-title-wrap">
+            <div class="compras-icon">
+                <i class="bi bi-basket2 text-light"></i>
+            </div>
+            <div>
+                <div class="compras-title">Compras a Proveedores</div>
+                <p class="compras-subtitle">Gestiona tus compras por estado, proveedor y seguimiento detallado.</p>
+                <span class="compras-pill-estado">
+                    <i class="bi bi-filter-circle"></i> Estado actual: <strong>@estadoActual</strong>
+                </span>
+            </div>
+        </div>
+
+        <a href="@Url.Action("Create")" class="btn-compras-new">
+            <i class="bi bi-plus-circle"></i>
+            <span>Nueva compra</span>
         </a>
     </div>
 
-    <!-- Alertas -->
+    <!-- ALERTAS -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <div class="alert alert-success alert-dismissible fade show alert-compras alert-success-compras mb-3" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show alert-compras alert-error-compras mb-3" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Filtros de estado -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row">
+    <!-- FILTROS -->
+    <div class="card border-0 shadow-sm mb-4 compras-card">
+        <div class="card-body compras-card-body">
+            <div class="row align-items-center g-3">
                 <div class="col-md-6">
-                    <div class="btn-group">
+                    <div class="btn-group compras-estado-group" role="group">
                         @foreach (var estado in estados)
                         {
+                            var isActive = estado == estadoActual;
                             <a href="@Url.Action("Index", new { estado = estado, proveedor = proveedorFiltro })"
-                               class="btn @(estado == estadoActual ? "btn-primary text-white" : "btn-outline-primary") rounded-pill px-3">
-                                <i class="bi @(estado == "Pendiente" ? "bi-hourglass-split" :
-                                                                                 estado == "Confirmada" ? "bi-check2-square" :
-                                                                                 estado == "Completada" ? "bi-flag-fill" : "bi-circle") me-1"></i>
+                               class="btn @(isActive ? "active" : "compras-estado-outline")">
+                                <i class="bi @(estado == "Pendiente"
+                                                                                  ? "bi-hourglass-split"
+                                                                                  : estado == "Confirmada"
+                                                                                      ? "bi-check2-square"
+                                                                                      : estado == "Completada"
+                                                                                          ? "bi-flag-fill"
+                                                                                          : "bi-circle")"></i>
                             @estado
                         </a>
                                                 }
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <!-- Filtro por proveedor -->
-                    <form method="get" action="@Url.Action("Index")" class="d-flex gap-2">
+                    <form method="get" action="@Url.Action("Index")" class="d-flex gap-2 compras-search">
                         <input type="hidden" name="estado" value="@estadoActual" />
                         <div class="input-group">
                             <input type="text"
@@ -66,14 +463,14 @@
                                    placeholder="Buscar por proveedor..."
                                    name="proveedor"
                                    value="@proveedorFiltro"
-                                   aria-label="Buscar proveedor">
-                            <button class="btn btn-outline-secondary" type="submit">
+                                   aria-label="Buscar proveedor" />
+                            <button class="btn btn-search" type="submit">
                                 <i class="bi bi-search"></i>
                             </button>
                             @if (!string.IsNullOrEmpty(proveedorFiltro))
                             {
                                 <a href="@Url.Action("Index", new { estado = estadoActual })"
-                                   class="btn btn-outline-danger"
+                                   class="btn btn-clear ms-2"
                                    title="Limpiar filtro">
                                     <i class="bi bi-x-circle"></i>
                                 </a>
@@ -85,29 +482,29 @@
         </div>
     </div>
 
-    <!-- Información de resultados -->
+    <!-- INFO FILTRO PROVEEDOR -->
     @if (!string.IsNullOrEmpty(proveedorFiltro))
     {
-        <div class="alert alert-info d-flex justify-content-between align-items-center">
+        <div class="alert alert-compras d-flex justify-content-between align-items-center mb-4">
             <span>
                 <i class="bi bi-funnel me-2"></i>
                 Filtrado por proveedor: <strong>@proveedorFiltro</strong>
-                <span class="badge bg-primary ms-2">@totalElementos resultado(s)</span>
+                <span class="badge ms-2">@totalElementos resultado(s)</span>
             </span>
-            <a href="@Url.Action("Index", new { estado = estadoActual })" class="btn btn-sm btn-outline-primary">
+            <a href="@Url.Action("Index", new { estado = estadoActual })" class="btn btn-sm btn-clear">
                 <i class="bi bi-x-circle me-1"></i> Limpiar filtro
             </a>
         </div>
     }
 
-    <!-- Tabla de compras -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
+    <!-- TABLA -->
+    <div class="card border-0 shadow-sm compras-card">
+        <div class="card-body compras-card-body">
             @if (Model.Any())
             {
                 <div class="table-responsive">
                     <table class="table align-middle table-hover">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>N° Documento</th>
                                 <th>Proveedor</th>
@@ -120,16 +517,26 @@
                         <tbody>
                             @foreach (var compra in Model)
                             {
-                                <tr>
+                                var rowClass =
+                                compra.Estado == "Pendiente" ? "row-pendiente" :
+                                compra.Estado == "Confirmada" ? "row-confirmada" :
+                                compra.Estado == "Completada" ? "row-completada" :
+                                "";
+
+                                <tr class="@rowClass">
                                     <td>@compra.NumeroDocumento</td>
                                     <td>@compra.Proveedor?.Nombre</td>
                                     <td>@compra.FechaCompra.ToString("dd/MM/yyyy")</td>
                                     <td>@compra.Total.ToString("C2")</td>
                                     <td>
-                                        <span class="badge rounded-pill
-                                                      @(compra.Estado == "Pendiente" ? "bg-warning text-dark" :
-                                                                                              compra.Estado == "Confirmada" ? "bg-info text-dark" :
-                                                                                              compra.Estado == "Completada" ? "bg-success" : "bg-secondary")">
+                                        <span class="badge badge-estado
+                                                    @(compra.Estado == "Pendiente"
+                                                                                              ? "badge-estado-pendiente"
+                                                                                              : compra.Estado == "Confirmada"
+                                                                                                  ? "badge-estado-confirmada"
+                                                                                                  : compra.Estado == "Completada"
+                                                                                                      ? "badge-estado-completada"
+                                                                                                      : "badge-estado-otro")">
                                     @compra.Estado
                                 </span>
                             </td>
@@ -137,7 +544,8 @@
                                 <div class="d-inline-flex gap-2">
                                     <!-- Ver detalles -->
                                     <a href="@Url.Action("Details", new { id = compra.IdCompra })"
-                                       class="btn btn-sm btn-outline-info rounded-circle" title="Ver detalles">
+                                       class="btn-accion-circle btn-accion-view"
+                                       title="Ver detalles">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
@@ -145,22 +553,31 @@
                                             {
                                                 <!-- Editar -->
                                                 <a href="@Url.Action("Edit", new { id = compra.IdCompra })"
-                                                   class="btn btn-sm btn-outline-warning rounded-circle" title="Editar compra">
+                                                   class="btn-accion-circle btn-accion-edit"
+                                                   title="Editar compra">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
 
                                                 <!-- Confirmar -->
-                                                <form method="post" action="@Url.Action("Confirmar", new { id = compra.IdCompra })"
-                                                      class="d-inline" onsubmit="return confirm('¿Confirmar esta compra?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" title="Confirmar">
+                                                <form method="post"
+                                                      action="@Url.Action("Confirmar", new { id = compra.IdCompra })"
+                                                      class="d-inline form-accion"
+                                                      data-mensaje="¿Confirmar esta compra?">
+                                                    <button type="submit"
+                                                            class="btn-accion-circle btn-accion-confirm"
+                                                            title="Confirmar">
                                                         <i class="bi bi-check2-circle"></i>
                                                     </button>
                                                 </form>
 
                                                 <!-- Cancelar -->
-                                                <form method="post" action="@Url.Action("Cancelar", new { id = compra.IdCompra })"
-                                                      class="d-inline" onsubmit="return confirm('¿Cancelar esta compra?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Cancelar">
+                                                <form method="post"
+                                                      action="@Url.Action("Cancelar", new { id = compra.IdCompra })"
+                                                      class="d-inline form-accion"
+                                                      data-mensaje="¿Cancelar esta compra? Esta acción no se puede deshacer.">
+                                                    <button type="submit"
+                                                            class="btn-accion-circle btn-accion-cancel"
+                                                            title="Cancelar">
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 </form>
@@ -169,9 +586,13 @@
                                             @if (compra.Estado == "Confirmada")
                                             {
                                                 <!-- Completar -->
-                                                <form method="post" action="@Url.Action("Completar", new { id = compra.IdCompra })"
-                                                      class="d-inline" onsubmit="return confirm('¿Marcar como completada?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-primary rounded-circle" title="Marcar como completada">
+                                                <form method="post"
+                                                      action="@Url.Action("Completar", new { id = compra.IdCompra })"
+                                                      class="d-inline form-accion"
+                                                      data-mensaje="¿Marcar esta compra como completada?">
+                                                    <button type="submit"
+                                                            class="btn-accion-circle btn-accion-complete"
+                                                            title="Marcar como completada">
                                                         <i class="bi bi-flag-fill"></i>
                                                     </button>
                                                 </form>
@@ -184,12 +605,11 @@
                     </table>
                 </div>
 
-                <!-- Paginación -->
+                <!-- PAGINACIÓN -->
                 @if (totalPaginas > 1)
                 {
                     <nav aria-label="Paginación de compras">
                         <ul class="pagination justify-content-center mt-4">
-                            <!-- Botón Anterior -->
                             <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
                                 <a class="page-link"
                                    href="@Url.Action("Index", new { estado = estadoActual, proveedor = proveedorFiltro, pagina = paginaActual - 1 })">
@@ -197,7 +617,6 @@
                                 </a>
                             </li>
 
-                            <!-- Números de página -->
                             @for (int i = 1; i <= totalPaginas; i++)
                             {
                                 if (i == 1 || i == totalPaginas || (i >= paginaActual - 2 && i <= paginaActual + 2))
@@ -217,7 +636,6 @@
                                 }
                             }
 
-                            <!-- Botón Siguiente -->
                             <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
                                 <a class="page-link"
                                    href="@Url.Action("Index", new { estado = estadoActual, proveedor = proveedorFiltro, pagina = paginaActual + 1 })">
@@ -228,15 +646,15 @@
                     </nav>
                 }
 
-                <!-- Información de paginación -->
-                <div class="text-center text-muted mt-2">
-                    Mostrando <strong>@((paginaActual - 1) * elementosPorPagina + 1)-@Math.Min(paginaActual * elementosPorPagina, totalElementos)</strong>
+                <div class="text-center compras-info-paginacion mt-2">
+                    Mostrando
+                    <strong>@((paginaActual - 1) * elementosPorPagina + 1)-@Math.Min(paginaActual * elementosPorPagina, totalElementos)</strong>
                     de <strong>@totalElementos</strong> compras
                 </div>
             }
             else
             {
-                <div class="alert alert-info text-center">
+                <div class="alert alert-compras text-center mt-2">
                     <i class="bi bi-info-circle me-2"></i>
                     @if (!string.IsNullOrEmpty(proveedorFiltro))
                     {
@@ -252,10 +670,82 @@
                     }
                     @if (estadoActual == "Pendiente")
                     {
-                        <a href="@Url.Action("Create")" class="alert-link">Crear una nueva compra</a>
+                        <a href="@Url.Action("Create")"
+                           class="ms-1 text-decoration-underline"
+                           style="color: var(--compras-accent);">
+                            Crear una nueva compra
+                        </a>
                     }
                 </div>
             }
         </div>
     </div>
 </div>
+
+<!-- Modal de confirmación reutilizable -->
+<div class="modal fade" id="modalAccionCompra" tabindex="-1" aria-labelledby="modalAccionCompraLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content"
+             style="background-color:#161B3A; border-radius:0.85rem; border:1px solid rgba(143,156,255,0.35); color:#F7F8FF;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="modalAccionCompraLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    Confirmar acción
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-0" id="modalAccionCompraMensaje">
+                <!-- Mensaje dinámico -->
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-end gap-2">
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-primary"
+                        id="btnConfirmarAccion">
+                    <i class="bi bi-check2-circle me-1"></i>Sí, continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const modalEl = document.getElementById("modalAccionCompra");
+            const modalMensaje = document.getElementById("modalAccionCompraMensaje");
+            const btnConfirmar = document.getElementById("btnConfirmarAccion");
+            if (!modalEl || !modalMensaje || !btnConfirmar) return;
+
+            const modal = new bootstrap.Modal(modalEl);
+            let formPendiente = null;
+
+            // Interceptar formularios de acción
+            document.querySelectorAll("form.form-accion").forEach(form => {
+                form.addEventListener("submit", (e) => {
+                    e.preventDefault();
+
+                    const mensaje = form.getAttribute("data-mensaje")
+                        || "¿Desea continuar con esta acción?";
+
+                    formPendiente = form;
+                    modalMensaje.textContent = mensaje;
+                    modal.show();
+                });
+            });
+
+            // Confirmar desde el modal
+            btnConfirmar.addEventListener("click", () => {
+                if (formPendiente) {
+                    modal.hide();
+                    formPendiente.submit();
+                    formPendiente = null;
+                }
+            });
+        });
+    </script>
+}

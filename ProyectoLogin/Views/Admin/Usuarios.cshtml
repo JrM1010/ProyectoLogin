@@ -254,7 +254,7 @@
         color: rgba(139, 136, 242, 0.6);
     }
 
-    /* TABLA USUARIOS (alineada al estilo productos) */
+    /* TABLA USUARIOS */
     .users-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -460,6 +460,51 @@
     .text-soft-muted {
         color: var(--users-muted);
     }
+
+    /* MODAL CONFIRMACIÓN */
+    .modal-users .modal-content {
+        background: #15183A;
+        color: var(--users-text);
+        border-radius: 1rem;
+        border: 1px solid var(--users-accent);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-users .modal-header {
+        border-bottom-color: rgba(139, 136, 242, 0.25);
+    }
+
+    .modal-users .modal-footer {
+        border-top-color: rgba(139, 136, 242, 0.18);
+    }
+
+    .modal-users .btn-cancel {
+        border-radius: 0.7rem;
+        padding: 0.45rem 1.2rem;
+        background: transparent;
+        color: var(--users-muted);
+        border: 1px solid rgba(139, 136, 242, 0.4);
+        transition: all 0.2s ease;
+    }
+
+    .modal-users .btn-cancel:hover {
+        background: rgba(139, 136, 242, 0.15);
+        color: var(--users-text);
+    }
+
+    .modal-users .btn-confirm {
+        border-radius: 0.7rem;
+        padding: 0.45rem 1.4rem;
+        background: var(--users-secondary);
+        color: #fff;
+        border: 1px solid var(--users-accent);
+        transition: all 0.2s ease;
+    }
+
+    .modal-users .btn-confirm:hover {
+        background: var(--users-primary);
+        box-shadow: 0 6px 18px rgba(81, 75, 242, 0.5);
+    }
 </style>
 
 <div class="container-fluid users-theme">
@@ -566,13 +611,14 @@
                                                title="Editar usuario">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            <!-- Desactivar -->
+                                            <!-- Desactivar (con modal) -->
                                             <form asp-action="Desactivar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="btn-user-action btn-user-disable"
-                                                        title="Desactivar usuario"
-                                                        onclick="return confirm('¿Estás seguro de desactivar a @usuario.NombreUsuario?')">
+                                                <button type="button"
+                                                        class="btn-user-action btn-user-disable btn-user-confirm"
+                                                        data-user-name="@usuario.NombreUsuario"
+                                                        data-action="desactivar"
+                                                        title="Desactivar usuario">
                                                     <i class="bi bi-person-dash"></i>
                                                 </button>
                                             </form>
@@ -629,13 +675,11 @@
                                                pageSize = pageSize
                                            })">1</a>
                                     </li>
-                                    ;
                                     if (startPage > 2)
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
                                         </li>
-                                        ;
                                     }
                                 }
 
@@ -650,7 +694,6 @@
                                                pageSize = pageSize
                                            })">@i</a>
                                     </li>
-                                    ;
                                 }
 
                                 if (endPage < totalPagesActivos)
@@ -660,7 +703,6 @@
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
                                         </li>
-                                        ;
                                     }
                                     <li class="page-item">
                                         <a class="page-link"
@@ -671,7 +713,6 @@
                                                pageSize = pageSize
                                            })">@totalPagesActivos</a>
                                     </li>
-                                    ;
                                 }
                             }
 
@@ -749,13 +790,14 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="user-actions">
-                                            <!-- Activar -->
+                                            <!-- Activar (con modal) -->
                                             <form asp-action="Activar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="btn-user-action btn-user-enable"
-                                                        title="Activar usuario"
-                                                        onclick="return confirm('¿Estás seguro de activar a @usuario.NombreUsuario?')">
+                                                <button type="button"
+                                                        class="btn-user-action btn-user-enable btn-user-confirm"
+                                                        data-user-name="@usuario.NombreUsuario"
+                                                        data-action="activar"
+                                                        title="Activar usuario">
                                                     <i class="bi bi-person-check"></i>
                                                 </button>
                                             </form>
@@ -812,13 +854,11 @@
                                                pageSize = pageSize
                                            })">1</a>
                                     </li>
-                                    ;
                                     if (startPageInactivos > 2)
                                     {
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
                                         </li>
-                                        ;
                                     }
                                 }
 
@@ -833,7 +873,6 @@
                                                pageSize = pageSize
                                            })">@i</a>
                                     </li>
-                                    ;
                                 }
 
                                 if (endPageInactivos < totalPagesInactivos)
@@ -843,7 +882,6 @@
                                         <li class="page-item disabled">
                                             <span class="page-link">...</span>
                                         </li>
-                                        ;
                                     }
                                     <li class="page-item">
                                         <a class="page-link"
@@ -854,7 +892,6 @@
                                                pageSize = pageSize
                                            })">@totalPagesInactivos</a>
                                     </li>
-                                    ;
                                 }
                             }
 
@@ -887,11 +924,97 @@
     }
 </div>
 
+<!-- MODAL DE CONFIRMACIÓN -->
+<div class="modal fade modal-users" id="confirmUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmUserTitle">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmUserText" class="mb-0">¿Deseas continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-confirm" id="btnConfirmUser">
+                    Sí, continuar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
+
+            const modalEl = document.getElementById('confirmUserModal');
+            let confirmModal = null;
+            if (modalEl && window.bootstrap) {
+                confirmModal = new bootstrap.Modal(modalEl);
+            }
+
+            const titleEl = document.getElementById('confirmUserTitle');
+            const textEl = document.getElementById('confirmUserText');
+            const btnConfirm = document.getElementById('btnConfirmUser');
+            let formToSubmit = null;
+
+            // Botones que disparan el modal
+            document.querySelectorAll('.btn-user-confirm').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    const form = btn.closest('form');
+                    if (!form) return;
+
+                    const userName = btn.getAttribute('data-user-name') || 'este usuario';
+                    const action = (btn.getAttribute('data-action') || '').toLowerCase();
+
+                    let title = 'Confirmar acción';
+                    let message = '';
+                    if (action === 'desactivar') {
+                        title = 'Desactivar usuario';
+                        message = `<strong>${userName}</strong><br>El usuario no podrá acceder al sistema hasta que sea activado nuevamente.`;
+                    } else if (action === 'activar') {
+                        title = 'Activar usuario';
+                        message = `<strong>${userName}</strong><br>El usuario recuperará el acceso al sistema.`;
+                    } else {
+                        message = `¿Deseas continuar con la operación para <strong>${userName}</strong>?`;
+                    }
+
+                    if (titleEl) titleEl.textContent = title;
+                    if (textEl) textEl.innerHTML = message;
+
+                    formToSubmit = form;
+
+                    if (confirmModal) {
+                        confirmModal.show();
+                    } else {
+                        // Fallback si no está Bootstrap JS
+                        if (confirm(title + ' - ' + userName + '?')) {
+                            form.submit();
+                        }
+                    }
+                });
+            });
+
+            // Confirmar desde el modal
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', () => {
+                    if (formToSubmit) {
+                        formToSubmit.submit();
+                        formToSubmit = null;
+                    }
+                    if (confirmModal) {
+                        confirmModal.hide();
+                    }
+                });
+            }
         });
     </script>
 }

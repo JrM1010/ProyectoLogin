@@ -8,7 +8,6 @@ using ProyectoLogin.Models.UnidadesDeMedida;
 using ProyectoLogin.Recursos;
 using System;
 
-
 namespace ProyectoLogin.Controllers
 {
     [Authorize(Roles = "Administrador,Gerente")]
@@ -21,7 +20,6 @@ namespace ProyectoLogin.Controllers
             _context = context;
         }
 
-
         // 🔹 LISTAR COMPRAS CON FILTROS Y PAGINACIÓN
         public async Task<IActionResult> Index(string estado = "Pendiente", string proveedor = "", int pagina = 1)
         {
@@ -29,11 +27,9 @@ namespace ProyectoLogin.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            // Configuración de paginación
             int elementosPorPagina = 10;
             int elementosASaltar = (pagina - 1) * elementosPorPagina;
 
-            // Consulta base con cálculo de totales
             var consulta = _context.Compras
                 .Include(c => c.Proveedor)
                 .Include(c => c.Detalles)
@@ -46,41 +42,34 @@ namespace ProyectoLogin.Controllers
                 .Select(c => new
                 {
                     Compra = c,
-                    // Calcular totales en tiempo real por si hay discrepancias
                     TotalCalculado = c.Detalles.Sum(d =>
                         (d.Cantidad * (d.PrecioUnitario / 1.12m) *
                          d.UnidadMedida.EquivalenciaEnUnidades) * 1.12m
                     )
                 });
 
-            // Aplicar filtro por proveedor si se especifica
             if (!string.IsNullOrEmpty(proveedor))
             {
                 consulta = consulta.Where(c => c.Compra.Proveedor.Nombre.Contains(proveedor));
             }
 
-            // Obtener el total de elementos para la paginación
             int totalElementos = await consulta.CountAsync();
             int totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
 
-            // Aplicar paginación y obtener datos
             var comprasConTotales = await consulta
                 .Skip(elementosASaltar)
                 .Take(elementosPorPagina)
                 .ToListAsync();
 
-            // Extraer las compras y verificar/actualizar totales si es necesario
             var compras = comprasConTotales.Select(c =>
             {
-                // Si hay discrepancia entre el total guardado y el calculado, usar el calculado
-                if (Math.Abs(c.TotalCalculado - c.Compra.Total) > 0.01m) // Tolerancia de 0.01 para decimales
+                if (Math.Abs(c.TotalCalculado - c.Compra.Total) > 0.01m)
                 {
                     c.Compra.Total = c.TotalCalculado;
                 }
                 return c.Compra;
             }).ToList();
 
-            // Datos para la vista
             ViewBag.EstadoActual = estado;
             ViewBag.Estados = new List<string> { "Pendiente", "Confirmada", "Completada" };
             ViewBag.ProveedorFiltro = proveedor;
@@ -89,7 +78,6 @@ namespace ProyectoLogin.Controllers
             ViewBag.TotalElementos = totalElementos;
             ViewBag.ElementosPorPagina = elementosPorPagina;
 
-            // Obtener lista de proveedores para el dropdown
             ViewBag.Proveedores = await _context.Proveedores
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
@@ -99,19 +87,27 @@ namespace ProyectoLogin.Controllers
             return View("~/Views/Compras/Index.cshtml", compras);
         }
 
+
+
         // 🔹 CREAR COMPRA (GET)
         public async Task<IActionResult> Create(int? idProveedor)
         {
             await CargarDatosVista(idProveedor);
 
-            if (idProveedor == null)
+            // Primera carga: sin proveedor seleccionado
+            if (!idProveedor.HasValue)
+            {
                 return View(new Compra());
+            }
 
+            int proveedorId = idProveedor.Value;
+
+            // Cargar productos del proveedor
             var productosProveedor = await _context.ProductosProveedores
                 .Include(pp => pp.Producto)
                     .ThenInclude(p => p.ProductosUnidades)
                         .ThenInclude(pu => pu.UnidadMedida)
-                .Where(pp => pp.IdProveedor == idProveedor)
+                .Where(pp => pp.IdProveedor == proveedorId)
                 .Select(pp => new
                 {
                     pp.Producto.IdProducto,
@@ -134,32 +130,50 @@ namespace ProyectoLogin.Controllers
                 })
                 .ToListAsync();
 
-            ViewBag.Productos = productosProveedor;
-            ViewBag.ProveedorSeleccionado = idProveedor;
+            // Seguridad extra: si por URL forzan un proveedor sin productos, lo rechazo
+            if (!productosProveedor.Any())
+            {
+                TempData["Error"] = "El proveedor seleccionado no tiene productos asociados.";
+                return RedirectToAction(nameof(Create));
+            }
 
+            ViewBag.Productos = productosProveedor;
+            ViewBag.ProveedorSeleccionado = proveedorId;
+
+            // Generar código de compra
             var random = new Random();
-            ViewBag.NumeroDocumento = random.Next(100000000, 999999999).ToString();
+            var numeroDocumento = random.Next(100000000, 999999999).ToString();
+            ViewBag.NumeroDocumento = numeroDocumento;
 
             return View(new Compra
             {
-                IdProveedor = idProveedor.Value,
-                Estado = "Pendiente"
+                IdProveedor = proveedorId,
+                Estado = "Pendiente",
+                NumeroDocumento = numeroDocumento
             });
         }
+
+
 
         // 🔹 CREAR COMPRA (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Compra compra, List<DetalleCompra> detalles)
         {
-            // 🔹 Filtrar solo los detalles válidos
             detalles = detalles
                 .Where(d => d.IdProducto > 0 && d.Cantidad > 0 && d.PrecioUnitario > 0)
                 .ToList();
 
             if (!ValidarCompra(compra, detalles))
             {
-                TempData["Error"] = "Debe seleccionar un proveedor válido y agregar al menos un producto.";
+                var msg = "Debe seleccionar un proveedor válido con productos asociados y agregar al menos un producto.";
+
+                if (EsAjax())
+                {
+                    return Json(new { success = false, message = msg });
+                }
+
+                TempData["Error"] = msg;
                 await CargarDatosVista(compra.IdProveedor);
                 return View(compra);
             }
@@ -173,15 +187,12 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // ✅ Asignar el usuario actual que realiza la compra
                 var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
                 compra.IdUsuario = idUsuario;
 
-                // ✅ Guardar la compra
                 _context.Compras.Add(compra);
                 await _context.SaveChangesAsync();
 
-                // ✅ Guardar los detalles
                 foreach (var det in detalles)
                 {
                     det.IdCompra = compra.IdCompra;
@@ -191,7 +202,6 @@ namespace ProyectoLogin.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 🔹 Registrar movimiento en bitácora
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
                 {
                     IdUsuario = idUsuario,
@@ -202,16 +212,37 @@ namespace ProyectoLogin.Controllers
                 });
                 await _context.SaveChangesAsync();
 
+                if (EsAjax())
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        redirectUrl = Url.Action(nameof(Index), new { estado = "Pendiente" })
+                    });
+                }
+
                 TempData["Success"] = "Compra creada correctamente.";
                 return RedirectToAction(nameof(Index), new { estado = "Pendiente" });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                TempData["Error"] = "Error al registrar la compra: " + ex.Message;
+                var msg = "Error al registrar la compra: " + ex.Message;
+
+                if (EsAjax())
+                {
+                    return Json(new { success = false, message = msg });
+                }
+
+                TempData["Error"] = msg;
                 await CargarDatosVista(compra.IdProveedor);
                 return View(compra);
             }
+        }
+
+        private bool EsAjax()
+        {
+            return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
         }
 
 
@@ -223,15 +254,13 @@ namespace ProyectoLogin.Controllers
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
                 .Include(c => c.Detalles)
-                    .ThenInclude(d => d.UnidadMedida) // ahora válido
+                    .ThenInclude(d => d.UnidadMedida)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.IdCompra == id);
 
             if (compra == null) return NotFound();
             return View(compra);
         }
-
-
 
         // 🔹 EDITAR COMPRA (GET)
         public async Task<IActionResult> Edit(int id)
@@ -320,19 +349,15 @@ namespace ProyectoLogin.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 🧹 Eliminar detalles antiguos
                 _context.DetallesCompra.RemoveRange(compraExistente.Detalles);
                 await _context.SaveChangesAsync();
 
-                // 🔢 Calcular nuevos totales
                 await CalcularTotalesAsync(compraExistente, detalles);
 
-                // ✏️ Actualizar datos de la compra
                 compraExistente.Observaciones = compra.Observaciones;
                 compraExistente.MetodoPago = compra.MetodoPago;
                 compraExistente.FechaCompra = FechaLocal.Ahora();
 
-                // 🧩 Agregar nuevos detalles
                 foreach (var det in detalles)
                 {
                     det.IdCompra = compraExistente.IdCompra;
@@ -340,12 +365,9 @@ namespace ProyectoLogin.Controllers
                     _context.DetallesCompra.Add(det);
                 }
 
-                // 💾 Guardar y confirmar
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-
-                // 🔹 Registrar movimiento en bitácora
                 var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
                 {
@@ -356,8 +378,6 @@ namespace ProyectoLogin.Controllers
                     Fecha = FechaLocal.Ahora()
                 });
                 await _context.SaveChangesAsync();
-
-
 
                 TempData["Success"] = "Compra actualizada correctamente.";
                 return RedirectToAction(nameof(Index), new { estado = "Pendiente" });
@@ -397,8 +417,6 @@ namespace ProyectoLogin.Controllers
                 await ActualizarInventarioYPreciosAsync(compra);
                 await _context.SaveChangesAsync();
 
-
-                // 🔹 Registrar movimiento en bitácora
                 var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
                 _context.BitacoraMovimientos.Add(new BitacoraMovimiento
                 {
@@ -409,7 +427,6 @@ namespace ProyectoLogin.Controllers
                     Fecha = FechaLocal.Ahora()
                 });
                 await _context.SaveChangesAsync();
-
 
                 await transaction.CommitAsync();
                 TempData["Success"] = "Compra confirmada correctamente.";
@@ -459,10 +476,8 @@ namespace ProyectoLogin.Controllers
             }
 
             _context.Compras.Remove(compra);
-
             await _context.SaveChangesAsync();
 
-            // 🔹 Registrar movimiento en bitácora
             var idUsuario = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
             _context.BitacoraMovimientos.Add(new BitacoraMovimiento
             {
@@ -474,7 +489,6 @@ namespace ProyectoLogin.Controllers
             });
             await _context.SaveChangesAsync();
 
-
             TempData["Success"] = "Compra cancelada correctamente.";
             return RedirectToAction(nameof(Index), new { estado = "Pendiente" });
         }
@@ -482,16 +496,15 @@ namespace ProyectoLogin.Controllers
         // 🔹 MÉTODOS AUXILIARES
         private async Task CargarDatosVista(int? idProveedor)
         {
-            // Proveedores + flag si tienen productos asociados
+            // Solo proveedores activos que tienen al menos un producto asociado
             ViewBag.Proveedores = await _context.Proveedores
                 .Where(p => p.Activo)
+                .Where(p => _context.ProductosProveedores.Any(pp => pp.IdProveedor == p.IdProveedor))
                 .OrderBy(p => p.Nombre)
                 .Select(p => new
                 {
                     p.IdProveedor,
-                    p.Nombre,
-                    TieneProductos = _context.ProductosProveedores
-                        .Any(pp => pp.IdProveedor == p.IdProveedor)
+                    p.Nombre
                 })
                 .ToListAsync();
 
@@ -509,12 +522,22 @@ namespace ProyectoLogin.Controllers
             ViewBag.ProveedorSeleccionado = idProveedor ?? 0;
         }
 
-        private static bool ValidarCompra(Compra compra, List<DetalleCompra> detalles)
+
+        // Valida proveedor + detalles + que el proveedor tenga productos asociados
+        private bool ValidarCompra(Compra compra, List<DetalleCompra> detalles)
         {
-            return compra.IdProveedor > 0 && detalles.Any();
+            if (compra == null || compra.IdProveedor <= 0)
+                return false;
+
+            if (detalles == null || !detalles.Any())
+                return false;
+
+            // Seguridad extra: no permitir compras a proveedores sin productos asociados
+            bool proveedorTieneProductos = _context.ProductosProveedores
+                .Any(pp => pp.IdProveedor == compra.IdProveedor);
+
+            return proveedorTieneProductos;
         }
-
-
 
         private async Task CalcularTotalesAsync(Compra compra, List<DetalleCompra> detalles)
         {
@@ -531,18 +554,12 @@ namespace ProyectoLogin.Controllers
 
                 decimal equivalencia = productoUnidad?.FactorConversion ?? 1;
 
-                // ✅ Si el descuento viene en porcentaje (0–100), convertir a decimal (0–1)
                 if (det.Descuento > 1)
                     det.Descuento /= 100;
 
-                // ✅ Calcular precio total con descuento (ya incluye IVA)
                 decimal precioConDescuento = det.PrecioUnitario * (1 - det.Descuento);
-
-                // ✅ Calcular precio base (sin IVA) y el IVA de ese producto
                 decimal precioBase = precioConDescuento / 1.12m;
-                decimal ivaItem = precioBase * 0.12m;
 
-                // ✅ Subtotal de la fila (sin IVA)
                 det.Subtotal = det.Cantidad * precioBase * equivalencia;
 
                 subtotal += det.Subtotal;
@@ -565,9 +582,6 @@ namespace ProyectoLogin.Controllers
 
             foreach (var det in compra.Detalles)
             {
-                // ============================
-                // 🔹 ACTUALIZACIÓN DE INVENTARIO
-                // ============================
                 var prodUnidad = productosUnidades
                     .FirstOrDefault(pu => pu.IdProducto == det.IdProducto && pu.IdUnidad == det.IdUnidad);
 
@@ -597,9 +611,6 @@ namespace ProyectoLogin.Controllers
                     });
                 }
 
-                // ============================
-                // 🔹 RELACIÓN PRODUCTO-PROVEEDOR
-                // ============================
                 var prodProv = productosProveedores
                     .FirstOrDefault(pp => pp.IdProducto == det.IdProducto && pp.IdProveedor == compra.IdProveedor);
                 if (prodProv != null)
@@ -611,28 +622,18 @@ namespace ProyectoLogin.Controllers
                 if (prodUnidad != null)
                     prodUnidad.PrecioCompra = det.PrecioUnitario;
 
-                // ============================
-                // 🔹 CÁLCULO DE PRECIOS BASE Y UTILIDAD
-                // ============================
-                decimal precioCompraConIVA = det.PrecioUnitario; // precio registrado
-                decimal precioBase = precioCompraConIVA / 1.12m; // sin IVA
+                decimal precioCompraConIVA = det.PrecioUnitario;
+                decimal precioBase = precioCompraConIVA / 1.12m;
                 decimal ivaCompra = precioBase * 0.12m;
 
-                // 🔸 Margen de ganancia estándar (puedes ajustar por tipo)
                 const decimal margenUnidad = 0.25m;
                 const decimal margenPaquete = 0.15m;
                 const decimal margenCaja = 0.10m;
 
-                // ============================
-                // 🔹 PRECIOS DE VENTA (CON IVA)
-                // ============================
                 decimal precioVentaUnidad = Math.Round((precioBase * (1 + margenUnidad)) * 1.12m, 2);
                 decimal precioVentaPaquete = Math.Round(((precioBase * 6) * (1 + margenPaquete)) * 1.12m, 2);
                 decimal precioVentaCaja = Math.Round(((precioBase * 12) * (1 + margenCaja)) * 1.12m, 2);
 
-                // ============================
-                // 🔹 DESACTIVAR PRECIOS ANTIGUOS
-                // ============================
                 var preciosAntiguos = precios
                     .Where(p => p.IdProducto == det.IdProducto && p.Activo)
                     .ToList();
@@ -643,9 +644,6 @@ namespace ProyectoLogin.Controllers
                     p.FechaFin = FechaLocal.Ahora();
                 }
 
-                // ============================
-                // 🔹 CREAR NUEVO PRECIO VIGENTE
-                // ============================
                 _context.ProductoPrecio.Add(new ProductoPrecio
                 {
                     IdProducto = det.IdProducto,
@@ -658,17 +656,13 @@ namespace ProyectoLogin.Controllers
                     PrecioVentaPaquete = precioVentaPaquete,
                     PrecioVentaCaja = precioVentaCaja,
                     PrecioVentaSinIVA = Math.Round(precioBase * (1 + margenUnidad), 2),
-                    PrecioVenta = precioVentaUnidad, // valor principal para POS
-
+                    PrecioVenta = precioVentaUnidad,
                     FechaInicio = FechaLocal.Ahora(),
                     Activo = true,
                     UsuarioRegistro = User?.Identity?.Name ?? "Sistema",
                     OrigenCambio = "Compra"
                 });
 
-                // ============================
-                // 🔹 REGISTRAR UTILIDAD ESTIMADA
-                // ============================
                 decimal utilidadUnidad = precioVentaUnidad - precioCompraConIVA;
                 decimal utilidadPorCompra = utilidadUnidad * cantidadEquivalente;
 
@@ -684,7 +678,5 @@ namespace ProyectoLogin.Controllers
 
             await _context.SaveChangesAsync();
         }
-
-
     }
 }

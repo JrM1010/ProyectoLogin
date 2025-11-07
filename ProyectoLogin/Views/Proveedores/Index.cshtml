@@ -505,6 +505,51 @@
             align-items: flex-start;
         }
     }
+
+    /* MODAL CONFIRMACIÓN PROVEEDORES */
+    .modal-prov .modal-content {
+        background: #0B0E26;
+        color: var(--prov-text);
+        border-radius: 1rem;
+        border: 1px solid var(--prov-accent);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85);
+    }
+
+    .modal-prov .modal-header {
+        border-bottom-color: rgba(139, 136, 242, 0.25);
+    }
+
+    .modal-prov .modal-footer {
+        border-top-color: rgba(139, 136, 242, 0.18);
+    }
+
+    .modal-prov .btn-cancel {
+        border-radius: 0.7rem;
+        padding: 0.4rem 1.1rem;
+        background: transparent;
+        color: var(--prov-muted);
+        border: 1px solid rgba(139, 136, 242, 0.4);
+        transition: all 0.2s ease;
+    }
+
+    .modal-prov .btn-cancel:hover {
+        background: rgba(139, 136, 242, 0.18);
+        color: var(--prov-text);
+    }
+
+    .modal-prov .btn-confirm {
+        border-radius: 0.7rem;
+        padding: 0.4rem 1.4rem;
+        background: var(--prov-secondary);
+        color: #fff;
+        border: 1px solid var(--prov-accent);
+        transition: all 0.2s ease;
+    }
+
+    .modal-prov .btn-confirm:hover {
+        background: var(--prov-primary);
+        box-shadow: 0 6px 18px rgba(81, 75, 242, 0.55);
+    }
 </style>
 
 <div class="container-fluid prov-theme">
@@ -647,10 +692,11 @@
                                             </a>
                                             <form asp-action="Delete" asp-route-id="@p.IdProveedor" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="prov-action-btn off"
-                                                        title="Desactivar proveedor"
-                                                        onclick="return confirm('¿Estás seguro de desactivar a @p.Nombre?')">
+                                                <button type="button"
+                                                        class="prov-action-btn off prov-prov-confirm"
+                                                        data-prov-name="@p.Nombre"
+                                                        data-action="desactivar"
+                                                        title="Desactivar proveedor">
                                                     <i class="bi bi-person-dash"></i>
                                                 </button>
                                             </form>
@@ -840,10 +886,11 @@
                                         <div class="d-flex justify-content-center">
                                             <form asp-action="Activar" asp-route-id="@p.IdProveedor" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="prov-action-btn on"
-                                                        title="Activar proveedor"
-                                                        onclick="return confirm('¿Estás seguro de activar a @p.Nombre?')">
+                                                <button type="button"
+                                                        class="prov-action-btn on prov-prov-confirm"
+                                                        data-prov-name="@p.Nombre"
+                                                        data-action="activar"
+                                                        title="Activar proveedor">
                                                     <i class="bi bi-person-check"></i>
                                                 </button>
                                             </form>
@@ -970,11 +1017,92 @@
     }
 </div>
 
+<!-- MODAL CONFIRMACIÓN -->
+<div class="modal fade modal-prov" id="confirmProvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmProvTitle">Confirmar acción</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmProvText" class="mb-0">¿Deseas continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-confirm" id="btnConfirmProv">Sí, continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
+
+            const modalEl = document.getElementById('confirmProvModal');
+            let confirmModal = null;
+            if (modalEl && window.bootstrap) {
+                confirmModal = new bootstrap.Modal(modalEl);
+            }
+
+            const titleEl = document.getElementById('confirmProvTitle');
+            const textEl = document.getElementById('confirmProvText');
+            const btnConfirm = document.getElementById('btnConfirmProv');
+            let formToSubmit = null;
+
+            document.querySelectorAll('.prov-prov-confirm').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    const form = btn.closest('form');
+                    if (!form) return;
+
+                    const provName = btn.getAttribute('data-prov-name') || 'este proveedor';
+                    const action = (btn.getAttribute('data-action') || '').toLowerCase();
+
+                    let title = 'Confirmar acción';
+                    let message = '';
+
+                    if (action === 'desactivar') {
+                        title = 'Desactivar proveedor';
+                        message = `<strong>${provName}</strong><br>El proveedor pasará a la lista de inactivos y no se eliminará del sistema.`;
+                    } else if (action === 'activar') {
+                        title = 'Activar proveedor';
+                        message = `<strong>${provName}</strong><br>El proveedor volverá a estar disponible para operaciones.`;
+                    } else {
+                        message = `¿Deseas continuar con la operación para <strong>${provName}</strong>?`;
+                    }
+
+                    if (titleEl) titleEl.textContent = title;
+                    if (textEl) textEl.innerHTML = message;
+
+                    formToSubmit = form;
+
+                    if (confirmModal) {
+                        confirmModal.show();
+                    } else {
+                        // Fallback solo si no está disponible Bootstrap JS
+                        if (confirm(`${title} - ${provName}`)) {
+                            form.submit();
+                        }
+                    }
+                });
+            });
+
+            if (btnConfirm) {
+                btnConfirm.addEventListener('click', () => {
+                    if (formToSubmit) {
+                        formToSubmit.submit();
+                        formToSubmit = null;
+                    }
+                    if (confirmModal) {
+                        confirmModal.hide();
+                    }
+                });
+            }
         });
     </script>
 }
