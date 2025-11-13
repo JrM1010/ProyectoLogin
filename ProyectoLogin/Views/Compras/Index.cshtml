@@ -391,6 +391,314 @@
             background-color: rgba(14, 18, 40, 0.98) !important;
         }
     </style>
+
+    <!-- ======= OVERRIDES MENTA (modo claro, guiado por Clientes) ======= -->
+    <style>
+        /* Variables menta claras */
+        :root {
+            --compras-primary: #062926;
+            --compras-primary-soft: #0A3A34;
+            --compras-secondary: #12C6A1;
+            --compras-accent: #5EF2C1;
+            --compras-bg-dark: #f5f6fa; /* fondo de página claro */
+            --compras-bg-elevated: #ffffff; /* tarjetas */
+            --compras-bg-soft: #ecfdf5; /* tint menta suave */
+            --compras-border-soft: #e5e7eb;
+            --compras-text-main: #111827; /* texto principal oscuro */
+            --compras-text-muted: #6b7280; /* texto secundario */
+            --compras-success: #16a34a;
+            --compras-warning: #eab308;
+            --compras-danger: #ef4444;
+        }
+
+        /* Fondo y tipografía generales */
+        .compras-page {
+            background: var(--compras-bg-dark) !important;
+            color: var(--compras-text-main) !important;
+        }
+
+        /* Header estilo "clientes" */
+        .compras-header {
+            background: linear-gradient(90deg,var(--compras-primary),var(--compras-secondary)) !important;
+            border: 1px solid rgba(255,255,255,.16) !important;
+            border-radius: var(--compras-radius) !important;
+            padding: 1.1rem 1.4rem !important;
+            color: #fff !important;
+            box-shadow: 0 6px 18px rgba(15,23,42,.18) !important;
+        }
+
+            .compras-header .compras-title,
+            .compras-header .compras-subtitle {
+                color: #fff !important;
+            }
+
+        .compras-icon {
+            background: rgba(0,0,0,.22) !important;
+        }
+
+            .compras-icon i {
+                color: var(--compras-accent) !important;
+            }
+
+        .compras-pill-estado {
+            background: rgba(94,242,193,.16) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,.18) !important;
+        }
+
+        /* Botón principal */
+        .btn-compras-new {
+            background: #fff !important;
+            color: var(--compras-primary) !important;
+            border: none !important;
+        }
+
+            .btn-compras-new:hover {
+                background: #f9fafb !important;
+                color: var(--compras-secondary) !important;
+            }
+
+        /* Cards */
+        .compras-card {
+            background: var(--compras-bg-elevated) !important;
+            border: 1px solid var(--compras-border-soft) !important;
+            box-shadow: 0 4px 14px rgba(15,23,42,.06) !important;
+        }
+
+        .compras-card-body {
+            padding: 1rem 1.1rem !important;
+        }
+
+        /* Filtros */
+        .compras-estado-group .btn {
+            color: var(--compras-text-muted) !important;
+        }
+
+            .compras-estado-group .btn.compras-estado-outline {
+                border-color: var(--compras-border-soft) !important;
+            }
+
+            .compras-estado-group .btn.active,
+            .compras-estado-group .btn:hover {
+                background: linear-gradient(135deg,var(--compras-primary),var(--compras-secondary)) !important;
+                color: #fff !important;
+                border-color: transparent !important;
+                box-shadow: 0 4px 10px rgba(15,23,42,.18) !important;
+            }
+
+        /* Buscador */
+        .compras-search .form-control {
+            background: #fff !important;
+            border: 1px solid var(--compras-border-soft) !important;
+            color: var(--compras-text-main) !important;
+        }
+
+            .compras-search .form-control::placeholder {
+                color: #9ca3af !important;
+            }
+
+        .compras-search .btn-search {
+            background: var(--compras-secondary) !important;
+            border-color: var(--compras-secondary) !important;
+            color: #020814 !important;
+        }
+
+            .compras-search .btn-search:hover {
+                background: var(--compras-primary) !important;
+                border-color: var(--compras-primary) !important;
+                color: #fff !important;
+            }
+
+        .compras-search .btn-clear {
+            border-color: rgba(239,68,68,.4) !important;
+            color: #b91c1c !important;
+        }
+
+            .compras-search .btn-clear:hover {
+                background: #fee2e2 !important;
+            }
+
+        /* Alertas */
+        .alert-compras {
+            background: #fff !important;
+            color: var(--compras-text-main) !important;
+            border: 1px solid var(--compras-border-soft) !important;
+        }
+
+        .alert-success-compras {
+            background: #ecfdf5 !important;
+            border-color: rgba(18,198,161,.35) !important;
+            color: #064e3b !important;
+        }
+
+        .alert-error-compras {
+            background: #fef2f2 !important;
+            border-color: rgba(239,68,68,.35) !important;
+            color: #7f1d1d !important;
+        }
+
+        .alert-compras .badge {
+            background: var(--compras-secondary) !important;
+            color: #020814 !important;
+        }
+
+        /* Tabla (modo claro) */
+        .compras-card table.table thead {
+            background: #e5f9f3 !important;
+            color: var(--compras-text-muted) !important;
+            border-bottom: 1px solid var(--compras-border-soft) !important;
+        }
+
+            .compras-card table.table thead th {
+                color: var(--compras-text-muted) !important;
+            }
+
+        .compras-card table.table tbody tr {
+            background: #fff !important;
+            color: var(--compras-text-main) !important;
+            border-bottom: 1px solid var(--compras-border-soft) !important;
+        }
+
+            .compras-card table.table tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            .compras-card table.table tbody tr:hover {
+                background: #ecfdf5 !important;
+            }
+
+            /* Filas por estado */
+            .compras-card table.table tbody tr.row-pendiente {
+                background: #fff7ed !important;
+            }
+
+                .compras-card table.table tbody tr.row-pendiente:hover {
+                    background: #ffedd5 !important;
+                }
+
+            .compras-card table.table tbody tr.row-confirmada {
+                background: #ecfdf5 !important;
+            }
+
+                .compras-card table.table tbody tr.row-confirmada:hover {
+                    background: #d1fae5 !important;
+                }
+
+            .compras-card table.table tbody tr.row-completada {
+                background: linear-gradient(90deg,#dcfce7,#bbf7d0) !important;
+                color: var(--compras-text-main) !important;
+            }
+
+        /* Badges */
+        .badge-estado {
+            border: 1px solid var(--compras-border-soft) !important;
+        }
+
+        .badge-estado-pendiente {
+            background: #fff7ed !important;
+            color: #b45309 !important;
+            border-color: #fcd34d !important;
+        }
+
+        .badge-estado-confirmada {
+            background: #ecfdf5 !important;
+            color: var(--compras-primary) !important;
+            border-color: var(--compras-secondary) !important;
+        }
+
+        .badge-estado-completada {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+            border-color: #86efac !important;
+        }
+
+        /* Botones de acción */
+        .btn-accion-circle {
+            border: 1px solid var(--compras-border-soft) !important;
+            color: var(--compras-text-muted) !important;
+            background: #f3f4f6 !important;
+        }
+
+        .btn-accion-view:hover {
+            background: #ecfdf5 !important;
+            color: var(--compras-primary) !important;
+        }
+
+        .btn-accion-edit:hover {
+            background: #fef3c7 !important;
+            color: #92400e !important;
+        }
+
+        .btn-accion-confirm:hover {
+            background: #dcfce7 !important;
+            color: #166534 !important;
+        }
+
+        .btn-accion-cancel:hover {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+        }
+
+        .btn-accion-complete:hover {
+            background: #e5f9f3 !important;
+            color: var(--compras-secondary) !important;
+        }
+
+        /* Paginación */
+        .pagination .page-link {
+            background: #fff !important;
+            border-color: var(--compras-border-soft) !important;
+            color: var(--compras-text-muted) !important;
+        }
+
+            .pagination .page-link:hover {
+                background: #ecfdf5 !important;
+                color: var(--compras-secondary) !important;
+                border-color: var(--compras-secondary) !important;
+            }
+
+        .pagination .page-item.active .page-link {
+            background: var(--compras-secondary) !important;
+            color: #020814 !important;
+            border-color: var(--compras-secondary) !important;
+            box-shadow: 0 3px 8px rgba(18,198,161,.35) !important;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            opacity: .5 !important;
+            background: #f9fafb !important;
+        }
+
+        .compras-info-paginacion {
+            color: var(--compras-text-muted) !important;
+        }
+
+        /* Asegurar herencia en celdas */
+        .compras-card table.table > :not(caption) > * > * {
+            background-color: inherit !important;
+            color: inherit !important;
+        }
+
+        /* Modal (override al inline style) */
+        #modalAccionCompra .modal-content {
+            background: #ffffff !important;
+            color: var(--compras-text-main) !important;
+            border: 1px solid var(--compras-border-soft) !important;
+            border-radius: var(--compras-radius) !important;
+        }
+
+        #modalAccionCompra .btn.btn-outline-secondary {
+            border-color: var(--compras-border-soft) !important;
+            color: var(--compras-text-muted) !important;
+            background: #fff !important;
+        }
+
+        #modalAccionCompra .btn.btn-primary {
+            background: var(--compras-secondary) !important;
+            border-color: var(--compras-secondary) !important;
+            color: #020814 !important;
+        }
+    </style>
 }
 
 <div class="container-fluid compras-page">
@@ -443,12 +751,12 @@
                             <a href="@Url.Action("Index", new { estado = estado, proveedor = proveedorFiltro })"
                                class="btn @(isActive ? "active" : "compras-estado-outline")">
                                 <i class="bi @(estado == "Pendiente"
-                                                                                  ? "bi-hourglass-split"
-                                                                                  : estado == "Confirmada"
-                                                                                      ? "bi-check2-square"
-                                                                                      : estado == "Completada"
-                                                                                          ? "bi-flag-fill"
-                                                                                          : "bi-circle")"></i>
+                                                                                                                                                        ? "bi-hourglass-split"
+                                                                                                                                                        : estado == "Confirmada"
+                                                                                                                                                            ? "bi-check2-square"
+                                                                                                                                                            : estado == "Completada"
+                                                                                                                                                                ? "bi-flag-fill"
+                                                                                                                                                                : "bi-circle")"></i>
                             @estado
                         </a>
                                                 }
@@ -527,16 +835,16 @@
                                     <td>@compra.NumeroDocumento</td>
                                     <td>@compra.Proveedor?.Nombre</td>
                                     <td>@compra.FechaCompra.ToString("dd/MM/yyyy")</td>
-                                    <td>@compra.Total.ToString("C2")</td>
+                                    <td>@compra.Total.ToString("C2", new System.Globalization.CultureInfo("es-GT"))</td>
                                     <td>
                                         <span class="badge badge-estado
-                                                    @(compra.Estado == "Pendiente"
-                                                                                              ? "badge-estado-pendiente"
-                                                                                              : compra.Estado == "Confirmada"
-                                                                                                  ? "badge-estado-confirmada"
-                                                                                                  : compra.Estado == "Completada"
-                                                                                                      ? "badge-estado-completada"
-                                                                                                      : "badge-estado-otro")">
+                                                                    @(compra.Estado == "Pendiente"
+                                                                                                                                                                                          ? "badge-estado-pendiente"
+                                                                                                                                                                                          : compra.Estado == "Confirmada"
+                                                                                                                                                                                              ? "badge-estado-confirmada"
+                                                                                                                                                                                              : compra.Estado == "Completada"
+                                                                                                                                                                                                  ? "badge-estado-completada"
+                                                                                                                                                                                                  : "badge-estado-otro")">
                                     @compra.Estado
                                 </span>
                             </td>

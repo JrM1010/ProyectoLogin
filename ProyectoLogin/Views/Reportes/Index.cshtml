@@ -2,9 +2,9 @@
     ViewData["Title"] = "Reportes";
 }
 
-<div class="container-fluid py-4 reportes-index-page">
+<div class="container-fluid py-4 reports-theme">
     <!-- HEADER -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div class="reports-header d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div class="d-flex align-items-center">
             <div class="reports-icon-main me-3">
                 <i class="bi bi-clipboard-data fs-3"></i>
@@ -45,7 +45,7 @@
                 <!-- Reporte de Ventas -->
                 <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Ventas" class="text-decoration-none">
-                        <div class="report-card-item h-100">
+                        <div class="report-card-item ventas h-100">
                             <div class="report-card-icon ventas">
                                 <i class="bi bi-receipt"></i>
                             </div>
@@ -54,7 +54,7 @@
                                 <p class="report-card-text">
                                     Analiza ventas por fecha, cliente, método de pago y utilidad generada.
                                 </p>
-                                <span class="report-card-link">
+                                <span class="report-card-link btn-chip ventas">
                                     Ver detalle <i class="bi bi-arrow-right-short"></i>
                                 </span>
                             </div>
@@ -65,7 +65,7 @@
                 <!-- Reporte de Compras -->
                 <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Compras" class="text-decoration-none">
-                        <div class="report-card-item h-100">
+                        <div class="report-card-item compras h-100">
                             <div class="report-card-icon compras">
                                 <i class="bi bi-cart4"></i>
                             </div>
@@ -74,7 +74,7 @@
                                 <p class="report-card-text">
                                     Consulta compras por proveedor, fechas y totales consolidados.
                                 </p>
-                                <span class="report-card-link">
+                                <span class="report-card-link btn-chip compras">
                                     Ver detalle <i class="bi bi-arrow-right-short"></i>
                                 </span>
                             </div>
@@ -85,7 +85,7 @@
                 <!-- Reporte de Inventario -->
                 <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="ReporteInventario" class="text-decoration-none">
-                        <div class="report-card-item h-100">
+                        <div class="report-card-item inventario h-100">
                             <div class="report-card-icon inventario">
                                 <i class="bi bi-box-seam"></i>
                             </div>
@@ -94,7 +94,7 @@
                                 <p class="report-card-text">
                                     Visualiza existencias, mínimos, valor total y categorización de productos.
                                 </p>
-                                <span class="report-card-link">
+                                <span class="report-card-link btn-chip inventario">
                                     Ver detalle <i class="bi bi-arrow-right-short"></i>
                                 </span>
                             </div>
@@ -105,7 +105,7 @@
                 <!-- Reporte de Ajustes de Inventario -->
                 <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="ReporteAjustesInventario" class="text-decoration-none">
-                        <div class="report-card-item h-100">
+                        <div class="report-card-item ajustes h-100">
                             <div class="report-card-icon ajustes">
                                 <i class="bi bi-box-arrow-up-right"></i>
                             </div>
@@ -114,7 +114,7 @@
                                 <p class="report-card-text">
                                     Revisa entradas, salidas y motivos de ajustes manuales del inventario.
                                 </p>
-                                <span class="report-card-link">
+                                <span class="report-card-link btn-chip ajustes">
                                     Ver detalle <i class="bi bi-arrow-right-short"></i>
                                 </span>
                             </div>
@@ -125,7 +125,7 @@
                 <!-- Reporte de Actividades de Usuarios -->
                 <div class="col-12 col-sm-6 col-lg-4">
                     <a asp-action="Actividades" class="text-decoration-none">
-                        <div class="report-card-item h-100">
+                        <div class="report-card-item actividades h-100">
                             <div class="report-card-icon actividades">
                                 <i class="bi bi-list-check"></i>
                             </div>
@@ -134,7 +134,7 @@
                                 <p class="report-card-text">
                                     Consulta el historial de acciones realizadas en el sistema por cada usuario.
                                 </p>
-                                <span class="report-card-link">
+                                <span class="report-card-link btn-chip actividades">
                                     Ver detalle <i class="bi bi-arrow-right-short"></i>
                                 </span>
                             </div>
@@ -149,189 +149,292 @@
 @section Styles {
     <style>
         :root {
-            --primary-blue: #1C1973;
-            --secondary-blue: #514BF2;
-            --accent-blue: #8B88F2;
-            --dark-bg: #0D0E26;
-            --alt-bg: #081C59;
-            --light-text: #F0F0F7;
-            --muted-text: #9ba4c4;
-            --border-soft: rgba(139, 136, 242, 0.22);
-            --card-bg: #0F122F;
-            --card-bg-soft: #151838;
+            /* Azul (inventario/ventas) + Menta (compras) + puente entre ambos */
+            --reports-blue: #1C1973;
+            --reports-blue-2: #514BF2;
+            --reports-mint: #12C6A1;
+            --reports-mint-accent: #5EF2C1;
+            --reports-bg: #f5f6fa; /* fondo claro */
+            --reports-card: #ffffff;
+            --reports-text: #111827;
+            --reports-muted: #6b7280;
+            --reports-radius: .9rem;
+            --reports-border: #e5e7eb;
+            /* Colores por módulo */
+            --ventas: #4F46E5; /* azul intenso */
+            --compras: #12C6A1; /* menta */
+            --inventario: #f59e0b; /* dorado/amber */
+            --ajustes: #0ea5e9; /* celeste */
+            --actividades: #e74c3c; /* rojo */
         }
 
-        .reportes-index-page {
-            color: var(--light-text);
+        .reports-theme {
+            background: var(--reports-bg);
+            color: var(--reports-text);
+        }
+
+        /* Header híbrido azul ↔ menta */
+        .reports-header {
+            background: linear-gradient(90deg,var(--reports-blue),var(--reports-mint));
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: var(--reports-radius);
+            padding: 1.1rem 1.4rem;
+            box-shadow: 0 6px 18px rgba(15,23,42,.18);
+            color: #fff;
         }
 
         .text-muted-small {
-            color: var(--muted-text) !important;
-            font-size: 0.86rem;
+            color: rgba(241,245,249,.9) !important;
+            font-size: .86rem;
         }
 
         .reports-icon-main {
             width: 52px;
             height: 52px;
             border-radius: 999px;
-            background: radial-gradient(circle at 20% 0, var(--secondary-blue), transparent), rgba(12, 18, 58, 0.96);
+            background: radial-gradient(circle at 20% 0, var(--reports-blue-2), transparent), rgba(0,0,0,.22);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent-blue);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+            color: #dbeafe;
         }
 
         .reports-icon-soft {
             width: 30px;
             height: 30px;
             border-radius: 999px;
-            background: rgba(81, 75, 242, 0.16);
+            background: rgba(255,255,255,.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--accent-blue);
-            font-size: 0.9rem;
+            color: #fff;
+            font-size: .9rem;
         }
 
+        /* Card principal */
         .reports-main-card {
-            background: linear-gradient(150deg, #0D0E26, #111433);
-            border-radius: 1.1rem;
-            border: 1px solid var(--border-soft);
-        }
-
-        .reports-main-header {
-            padding: 1rem 1.5rem 0.4rem 1.5rem;
-            background: transparent;
-        }
-
-        .report-card-item {
-            display: flex;
-            gap: 0.85rem;
-            padding: 0.95rem 1rem;
-            border-radius: 0.9rem;
-            background: rgba(10, 13, 40, 0.98);
-            border: 1px solid rgba(139, 136, 242, 0.14);
-            transition: all 0.22s ease-in-out;
-            position: relative;
+            background: var(--reports-card);
+            border: 1px solid var(--reports-border);
+            border-radius: var(--reports-radius);
+            box-shadow: 0 4px 14px rgba(15,23,42,.06);
             overflow: hidden;
         }
 
-            .report-card-item::before {
+        .reports-main-header {
+            padding: 1rem 1.5rem .6rem 1.5rem;
+            background: linear-gradient(90deg,var(--reports-blue),var(--reports-mint));
+            color: #fff;
+        }
+
+        /* Tarjetas módulo (estilo claro, con “cinta” lateral por color) */
+        .report-card-item {
+            display: flex;
+            gap: .9rem;
+            padding: 1rem 1rem;
+            border-radius: 1rem;
+            background: #fff;
+            border: 1px solid var(--reports-border);
+            box-shadow: 0 2px 10px rgba(15,23,42,.05);
+            position: relative;
+            transition: .22s;
+        }
+
+            .report-card-item::after {
                 content: "";
                 position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 0 0, rgba(81, 75, 242, 0.09), transparent);
-                opacity: 0;
-                transition: opacity 0.25s ease-in-out;
-                pointer-events: none;
-            }
-
-            .report-card-item:hover::before {
-                opacity: 1;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                border-radius: 1rem 0 0 1rem;
             }
 
             .report-card-item:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
-                border-color: rgba(139, 136, 242, 0.3);
+                transform: translateY(-2px);
+                box-shadow: 0 7px 20px rgba(15,23,42,.10);
             }
 
         .report-card-icon {
             width: 46px;
             height: 46px;
-            border-radius: 0.9rem;
+            border-radius: .9rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
             font-size: 1.5rem;
-            color: var(--accent-blue);
-            background: rgba(81, 75, 242, 0.12);
-            transition: all 0.22s ease-in-out;
+            flex-shrink: 0;
+            transition: .22s;
+            background: #f3f4ff;
+            color: var(--reports-blue-2);
         }
 
         .report-card-item:hover .report-card-icon {
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        .report-card-icon.ventas {
-            color: #4cd137;
-            background: rgba(76, 209, 55, 0.08);
-        }
-
-        .report-card-icon.compras {
-            color: #00cec9;
-            background: rgba(0, 206, 201, 0.08);
-        }
-
-        .report-card-icon.inventario {
-            color: #f1c40f;
-            background: rgba(241, 196, 15, 0.08);
-        }
-
-        .report-card-icon.ajustes {
-            color: #0984e3;
-            background: rgba(9, 132, 227, 0.08);
-        }
-
-        .report-card-icon.actividades {
-            color: #e74c3c;
-            background: rgba(231, 76, 60, 0.08);
+            transform: translateY(-1px) scale(1.03);
         }
 
         .report-card-content {
             display: flex;
             flex-direction: column;
-            gap: 0.1rem;
+            gap: .15rem;
         }
 
         .report-card-title {
-            font-size: 0.96rem;
-            font-weight: 600;
-            color: var(--light-text);
-            margin-bottom: 0;
+            font-size: .98rem;
+            font-weight: 700;
+            color: var(--reports-text);
+            margin: 0;
         }
 
         .report-card-text {
             margin: 0;
-            font-size: 0.8rem;
-            color: var(--muted-text);
+            font-size: .83rem;
+            color: var(--reports-muted);
         }
 
-        .report-card-link {
-            margin-top: 0.25rem;
-            font-size: 0.78rem;
-            color: var(--accent-blue);
+        /* Botón “Ver detalle” tipo chip y con color del módulo */
+        .btn-chip {
             display: inline-flex;
             align-items: center;
-            gap: 0.1rem;
+            gap: .2rem;
+            margin-top: .35rem;
+            padding: .35rem .7rem;
+            font-size: .78rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            transition: .2s;
+            user-select: none;
         }
 
-            .report-card-link i {
+            .btn-chip i {
                 font-size: 1rem;
             }
 
+        /* ====== Colores por módulo ====== */
+        /* Ventas (azul) */
+        .report-card-item.ventas::after {
+            background: var(--ventas);
+        }
+
+        .report-card-icon.ventas {
+            color: #fff;
+            background: rgba(79,70,229,.18);
+        }
+
+        .btn-chip.ventas {
+            color: var(--ventas);
+            border-color: var(--ventas);
+            background: #fff;
+        }
+
+        .report-card-item.ventas:hover .btn-chip.ventas {
+            background: var(--ventas);
+            color: #fff;
+        }
+
+        /* Compras (menta) */
+        .report-card-item.compras::after {
+            background: var(--compras);
+        }
+
+        .report-card-icon.compras {
+            color: #035c4f;
+            background: rgba(18,198,161,.15);
+        }
+
+        .btn-chip.compras {
+            color: #035c4f;
+            border-color: var(--compras);
+            background: #fff;
+        }
+
+        .report-card-item.compras:hover .btn-chip.compras {
+            background: var(--compras);
+            color: #020814;
+        }
+
+        /* Inventario (Azul) */
+        .report-card-item.inventario::after {
+            background: var(--ventas);
+        }
+
+        .report-card-icon.inventario {
+            color: #fff;
+            background: rgba(79,70,229,.18);
+        }
+
+        .btn-chip.inventario {
+            color: var(--ventas);
+            border-color: var(--ventas);
+            background: #fff;
+        }
+
+        .report-card-item.inventario:hover .btn-chip.inventario {
+            background: var(--ventas);
+            color: #fff;
+        }
+
+        /* Ajustes (menta) */
+        .report-card-item.ajustes::after {
+            background: var(--compras);
+        }
+
+        .report-card-icon.ajustes {
+            color: #035c4f;
+            background: rgba(18,198,161,.15);
+        }
+
+        .btn-chip.ajustes {
+            color: #035c4f;
+            border-color: var(--compras);
+            background: #fff;
+        }
+
+        .report-card-item.ajustes:hover .btn-chip.ajustes {
+            background: var(--compras);
+            color: #020814;
+        }
+
+        /* Actividades (Azul) */
+        .report-card-item.actividades::after {
+            background: var(--ventas);
+        }
+
+        .report-card-icon.actividades {
+            color: #fff;
+            background: rgba(79,70,229,.18);
+        }
+
+        .btn-chip.actividades {
+            color: var(--ventas);
+            border-color: var(--ventas);
+            background: #fff;
+        }
+
+        .report-card-item.actividades:hover .btn-chip.actividades {
+            background: var(--ventas);
+            color: #fff;
+        }
+
+        /* Botón “Volver al Inicio” */
         .btn-outline-light {
-            border-color: rgba(240, 240, 247, 0.45);
+            border-color: rgba(240,240,247,.65);
+            color: #fff;
         }
 
             .btn-outline-light:hover {
-                background-color: var(--light-text);
-                color: #111433;
+                background: #fff;
+                color: #0f172a;
             }
 
-        @@media (max-width: 576px) {
-            .reports-main-card
+        /* Responsivo */
+        @@media (max-width:576px) {
+            .reports-main-card {
+                padding-top: .15rem;
+            }
 
-        {
-            padding-top: 0.15rem;
-        }
-
-        .report-card-item {
-            padding: 0.85rem 0.85rem;
-        }
-
+            .report-card-item {
+                padding: .9rem .9rem;
+            }
         }
     </style>
 }

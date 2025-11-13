@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProyectoLogin.Migrations
 {
     /// <inheritdoc />
-    public partial class reseteoBD : Migration
+    public partial class resetBD : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

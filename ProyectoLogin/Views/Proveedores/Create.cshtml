@@ -6,462 +6,397 @@
 
 <style>
     :root {
-        --prov-primary: #1C1973;
-        --prov-secondary: #514BF2;
-        --prov-accent: #8B88F2;
-        --prov-bg: #0D0E26;
-        --prov-card: #11133F;
-        --prov-card-soft: #15184B;
-        --prov-text: #F0F0F7;
-        --prov-muted: #A4A5D4;
-        --prov-border: #2E2C7A;
-        --prov-radius: 0.9rem;
-        --prov-danger: #FF6B6B;
-        --prov-success: #2ECC71;
-        --prov-warning: #F1C40F;
+        /* Paleta AZUL (igual a Productos) */
+        --sup-primary: #1C1973; /* primario */
+        --sup-secondary: #514BF2; /* secundario */
+        --sup-accent: #8B88F2; /* acento */
+        --sup-bg: #f5f6fa; /* fondo */
+        --sup-card: #FFFFFF;
+        --sup-text: #212529;
+        --sup-radius: 0.75rem;
+        --sup-border: #e5e7eb; /* borde suave */
+        --sup-muted: #6b7280; /* muted como productos */
+        /* Colores de estado (se mantienen) */
+        --sup-success: #22C55E;
+        --sup-danger: #E54848;
+        --sup-warning: #F1C40F;
     }
 
-    .prov-edit-theme {
-        min-height: 100vh;
-        padding: 1.8rem 0 2.5rem;
-        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.08), transparent), radial-gradient(circle at bottom right, rgba(28, 25, 115, 0.18), transparent), linear-gradient(135deg, var(--prov-bg) 0%, #080A2E 100%);
-        color: var(--prov-text);
+    /* Contenedor general */
+    .supplier-theme {
+        background: var(--sup-bg);
+        padding: 1.5rem 0 2rem;
     }
 
-    .prov-edit-card-main {
-        background: linear-gradient(180deg, rgba(17, 19, 63, 0.98), #0E1035);
-        border-radius: var(--prov-radius);
-        border: 1px solid var(--prov-border);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+    /* Tarjeta principal */
+    .create-card {
+        background: var(--sup-card);
+        border: 1px solid var(--sup-border);
+        border-radius: var(--sup-radius);
+        box-shadow: 0 6px 20px rgba(15,23,42,.08);
         overflow: hidden;
+        margin-bottom: 1.5rem;
+        transition: all .25s ease;
     }
 
-    .prov-edit-header {
-        padding: 1rem 1.6rem;
-        background: linear-gradient(135deg, var(--prov-primary), var(--prov-secondary), #080A2E);
-        border-bottom: 1px solid rgba(139, 136, 242, 0.4);
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
+        .create-card:hover {
+            box-shadow: 0 10px 28px rgba(15,23,42,.12);
+            transform: translateY(-1px);
+        }
+
+    .create-card-header {
+        background: linear-gradient(90deg,var(--sup-primary),var(--sup-secondary));
+        color: #fff;
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid rgba(255,255,255,.18);
     }
 
-    .prov-edit-header-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(139, 136, 242, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--prov-accent);
-        font-size: 1.4rem;
+    .create-card-body {
+        padding: 1.5rem 1.75rem 1.75rem;
     }
 
-    .prov-edit-header h4 {
-        margin: 0;
+    /* Secciones */
+    .section-container {
+        background: #fff;
+        border: 1px solid var(--sup-border);
+        border-radius: var(--sup-radius);
+        padding: 1.25rem 1.25rem 1.15rem;
+        margin-bottom: 1.25rem;
+        transition: all .25s ease;
+    }
+
+        .section-container:hover {
+            box-shadow: 0 4px 14px rgba(15,23,42,.06);
+            border-color: var(--sup-accent);
+        }
+
+    .section-title {
+        color: #111827;
         font-weight: 700;
-        font-size: 1.18rem;
-        color: var(--prov-text);
+        font-size: 1rem;
+        margin-bottom: .85rem;
+        padding-bottom: .6rem;
+        border-bottom: 2px solid rgba(139,136,242,.22); /* antes rojo, ahora acento azul */
+        display: flex;
+        align-items: center;
+        gap: .5rem;
     }
 
-    .prov-edit-header small {
+        .section-title i {
+            background: var(--sup-secondary);
+            color: #fff;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .95rem;
+        }
+
+    /* Labels y controles */
+    .form-label {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: .35rem;
         display: block;
-        font-size: 0.7rem;
-        color: var(--prov-muted);
     }
 
-    .prov-edit-body {
-        padding: 1.8rem 1.6rem 1.4rem;
-    }
-
-    .prov-section-label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--prov-accent);
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-    }
-
-        .prov-section-label i {
-            font-size: 1rem;
-            color: var(--prov-accent);
-        }
-
-    .prov-label {
-        font-size: 0.84rem;
-        font-weight: 600;
-        color: var(--prov-text);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-bottom: 0.25rem;
-    }
-
-        .prov-label i {
-            color: var(--prov-accent);
-            font-size: 0.9rem;
-        }
-
-        .prov-label .required {
-            color: var(--prov-danger);
-        }
-
-    .prov-input,
-    .prov-textarea {
-        background: #0A0C3A;
-        border-radius: 0.6rem;
-        border: 1px solid var(--prov-border);
-        padding: 0.55rem 0.8rem;
-        font-size: 0.86rem;
-        color: var(--prov-text);
+    .form-control-create,
+    textarea.form-control-create {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: var(--sup-radius);
+        color: #111827;
+        padding: .6rem .85rem;
+        transition: all .25s ease;
         width: 100%;
-        transition: all 0.2s ease;
+        font-size: .94rem;
     }
 
-        .prov-input::placeholder,
-        .prov-textarea::placeholder {
-            color: rgba(164, 165, 212, 0.7);
+        .form-control-create::placeholder {
+            color: #9ca3af;
         }
 
-        .prov-input:focus,
-        .prov-textarea:focus {
+        .form-control-create:focus,
+        textarea.form-control-create:focus {
+            background: #fff;
+            border-color: var(--sup-secondary);
+            box-shadow: 0 0 0 .16rem rgba(81,75,242,.18); /* antes coral */
+            color: #111827;
             outline: none;
-            border-color: var(--prov-accent);
-            box-shadow: 0 0 0 0.12rem rgba(139, 136, 242, 0.3);
-            background: #10125A;
         }
 
-        .prov-input.is-invalid,
-        .prov-textarea.is-invalid {
-            border-color: var(--prov-danger);
-        }
-
-        .prov-input.is-valid,
-        .prov-textarea.is-valid {
-            border-color: var(--prov-success);
-        }
-
-    .prov-help {
-        font-size: 0.72rem;
-        color: var(--prov-muted);
-        margin-top: 0.1rem;
+    .form-text-create {
+        color: var(--sup-muted);
+        font-size: .8rem;
+        margin-top: .15rem;
     }
 
-    .text-danger.small {
-        font-size: 0.72rem;
+    .required-field::after {
+        content: " *";
+        color: var(--sup-danger);
     }
 
-    /* Alertas integradas al tema (se usan si tu controlador setea TempData) */
-    .prov-alert {
-        border-radius: 0.7rem;
-        padding: 0.6rem 0.8rem;
-        font-size: 0.78rem;
-        margin-bottom: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+    .validation-message {
+        color: var(--sup-danger);
+        font-size: .8rem;
+        margin-top: .15rem;
+        display: block;
     }
 
-    .prov-alert-success {
-        background: rgba(46, 204, 113, 0.06);
-        border: 1px solid rgba(46, 204, 113, 0.45);
-        color: var(--prov-success);
+    .alert-create {
+        border-radius: var(--sup-radius);
+        border: 1px solid transparent;
+        padding: .7rem .9rem;
+        margin-bottom: .85rem;
+        font-size: .86rem;
     }
 
-    .prov-alert-error {
-        background: rgba(255, 107, 107, 0.06);
-        border: 1px solid rgba(255, 107, 107, 0.55);
-        color: var(--prov-danger);
+    .alert-danger {
+        background: #FEF2F2;
+        border-color: #FECACA;
+        color: #B91C1C;
     }
 
-    .prov-validation-summary {
-        background: rgba(255, 107, 107, 0.04);
-        border: 1px solid rgba(255, 107, 107, 0.55);
-        color: var(--prov-danger);
-        border-radius: 0.7rem;
-        padding: 0.6rem 0.8rem;
-        font-size: 0.78rem;
-        margin-bottom: 0.9rem;
+    .alert-success {
+        background: #ECFDF5;
+        border-color: #BBF7D0;
+        color: #166534;
     }
 
-        .prov-validation-summary ul {
-            margin: 0.3rem 0 0 1.1rem;
-            padding: 0;
-            font-size: 0.75rem;
-        }
-
-    /* Acciones */
-    .prov-actions {
-        padding-top: 1rem;
-        margin-top: 0.8rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .prov-btn-back {
-        border-radius: 999px;
-        padding: 0.45rem 1.1rem;
-        font-size: 0.8rem;
-        border: 1px solid var(--prov-accent);
-        color: var(--prov-accent);
-        background: transparent;
+    /* Botones */
+    .btn-create-primary {
+        background: var(--sup-secondary);
+        border: none;
+        border-radius: var(--sup-radius);
+        color: #fff;
+        font-weight: 600;
+        padding: .6rem 1.4rem;
+        font-size: .92rem;
+        transition: all .25s ease;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        transition: all 0.2s ease;
-        text-decoration: none;
+        gap: .35rem;
     }
 
-        .prov-btn-back:hover {
-            background: rgba(139, 136, 242, 0.1);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        .btn-create-primary:hover {
+            background: var(--sup-primary);
+            box-shadow: 0 4px 12px rgba(15,23,42,.18);
+            transform: translateY(-1px);
             color: #fff;
         }
 
-    .prov-btn-reset {
-        border-radius: 999px;
-        padding: 0.45rem 1.1rem;
-        font-size: 0.8rem;
-        border: 1px solid rgba(241, 196, 15, 0.9);
-        color: var(--prov-warning);
+    .btn-create-outline {
+        border: 1px solid var(--sup-accent);
         background: transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        transition: all 0.2s ease;
+        color: var(--sup-primary); /* antes rojo fijo */
+        border-radius: var(--sup-radius);
+        font-weight: 500;
+        padding: .6rem 1.4rem;
+        font-size: .9rem;
+        transition: all .25s ease;
         text-decoration: none;
-    }
-
-        .prov-btn-reset:hover {
-            background: rgba(241, 196, 15, 0.12);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-            color: #FFF8D2;
-        }
-
-    .prov-btn-save {
-        border-radius: 999px;
-        padding: 0.48rem 1.4rem;
-        font-size: 0.8rem;
-        border: none;
-        background: linear-gradient(135deg, var(--prov-success), var(--prov-accent));
-        color: #FFF;
-        font-weight: 600;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        box-shadow: 0 10px 24px rgba(81, 75, 242, 0.35);
-        transition: all 0.25s ease;
+        gap: .35rem;
     }
 
-        .prov-btn-save:hover {
-            background: linear-gradient(135deg, #5EDE9A, #8B88F2);
+        .btn-create-outline:hover {
+            background: var(--sup-accent);
+            color: #101232; /* azul oscuro legible */
+            box-shadow: 0 4px 10px rgba(15,23,42,.16);
             transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.7);
         }
+
+    .action-buttons {
+        border-top: 1px solid var(--sup-border);
+        padding-top: 1rem;
+        margin-top: .75rem;
+    }
 
     /* Tarjeta informativa */
-    .prov-info-card {
-        margin-top: 1.6rem;
-        background: linear-gradient(145deg, #0C0E39, #0D0E26);
-        border-radius: var(--prov-radius);
-        border: 1px solid var(--prov-border);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
-        color: var(--prov-muted);
-        font-size: 0.78rem;
+    .info-panel {
+        background: #fff;
+        border: 1px solid var(--sup-border);
+        border-radius: var(--sup-radius);
+        box-shadow: 0 6px 18px rgba(15,23,42,.08);
+        color: #374151;
+        font-size: .9rem;
     }
 
-        .prov-info-card h6 {
-            color: var(--prov-accent);
-            font-weight: 600;
-            font-size: 0.86rem;
-            margin-bottom: 0.55rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+        .info-panel h6 {
+            color: var(--sup-primary); /* antes rojo */
+            font-weight: 700;
+            font-size: .95rem;
         }
 
-        .prov-info-card p {
-            margin-bottom: 0.35rem;
+    /* Scrollbars */
+    .table-responsive::-webkit-scrollbar {
+        width: 7px;
+        height: 7px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #c9cbff;
+        border-radius: 4px;
+    }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #a3a6ff;
         }
 
-    @@media (max-width: 768px) {
-        .prov-edit-body
+    @@media (max-width:768px) {
+        .create-card-body {
+            padding: 1.1rem 1.1rem 1.3rem;
+        }
 
-    {
-        padding: 1.4rem 1rem 1rem;
-    }
+        .section-container {
+            padding: .9rem .85rem;
+        }
 
-    .prov-actions {
-        flex-direction: column;
-    }
+        .section-title {
+            font-size: .95rem;
+            padding-bottom: .4rem;
+        }
 
-        .prov-actions > * {
+        .create-card-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .action-buttons .d-flex {
+            flex-direction: column;
+            align-items: stretch;
+            gap: .6rem;
+        }
+
+        .btn-create-outline, .btn-create-primary {
             width: 100%;
-            text-align: center;
             justify-content: center;
         }
-
     }
 </style>
 
-<div class="container-fluid prov-edit-theme">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-8 col-xl-6">
-            <!-- CARD PRINCIPAL -->
-            <div class="prov-edit-card-main">
-                <!-- Encabezado -->
-                <div class="prov-edit-header">
-                    <div class="prov-edit-header-icon">
-                        <i class="bi bi-building-add"></i>
-                    </div>
-                    <div>
-                        <h4>Agregar Nuevo Proveedor</h4>
-                        <small>Registra un nuevo aliado comercial con datos claros y actualizados.</small>
-                    </div>
-                </div>
-
-                <!-- Cuerpo / Formulario -->
-                <div class="prov-edit-body">
-                    <!-- Resumen de errores (usa validación MVC estándar) -->
-                    <div asp-validation-summary="ModelOnly" class="prov-validation-summary" role="alert"></div>
-
-                    <form asp-action="Create" method="post" id="proveedorForm">
-                        @Html.AntiForgeryToken()
-
-                        <!-- INFORMACIÓN BÁSICA -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="prov-section-label">
-                                    <i class="bi bi-building"></i> Información del Proveedor
-                                </div>
-                            </div>
-                            <div class="col-12 mb-3">
-                                <label asp-for="Nombre" class="prov-label">
-                                    <i class="bi bi-building"></i> Nombre del Proveedor
-                                    <span class="required">*</span>
-                                </label>
-                                <input asp-for="Nombre"
-                                       class="prov-input"
-                                       placeholder="Ingrese el nombre del proveedor"
-                                       required />
-                                <span asp-validation-for="Nombre" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <!-- INFORMACIÓN DE CONTACTO -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="prov-section-label">
-                                    <i class="bi bi-telephone"></i> Información de Contacto
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contacto" class="prov-label">
-                                    <i class="bi bi-person"></i> Persona de Contacto
-                                </label>
-                                <input asp-for="Contacto"
-                                       class="prov-input"
-                                       placeholder="Nombre del contacto principal" />
-                                <span asp-validation-for="Contacto" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Telefono" class="prov-label">
-                                    <i class="bi bi-phone"></i> Teléfono
-                                </label>
-                                <input asp-for="Telefono"
-                                       class="prov-input"
-                                       placeholder="Número de teléfono" />
-                                <span asp-validation-for="Telefono" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <!-- INFORMACIÓN ADICIONAL -->
-                        <div class="row mb-2">
-                            <div class="col-12">
-                                <div class="prov-section-label">
-                                    <i class="bi bi-geo-alt"></i> Información Adicional
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Email" class="prov-label">
-                                    <i class="bi bi-envelope"></i> Correo Electrónico
-                                </label>
-                                <input asp-for="Email"
-                                       class="prov-input"
-                                       type="email"
-                                       placeholder="correo@proveedor.com" />
-                                <span asp-validation-for="Email" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Direccion" class="prov-label">
-                                    <i class="bi bi-geo"></i> Dirección
-                                </label>
-                                <textarea asp-for="Direccion"
-                                          class="prov-textarea"
-                                          rows="2"
-                                          placeholder="Dirección completa"></textarea>
-                                <span asp-validation-for="Direccion" class="text-danger small"></span>
-                            </div>
-                        </div>
-
-                        <!-- BOTONES DE ACCIÓN -->
-                        <div class="prov-actions">
-                            <a asp-action="Index"
-                               class="prov-btn-back"
-                               title="Volver al listado de proveedores">
-                                <i class="bi bi-arrow-left"></i> Volver al listado
-                            </a>
-
-                            <div class="d-flex gap-2">
-                                <button type="reset"
-                                        class="prov-btn-reset"
-                                        id="btnReset"
-                                        title="Limpiar formulario">
-                                    <i class="bi bi-arrow-clockwise"></i> Limpiar
-                                </button>
-
-                                <button type="submit"
-                                        class="prov-btn-save"
-                                        id="btnSubmit"
-                                        title="Guardar nuevo proveedor">
-                                    <i class="bi bi-plus-circle"></i> Agregar Proveedor
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+<div class="container supplier-theme">
+    <!-- Card principal -->
+    <div class="create-card">
+        <div class="create-card-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-building-add fs-2 me-3"></i>
+                <div>
+                    <h2 class="mb-1">Agregar Nuevo Proveedor</h2>
+                    <p class="mb-0 opacity-75">Registra un nuevo aliado comercial con datos claros y actualizados.</p>
                 </div>
             </div>
+        </div>
 
-            <!-- TARJETA INFORMATIVA -->
-            <div class="card prov-info-card mt-4">
-                <div class="card-body">
-                    <h6><i class="bi bi-lightbulb"></i> Recomendaciones para el registro</h6>
-                    <p>
-                        <i class="bi bi-check-circle text-success me-1"></i>
-                        <strong>Nombre claro:</strong> usa el nombre comercial real del proveedor.
-                    </p>
-                    <p>
-                        <i class="bi bi-telephone me-1"></i>
-                        <strong>Contacto confiable:</strong> agrega teléfono o correo que realmente respondan.
-                    </p>
-                    <p class="mb-0">
-                        <i class="bi bi-shield-check text-info me-1"></i>
-                        <strong>Datos correctos:</strong> evitar errores facilita compras, pagos y facturación.
-                    </p>
+        <div class="create-card-body">
+            <!-- Resumen de validación MVC -->
+            <div asp-validation-summary="ModelOnly" class="alert-create alert-danger" role="alert"></div>
+
+            <form asp-action="Create" method="post" id="proveedorForm">
+                @Html.AntiForgeryToken()
+
+                <!-- SECCIÓN: Información del Proveedor -->
+                <div class="section-container">
+                    <h4 class="section-title">
+                        <i class="bi bi-card-text"></i>
+                        Información del Proveedor
+                    </h4>
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label asp-for="Nombre" class="form-label required-field">Nombre del Proveedor</label>
+                            <input asp-for="Nombre" class="form-control-create" placeholder="Ingrese el nombre del proveedor" required />
+                            <span asp-validation-for="Nombre" class="validation-message"></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- SECCIÓN: Información de Contacto -->
+                <div class="section-container">
+                    <h4 class="section-title">
+                        <i class="bi bi-telephone"></i>
+                        Información de Contacto
+                    </h4>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label asp-for="Contacto" class="form-label">Persona de Contacto</label>
+                            <input asp-for="Contacto" class="form-control-create" placeholder="Nombre del contacto principal" />
+                            <span asp-validation-for="Contacto" class="validation-message"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Telefono" class="form-label">Teléfono</label>
+                            <input asp-for="Telefono" class="form-control-create" placeholder="Número de teléfono" />
+                            <span asp-validation-for="Telefono" class="validation-message"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: Información Adicional -->
+                <div class="section-container">
+                    <h4 class="section-title">
+                        <i class="bi bi-geo-alt"></i>
+                        Información Adicional
+                    </h4>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">Correo Electrónico</label>
+                            <input asp-for="Email" type="email" class="form-control-create" placeholder="correo@proveedor.com" />
+                            <span asp-validation-for="Email" class="validation-message"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Direccion" class="form-label">Dirección</label>
+                            <textarea asp-for="Direccion" rows="2" class="form-control-create" placeholder="Dirección completa"></textarea>
+                            <span asp-validation-for="Direccion" class="validation-message"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTONES -->
+                <div class="action-buttons">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Index" class="btn-create-outline">
+                            <i class="bi bi-arrow-left"></i> Volver al listado
+                        </a>
+
+                        <div class="d-flex gap-3">
+                            <button type="reset" class="btn-create-outline" id="btnReset">
+                                <i class="bi bi-arrow-clockwise"></i> Limpiar
+                            </button>
+                            <button type="submit" class="btn-create-primary" id="btnSubmit">
+                                <i class="bi bi-plus-circle"></i> Agregar Proveedor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tarjeta informativa -->
+    <div class="card info-panel mt-4">
+        <div class="card-body">
+            <h6><i class="bi bi-lightbulb me-1"></i> Recomendaciones para el registro</h6>
+            <p>
+                <i class="bi bi-check-circle text-success me-1"></i>
+                <strong>Nombre claro:</strong> usa el nombre comercial real del proveedor.
+            </p>
+            <p>
+                <i class="bi bi-telephone me-1"></i>
+                <strong>Contacto confiable:</strong> agrega teléfono o correo que realmente respondan.
+            </p>
+            <p class="mb-0">
+                <i class="bi bi-shield-check text-info me-1"></i>
+                <strong>Datos correctos:</strong> evitar errores facilita compras, pagos y facturación.
+            </p>
         </div>
     </div>
 </div>
@@ -475,16 +410,12 @@
             const nombreInput = document.querySelector('#Nombre');
             const resetButton = document.querySelector('#btnReset');
 
-            // Foco inicial
-            if (nombreInput) {
-                nombreInput.focus();
-            }
+            if (nombreInput) nombreInput.focus();
 
-            // Validación visual simple para Nombre (sin romper validación MVC)
             if (nombreInput) {
                 nombreInput.addEventListener('blur', function () {
                     const errorSpan = this.nextElementSibling;
-                    if (!this.value.trim() && errorSpan && errorSpan.classList.contains('text-danger')) {
+                    if (!this.value.trim() && errorSpan && errorSpan.classList.contains('validation-message')) {
                         this.classList.add('is-invalid');
                     } else if (this.value.trim()) {
                         this.classList.remove('is-invalid');
@@ -494,7 +425,6 @@
                 });
             }
 
-            // Limpiar estados al resetear
             if (resetButton && form) {
                 resetButton.addEventListener('click', function () {
                     form.querySelectorAll('.is-valid, .is-invalid').forEach(el => {

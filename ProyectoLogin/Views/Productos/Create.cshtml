@@ -13,448 +13,460 @@
 
 <style>
     :root {
-        --inventory-primary: #2D2A99;
-        --inventory-secondary: #6361F2;
-        --inventory-accent: #9B99F5;
-        --inventory-bg: #15153A;
-        --inventory-card: #1E1E4D;
-        --light-text: #F0F0F7;
-        --border-radius: 0.75rem;
+        --inventory-primary: #1C1973;
+        --inventory-secondary: #514BF2;
+        --inventory-accent: #8B88F2;
+        --inventory-bg: #f5f6fa;
+        --inventory-card: #ffffff;
+        --inventory-text: #212529;
+        --inventory-radius: 0.75rem;
     }
 
+    /* Contenedor general del módulo (encaja con layout claro) */
     .inventory-theme {
-        background: linear-gradient(135deg, var(--inventory-bg) 0%, var(--inventory-primary) 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
+        background: var(--inventory-bg);
+        padding: 1.5rem 0 2rem;
     }
 
     .create-card {
         background: var(--inventory-card);
-        border: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid #e5e7eb;
+        border-radius: var(--inventory-radius);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
         overflow: hidden;
-        margin-bottom: 2rem;
-        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        transition: all 0.25s ease;
     }
 
         .create-card:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+            transform: translateY(-1px);
         }
 
     .create-card-header {
-        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid var(--inventory-accent);
+        background: linear-gradient(90deg, var(--inventory-primary), var(--inventory-secondary));
+        color: #ffffff;
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
     }
 
     .create-card-body {
-        padding: 2rem;
+        padding: 1.5rem 1.75rem 1.75rem;
     }
 
     .section-container {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--inventory-radius);
+        padding: 1.25rem 1.25rem 1.15rem;
+        margin-bottom: 1.25rem;
+        transition: all 0.25s ease;
     }
 
         .section-container:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--inventory-secondary);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            border-color: var(--inventory-accent);
         }
 
     .section-title {
-        color: var(--light-text);
+        color: #111827;
         font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid var(--inventory-secondary);
+        font-size: 1rem;
+        margin-bottom: 0.85rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid rgba(81, 75, 242, 0.18);
         display: flex;
         align-items: center;
+        gap: 0.5rem;
     }
 
         .section-title i {
             background: var(--inventory-secondary);
             color: white;
-            width: 2rem;
-            height: 2rem;
+            width: 1.9rem;
+            height: 1.9rem;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-right: 0.75rem;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
     .form-label {
-        color: var(--light-text);
+        color: #374151;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.35rem;
         display: block;
     }
 
-    .form-control-create {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius);
-        color: var(--light-text);
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
+    .form-control-create,
+    .form-select-create,
+    textarea.form-control-create {
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: var(--inventory-radius);
+        color: #111827;
+        padding: 0.6rem 0.85rem;
+        transition: all 0.25s ease;
         width: 100%;
+        font-size: 0.94rem;
     }
 
-        .form-control-create:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--inventory-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25);
-            color: var(--light-text);
+        .form-control-create::placeholder {
+            color: #9ca3af;
         }
 
-        .form-control-create::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        .form-control-create:focus,
+        .form-select-create:focus,
+        textarea.form-control-create:focus {
+            background: #ffffff;
+            border-color: var(--inventory-secondary);
+            box-shadow: 0 0 0 0.16rem rgba(81, 75, 242, 0.15);
+            color: #111827;
+            outline: none;
         }
 
     .form-select-create {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid var(--inventory-accent) !important;
-        border-radius: var(--border-radius) !important;
-        color: var(--light-text) !important;
-        padding: 0.75rem 1rem !important;
-        transition: all 0.3s ease !important;
-        appearance: none !important;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%239B99F5' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e") !important;
-        background-repeat: no-repeat !important;
-        background-position: right 0.75rem center !important;
-        background-size: 16px 12px !important;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23514BF2' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 14px 10px;
     }
 
-        .form-select-create:focus {
-            background: rgba(255, 255, 255, 0.15) !important;
-            border-color: var(--inventory-secondary) !important;
-            box-shadow: 0 0 0 0.2rem rgba(99, 97, 242, 0.25) !important;
-            color: var(--light-text) !important;
-        }
-
         .form-select-create option {
-            background: var(--inventory-card) !important;
-            color: var(--light-text) !important;
-            padding: 0.5rem !important;
+            background: #ffffff !important;
+            color: #111827 !important;
         }
-
-            .form-select-create option:checked {
-                background: var(--inventory-secondary) !important;
-                color: white !important;
-            }
 
     .form-text-create {
-        color: #A0A0CC;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 0.15rem;
     }
 
     .btn-create-primary {
         background: var(--inventory-secondary);
         border: none;
-        border-radius: var(--border-radius);
+        border-radius: var(--inventory-radius);
         color: white;
         font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        transition: all 0.3s ease;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.92rem;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
     }
 
         .btn-create-primary:hover {
             background: var(--inventory-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+            transform: translateY(-1px);
             color: white;
         }
 
     .btn-create-outline {
-        border: 2px solid var(--inventory-accent);
+        border: 1px solid var(--inventory-accent);
         background: transparent;
-        color: var(--inventory-accent);
-        border-radius: var(--border-radius);
-        font-weight: 600;
-        padding: 0.75rem 1.5rem;
-        transition: all 0.3s ease;
+        color: var(--inventory-secondary);
+        border-radius: var(--inventory-radius);
+        font-weight: 500;
+        padding: 0.6rem 1.4rem;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
+        gap: 0.35rem;
     }
 
         .btn-create-outline:hover {
             background: var(--inventory-accent);
-            color: var(--inventory-card);
-            transform: translateY(-2px);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+            transform: translateY(-1px);
         }
 
     .btn-manage {
         background: transparent;
-        border: 1px solid var(--inventory-accent);
-        color: var(--inventory-accent);
-        border-radius: var(--border-radius);
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
+        border: 1px solid #d1d5db;
+        color: #6b7280;
+        border-radius: 999px;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.78rem;
+        transition: all 0.25s ease;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
+        gap: 0.25rem;
     }
 
         .btn-manage:hover {
-            background: var(--inventory-accent);
-            color: var(--inventory-card);
+            border-color: var(--inventory-secondary);
+            color: var(--inventory-secondary);
+            background: #eef2ff;
         }
 
     .required-field::after {
         content: " *";
-        color: #ff6b6b;
+        color: #ef4444;
     }
 
     .validation-message {
-        color: #ff6b6b;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.15rem;
         display: block;
     }
 
     .field-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.9rem;
     }
 
-        .field-group:last-child {
-            margin-bottom: 0;
-        }
-
     .action-buttons {
-        border-top: 1px solid var(--inventory-accent);
-        padding-top: 1.5rem;
-        margin-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+        margin-top: 0.75rem;
     }
 
     .alert-create {
-        border-radius: var(--border-radius);
+        border-radius: var(--inventory-radius);
         border: 1px solid transparent;
-        padding: 1rem;
-        margin-bottom: 1rem;
+        padding: 0.7rem 0.9rem;
+        margin-bottom: 0.85rem;
+        font-size: 0.86rem;
     }
 
     .alert-success {
-        background: rgba(40, 167, 69, 0.1);
-        border-color: rgba(40, 167, 69, 0.3);
-        color: #51cf66;
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #166534;
     }
 
     .alert-danger {
-        background: rgba(220, 53, 69, 0.1);
-        border-color: rgba(220, 53, 69, 0.3);
-        color: #ff6b6b;
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #b91c1c;
     }
 
     .code-generated {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius);
-        padding: 0.75rem 1rem;
-        color: var(--light-text);
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--inventory-radius);
+        padding: 0.6rem 0.85rem;
+        color: #111827;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
     .modal-section-title {
-        color: var(--light-text);
+        color: #111827;
         font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 1rem;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: var(--border-radius);
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+        padding: 0.55rem 0.8rem;
+        background: #f9fafb;
+        border-radius: var(--inventory-radius);
         border-left: 4px solid var(--inventory-secondary);
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: 0.4rem;
     }
 
         .modal-section-title i {
             margin: 0;
         }
 
-    /* ================= MODALES ================= */
-
     .modal-content {
-        background: var(--inventory-card);
-        border: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius);
-        color: var(--light-text);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--inventory-radius);
+        color: #111827;
+        box-shadow: 0 10px 40px rgba(15, 23, 42, 0.18);
     }
 
     .modal-header {
-        background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
-        border-bottom: 1px solid var(--inventory-accent);
-        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        background: linear-gradient(90deg, var(--inventory-primary), var(--inventory-secondary));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: var(--inventory-radius) var(--inventory-radius) 0 0;
         color: #ffffff;
     }
 
     .modal-title {
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: 0.4rem;
         font-weight: 600;
     }
 
     .modal-footer {
-        border-top: 1px solid var(--inventory-accent);
+        border-top: 1px solid #e5e7eb;
     }
 
     .text-accent {
-        color: var(--inventory-accent) !important;
+        color: var(--inventory-secondary) !important;
     }
 
-    /* Contenedor de tabla en modal */
     .table-modal-container {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: var(--border-radius);
+        background: #ffffff;
+        border-radius: var(--inventory-radius);
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid #e5e7eb;
     }
 
-    /* Tabla del modal */
     .table-modal {
         width: 100%;
         margin: 0;
         border-collapse: collapse;
         background: transparent;
-        color: #E8E8FF;
+        color: #111827;
+        font-size: 0.82rem;
     }
 
         .table-modal thead th {
-            background: linear-gradient(135deg, var(--inventory-primary) 0%, var(--inventory-secondary) 100%);
-            color: #FFFFFF;
-            border: none;
-            padding: 0.85rem 1rem;
+            background: #f3f4ff;
+            color: #111827;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.6rem 0.75rem;
             font-weight: 600;
-            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
             white-space: nowrap;
         }
 
         .table-modal tbody tr {
-            background: rgba(10, 10, 35, 0.7);
-            transition: all 0.25s ease;
+            background: #ffffff;
+            transition: all 0.18s ease;
         }
 
             .table-modal tbody tr:nth-child(even) {
-                background: rgba(26, 26, 60, 0.9);
+                background: #f9fafb;
             }
 
         .table-modal tbody td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid rgba(155, 153, 245, 0.18);
-            color: #D8D8FF;
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
             vertical-align: middle;
-            font-size: 0.85rem;
         }
 
-            /* Nombre destacado */
             .table-modal tbody td.fw-semibold {
-                color: var(--inventory-accent); /* o #9B99F5 directo si prefieres */
+                color: var(--inventory-primary);
                 font-weight: 700 !important;
             }
 
         .table-modal tbody tr:hover {
-            background: rgba(99, 97, 242, 0.22);
-            transform: translateX(3px);
+            background: #eef2ff;
+            transform: translateX(2px);
         }
 
-        .table-modal tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-    /* Badges */
     .badge-status {
-        padding: 0.35rem 0.75rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
         font-weight: 600;
-        letter-spacing: 0.3px;
     }
 
     .badge-active {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
+        background: #22c55e;
+        color: #ffffff;
     }
 
     .badge-inactive {
-        background: linear-gradient(135deg, #6c757d, #868e96);
-        color: white;
+        background: #9ca3af;
+        color: #ffffff;
     }
 
-    /* Botones acción tabla */
     .btn-table-action {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
+        width: 26px;
+        height: 26px;
+        border-radius: 0.5rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border: none;
-        transition: all 0.3s ease;
-        margin: 0 2px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
     }
 
     .btn-edit {
-        background: rgba(59, 130, 246, 0.18);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.35);
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
     }
 
         .btn-edit:hover {
-            background: #3b82f6;
-            color: white;
-            transform: scale(1.08);
+            background: #2563eb;
+            color: #ffffff;
+            transform: scale(1.05);
         }
 
     .btn-delete {
-        background: rgba(239, 68, 68, 0.18);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.35);
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
     }
 
         .btn-delete:hover {
-            background: #ef4444;
-            color: white;
-            transform: scale(1.08);
+            background: #dc2626;
+            color: #ffffff;
+            transform: scale(1.05);
         }
 
-    /* Scrollbar tablas modal */
     .table-responsive::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
     }
 
     .table-responsive::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+        background: #f3f4f6;
         border-radius: 4px;
     }
 
     .table-responsive::-webkit-scrollbar-thumb {
-        background: var(--inventory-accent);
+        background: #cbd5f5;
         border-radius: 4px;
     }
 
         .table-responsive::-webkit-scrollbar-thumb:hover {
-            background: var(--inventory-secondary);
+            background: #9ca3af;
         }
+
+    @@media (max-width: 768px) {
+        .create-card-body {
+            padding: 1.1rem 1.1rem 1.3rem;
+        }
+
+        .section-container {
+            padding: 0.9rem 0.85rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .create-card-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .action-buttons .d-flex {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.6rem;
+        }
+
+        .btn-create-outline,
+        .btn-create-primary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
+
 
 @if (isAuth && isAdmin)
 {
@@ -478,7 +490,7 @@
                     <div class="alert-create alert-success d-flex align-items-center">
                         <i class="bi bi-check-circle-fill me-2"></i>
                         <div>@TempData["SuccessCategoria"]</div>
-                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                     </div>
                 }
                 @if (TempData["ErrorCategoria"] != null)
@@ -486,7 +498,7 @@
                     <div class="alert-create alert-danger d-flex align-items-center">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <div>@TempData["ErrorCategoria"]</div>
-                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                     </div>
                 }
 
@@ -549,7 +561,7 @@
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <label class="form-label required-field">Categoría del Producto</label>
                                         <button type="button" class="btn-manage" data-bs-toggle="modal" data-bs-target="#modalCategoria">
-                                            <i class="bi bi-plus-circle me-1"></i>Gestionar Categorías
+                                            <i class="bi bi-plus-circle"></i>Gestionar Categorías
                                         </button>
                                     </div>
                                     <select asp-for="IdCategoria" asp-items="ViewBag.CategoriasSelect" class="form-select-create" id="IdCategoria">
@@ -564,7 +576,7 @@
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <label class="form-label required-field">Marca del Producto</label>
                                         <button type="button" class="btn-manage" data-bs-toggle="modal" data-bs-target="#modalMarca">
-                                            <i class="bi bi-plus-circle me-1"></i>Gestionar Marcas
+                                            <i class="bi bi-plus-circle"></i>Gestionar Marcas
                                         </button>
                                     </div>
                                     <select asp-for="IdMarca" asp-items="ViewBag.MarcasSelect" class="form-select-create" id="IdMarca">
@@ -617,15 +629,15 @@
                     <div class="action-buttons">
                         <div class="d-flex justify-content-between align-items-center">
                             <a asp-action="Index" class="btn-create-outline">
-                                <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+                                <i class="bi bi-arrow-left"></i>Volver al Inventario
                             </a>
 
                             <div class="d-flex gap-3">
                                 <a asp-action="Index" class="btn-create-outline">
-                                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                                    <i class="bi bi-x-circle"></i>Cancelar
                                 </a>
                                 <button type="submit" class="btn-create-primary" id="btnSubmit">
-                                    <i class="bi bi-check-lg me-2"></i>Guardar Producto
+                                    <i class="bi bi-check-lg"></i>Guardar Producto
                                 </button>
                             </div>
                         </div>
@@ -659,13 +671,13 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn-create-primary" id="btnGuardarCategoria">
-                                <i class="bi bi-check-lg me-1"></i>Guardar
+                                <i class="bi bi-check-lg"></i>Guardar
                             </button>
                             <button type="button" class="btn-create-outline" id="btnCancelarEdicion" style="display: none;">
-                                <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                                <i class="bi bi-x-lg"></i>Cancelar Edición
                             </button>
                             <button type="button" class="btn-create-outline ms-auto" data-bs-dismiss="modal">
-                                <i class="bi bi-door-closed me-1"></i>Cerrar
+                                <i class="bi bi-door-closed"></i>Cerrar
                             </button>
                         </div>
                     </form>
@@ -735,13 +747,13 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn-create-primary" id="btnGuardarMarca">
-                                <i class="bi bi-check-lg me-1"></i>Guardar
+                                <i class="bi bi-check-lg"></i>Guardar
                             </button>
                             <button type="button" class="btn-create-outline" id="btnCancelarEdicionMarca" style="display: none;">
-                                <i class="bi bi-x-lg me-1"></i>Cancelar Edición
+                                <i class="bi bi-x-lg"></i>Cancelar Edición
                             </button>
                             <button type="button" class="btn-create-outline ms-auto" data-bs-dismiss="modal">
-                                <i class="bi bi-door-closed me-1"></i>Cerrar
+                                <i class="bi bi-door-closed"></i>Cerrar
                             </button>
                         </div>
                     </form>
@@ -800,7 +812,7 @@
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
     <script>
-        // Auto ocultar alertas
+        // Auto ocultar alertas bootstrap
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(a => {
                 const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
@@ -809,7 +821,7 @@
         }, 5000);
 
         // --- VALIDACIONES DEL FORMULARIO PRINCIPAL ---
-        document.getElementById('productForm').addEventListener('submit', function (e) {
+        document.getElementById('productForm')?.addEventListener('submit', function (e) {
             let isValid = true;
             const submitBtn = document.getElementById('btnSubmit');
 
@@ -855,7 +867,7 @@
                     submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Guardar Producto';
                 }, 1000);
 
-                const firstError = document.querySelector('.text-danger');
+                const firstError = document.querySelector('.validation-message');
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
@@ -864,22 +876,19 @@
 
         function mostrarError(campoId, mensaje) {
             const campo = document.getElementById(campoId);
-            const errorSpan = campo.nextElementSibling || campo.parentElement.nextElementSibling;
-
-            if (errorSpan && errorSpan.classList.contains('text-danger')) {
+            if (!campo) return;
+            const errorSpan = campo.parentElement.querySelector('.validation-message');
+            if (errorSpan) {
                 errorSpan.textContent = mensaje;
             }
-
             campo.classList.add('is-invalid');
         }
 
         document.querySelectorAll('#Nombre, #Descripcion, #IdCategoria, #IdMarca, #idProveedor').forEach(campo => {
-            campo.addEventListener('input', function () {
+            campo?.addEventListener('input', function () {
                 this.classList.remove('is-invalid');
-                const errorSpan = this.nextElementSibling || this.parentElement.nextElementSibling;
-                if (errorSpan && errorSpan.classList.contains('text-danger')) {
-                    errorSpan.textContent = '';
-                }
+                const errorSpan = this.parentElement.querySelector('.validation-message');
+                if (errorSpan) errorSpan.textContent = '';
                 if (this.id === 'idProveedor') {
                     document.getElementById('proveedorValidation').textContent = '';
                 }
@@ -887,7 +896,7 @@
         });
 
         // --- CATEGORÍAS ---
-        document.getElementById('formCategoria').addEventListener('submit', function (e) {
+        document.getElementById('formCategoria')?.addEventListener('submit', function (e) {
             e.preventDefault();
             guardarCategoria();
         });
@@ -908,65 +917,59 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        mostrarAlertaCategoria(data.message, 'success');
-                        resetFormCategoria();
-                        cargarCategorias();
-                        actualizarSelectCategorias(data.categorias);
-                    } else {
-                        mostrarAlertaCategoria(data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    mostrarAlertaCategoria('Error al guardar la categoría', 'danger');
-                    console.error('Error:', error);
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = idCategoria
-                        ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
-                        : '<i class="bi bi-check-lg me-1"></i>Guardar';
-                });
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaCategoria(data.message, 'success');
+                    resetFormCategoria();
+                    cargarCategorias();
+                    actualizarSelectCategorias(data.categorias);
+                } else {
+                    mostrarAlertaCategoria(data.message, 'danger');
+                }
+            })
+            .catch(() => mostrarAlertaCategoria('Error al guardar la categoría', 'danger'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = idCategoria
+                    ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
+                    : '<i class="bi bi-check-lg me-1"></i>Guardar';
+            });
         }
 
         function cargarCategorias() {
             fetch('/Productos/ObtenerCategorias')
-                .then(response => response.json())
-                .then(categorias => {
-                    const tbody = document.getElementById('tbodyCategorias');
-                    tbody.innerHTML = '';
-
-                    categorias.forEach(categoria => {
-                        const tr = document.createElement('tr');
-                        tr.setAttribute('data-id', categoria.idCategoria);
-                        tr.innerHTML = `
-                            <td class="fw-semibold">${categoria.nombre}</td>
-                            <td class="text-accent">${categoria.descripcion || 'Sin descripción'}</td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-1">
-                                    <button type="button" class="btn-table-action btn-edit"
-                                            onclick="editarCategoria(${categoria.idCategoria}, '${categoria.nombre}', '${categoria.descripcion || ''}')">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn-table-action btn-delete"
-                                            onclick="eliminarCategoria(${categoria.idCategoria}, '${categoria.nombre}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+            .then(r => r.json())
+            .then(categorias => {
+                const tbody = document.getElementById('tbodyCategorias');
+                tbody.innerHTML = '';
+                categorias.forEach(categoria => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', categoria.idCategoria);
+                    tr.innerHTML = `
+                        <td class="fw-semibold">${categoria.nombre}</td>
+                        <td class="text-accent">${categoria.descripcion || 'Sin descripción'}</td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <button type="button" class="btn-table-action btn-edit"
+                                    onclick="editarCategoria(${categoria.idCategoria}, '${categoria.nombre}', '${categoria.descripcion || ''}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn-table-action btn-delete"
+                                    onclick="eliminarCategoria(${categoria.idCategoria}, '${categoria.nombre}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            });
         }
 
         function actualizarSelectCategorias(categorias) {
             const select = document.getElementById('IdCategoria');
+            if (!select) return;
             select.innerHTML = '<option value="">-- Seleccione una categoría --</option>';
-
             categorias.forEach(categoria => {
                 const option = document.createElement('option');
                 option.value = categoria.idCategoria;
@@ -979,69 +982,58 @@
             document.getElementById('idCategoria').value = id;
             document.getElementById('nombreCategoria').value = nombre;
             document.getElementById('descripcionCategoria').value = descripcion || '';
-
             const btn = document.getElementById('btnGuardarCategoria');
             btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
-            btn.classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicion').style.display = 'block';
         }
 
         function eliminarCategoria(id, nombre) {
-            if (confirm(`¿Está seguro de que desea eliminar la categoría "${nombre}"?`)) {
-                const formData = new FormData();
-                formData.append('id', id);
+            if (!confirm(`¿Está seguro de que desea eliminar la categoría "${nombre}"?`)) return;
 
-                fetch('/Productos/EliminarCategoria', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            mostrarAlertaCategoria(data.message, 'success');
-                            cargarCategorias();
-                            actualizarSelectCategorias(data.categorias);
-                        } else {
-                            mostrarAlertaCategoria(data.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        mostrarAlertaCategoria('Error al eliminar la categoría', 'danger');
-                        console.error('Error:', error);
-                    });
-            }
+            const formData = new FormData();
+            formData.append('id', id);
+
+            fetch('/Productos/EliminarCategoria', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaCategoria(data.message, 'success');
+                    cargarCategorias();
+                    actualizarSelectCategorias(data.categorias);
+                } else {
+                    mostrarAlertaCategoria(data.message, 'danger');
+                }
+            })
+            .catch(() => mostrarAlertaCategoria('Error al eliminar la categoría', 'danger'));
         }
 
         function resetFormCategoria() {
             document.getElementById('formCategoria').reset();
             document.getElementById('idCategoria').value = '';
-            const btn = document.getElementById('btnGuardarCategoria');
-            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
-            btn.classList.replace('btn-warning', 'btn-success');
+            document.getElementById('btnGuardarCategoria').innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
             document.getElementById('btnCancelarEdicion').style.display = 'none';
         }
 
         function mostrarAlertaCategoria(mensaje, tipo) {
-            const alertContainer = document.getElementById('alertContainerCategoria');
+            const cont = document.getElementById('alertContainerCategoria');
             const alert = document.createElement('div');
             alert.className = `alert alert-${tipo} alert-dismissible fade show`;
             alert.innerHTML = `
                 <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-2"></i>
                 ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            alertContainer.appendChild(alert);
-
-            setTimeout(() => {
-                if (alert.parentNode) alert.remove();
-            }, 5000);
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            cont.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
         }
 
         // --- MARCAS ---
-        document.getElementById('formMarca').addEventListener('submit', function (e) {
+        document.getElementById('formMarca')?.addEventListener('submit', function (e) {
             e.preventDefault();
             guardarMarca();
         });
@@ -1062,69 +1054,63 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        mostrarAlertaMarca(data.message, 'success');
-                        resetFormMarca();
-                        cargarMarcas();
-                        actualizarSelectMarcas(data.marcas);
-                    } else {
-                        mostrarAlertaMarca(data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    mostrarAlertaMarca('Error al guardar la marca', 'danger');
-                    console.error('Error:', error);
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = idMarca
-                        ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
-                        : '<i class="bi bi-check-lg me-1"></i>Guardar';
-                });
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaMarca(data.message, 'success');
+                    resetFormMarca();
+                    cargarMarcas();
+                    actualizarSelectMarcas(data.marcas);
+                } else {
+                    mostrarAlertaMarca(data.message, 'danger');
+                }
+            })
+            .catch(() => mostrarAlertaMarca('Error al guardar la marca', 'danger'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = idMarca
+                    ? '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar'
+                    : '<i class="bi bi-check-lg me-1"></i>Guardar';
+            });
         }
 
         function cargarMarcas() {
             fetch('/Productos/ObtenerMarcas')
-                .then(response => response.json())
-                .then(marcas => {
-                    const tbody = document.getElementById('tbodyMarcas');
-                    tbody.innerHTML = '';
-
-                    marcas.forEach(marca => {
-                        const tr = document.createElement('tr');
-                        tr.setAttribute('data-id', marca.idMarca);
-                        tr.innerHTML = `
-                            <td class="fw-semibold">${marca.nombre}</td>
-                            <td>
-                                <span class="badge-status ${marca.activo ? 'badge-active' : 'badge-inactive'}">
-                                    ${marca.activo ? 'Activa' : 'Inactiva'}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-1">
-                                    <button type="button" class="btn-table-action btn-edit"
-                                            onclick="editarMarca(${marca.idMarca}, '${marca.nombre}')">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button type="button" class="btn-table-action btn-delete"
-                                            onclick="eliminarMarca(${marca.idMarca}, '${marca.nombre}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+            .then(r => r.json())
+            .then(marcas => {
+                const tbody = document.getElementById('tbodyMarcas');
+                tbody.innerHTML = '';
+                marcas.forEach(marca => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-id', marca.idMarca);
+                    tr.innerHTML = `
+                        <td class="fw-semibold">${marca.nombre}</td>
+                        <td>
+                            <span class="badge-status ${marca.activo ? 'badge-active' : 'badge-inactive'}">
+                                ${marca.activo ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <button type="button" class="btn-table-action btn-edit"
+                                    onclick="editarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn-table-action btn-delete"
+                                    onclick="eliminarMarca(${marca.idMarca}, '${marca.nombre}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            });
         }
 
         function actualizarSelectMarcas(marcas) {
             const select = document.getElementById('IdMarca');
+            if (!select) return;
             select.innerHTML = '<option value="">-- Seleccione una marca --</option>';
-
             marcas.forEach(marca => {
                 const option = document.createElement('option');
                 option.value = marca.idMarca;
@@ -1136,40 +1122,35 @@
         function editarMarca(id, nombre) {
             document.getElementById('idMarca').value = id;
             document.getElementById('nombreMarca').value = nombre;
-
             const btn = document.getElementById('btnGuardarMarca');
             btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Actualizar';
-            btn.classList.replace('btn-success', 'btn-warning');
             document.getElementById('btnCancelarEdicionMarca').style.display = 'block';
         }
 
         function eliminarMarca(id, nombre) {
-            if (confirm(`¿Está seguro de que desea eliminar la marca "${nombre}"?`)) {
-                const formData = new FormData();
-                formData.append('id', id);
+            if (!confirm(`¿Está seguro de que desea eliminar la marca "${nombre}"?`)) return;
 
-                fetch('/Productos/EliminarMarca', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            mostrarAlertaMarca(data.message, 'success');
-                            cargarMarcas();
-                            actualizarSelectMarcas(data.marcas);
-                        } else {
-                            mostrarAlertaMarca(data.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        mostrarAlertaMarca('Error al eliminar la marca', 'danger');
-                        console.error('Error:', error);
-                    });
-            }
+            const formData = new FormData();
+            formData.append('id', id);
+
+            fetch('/Productos/EliminarMarca', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlertaMarca(data.message, 'success');
+                    cargarMarcas();
+                    actualizarSelectMarcas(data.marcas);
+                } else {
+                    mostrarAlertaMarca(data.message, 'danger');
+                }
+            })
+            .catch(() => mostrarAlertaMarca('Error al eliminar la marca', 'danger'));
         }
 
         function resetFormMarca() {
@@ -1177,28 +1158,22 @@
             document.getElementById('idMarca').value = '';
             const btn = document.getElementById('btnGuardarMarca');
             btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Guardar';
-            btn.classList.replace('btn-warning', 'btn-success');
             document.getElementById('btnCancelarEdicionMarca').style.display = 'none';
         }
 
         function mostrarAlertaMarca(mensaje, tipo) {
-            const alertContainer = document.getElementById('alertContainerMarca');
+            const cont = document.getElementById('alertContainerMarca');
             const alert = document.createElement('div');
             alert.className = `alert alert-${tipo} alert-dismissible fade show`;
             alert.innerHTML = `
                 <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}-fill me-2"></i>
                 ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            alertContainer.appendChild(alert);
-
-            setTimeout(() => {
-                if (alert.parentNode) alert.remove();
-            }, 5000);
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            cont.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
         }
 
-        // Botones cancelar edición
-        document.getElementById('btnCancelarEdicion').addEventListener('click', resetFormCategoria);
-        document.getElementById('btnCancelarEdicionMarca').addEventListener('click', resetFormMarca);
+        document.getElementById('btnCancelarEdicion')?.addEventListener('click', resetFormCategoria);
+        document.getElementById('btnCancelarEdicionMarca')?.addEventListener('click', resetFormMarca);
     </script>
 }

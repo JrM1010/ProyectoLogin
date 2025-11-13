@@ -56,7 +56,7 @@
                                         }
                                     </ul>
                                 </div>
-                                <button type="button" class="btn-close btn-close-white ms-2"
+                                <button type="button" class="btn-close ms-2"
                                         data-bs-dismiss="alert" aria-label="Cerrar"></button>
                             </div>
                         </div>
@@ -77,7 +77,7 @@
                                     <i class="bi bi-credit-card me-1"></i>NIT *
                                 </label>
                                 <input asp-for="Nit"
-                                       class="form-control form-control-client"
+                                       class="form-control clients-input form-control-client"
                                        placeholder="Ej: 12345678-9"
                                        required
                                        pattern="[0-9]+(-[0-9kK])?"
@@ -102,7 +102,7 @@
                                         <i class="bi bi-person me-1"></i>Nombres *
                                     </label>
                                     <input asp-for="Nombres"
-                                           class="form-control form-control-client"
+                                           class="form-control clients-input form-control-client"
                                            placeholder="Nombres del cliente"
                                            required
                                            minlength="2"
@@ -117,7 +117,7 @@
                                         <i class="bi bi-person me-1"></i>Apellidos *
                                     </label>
                                     <input asp-for="Apellidos"
-                                           class="form-control form-control-client"
+                                           class="form-control clients-input form-control-client"
                                            placeholder="Apellidos del cliente"
                                            required
                                            minlength="2"
@@ -139,7 +139,7 @@
                                     <i class="bi bi-envelope me-1"></i>Correo Electrónico
                                 </label>
                                 <input asp-for="Correo"
-                                       class="form-control form-control-client"
+                                       class="form-control clients-input form-control-client"
                                        type="email"
                                        placeholder="cliente@correo.com"
                                        maxlength="150" />
@@ -157,7 +157,7 @@
                                     <i class="bi bi-house me-1"></i>Dirección Completa
                                 </label>
                                 <textarea asp-for="Direccion"
-                                          class="form-control form-control-client"
+                                          class="form-control clients-input form-control-client"
                                           rows="3"
                                           maxlength="250"
                                           placeholder="Dirección completa del cliente"
@@ -200,20 +200,20 @@
             <!-- TARJETA INFORMATIVA -->
             <div class="card cliente-info-card mt-4">
                 <div class="card-body">
-                    <h6 class="mb-3 text-accent">
+                    <h6 class="mb-3">
                         <i class="bi bi-lightbulb me-2"></i>Información Importante
                     </h6>
-                    <ul class="list-unstyled text-muted small mb-0">
+                    <ul class="list-unstyled small mb-0">
                         <li class="mb-2">
-                            <i class="bi bi-info-circle text-accent me-1"></i>
+                            <i class="bi bi-info-circle me-1"></i>
                             <strong>NIT:</strong> Verifica el NIT antes de guardar; se usará para facturación.
                         </li>
                         <li class="mb-2">
-                            <i class="bi bi-envelope-open text-accent me-1"></i>
+                            <i class="bi bi-envelope-open me-1"></i>
                             <strong>Correo:</strong> Facilita el envío de comprobantes y comunicación.
                         </li>
                         <li>
-                            <i class="bi bi-person-check text-success me-1"></i>
+                            <i class="bi bi-person-check me-1"></i>
                             <strong>Registro correcto:</strong> Un cliente bien registrado agiliza tus procesos de venta.
                         </li>
                     </ul>
@@ -385,263 +385,271 @@
 
 <style>
     :root {
-        --primary-blue: #1C1973;
-        --secondary-blue: #514BF2;
-        --accent-blue: #8B88F2;
-        --dark-bg: #0D0E26;
-        --alt-bg: #081C59;
-        --light-text: #F0F0F7;
-        --muted-text: #A4A5D4;
-        --radius: 0.75rem;
+        /* Paleta menta (alineada a la de usuarios) */
+        --clients-primary: #062926;
+        --clients-secondary: #12C6A1;
+        --clients-accent: #5EF2C1;
+        --clients-bg: #f5f6fa;
+        --clients-card: #ffffff;
+        --clients-text: #111827;
+        --clients-muted: #6b7280;
+        --clients-radius: 0.75rem;
+        --clients-border-soft: #e5e7eb;
+        --clients-danger: #b91c1c;
+        --clients-warning: #ffc107;
     }
 
+    /* Fondo claro y tipografía principal */
     .cliente-edit-theme {
         min-height: 100vh;
-        background: radial-gradient(circle at top left, rgba(81,75,242,0.14), transparent), radial-gradient(circle at top right, rgba(139,136,242,0.08), transparent), linear-gradient(180deg, #0D0E26, #040611);
-        color: var(--light-text);
+        background: var(--clients-bg);
+        color: var(--clients-text);
     }
 
+    /* Card principal en blanco */
     .cliente-edit-card {
-        background: rgba(5, 10, 35, 0.98);
-        border-radius: var(--radius);
-        border: 1px solid rgba(81,75,242,0.35);
-        box-shadow: 0 14px 32px rgba(0,0,0,0.7);
+        background: var(--clients-card);
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-border-soft);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
         overflow: hidden;
-        backdrop-filter: blur(4px);
     }
 
+    /* Header con gradiente menta */
     .cliente-edit-header {
-        background: linear-gradient(135deg, var(--alt-bg), var(--primary-blue));
+        background: linear-gradient(90deg, var(--clients-primary), var(--clients-secondary));
         padding: 1.1rem 1.4rem;
-        border-bottom: 1px solid rgba(139,136,242,0.35);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        color: #fff;
     }
 
     .cliente-edit-icon {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
-        background: radial-gradient(circle at 30% 0, var(--accent-blue), var(--primary-blue));
+        background: rgba(0, 0, 0, 0.16);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
-        font-size: 1.3rem;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+        color: var(--clients-accent);
+        font-size: 1.4rem;
+        box-shadow: none;
     }
 
     .cliente-edit-subtitle {
-        color: var(--muted-text);
-        font-size: 0.8rem;
+        color: rgba(241, 245, 249, 0.9);
+        font-size: 0.82rem;
     }
 
     .label-estado {
-        font-size: 0.7rem;
-        color: var(--muted-text);
+        font-size: 0.72rem;
+        color: rgba(241, 245, 249, 0.9);
     }
 
     .badge-estado {
-        padding: 0.15rem 0.6rem;
+        padding: 0.2rem 0.65rem;
         font-size: 0.72rem;
         border-radius: 999px;
+        border: 1px solid transparent;
     }
 
     .badge-estado-activo {
-        background-color: rgba(46, 204, 113, 0.18);
-        color: #2ECC71;
-        border: 1px solid rgba(46, 204, 113, 0.6);
+        background: #ecfdf5;
+        color: #064e3b;
+        border-color: #bbf7d0;
     }
 
+    /* Secciones */
     .seccion-form {
         padding: 1rem 0.2rem 0.2rem;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid var(--clients-border-soft);
     }
 
     .seccion-titulo {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--accent-blue);
+        font-size: 0.95rem;
+        color: var(--clients-text);
+        font-weight: 700;
         display: flex;
         align-items: center;
-        margin-bottom: 0.55rem;
+        gap: .4rem;
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.55rem;
+        border-bottom: 2px solid rgba(18, 198, 161, 0.18);
+        text-transform: none;
+        letter-spacing: 0;
     }
 
+    /* Labels */
     .form-label-client {
-        font-size: 0.8rem;
-        color: var(--accent-blue);
+        font-size: 0.9rem;
+        color: #374151;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
     }
 
-    .form-control-client {
-        background-color: #030618;
-        border-radius: 0.55rem;
-        border: 1px solid rgba(81,75,242,0.4);
-        color: var(--light-text);
-        font-size: 0.86rem;
-        padding: 0.45rem 0.75rem;
+        .form-label-client i {
+            color: var(--clients-secondary);
+        }
+
+    /* Inputs claros tipo usuarios */
+    .form-control-client,
+    .clients-input {
+        background: #ffffff;
+        border-radius: var(--clients-radius);
+        border: 1px solid #d1d5db;
+        color: var(--clients-text);
+        font-size: 0.94rem;
+        padding: 0.55rem 0.85rem;
+        transition: all 0.25s ease;
     }
 
-        .form-control-client:focus {
-            background-color: #030618;
-            color: var(--light-text);
-            border-color: var(--secondary-blue);
-            box-shadow: 0 0 0 0.16rem rgba(81,75,242,0.32);
+        .form-control-client::placeholder,
+        .clients-input::placeholder,
+        textarea.form-control-client::placeholder {
+            color: #9ca3af;
+            opacity: 1;
+        }
+
+        .form-control-client:focus,
+        .clients-input:focus,
+        textarea.form-control-client:focus {
+            background: #ffffff;
+            color: var(--clients-text);
+            border-color: var(--clients-secondary);
+            box-shadow: 0 0 0 0.16rem rgba(18, 198, 161, 0.15);
         }
 
     textarea.form-control-client {
         resize: vertical;
     }
 
-        /* Placeholders legibles en inputs oscuros */
-        .form-control-client::placeholder,
-        textarea.form-control-client::placeholder {
-            color: var(--muted-text);
-            opacity: 0.9;
-        }
-
-        .form-control-client:focus::placeholder,
-        textarea.form-control-client:focus::placeholder {
-            color: rgba(164,165,212,0.85);
-        }
-
-        /* Autocomplete navegador en tema oscuro */
-        .form-control-client:-webkit-autofill,
-        .form-control-client:-webkit-autofill:hover,
-        .form-control-client:-webkit-autofill:focus,
-        textarea.form-control-client:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0px 1000px #030618 inset !important;
-            -webkit-text-fill-color: var(--light-text) !important;
-            caret-color: var(--light-text);
-            transition: background-color 9999s ease-in-out 0s;
-        }
-
-    /* Fallback genérico por si algún input no lleva la clase custom */
-    input::placeholder,
-    textarea::placeholder {
-        color: var(--muted-text);
-        opacity: 0.9;
-    }
-
     .form-text-client {
-        color: var(--muted-text);
-        font-size: 0.75rem;
+        color: var(--clients-muted);
+        font-size: 0.78rem;
     }
 
+    /* Footer */
     .cliente-edit-footer {
-        border-top: 1px solid rgba(255,255,255,0.04);
+        border-top: 1px solid var(--clients-border-soft);
         margin-top: 0.3rem;
     }
 
     /* Botones */
-
     .btn-clientes-primary {
-        background: var(--secondary-blue);
-        color: #fff !important;
-        border: 1px solid var(--secondary-blue);
-        border-radius: var(--radius);
-        padding: 0.45rem 1.3rem;
-        font-weight: 600;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.55);
+        background: var(--clients-secondary);
+        color: #020814 !important;
+        border: 1px solid var(--clients-secondary);
+        border-radius: var(--clients-radius);
+        padding: 0.48rem 1.3rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
         transition: all 0.25s ease;
     }
 
         .btn-clientes-primary:hover {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
-            color: #fff !important;
+            background: var(--clients-primary);
+            border-color: var(--clients-primary);
+            color: #ffffff !important;
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
         }
 
     .btn-outline-clientes {
-        border-radius: var(--radius);
-        border: 1px solid var(--accent-blue);
-        color: var(--accent-blue) !important;
-        padding: 0.4rem 1rem;
-        font-weight: 500;
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-secondary);
+        color: var(--clients-secondary) !important;
+        padding: 0.45rem 1rem;
+        font-weight: 600;
         background-color: transparent;
-        font-size: 0.8rem;
+        font-size: 0.86rem;
         transition: all 0.25s ease;
     }
 
         .btn-outline-clientes:hover {
-            background-color: rgba(139,136,242,0.18);
-            color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background-color: rgba(18, 198, 161, 0.12);
+            color: #064e3b !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
             transform: translateY(-1px);
         }
 
-    .cliente-btn-cancel {
-        padding: 0.4rem 1rem;
-    }
-
-    .cliente-btn-submit {
-        padding: 0.45rem 1.3rem;
-    }
-
     .cliente-btn-reset {
-        border-radius: var(--radius);
-        border: 1px solid rgba(255,193,7,0.8);
-        color: #FFC107 !important;
+        border-radius: var(--clients-radius);
+        border: 1px solid rgba(255, 193, 7, 0.9);
+        color: var(--clients-warning) !important;
         background-color: transparent;
-        padding: 0.4rem 1rem;
-        font-size: 0.78rem;
-        font-weight: 500;
+        padding: 0.45rem 1rem;
+        font-size: 0.84rem;
+        font-weight: 600;
         transition: all 0.25s ease;
     }
 
         .cliente-btn-reset:hover {
-            background-color: rgba(255,193,7,0.16);
-            color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background-color: rgba(255, 193, 7, 0.14);
+            color: #7a5a00 !important;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
             transform: translateY(-1px);
         }
 
-    /* Tarjeta Info */
+    .cliente-btn-cancel {
+        padding: 0.45rem 1rem;
+    }
+
+    .cliente-btn-submit {
+        padding: 0.48rem 1.3rem;
+    }
+
+    /* Tarjeta info (clara) */
     .cliente-info-card {
-        background: rgba(5, 10, 35, 0.98);
-        border-radius: var(--radius);
-        border: 1px solid rgba(81,75,242,0.22);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.7);
-        color: var(--light-text);
+        background: #ffffff;
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-border-soft);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        color: var(--clients-text);
     }
 
         .cliente-info-card h6 {
-            color: var(--accent-blue);
-            font-weight: 600;
+            color: var(--clients-primary);
+            font-weight: 700;
+            font-size: 0.95rem;
         }
 
         .cliente-info-card ul li {
-            color: var(--muted-text);
+            color: var(--clients-muted);
+            font-size: 0.85rem;
+        }
+
+        .cliente-info-card i {
+            color: var(--clients-secondary);
         }
 
         .cliente-info-card strong {
-            color: var(--light-text);
+            color: var(--clients-text);
         }
 
     /* Alertas */
     .alert-smart-danger {
-        background: radial-gradient(circle at 0 0, rgba(255,107,107,0.18), rgba(5,10,35,0.98));
-        border-left: 4px solid #FF6B6B;
-        color: var(--light-text);
-        font-size: 0.8rem;
-    }
-
-    .text-accent {
-        color: var(--accent-blue) !important;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: var(--clients-danger);
+        font-size: 0.86rem;
+        border-radius: var(--clients-radius);
     }
 
     @@media (max-width: 768px) {
-        .cliente-edit-card {
-            margin-top: 0.5rem;
-        }
+        .cliente-edit-card
 
-        .cliente-edit-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
+    {
+        margin-top: 0.5rem;
+    }
+
+    .cliente-edit-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
     }
 </style>
-

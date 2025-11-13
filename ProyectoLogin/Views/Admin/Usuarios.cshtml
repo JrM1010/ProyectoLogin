@@ -4,7 +4,7 @@
     var activos = ViewBag.Activos as List<ProyectoLogin.Models.Usuario>
                   ?? new List<ProyectoLogin.Models.Usuario>();
     var inactivos = ViewBag.Inactivos as List<ProyectoLogin.Models.Usuario>
-                   ?? new List<ProyectoLogin.Models.Usuario>();
+                    ?? new List<ProyectoLogin.Models.Usuario>();
 
     // Variables de paginación
     var totalActivos = ViewBag.TotalActivos ?? 0;
@@ -16,496 +16,552 @@
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
 }
 
-<style>
-    :root {
-        /* Aprovechamos la paleta del layout / productos */
-        --users-primary: var(--primary-blue, #1C1973);
-        --users-secondary: var(--secondary-blue, #514BF2);
-        --users-accent: var(--accent-blue, #8B88F2);
-        --users-bg: var(--dark-bg, #0D0E26);
-        --users-alt-bg: var(--alt-bg, #081C59);
-        --users-text: var(--light-text, #F0F0F7);
-        --users-radius: 0.75rem;
-        --users-border: rgba(139, 136, 242, 0.35);
-        --users-muted: #A0A0CC;
-        --users-danger: #ff6b6b;
-        --users-success: #35D399;
-    }
-
-    .users-theme {
-        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.12), transparent),
-                    radial-gradient(circle at top right, rgba(139, 136, 242, 0.08), transparent),
-                    linear-gradient(135deg, var(--users-bg) 0%, #050814 100%);
-        min-height: 100vh;
-        padding: 1.5rem 0 2rem 0;
-    }
-
-    /* HEADER PRINCIPAL */
-    .users-header {
-        background: linear-gradient(135deg, var(--users-primary) 0%, var(--users-secondary) 100%);
-        border-radius: var(--users-radius);
-        padding: 1.5rem 2rem;
-        margin-bottom: 1.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
-        border: 1px solid var(--users-accent);
-        color: var(--users-text);
-    }
-
-    .users-header-title {
-        display: flex;
-        align-items: center;
-        gap: 0.9rem;
-    }
-
-    .users-header-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: rgba(8, 12, 32, 0.35);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-        color: var(--users-accent);
-    }
-
-    .users-header h2 {
-        margin: 0;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
-    .users-header p {
-        margin: 0;
-        font-size: 0.86rem;
-        color: rgba(240, 240, 247, 0.8);
-    }
-
-    .users-header-actions .btn {
-        border-radius: var(--users-radius);
-        font-weight: 600;
-        padding: 0.55rem 1.35rem;
-        font-size: 0.86rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .btn-users-outline {
-        border: 1px solid rgba(240, 240, 247, 0.7);
-        background: transparent;
-        color: var(--users-text);
-        transition: all 0.25s ease;
-    }
-
-    .btn-users-outline:hover {
-        background: rgba(255, 255, 255, 0.08);
-        transform: translateY(-1px);
-    }
-
-    .btn-users-primary {
-        background: var(--users-secondary);
-        border: none;
-        color: #ffffff;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-        transition: all 0.25s ease;
-    }
-
-    .btn-users-primary:hover {
-        background: var(--users-primary);
-        transform: translateY(-1px);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
-        color: #ffffff;
-    }
-
-    /* BARRA DE BÚSQUEDA */
-    .users-search-card {
-        background: #121633;
-        border-radius: var(--users-radius);
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1.75rem;
-        border: 1px solid var(--users-border);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-        color: var(--users-text);
-    }
-
-    .users-search-label {
-        font-size: 0.86rem;
-        color: var(--users-muted);
-        margin-bottom: 0.25rem;
-    }
-
-    .users-search-input {
-        background: rgba(10, 12, 34, 0.95);
-        border-radius: var(--users-radius);
-        border: 1px solid var(--users-border);
-        color: var(--users-text);
-        padding: 0.7rem 1rem;
-        width: 260px;
-        transition: all 0.25s ease;
-        font-size: 0.88rem;
-    }
-
-    .users-search-input::placeholder {
-        color: rgba(160, 160, 204, 0.7);
-    }
-
-    .users-search-input:focus {
-        outline: none;
-        border-color: var(--users-secondary);
-        box-shadow: 0 0 0 0.16rem rgba(81, 75, 242, 0.3);
-        background: #111632;
-    }
-
-    .btn-users-search {
-        border-radius: var(--users-radius);
-        padding: 0.7rem 1.4rem;
-        font-size: 0.85rem;
-        background: var(--users-secondary);
-        border: 1px solid var(--users-accent);
-        color: #ffffff;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        transition: all 0.25s ease;
-    }
-
-    .btn-users-search:hover {
-        background: var(--users-accent);
-        color: var(--users-bg);
-        box-shadow: 0 6px 18px rgba(139, 136, 242, 0.35);
-        transform: translateY(-1px);
-    }
-
-    /* CARDS CONTENEDORAS */
-    .users-card {
-        background: #15183A;
-        border-radius: var(--users-radius);
-        border: 1px solid var(--users-border);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        margin-bottom: 1.75rem;
-        overflow: hidden;
-    }
-
-    .users-card-header {
-        padding: 0.95rem 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        border-bottom: 1px solid rgba(139, 136, 242, 0.25);
-        color: var(--users-text);
-    }
-
-    .users-card-header.active {
-        background: linear-gradient(135deg, var(--users-primary), var(--users-secondary));
-    }
-
-    .users-card-header.inactive {
-        background: linear-gradient(135deg, #3b1b2c, #1f0f18);
-    }
-
-    .users-card-header h5 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 0.55px;
-    }
-
-    .users-header-badge {
-        padding: 0.2rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        margin-left: auto;
-    }
-
-    .badge-active-count {
-        background: rgba(81, 75, 242, 0.18);
-        border: 1px solid var(--users-accent);
-        color: var(--users-accent);
-    }
-
-    .badge-inactive-count {
-        background: rgba(255, 107, 107, 0.16);
-        border: 1px solid rgba(255, 107, 107, 0.7);
-        color: #ffb3b3;
-    }
-
-    .users-card-body {
-        padding: 0;
-    }
-
-    .users-empty {
-        text-align: center;
-        padding: 2.5rem 1rem;
-        color: var(--users-muted);
-    }
-
-    .users-empty i {
-        font-size: 2.4rem;
-        margin-bottom: 0.75rem;
-        color: rgba(139, 136, 242, 0.6);
-    }
-
-    /* TABLA USUARIOS */
-    .users-table-wrap {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    .users-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #15183A;
-        color: var(--users-text);
-        table-layout: fixed;
-    }
-
-    .users-table thead {
-        background: #1E2050;
-        position: sticky;
-        top: 0;
-        z-index: 5;
-    }
-
-    .users-table thead th {
-        padding: 0.9rem 0.9rem;
-        text-align: left;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.78rem;
-        letter-spacing: 0.4px;
-        color: #ffffff;
-        border-bottom: 2px solid var(--users-secondary);
-        white-space: nowrap;
-    }
-
-    .users-table thead th.text-center {
-        text-align: center;
-    }
-
-    .users-table tbody tr {
-        transition: all 0.25s ease;
-        background: #15183A;
-    }
-
-    .users-table tbody tr:nth-child(even) {
-        background: #191C44;
-    }
-
-    .users-table tbody tr:hover {
-        background: rgba(81, 75, 242, 0.16);
-        box-shadow: inset 4px 0 0 var(--users-secondary);
-        transform: translateX(2px);
-    }
-
-    .users-table td {
-        padding: 0.8rem 0.9rem;
-        border-bottom: 1px solid rgba(139, 136, 242, 0.18);
-        vertical-align: middle;
-        font-size: 0.86rem;
-        color: var(--users-text);
-    }
-
-    .user-id {
-        font-weight: 600;
-        color: var(--users-muted);
-        font-size: 0.78rem;
-    }
-
-    .user-name {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-weight: 600;
-        color: var(--users-text);
-    }
-
-    .user-name i {
-        color: var(--users-accent);
-    }
-
-    .user-email {
-        color: var(--users-muted);
-        font-size: 0.8rem;
-    }
-
-    .badge-role {
-        padding: 0.26rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        border: 1px solid var(--users-accent);
-        background: rgba(81, 75, 242, 0.12);
-        color: var(--users-accent);
-    }
-
-    .badge-role-muted {
-        border-color: rgba(160, 160, 204, 0.6);
-        background: rgba(10, 11, 28, 0.9);
-        color: var(--users-muted);
-    }
-
-    /* ACCIONES */
-    .user-actions {
-        display: flex;
-        justify-content: center;
-        gap: 0.3rem;
-    }
-
-    .btn-user-action {
-        width: 30px;
-        height: 30px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        transition: all 0.22s ease;
-        background: transparent;
-        color: var(--users-muted);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    }
-
-    .btn-user-edit {
-        border-color: rgba(255, 193, 7, 0.45);
-        color: #ffc107;
-        background: rgba(255, 193, 7, 0.06);
-    }
-
-    .btn-user-edit:hover {
-        background: #ffc107;
-        color: #111;
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(255, 193, 7, 0.4);
-    }
-
-    .btn-user-disable {
-        border-color: rgba(255, 107, 107, 0.55);
-        color: #ff6b6b;
-        background: rgba(255, 107, 107, 0.06);
-    }
-
-    .btn-user-disable:hover {
-        background: #ff6b6b;
-        color: #111;
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(255, 107, 107, 0.4);
-    }
-
-    .btn-user-enable {
-        border-color: rgba(53, 211, 153, 0.55);
-        color: var(--users-success);
-        background: rgba(53, 211, 153, 0.06);
-    }
-
-    .btn-user-enable:hover {
-        background: var(--users-success);
-        color: #111;
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 14px rgba(53, 211, 153, 0.4);
-    }
-
-    /* PAGINACIÓN */
-    .users-pagination-bar {
-        padding: 0.85rem 1.2rem;
-        border-top: 1px solid rgba(139, 136, 242, 0.25);
-        background: #101331;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        font-size: 0.78rem;
-        color: var(--users-muted);
-    }
-
-    .users-pagination .page-link {
-        padding: 0.25rem 0.6rem;
-        font-size: 0.75rem;
-        border-radius: 0.4rem;
-        border: 1px solid rgba(139, 136, 242, 0.5);
-        background: rgba(5, 7, 22, 0.98);
-        color: var(--users-muted);
-        transition: all 0.25s ease;
-    }
-
-    .users-pagination .page-link:hover {
-        background: rgba(81, 75, 242, 0.18);
-        color: var(--users-accent);
-        border-color: var(--users-accent);
-    }
-
-    .users-pagination .page-item.active .page-link {
-        background: var(--users-secondary);
-        border-color: var(--users-secondary);
-        color: #ffffff;
-        box-shadow: 0 4px 10px rgba(81, 75, 242, 0.45);
-    }
-
-    .users-pagination .page-item.disabled .page-link {
-        opacity: 0.35;
-        background: #070816;
-        border-color: rgba(139, 136, 242, 0.25);
-        color: var(--users-muted);
-    }
-
-    .text-soft-muted {
-        color: var(--users-muted);
-    }
-
-    /* MODAL CONFIRMACIÓN */
-    .modal-users .modal-content {
-        background: #15183A;
-        color: var(--users-text);
-        border-radius: 1rem;
-        border: 1px solid var(--users-accent);
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7);
-    }
-
-    .modal-users .modal-header {
-        border-bottom-color: rgba(139, 136, 242, 0.25);
-    }
-
-    .modal-users .modal-footer {
-        border-top-color: rgba(139, 136, 242, 0.18);
-    }
-
-    .modal-users .btn-cancel {
-        border-radius: 0.7rem;
-        padding: 0.45rem 1.2rem;
-        background: transparent;
-        color: var(--users-muted);
-        border: 1px solid rgba(139, 136, 242, 0.4);
-        transition: all 0.2s ease;
-    }
-
-    .modal-users .btn-cancel:hover {
-        background: rgba(139, 136, 242, 0.15);
-        color: var(--users-text);
-    }
-
-    .modal-users .btn-confirm {
-        border-radius: 0.7rem;
-        padding: 0.45rem 1.4rem;
-        background: var(--users-secondary);
-        color: #fff;
-        border: 1px solid var(--users-accent);
-        transition: all 0.2s ease;
-    }
-
-    .modal-users .btn-confirm:hover {
-        background: var(--users-primary);
-        box-shadow: 0 6px 18px rgba(81, 75, 242, 0.5);
-    }
-</style>
+@section Styles {
+    <style>
+        :root {
+            --users-primary: #062926;          /* menta oscuro */
+            --users-secondary: #12C6A1;        /* menta vibrante */
+            --users-accent: #5EF2C1;           /* acento brillante */
+            --users-bg: #f5f6fa;               /* fondo claro */
+            --users-card: #ffffff;
+            --users-text: #111827;
+            --users-muted: #6b7280;
+            --users-radius: 0.75rem;
+            --users-border-soft: #e5e7eb;
+            --users-danger: #dc2626;
+            --users-success: #16a34a;
+        }
+
+        /* Fondo general del módulo (similar a productos) */
+        .users-theme {
+            background: var(--users-bg);
+            padding: 1.5rem 0 2rem;
+        }
+
+        /* HEADER PRINCIPAL - gradiente "Gestión de Usuarios" */
+        .users-header {
+            background: linear-gradient(90deg, var(--users-primary), var(--users-secondary));
+            border-radius: var(--users-radius);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            padding: 1.1rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            color: #ffffff;
+        }
+
+        .users-header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .users-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--users-accent);
+        }
+
+        .users-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #ffffff;
+        }
+
+        .users-header p {
+            margin: 0.1rem 0 0;
+            font-size: 0.85rem;
+            color: rgba(241, 245, 249, 0.9);
+        }
+
+        .users-header-actions .btn {
+            font-size: 0.86rem;
+            border-radius: var(--users-radius);
+            padding: 0.5rem 1rem;
+        }
+
+        .btn-users-outline {
+            border: 1px solid var(--users-accent);
+            background: transparent;
+            color: #ffffff;
+            border-radius: var(--users-radius);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-users-outline:hover {
+            background: rgba(94, 242, 193, 0.16);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .btn-users-primary {
+            background: #ffffff;
+            color: var(--users-primary);
+            border: none;
+            border-radius: var(--users-radius);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-users-primary:hover {
+            background: #f9fafb;
+            color: var(--users-secondary);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* TARJETA DE BÚSQUEDA (similar a search-card) */
+        .users-search-card {
+            background: var(--users-card);
+            border: 1px solid var(--users-border-soft);
+            border-radius: var(--users-radius);
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+
+        .users-search-card .users-search-label {
+            font-size: 0.82rem;
+            color: var(--users-muted);
+            margin-bottom: 0.15rem;
+        }
+
+        .users-search-input {
+            background: #ffffff;
+            border-radius: var(--users-radius);
+            border: 1px solid var(--users-border-soft);
+            color: var(--users-text);
+            padding: 0.6rem 0.85rem;
+            min-width: 240px;
+            font-size: 0.88rem;
+            transition: all 0.22s ease;
+        }
+
+        .users-search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .users-search-input:focus {
+            outline: none;
+            border-color: var(--users-secondary);
+            box-shadow: 0 0 0 0.16rem rgba(18, 198, 161, 0.18);
+            background: #ffffff;
+        }
+
+        .btn-users-search {
+            border-radius: var(--users-radius);
+            padding: 0.6rem 1.3rem;
+            font-size: 0.85rem;
+            background: var(--users-secondary);
+            border: 1px solid var(--users-secondary);
+            color: #020814;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.25s ease;
+        }
+
+        .btn-users-search:hover {
+            background: var(--users-primary);
+            border-color: var(--users-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+            transform: translateY(-1px);
+        }
+
+        /* TARJETAS LISTADO (Activos / Inactivos) - similar a inventory-card */
+        .users-card {
+            background: var(--users-card);
+            border: 1px solid var(--users-border-soft);
+            border-radius: var(--users-radius);
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            transition: all 0.22s ease;
+        }
+
+        .users-card:hover {
+            box-shadow: 0 7px 20px rgba(15, 23, 42, 0.10);
+            transform: translateY(-1px);
+        }
+
+        /* Encabezados con gradiente donde dice "Usuarios Activos / Inactivos" */
+        .users-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.85rem 1.15rem;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            color: #ffffff;
+        }
+
+        .users-card-header.active {
+            background: linear-gradient(90deg, var(--users-primary), var(--users-secondary));
+        }
+
+        .users-card-header.inactive {
+            background: linear-gradient(90deg, #6b7280, #9ca3af);
+        }
+
+        .users-card-header h5 {
+            margin: 0;
+            font-size: 0.98rem;
+            font-weight: 700;
+            text-transform: none;
+            letter-spacing: 0.02em;
+            color: #ffffff;
+        }
+
+        .users-card-header i {
+            font-size: 1.2rem;
+            color: #bbf7d0;
+        }
+
+        .users-card-header.inactive i {
+            color: #e5e7eb;
+        }
+
+        .users-header-badge {
+            margin-left: auto;
+            padding: 0.22rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            color: #f9fafb;
+        }
+
+        .users-card-body {
+            padding: 0;
+        }
+
+        .users-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--users-muted);
+        }
+
+        .users-empty i {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--users-secondary);
+            opacity: 0.5;
+        }
+
+        /* TABLA USUARIOS (alineada a estilo productos) */
+        .users-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            font-size: 0.85rem;
+            color: var(--users-text);
+            background: transparent;
+        }
+
+        .users-table thead th {
+            background: #e5f9f3;
+            font-weight: 600;
+            font-size: 0.78rem;
+            border-bottom: 1px solid var(--users-border-soft);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--users-muted);
+            padding: 0.7rem 0.9rem;
+        }
+
+        .users-table thead th.text-center {
+            text-align: center;
+        }
+
+        .users-table tbody td {
+            padding: 0.7rem 0.9rem;
+            border-bottom: 1px solid var(--users-border-soft);
+            vertical-align: middle;
+            color: var(--users-text);
+        }
+
+        .users-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .users-table tbody tr:hover {
+            background-color: #ecfdf5;
+        }
+
+        .user-id {
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: var(--users-muted);
+        }
+
+        .user-name {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-weight: 600;
+            color: var(--users-text);
+        }
+
+        .user-name i {
+            color: var(--users-secondary);
+        }
+
+        .user-email {
+            color: var(--users-muted);
+            font-size: 0.8rem;
+        }
+
+        .badge-role {
+            padding: 0.22rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            border: 1px solid var(--users-secondary);
+            background: #ecfdf5;
+            color: var(--users-primary);
+        }
+
+        .badge-role-muted {
+            border-color: #d1d5db;
+            background: #f3f4f6;
+            color: var(--users-muted);
+        }
+
+        .text-soft-muted {
+            color: var(--users-muted);
+        }
+
+        /* ACCIONES - similar a action-btn */
+        .user-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .btn-user-action {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 0.7rem;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background: #f3f4f6;
+            color: var(--users-muted);
+        }
+
+        .btn-user-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .btn-user-edit:hover {
+            background: #fbbf24;
+            color: #111827;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-user-disable {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-user-disable:hover {
+            background: #dc2626;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-user-enable {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .btn-user-enable:hover {
+            background: #22c55e;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(34, 197, 94, 0.4);
+        }
+
+        /* PAGINACIÓN (alineada con productos) */
+        .users-pagination-bar {
+            padding: 0.85rem 1.15rem;
+            border-top: 1px solid var(--users-border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.78rem;
+            color: var(--users-muted);
+            background: #ffffff;
+        }
+
+        .users-pagination .page-link {
+            border-radius: 999px !important;
+            font-size: 0.75rem;
+            padding: 0.24rem 0.6rem;
+            border: 1px solid var(--users-border-soft);
+            color: var(--users-muted);
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .users-pagination .page-link:hover {
+            background: #ecfdf5;
+            color: var(--users-secondary);
+            border-color: var(--users-secondary);
+        }
+
+        .users-pagination .page-item.active .page-link {
+            background-color: var(--users-secondary);
+            border-color: var(--users-secondary);
+            color: #020814;
+            box-shadow: 0 3px 8px rgba(18, 198, 161, 0.4);
+        }
+
+        .users-pagination .page-item.disabled .page-link {
+            opacity: 0.4;
+            background: #f9fafb;
+        }
+
+        /* MODAL CONFIRMACIÓN (similar a productos, con menta) */
+        .modal-users .modal-content {
+            background: #ffffff;
+            color: var(--users-text);
+            border-radius: var(--users-radius);
+            border: 1px solid var(--users-border-soft);
+            box-shadow: 0 10px 32px rgba(15, 23, 42, 0.18);
+        }
+
+        .modal-users .modal-header {
+            background: linear-gradient(90deg, var(--users-primary), var(--users-secondary));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+            border-radius: var(--users-radius) var(--users-radius) 0 0;
+        }
+
+        .modal-users .modal-title {
+            font-size: 0.98rem;
+            font-weight: 600;
+        }
+
+        .modal-users .modal-footer {
+            border-top: 1px solid var(--users-border-soft);
+        }
+
+        .modal-users .btn-cancel {
+            border-radius: var(--users-radius);
+            padding: 0.45rem 1.2rem;
+            background: transparent;
+            color: var(--users-muted);
+            border: 1px solid var(--users-border-soft);
+            transition: all 0.2s ease;
+        }
+
+        .modal-users .btn-cancel:hover {
+            background: #f9fafb;
+            color: var(--users-text);
+        }
+
+        .modal-users .btn-confirm {
+            border-radius: var(--users-radius);
+            padding: 0.45rem 1.4rem;
+            background: var(--users-secondary);
+            color: #020814;
+            border: none;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .modal-users .btn-confirm:hover {
+            background: var(--users-primary);
+            color: #ffffff;
+            box-shadow: 0 5px 14px rgba(18, 198, 161, 0.38);
+        }
+
+        @@media (max-width: 768px) {
+            .users-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0.9rem 1rem;
+            }
+
+            .users-header h2 {
+                font-size: 1.1rem;
+            }
+
+            .users-header p {
+                font-size: 0.8rem;
+            }
+
+            .users-header-actions {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.45rem;
+            }
+
+            .users-header-actions .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .users-search-card {
+                padding: 0.8rem 0.9rem;
+            }
+
+            .users-search-input {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .users-card-header {
+                padding: 0.75rem 0.9rem;
+            }
+
+            .users-pagination-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+}
 
 <div class="container-fluid users-theme">
     <!-- HEADER -->
@@ -557,7 +613,7 @@
         <div class="users-card-header active">
             <i class="bi bi-person-check fs-5"></i>
             <h5>Usuarios Activos</h5>
-            <span class="users-header-badge badge-active-count">
+            <span class="users-header-badge">
                 <i class="bi bi-people"></i>@totalActivos
             </span>
         </div>
@@ -611,7 +667,7 @@
                                                title="Editar usuario">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            <!-- Desactivar (con modal) -->
+                                            <!-- Desactivar -->
                                             <form asp-action="Desactivar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="button"
@@ -644,11 +700,11 @@
                                 <li class="page-item">
                                     <a class="page-link"
                                        href="@Url.Action("Usuarios", new {
-                                           q = ViewData["q"],
-                                           pageActivos = pageActivos - 1,
-                                           pageInactivos = pageInactivos,
-                                           pageSize = pageSize
-                                       })">
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos - 1,
+                                            pageInactivos = pageInactivos,
+                                            pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
@@ -669,11 +725,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = 1,
-                                               pageInactivos = pageInactivos,
-                                               pageSize = pageSize
-                                           })">1</a>
+                                                q = ViewData["q"],
+                                                pageActivos = 1,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                            })">1</a>
                                     </li>
                                     if (startPage > 2)
                                     {
@@ -688,11 +744,11 @@
                                     <li class="page-item @(i == pageActivos ? "active" : "")">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = i,
-                                               pageInactivos = pageInactivos,
-                                               pageSize = pageSize
-                                           })">@i</a>
+                                                q = ViewData["q"],
+                                                pageActivos = i,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                            })">@i</a>
                                     </li>
                                 }
 
@@ -707,11 +763,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = totalPagesActivos,
-                                               pageInactivos = pageInactivos,
-                                               pageSize = pageSize
-                                           })">@totalPagesActivos</a>
+                                                q = ViewData["q"],
+                                                pageActivos = totalPagesActivos,
+                                                pageInactivos = pageInactivos,
+                                                pageSize = pageSize
+                                            })">@totalPagesActivos</a>
                                     </li>
                                 }
                             }
@@ -722,11 +778,11 @@
                                 <li class="page-item">
                                     <a class="page-link"
                                        href="@Url.Action("Usuarios", new {
-                                           q = ViewData["q"],
-                                           pageActivos = pageActivos + 1,
-                                           pageInactivos = pageInactivos,
-                                           pageSize = pageSize
-                                       })">
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos + 1,
+                                            pageInactivos = pageInactivos,
+                                            pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
@@ -751,7 +807,7 @@
             <div class="users-card-header inactive">
                 <i class="bi bi-person-x fs-5"></i>
                 <h5>Usuarios Inactivos</h5>
-                <span class="users-header-badge badge-inactive-count">
+                <span class="users-header-badge">
                     <i class="bi bi-archive"></i>@totalInactivos
                 </span>
             </div>
@@ -790,7 +846,7 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="user-actions">
-                                            <!-- Activar (con modal) -->
+                                            <!-- Activar -->
                                             <form asp-action="Activar" asp-route-id="@usuario.IdUsuario" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="button"
@@ -823,11 +879,11 @@
                                 <li class="page-item">
                                     <a class="page-link"
                                        href="@Url.Action("Usuarios", new {
-                                           q = ViewData["q"],
-                                           pageActivos = pageActivos,
-                                           pageInactivos = pageInactivos - 1,
-                                           pageSize = pageSize
-                                       })">
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos - 1,
+                                            pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
@@ -848,11 +904,11 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = pageActivos,
-                                               pageInactivos = 1,
-                                               pageSize = pageSize
-                                           })">1</a>
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = 1,
+                                                pageSize = pageSize
+                                            })">1</a>
                                     </li>
                                     if (startPageInactivos > 2)
                                     {
@@ -867,11 +923,11 @@
                                     <li class="page-item @(i == pageInactivos ? "active" : "")">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = pageActivos,
-                                               pageInactivos = i,
-                                               pageSize = pageSize
-                                           })">@i</a>
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = i,
+                                                pageSize = pageSize
+                                            })">@i</a>
                                     </li>
                                 }
 
@@ -886,26 +942,25 @@
                                     <li class="page-item">
                                         <a class="page-link"
                                            href="@Url.Action("Usuarios", new {
-                                               q = ViewData["q"],
-                                               pageActivos = pageActivos,
-                                               pageInactivos = totalPagesInactivos,
-                                               pageSize = pageSize
-                                           })">@totalPagesInactivos</a>
+                                                q = ViewData["q"],
+                                                pageActivos = pageActivos,
+                                                pageInactivos = totalPagesInactivos,
+                                                pageSize = pageSize
+                                            })">@totalPagesInactivos</a>
                                     </li>
                                 }
                             }
 
-                            @* Siguiente *@
                             @if (pageInactivos < totalPagesInactivos)
                             {
                                 <li class="page-item">
                                     <a class="page-link"
                                        href="@Url.Action("Usuarios", new {
-                                           q = ViewData["q"],
-                                           pageActivos = pageActivos,
-                                           pageInactivos = pageInactivos + 1,
-                                           pageSize = pageSize
-                                       })">
+                                            q = ViewData["q"],
+                                            pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos + 1,
+                                            pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
@@ -930,7 +985,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmUserTitle">Confirmar acción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <p id="confirmUserText" class="mb-0">¿Deseas continuar?</p>
@@ -964,7 +1019,6 @@
             const btnConfirm = document.getElementById('btnConfirmUser');
             let formToSubmit = null;
 
-            // Botones que disparan el modal
             document.querySelectorAll('.btn-user-confirm').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -977,6 +1031,7 @@
 
                     let title = 'Confirmar acción';
                     let message = '';
+
                     if (action === 'desactivar') {
                         title = 'Desactivar usuario';
                         message = `<strong>${userName}</strong><br>El usuario no podrá acceder al sistema hasta que sea activado nuevamente.`;
@@ -995,15 +1050,13 @@
                     if (confirmModal) {
                         confirmModal.show();
                     } else {
-                        // Fallback si no está Bootstrap JS
-                        if (confirm(title + ' - ' + userName + '?')) {
+                        if (confirm(`${title} - ${userName}`)) {
                             form.submit();
                         }
                     }
                 });
             });
 
-            // Confirmar desde el modal
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', () => {
                     if (formToSubmit) {

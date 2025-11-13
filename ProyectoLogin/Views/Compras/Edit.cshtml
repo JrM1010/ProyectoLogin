@@ -75,13 +75,13 @@
         background-color: var(--c-dark-3) !important;
         border-color: var(--c-border-soft) !important;
         color: var(--c-text-main) !important;
-        border-radius: 0.5rem;
+        border-radius: .5rem;
     }
 
         .compras-input::placeholder,
         .compras-select::placeholder,
         textarea::placeholder {
-            color: rgba(195, 199, 245, 0.5);
+            color: rgba(195,199,245,.5);
         }
 
         .compras-input:focus,
@@ -90,12 +90,12 @@
             background-color: var(--c-dark-3) !important;
             color: var(--c-text-main) !important;
             border-color: var(--c-primary-light) !important;
-            box-shadow: 0 0 0 0.15rem rgba(95, 106, 245, 0.35) !important;
+            box-shadow: 0 0 0 .15rem rgba(95,106,245,.35) !important;
         }
 
     .compras-help {
         color: var(--c-text-muted);
-        font-size: 0.8rem;
+        font-size: .8rem;
     }
 
     /* Tabla */
@@ -106,14 +106,14 @@
         .table-compras thead {
             background: linear-gradient(to right, var(--c-dark-2), var(--c-dark-3));
             color: var(--c-primary-soft);
-            border-bottom: 1px solid rgba(95, 106, 245, 0.5);
+            border-bottom: 1px solid rgba(95,106,245,.5);
         }
 
             .table-compras thead th {
                 font-weight: 600;
-                font-size: 0.78rem;
+                font-size: .78rem;
                 text-transform: uppercase;
-                letter-spacing: 0.04em;
+                letter-spacing: .04em;
                 border: none;
                 white-space: nowrap;
             }
@@ -121,7 +121,7 @@
         .table-compras tbody tr {
             background-color: var(--c-dark-1);
             color: var(--c-text-main);
-            transition: all 0.18s ease;
+            transition: all .18s ease;
         }
 
             .table-compras tbody tr:nth-child(even) {
@@ -136,37 +136,37 @@
         .table-compras td,
         .table-compras th,
         .table-compras tfoot td {
-            border-color: rgba(60, 74, 165, 0.28) !important;
+            border-color: rgba(60,74,165,.28) !important;
         }
 
         .table-compras .form-control-sm {
             background-color: var(--c-dark-3);
             border-color: var(--c-border-soft);
             color: var(--c-text-main);
-            border-radius: 0.45rem;
-            font-size: 0.78rem;
-            padding: 0.25rem 0.4rem;
+            border-radius: .45rem;
+            font-size: .78rem;
+            padding: .25rem .4rem;
         }
 
             .table-compras .form-control-sm:focus {
                 border-color: var(--c-primary-light);
-                box-shadow: 0 0 0 0.12rem rgba(95, 106, 245, 0.28);
+                box-shadow: 0 0 0 .12rem rgba(95,106,245,.28);
             }
 
     .precio-venta-sin-iva,
     .precio-venta-con-iva {
         background-color: var(--c-dark-3) !important;
         color: var(--c-primary-soft) !important;
-        border-color: rgba(95, 106, 245, 0.4) !important;
+        border-color: rgba(95,106,245,.4) !important;
         font-weight: 500;
     }
 
     .descuento {
-        border-color: rgba(246, 194, 62, 0.7) !important;
+        border-color: rgba(246,194,62,.7) !important;
     }
 
     .table-compras tfoot td {
-        font-size: 0.85rem;
+        font-size: .85rem;
     }
 
     .table-compras tfoot .text-primary {
@@ -177,8 +177,7 @@
         color: var(--c-accent-success) !important;
     }
 
-    #subtotal-display,
-    #iva-display {
+    #subtotal-display, #iva-display {
         color: var(--c-primary-soft);
     }
 
@@ -190,7 +189,7 @@
     /* Botones */
     .btn-outline-secondary {
         border-radius: 999px;
-        border-color: rgba(143, 156, 255, 0.35);
+        border-color: rgba(143,156,255,.35);
         color: var(--c-primary-soft);
     }
 
@@ -212,25 +211,25 @@
 
     .btn-outline-danger.btn-sm {
         border-radius: 999px;
-        border-color: rgba(255, 107, 107, 0.75);
+        border-color: rgba(255,107,107,.75);
         color: var(--c-accent-danger);
     }
 
         .btn-outline-danger.btn-sm:hover {
-            background-color: rgba(255, 107, 107, 0.14);
+            background-color: rgba(255,107,107,.14);
             color: var(--c-accent-danger);
         }
 
     .btn-primary.rounded-pill {
         background: linear-gradient(to right, var(--c-primary-light), var(--c-primary));
         border: none;
-        box-shadow: 0 6px 16px rgba(95, 106, 245, 0.4);
+        box-shadow: 0 6px 16px rgba(95,106,245,.4);
         font-weight: 600;
     }
 
         .btn-primary.rounded-pill:hover {
             background: linear-gradient(to right, var(--c-primary), var(--c-primary-light));
-            box-shadow: 0 8px 20px rgba(95, 106, 245, 0.55);
+            box-shadow: 0 8px 20px rgba(95,106,245,.55);
             transform: translateY(-1px);
         }
 
@@ -240,7 +239,7 @@
     }
 
         .btn-outline-warning.rounded-pill:hover {
-            background-color: rgba(246, 194, 62, 0.12);
+            background-color: rgba(246,194,62,.12);
             color: var(--c-accent-warning);
         }
 
@@ -248,19 +247,209 @@
         color: var(--c-text-muted) !important;
     }
 
-    @@media (max-width: 768px) {
-        .compras-header
+    @@media (max-width:768px) {
+        .compras-header {
+            padding: 1.25rem 1.25rem 1rem;
+        }
 
-    {
-        padding: 1.25rem 1.25rem 1rem;
+        .table-compras th, .table-compras td {
+            font-size: .7rem;
+            padding: .25rem .35rem;
+        }
+    }
+</style>
+
+<!-- ======= OVERRIDES “MENTA” (misma estética clara que Index/Detalles) ======= -->
+<style>
+    :root {
+        --c-primary: #062926; /* menta oscuro */
+        --c-primary-light: #12C6A1; /* menta vibrante */
+        --c-primary-soft: #5EF2C1; /* acento brillante */
+        --c-dark-1: #ffffff; /* fondo filas */
+        --c-dark-2: #0A3A34; /* header grad inicio */
+        --c-dark-3: #ffffff; /* inputs y celdas */
+        --c-dark-4: #ecfdf5; /* hover suave */
+        --c-bg-soft: #f5f6fa;
+        --c-border-soft: #e5e7eb;
+        --c-accent-success: #16a34a;
+        --c-accent-warning: #eab308;
+        --c-accent-danger: #ef4444;
+        --c-text-main: #111827;
+        --c-text-muted: #6b7280;
     }
 
-    .table-compras th,
-    .table-compras td {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.35rem;
+    /* HEADER */
+    .compras-header {
+        background: linear-gradient(90deg,var(--c-primary),var(--c-primary-light)) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,.18) !important;
+        box-shadow: 0 6px 18px rgba(15,23,42,.18) !important;
     }
 
+        .compras-header h2, .compras-header p {
+            color: #fff !important;
+        }
+
+        .compras-header .bi-cart-check {
+            color: var(--c-primary-soft) !important;
+        }
+
+    /* CARD */
+    .card-compras {
+        background: #ffffff !important;
+        border: 1px solid var(--c-border-soft) !important;
+        color: var(--c-text-main) !important;
+        box-shadow: 0 4px 14px rgba(15,23,42,.06) !important;
+    }
+
+        .card-compras .card-header {
+            background: linear-gradient(90deg,var(--c-primary),var(--c-primary-light)) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(255,255,255,.2) !important;
+        }
+
+        .card-compras .form-label {
+            color: var(--c-primary-light) !important;
+        }
+
+    /* INPUTS */
+    .compras-input,
+    .compras-select,
+    .form-control.bg-light {
+        background: #fff !important;
+        border: 1px solid var(--c-border-soft) !important;
+        color: var(--c-text-main) !important;
+    }
+
+        .compras-input::placeholder,
+        .compras-select::placeholder,
+        textarea::placeholder {
+            color: #9ca3af !important;
+        }
+
+        .compras-input:focus,
+        .compras-select:focus,
+        textarea:focus {
+            border-color: var(--c-primary-light) !important;
+            box-shadow: 0 0 0 .16rem rgba(18,198,161,.18) !important;
+            background: #fff !important;
+            color: var(--c-text-main) !important;
+        }
+
+    /* TABLA */
+    .table-compras {
+        color: var(--c-text-main) !important;
+    }
+
+        .table-compras thead {
+            background: #e5f9f3 !important;
+            color: var(--c-text-muted) !important;
+            border-bottom: 1px solid var(--c-border-soft) !important;
+        }
+
+            .table-compras thead th {
+                color: var(--c-text-muted) !important;
+            }
+
+        .table-compras tbody tr {
+            background: #ffffff !important;
+        }
+
+            .table-compras tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            .table-compras tbody tr:hover {
+                background: #ecfdf5 !important;
+            }
+
+        .table-compras td, .table-compras th, .table-compras tfoot td {
+            border-color: var(--c-border-soft) !important;
+        }
+
+        .table-compras .form-control-sm {
+            background: #fff !important;
+            color: var(--c-text-main) !important;
+            border: 1px solid var(--c-border-soft) !important;
+        }
+
+            .table-compras .form-control-sm:focus {
+                border-color: var(--c-primary-light) !important;
+                box-shadow: 0 0 0 .12rem rgba(18,198,161,.18) !important;
+            }
+
+    .precio-venta-sin-iva,
+    .precio-venta-con-iva {
+        background: #f0fdf9 !important;
+        border-color: rgba(18,198,161,.35) !important;
+        color: #065f46 !important;
+    }
+
+    .descuento {
+        border-color: #f59e0b !important;
+    }
+
+    /* FOOTER TOTALES */
+    #subtotal-display, #iva-display {
+        color: var(--c-primary-light) !important;
+    }
+
+    #total-display {
+        color: var(--c-accent-success) !important;
+    }
+
+    /* BOTONES */
+    .btn-outline-secondary {
+        background: #fff !important;
+        color: var(--c-primary) !important;
+        border: 1px solid var(--c-border-soft) !important;
+    }
+
+        .btn-outline-secondary:hover {
+            background: #ecfdf5 !important;
+            color: var(--c-primary-light) !important;
+            border-color: var(--c-primary-light) !important;
+            box-shadow: 0 3px 8px rgba(18,198,161,.25) !important;
+        }
+
+    .btn-outline-primary {
+        border-color: var(--c-primary-light) !important;
+        color: var(--c-primary-light) !important;
+        background: #fff !important;
+    }
+
+        .btn-outline-primary:hover {
+            background: #e5f9f3 !important;
+            color: var(--c-primary) !important;
+            border-color: var(--c-primary) !important;
+            box-shadow: 0 3px 8px rgba(18,198,161,.25) !important;
+        }
+
+    .btn-outline-danger.btn-sm {
+        border-color: #ef4444 !important;
+        color: #b91c1c !important;
+        background: #fff !important;
+    }
+
+        .btn-outline-danger.btn-sm:hover {
+            background: #fee2e2 !important;
+            color: #991b1b !important;
+            box-shadow: 0 3px 8px rgba(239,68,68,.25) !important;
+        }
+
+    .btn-primary.rounded-pill {
+        background: linear-gradient(90deg,var(--c-primary-light),var(--c-primary)) !important;
+        box-shadow: 0 6px 16px rgba(18,198,161,.35) !important;
+    }
+
+        .btn-primary.rounded-pill:hover {
+            background: linear-gradient(90deg,var(--c-primary),var(--c-primary-light)) !important;
+            box-shadow: 0 8px 20px rgba(18,198,161,.45) !important;
+        }
+
+    /* BADGE “MODO EDICIÓN” (respeta inline, solo refuerza) */
+    .badge.bg-opacity-10 {
+        backdrop-filter: saturate(140%);
     }
 </style>
 
@@ -271,9 +460,7 @@
             <h2 class="fw-bold mb-1">
                 <i class="bi bi-cart-check me-2 text-primary"></i> Editar Compra
             </h2>
-            <p class="mb-0">
-                Modifique los productos, totales y datos asociados a la compra seleccionada.
-            </p>
+            <p class="mb-0">Modifique los productos, totales y datos asociados a la compra seleccionada.</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
             <a href="@Url.Action("Index", new { estado = "Pendiente" })"
@@ -478,20 +665,20 @@
         function cargarDetallesExistentes() {
             @if (Model.Detalles != null)
             {
-                    foreach (var d in Model.Detalles)
-                    {
-                            <text>
-                                agregarFilaExistente(
-                                    @d.IdProducto,
-                                    '@Html.Raw(d.Producto?.Nombre?.Replace("'", "\\'"))',
-                                    @d.Cantidad,
-                                    @d.IdUnidad,
-                                    @d.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                                    @(d.Descuento * 100),
-                                    @d.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
-                                );
-                            </text>
-                    }
+                        foreach (var d in Model.Detalles)
+                        {
+                                    <text>
+                                        agregarFilaExistente(
+                                            @d.IdProducto,
+                                            '@Html.Raw(d.Producto?.Nombre?.Replace("'", "\\'"))',
+                                            @d.Cantidad,
+                                            @d.IdUnidad,
+                                            @d.PrecioUnitario.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                                            @(d.Descuento * 100),
+                                            @d.Subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                                        );
+                                    </text>
+                        }
             }
         }
 
@@ -686,16 +873,12 @@
                 const producto = (productosDisponibles || []).find(p => p.idProducto == productoId);
                 if (producto && producto.unidades) {
                     const unidad = producto.unidades.find(u => u.idUnidad == unidadId);
-                    if (unidad) {
-                        factor = unidad.factorConversion || 1;
-                    }
+                    if (unidad) { factor = unidad.factorConversion || 1; }
                 }
             }
 
             let descuentoDecimal = descuentoPct;
-            if (descuentoPct > 1) {
-                descuentoDecimal = descuentoPct / 100;
-            }
+            if (descuentoPct > 1) descuentoDecimal = descuentoPct / 100;
 
             const precioConDescuento = precio * (1 - descuentoDecimal);
             const precioBase = precioConDescuento / 1.12;
@@ -703,6 +886,7 @@
 
             subtotalesFilas[index] = isNaN(subtotalFila) ? 0 : subtotalFila;
 
+            const margenGanancia = 0.25;
             const precioVentaSinIVA = precioBase * (1 + margenGanancia);
             const precioVentaConIVA = precioVentaSinIVA * 1.12;
 

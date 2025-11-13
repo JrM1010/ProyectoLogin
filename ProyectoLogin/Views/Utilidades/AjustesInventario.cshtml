@@ -2,30 +2,28 @@
     ViewData["Title"] = "Ajuste de Inventario";
 }
 
-<div class="container-fluid py-4 ajustes-page">
-    <!-- HEADER -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div class="d-flex align-items-center">
-            <div class="ajustes-icon-main me-3">
-                <i class="bi bi-sliders fs-3"></i>
+<div class="container-fluid clients-theme">
+    <!-- HEADER (estilo copiado de Clientes) -->
+    <div class="clients-header">
+        <div class="clients-header-title">
+            <div class="clients-header-icon">
+                <i class="bi bi-sliders"></i>
             </div>
             <div>
-                <h1 class="h3 mb-1 fw-bold text-white">Ajuste Manual de Inventario</h1>
-                <p class="mb-0 text-muted-small">
-                    Busca un producto, aplica ajustes de entrada o salida y revisa el historial reciente.
-                </p>
+                <h2>Ajuste Manual de Inventario</h2>
+                <p>Busca un producto, aplica ajustes de entrada o salida y revisa el historial reciente</p>
             </div>
         </div>
-
-        <button type="button"
-                class="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 shadow-sm"
-                id="btnLimpiarTodo">
-            <i class="bi bi-arrow-clockwise"></i>
-            Limpiar Todo
-        </button>
+        <div class="clients-header-actions d-flex gap-2">
+            <button type="button"
+                    class="btn btn-clients-outline"
+                    id="btnLimpiarTodo" title="Limpiar todo">
+                <i class="bi bi-arrow-clockwise"></i> Limpiar Todo
+            </button>
+        </div>
     </div>
 
-    <!-- TOAST NOTIFICACIONES -->
+    <!-- TOAST NOTIFICACIONES (sin cambios funcionales) -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
         <div id="toastNotificacion" class="toast align-items-center text-white border-0" role="alert">
             <div class="d-flex">
@@ -33,212 +31,178 @@
                     <i class="bi me-2"></i>
                     <span id="toast-message">Operación completada</span>
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
             </div>
         </div>
     </div>
 
-    <!-- CARD PRINCIPAL -->
-    <div class="card ajustes-main-card shadow-sm border-0">
-        <!-- ENCABEZADO CARD -->
-        <div class="card-header ajustes-main-header border-0 d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-                <div class="ajustes-icon-soft">
-                    <i class="bi bi-funnel"></i>
+    <!-- BUSCADOR (tarjeta igual a Clientes) -->
+    <div class="clients-search-card">
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-8">
+                <label for="buscarProducto" class="clients-search-label">Buscar producto</label>
+
+                <!-- ⬇️ Wrapper relativo para anclar el dropdown -->
+                <div class="clients-search-wrapper position-relative">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-upc-scan"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control clients-search-input"
+                               id="buscarProducto"
+                               placeholder="Código de barras, nombre o referencia..."
+                               autocomplete="off" />
+                        <button class="btn btn-clients-search" type="button" id="btnBuscar">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+
+                    <!-- LISTA SUGERENCIAS (ids/clases intactos para el JS) -->
+                    <ul id="sugerenciasProductos"
+                        class="list-group sugerencias-dropdown shadow-sm"
+                        role="listbox"
+                        style="display:none;"></ul>
                 </div>
-                <div>
-                    <h5 class="mb-0 fw-semibold text-white">Gestión de Ajustes</h5>
-                    <small class="text-muted-small">
-                        Localiza el producto, define el tipo de ajuste, la cantidad y el motivo.
-                    </small>
+
+                <small class="text-muted d-block mt-1">Escribe al menos 2 caracteres para ver sugerencias.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO PRODUCTO -->
+    <div id="productoInfo" class="clients-card mb-3" style="display:none;">
+        <div class="clients-card-header active">
+            <i class="bi bi-info-circle fs-5"></i>
+            <h5 class="mb-0">Información del producto</h5>
+            <span class="clients-header-badge ms-auto" id="infoEstado">Disponible</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="clients-search-label">Nombre</div>
+                    <div class="fw-semibold" id="infoNombre">-</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="clients-search-label">Código</div>
+                    <div class="text-muted fw-semibold" id="infoCodigo">-</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="clients-search-label">Categoría</div>
+                    <div class="text-muted fw-semibold" id="infoCategoria">-</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="clients-search-label">Marca</div>
+                    <div class="text-muted fw-semibold" id="infoMarca">-</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="clients-search-label">Stock actual</div>
+                    <div class="fs-5 fw-bold text-success" id="infoStock">0</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="card-body px-4 pb-4 pt-3">
-            <!-- BUSCADOR DE PRODUCTO -->
-            <div class="row mb-4">
-                <div class="col-lg-8">
-                    <div class="form-group position-relative">
-                        <label for="buscarProducto" class="form-label fw-semibold text-label">
-                            <i class="bi bi-search me-1"></i> Buscar producto
-                        </label>
-                        <div class="input-group input-group-dark">
-                            <span class="input-group-text">
-                                <i class="bi bi-upc-scan"></i>
-                            </span>
+    <!-- FORMULARIO DE AJUSTE (estructura e IDs intactos) -->
+    <div id="formAjuste" style="display:none;">
+        <form id="formAjusteStock" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="idProducto" name="IdProducto" />
+
+            <div class="clients-card">
+                <div class="clients-card-header active">
+                    <i class="bi bi-pencil-square fs-5"></i>
+                    <h5 class="mb-0">Detalles del ajuste</h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- TIPO -->
+                        <div class="col-md-3">
+                            <label for="tipoAjuste" class="clients-search-label">Tipo de ajuste *</label>
+                            <select class="form-select clients-search-input" id="tipoAjuste" name="TipoAjuste" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="entrada">Entrada (+)</option>
+                                <option value="salida">Salida (-)</option>
+                            </select>
+                            <div class="invalid-feedback">Selecciona el tipo de ajuste.</div>
+                        </div>
+
+                        <!-- CANTIDAD -->
+                        <div class="col-md-3">
+                            <label for="cantidad" class="clients-search-label">Cantidad *</label>
+                            <div class="input-group">
+                                <button type="button" class="btn clients-action-btn" id="btnMenos" title="Quitar 1">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number"
+                                       class="form-control text-center clients-search-input"
+                                       id="cantidad"
+                                       name="Cantidad"
+                                       min="1"
+                                       value="1"
+                                       required />
+                                <button type="button" class="btn clients-action-btn" id="btnMas" title="Agregar 1">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">La cantidad debe ser mayor a 0.</div>
+                        </div>
+
+                        <!-- MOTIVO -->
+                        <div class="col-md-6">
+                            <label for="motivo" class="clients-search-label">Motivo del ajuste *</label>
                             <input type="text"
-                                   class="form-control input-dark"
-                                   id="buscarProducto"
-                                   placeholder="Código de barras, nombre o referencia..."
-                                   autocomplete="off" />
-                            <button class="btn btn-primary-custom" type="button" id="btnBuscar">
-                                <i class="bi bi-search me-1"></i>Buscar
+                                   class="form-control clients-search-input"
+                                   id="motivo"
+                                   name="Motivo"
+                                   placeholder="Ej: Ajuste por conteo físico, devolución, merma, etc."
+                                   required />
+                            <div class="invalid-feedback">Ingresa el motivo del ajuste.</div>
+                        </div>
+                    </div>
+
+                    <!-- BOTONES -->
+                    <div class="row mt-4">
+                        <div class="col-12 d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-clients-primary d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle"></i> Aplicar Ajuste
+                            </button>
+                            <button type="button" class="btn btn-clients-outline d-flex align-items-center gap-2" id="btnLimpiar">
+                                <i class="bi bi-broom"></i> Limpiar
                             </button>
                         </div>
-                        <div class="form-text text-muted-small">
-                            Escribe al menos 2 caracteres para ver sugerencias de productos.
-                        </div>
-
-                        <!-- LISTA SUGERENCIAS -->
-                        <ul id="sugerenciasProductos"
-                            class="list-group sugerencias-dropdown shadow-sm"
-                            style="display:none;">
-                        </ul>
                     </div>
                 </div>
             </div>
+        </form>
+    </div>
 
-            <!-- INFO PRODUCTO -->
-            <div id="productoInfo" class="card producto-card border-0 mb-4" style="display:none;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-info-circle text-accent"></i>
-                            <h6 class="mb-0 fw-semibold text-white">Información del producto</h6>
-                        </div>
-                        <span class="badge bg-success rounded-pill" id="infoEstado">Disponible</span>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small text-label">Nombre</label>
-                            <div class="fw-semibold text-white" id="infoNombre">-</div>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-label">Código</label>
-                            <div class="fw-semibold text-muted-small" id="infoCodigo">-</div>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-label">Categoría</label>
-                            <div class="fw-semibold text-muted-small" id="infoCategoria">-</div>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-label">Marca</label>
-                            <div class="fw-semibold text-muted-small" id="infoMarca">-</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-label">Stock actual</label>
-                            <div class="fw-bold fs-5 text-accent" id="infoStock">0</div>
-                        </div>
-                    </div>
+    <!-- HISTORIAL AJUSTES -->
+    <div id="historialAjustes" class="mt-4" style="display:none;">
+        <div class="clients-card">
+            <div class="clients-card-header active">
+                <i class="bi bi-clock-history fs-5"></i>
+                <h5 class="mb-0">Últimos ajustes del producto</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="clients-table-wrap">
+                    <table class="clients-table ajustes-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Fecha</th>
+                                <th class="text-center">Cantidad</th>
+                                <th>Tipo</th>
+                                <th class="text-start">Referencia</th>
+                                <th class="text-start">Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorial"></tbody>
+                    </table>
                 </div>
             </div>
-
-            <!-- FORMULARIO DE AJUSTE -->
-            <div id="formAjuste" style="display:none;">
-                <form id="formAjusteStock" novalidate>
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="idProducto" name="IdProducto" />
-
-                    <div class="card ajuste-card border-0">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <i class="bi bi-pencil-square text-accent"></i>
-                                <h6 class="mb-0 fw-semibold text-white">Detalles del ajuste</h6>
-                            </div>
-
-                            <div class="row g-3">
-                                <!-- TIPO -->
-                                <div class="col-md-3">
-                                    <label for="tipoAjuste" class="form-label fw-semibold text-label">
-                                        <i class="bi bi-arrow-left-right me-1"></i>Tipo de ajuste *
-                                    </label>
-                                    <select class="form-select input-dark" id="tipoAjuste" name="TipoAjuste" required>
-                                        <option value="">Seleccionar...</option>
-                                        <option value="entrada">Entrada (+)</option>
-                                        <option value="salida">Salida (-)</option>
-                                    </select>
-                                    <div class="invalid-feedback">Selecciona el tipo de ajuste.</div>
-                                </div>
-
-                                <!-- CANTIDAD -->
-                                <div class="col-md-3">
-                                    <label for="cantidad" class="form-label fw-semibold text-label">
-                                        <i class="bi bi-hash me-1"></i>Cantidad *
-                                    </label>
-                                    <div class="input-group">
-                                        <button type="button" class="btn btn-outline-soft" id="btnMenos">
-                                            <i class="bi bi-dash"></i>
-                                        </button>
-                                        <input type="number"
-                                               class="form-control text-center input-dark"
-                                               id="cantidad"
-                                               name="Cantidad"
-                                               min="1"
-                                               value="1"
-                                               required />
-                                        <button type="button" class="btn btn-outline-soft" id="btnMas">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
-                                    </div>
-                                    <div class="invalid-feedback">La cantidad debe ser mayor a 0.</div>
-                                </div>
-
-                                <!-- MOTIVO -->
-                                <div class="col-md-6">
-                                    <label for="motivo" class="form-label fw-semibold text-label">
-                                        <i class="bi bi-chat-text me-1"></i>Motivo del ajuste *
-                                    </label>
-                                    <input type="text"
-                                           class="form-control input-dark"
-                                           id="motivo"
-                                           name="Motivo"
-                                           placeholder="Ej: Ajuste por conteo físico, devolución, merma, etc."
-                                           required />
-                                    <div class="invalid-feedback">Ingresa el motivo del ajuste.</div>
-                                </div>
-                            </div>
-
-                            <!-- BOTONES -->
-                            <div class="row mt-4">
-                                <div class="col-12 d-flex flex-wrap gap-2">
-                                    <button type="submit"
-                                            class="btn btn-success-custom rounded-pill d-flex align-items-center gap-2">
-                                        <i class="bi bi-check-circle"></i>
-                                        Aplicar Ajuste
-                                    </button>
-
-                                    <button type="button"
-                                            class="btn btn-outline-soft rounded-pill d-flex align-items-center gap-2"
-                                            id="btnLimpiar">
-                                        <i class="bi bi-broom"></i>
-                                        Limpiar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- HISTORIAL AJUSTES -->
-            <div id="historialAjustes" class="mt-4" style="display:none;">
-                <div class="card historial-card border-0">
-                    <div class="card-header bg-transparent border-0 d-flex align-items-center gap-2 pb-2">
-                        <i class="bi bi-clock-history text-accent"></i>
-                        <h6 class="mb-0 fw-semibold text-white">Últimos ajustes del producto</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-dark table-hover align-middle mb-0 ajustes-table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th class="text-center">Cantidad</th>
-                                        <th>Tipo</th>
-                                        <th class="text-start">Referencia</th>
-                                        <th class="text-start">Observación</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbodyHistorial"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div> <!-- /card-body -->
-    </div> <!-- /card -->
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -272,7 +236,7 @@
                 bsToast.show();
             }
 
-            // 🔹 Debounce para sugerencias
+            // 🔹 Debounce
             function debounce(fn, ms) {
                 let timeout;
                 return (...args) => {
@@ -302,8 +266,8 @@
                             li.innerHTML = `
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="fw-semibold text-white">${producto.nombre}</div>
-                                        <small class="text-muted-small">${producto.codigo}</small>
+                                        <div class="fw-semibold">${producto.nombre}</div>
+                                        <small class="text-muted">${producto.codigo}</small>
                                     </div>
                                     <span class="badge bg-accent-soft">${producto.stock} en stock</span>
                                 </div>
@@ -326,7 +290,7 @@
                 }
             }
 
-            // 🔹 Navegación con teclado en sugerencias
+            // Teclado en sugerencias
             document.getElementById('buscarProducto').addEventListener('keydown', function (e) {
                 const sugerencias = document.querySelectorAll('#sugerenciasProductos li');
                 if (!sugerencias.length) return;
@@ -354,7 +318,7 @@
                 });
             });
 
-            // 🔹 Buscar producto manual
+            // Buscar producto manual
             async function buscarProducto() {
                 const term = document.getElementById('buscarProducto').value.trim();
                 if (!term) {
@@ -379,7 +343,7 @@
                 }
             }
 
-            // 🔹 Buscar producto por ID (desde sugerencias)
+            // Buscar por ID (desde sugerencias)
             async function buscarProductoPorId(idProducto) {
                 try {
                     const response = await fetch(`/Utilidades/BuscarProducto?term=${idProducto}`);
@@ -398,7 +362,7 @@
                 }
             }
 
-            // 🔹 Mostrar / ocultar producto
+            // Mostrar / ocultar producto
             function mostrarProducto(producto) {
                 document.getElementById('infoNombre').textContent = producto.nombre;
                 document.getElementById('infoCodigo').textContent = producto.codigoBarras || '-';
@@ -420,7 +384,7 @@
                 productoActual = null;
             }
 
-            // 🔹 Controles cantidad
+            // Controles cantidad
             document.getElementById('btnMas').addEventListener('click', () => {
                 const input = document.getElementById('cantidad');
                 let val = parseInt(input.value) || 0;
@@ -445,7 +409,7 @@
                 }
             });
 
-            // 🔹 Aplicar ajuste
+            // Aplicar ajuste
             document.getElementById('formAjusteStock').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
@@ -513,7 +477,7 @@
                 }
             });
 
-            // 🔹 Cargar historial
+            // Cargar historial
             async function cargarHistorial(idProducto) {
                 try {
                     const response = await fetch(`/Utilidades/ObtenerHistorial?idProducto=${idProducto}`);
@@ -527,13 +491,13 @@
                             const tipoClass = mov.tipo === 'Entrada' ? 'text-success' : 'text-danger';
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td>${mov.fecha}</td>
+                                <td class="ps-3">${mov.fecha}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-dark-soft ${tipoClass} fw-semibold">${mov.cantidad}</span>
+                                    <span class="badge badge-soft ${tipoClass} fw-semibold">${mov.cantidad}</span>
                                 </td>
-                                <td class="${tipoClass} fw-semibold">${mov.tipo}</td>
-                                <td class="text-start text-muted-small">${mov.referencia || '-'}</td>
-                                <td class="text-start text-muted-small">${mov.observacion || '-'}</td>
+                                <td class="fw-semibold ${tipoClass}">${mov.tipo}</td>
+                                <td class="text-start text-muted">${mov.referencia || '-'}</td>
+                                <td class="text-start text-muted">${mov.observacion || '-'}</td>
                             `;
                             tbody.appendChild(row);
                         });
@@ -547,7 +511,7 @@
                 }
             }
 
-            // 🔹 Limpiar formulario
+            // Limpiar formulario
             function limpiarFormulario() {
                 document.getElementById('buscarProducto').value = '';
                 document.getElementById('motivo').value = '';
@@ -562,7 +526,7 @@
                 ocultarProducto();
             }
 
-            // 🔹 Inicializar eventos
+            // Inicializar
             function inicializar() {
                 const searchInput = document.getElementById('buscarProducto');
                 const debouncedBuscar = debounce(buscarSugerencias, 300);
@@ -602,209 +566,214 @@
 @section Styles {
     <style>
         :root {
-            --primary-blue: #3036A6;
-            --secondary-blue: #5F6AF5;
-            --accent-blue: #8F9CFF;
-            --dark-bg: #161B3A;
-            --alt-bg: #1F2650;
-            --light-text: #F7F8FF;
-            --muted-text: #C3C7F5;
-            --border-soft: rgba(143, 156, 255, 0.32);
-            --card-bg: #1E2546;
-            --card-bg-soft: #242C54;
+            /* Paleta tomada del Index de Clientes */
+            --clients-primary: #062926;
+            --clients-secondary: #12C6A1;
+            --clients-accent: #5EF2C1;
+            --clients-bg: #f5f6fa;
+            --clients-card: #ffffff;
+            --clients-text: #111827;
+            --clients-muted: #6b7280;
+            --clients-radius: .75rem;
+            --clients-border-soft: #e5e7eb;
         }
 
-        .ajustes-page {
-            color: var(--light-text);
+        /* CONTENEDOR GENERAL */
+        .clients-theme {
+            background: var(--clients-bg);
+            padding: 1.5rem 0 2rem;
+            color: var(--clients-text);
         }
 
-        .text-muted-small {
-            color: var(--muted-text) !important;
-            font-size: 0.85rem;
-        }
-
-        .text-label {
-            color: var(--muted-text);
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-        }
-
-        .text-accent {
-            color: var(--accent-blue) !important;
-        }
-
-        .ajustes-icon-main {
-            width: 52px;
-            height: 52px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 20% 0, var(--secondary-blue), transparent), rgba(22, 27, 74, 0.98);
+        /* HEADER */
+        .clients-header {
+            background: linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+            border-radius: var(--clients-radius);
+            border: 1px solid rgba(255,255,255,.16);
+            padding: 1.1rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px rgba(15,23,42,.18);
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: var(--accent-blue);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
-        }
-
-        .ajustes-icon-soft {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            background: rgba(95, 106, 245, 0.18);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-blue);
-            font-size: 0.85rem;
-        }
-
-        .ajustes-main-card {
-            background: linear-gradient(145deg, #181E40, #1E2546);
-            border-radius: 1.1rem;
-            border: 1px solid var(--border-soft);
-        }
-
-        .ajustes-main-header {
-            padding: 1rem 1.5rem 0.4rem 1.5rem;
-            background: transparent;
-        }
-
-        .producto-card,
-        .ajuste-card,
-        .historial-card {
-            background-color: var(--card-bg);
-            border-radius: 0.9rem;
-            border: 1px solid rgba(143, 156, 255, 0.24);
-        }
-
-        .input-group-dark .input-group-text {
-            background-color: #181E40;
-            border-color: rgba(143, 156, 255, 0.35);
-            color: var(--muted-text);
-        }
-
-        .input-dark,
-        .input-dark:focus,
-        .input-dark:active {
-            background-color: #181E40;
-            border: 1px solid rgba(143, 156, 255, 0.35);
-            color: var(--light-text);
-            box-shadow: none;
-        }
-
-            .input-dark::placeholder {
-                color: rgba(195, 199, 245, 0.7);
-            }
-
-        .btn-primary-custom {
-            background: var(--secondary-blue);
-            border-color: var(--secondary-blue);
+            justify-content: space-between;
+            gap: 1rem;
             color: #fff;
-            font-weight: 500;
-            border-radius: 999px;
         }
 
-            .btn-primary-custom:hover {
-                background: #454FEA;
-                border-color: #454FEA;
+        .clients-header-title { display: flex; align-items: center; gap: .7rem; }
+
+        .clients-header-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0,0,0,.22);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: var(--clients-accent);
+        }
+
+        .clients-header h2 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: .02em; color: #fff; }
+        .clients-header p { margin: .1rem 0 0; font-size: .85rem; color: rgba(241,245,249,.9); }
+
+        .btn-clients-outline{
+            border:1px solid var(--clients-accent);
+            background:transparent; color:#fff; border-radius:var(--clients-radius);
+            font-weight:500; display:inline-flex; align-items:center; gap:.35rem;
+            transition:all .25s ease; text-decoration:none; padding:.5rem 1rem;
+        }
+        .btn-clients-outline:hover{
+            background:rgba(94,242,193,.16); color:#fff;
+            box-shadow:0 4px 10px rgba(15,23,42,.25); transform:translateY(-1px);
+        }
+
+        .btn-clients-primary{
+            background:#0ea5a0; color:#020814; border:none; border-radius:var(--clients-radius);
+            font-weight:700; display:inline-flex; align-items:center; gap:.35rem;
+            transition:all .25s ease; text-decoration:none; padding:.55rem 1.15rem;
+        }
+        .btn-clients-primary:hover{
+            background:#12C6A1; color:#020814;
+            box-shadow:0 4px 12px rgba(15,23,42,.25); transform:translateY(-1px);
+        }
+
+        /* BUSCADOR */
+        .clients-search-card{
+            background:var(--clients-card);
+            border:1px solid var(--clients-border-soft);
+            border-radius:var(--clients-radius);
+            padding:1rem 1.1rem; margin-bottom:1.1rem;
+            box-shadow:0 2px 8px rgba(15,23,42,.04);
+        }
+        .clients-search-label{ font-size:.82rem; color:var(--clients-muted); margin-bottom:.15rem; display:block; }
+        .clients-search-input{
+            background:#fff; border-radius:var(--clients-radius);
+            border:1px solid var(--clients-border-soft);
+            color:var(--clients-text); padding:.6rem .85rem; min-width:240px; font-size:.88rem;
+            transition:all .22s ease;
+        }
+        .clients-search-input::placeholder{ color:#9ca3af; }
+        .clients-search-input:focus{
+            outline:none; border-color:var(--clients-secondary);
+            box-shadow:0 0 0 .16rem rgba(18,198,161,.18); background:#fff;
+        }
+        .btn-clients-search{
+            border-radius:var(--clients-radius); padding:.6rem 1.15rem; font-size:.85rem;
+            background:var(--clients-secondary); border:1px solid var(--clients-secondary);
+            color:#020814; display:inline-flex; align-items:center; gap:.35rem; transition:.25s;
+        }
+        .btn-clients-search:hover{
+            background:var(--clients-primary); border-color:var(--clients-primary); color:#fff;
+            box-shadow:0 4px 10px rgba(15,23,42,.18); transform:translateY(-1px);
+        }
+
+        /* ⬇️ Nuevo: wrapper relativo para anclar el dropdown al input */
+        .clients-search-wrapper{ position: relative; display: block; }
+
+        /* TARJETAS */
+        .clients-card{
+            background:var(--clients-card);
+            border:1px solid var(--clients-border-soft);
+            border-radius:var(--clients-radius);
+            overflow:hidden; margin-bottom:1.1rem;
+            box-shadow:0 4px 14px rgba(15,23,42,.06);
+            transition:all .22s ease;
+        }
+        .clients-card:hover{ box-shadow:0 7px 20px rgba(15,23,42,.10); transform:translateY(-1px); }
+
+        .clients-card-header{
+            display:flex; align-items:center; gap:.65rem;
+            padding:.85rem 1.15rem; border-bottom:1px solid rgba(15,23,42,.06);
+            color:#fff; background:linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+        }
+        .clients-card-header h5{ margin:0; font-size:.98rem; font-weight:700; color:#fff; }
+        .clients-card-header i{ font-size:1.1rem; color:#bbf7d0; }
+
+        .clients-header-badge{
+            margin-left:auto; padding:.22rem .75rem; border-radius:999px; font-size:.72rem; font-weight:600;
+            display:inline-flex; align-items:center; gap:.25rem;
+            background:rgba(15,23,42,.12); border:1px solid rgba(226,232,240,.5); color:#f9fafb;
+        }
+
+        /* TABLAS */
+        .clients-table-wrap{ width:100%; overflow-x:auto; }
+        .clients-table{
+            width:100%; border-collapse:collapse; margin-bottom:0;
+            font-size:.85rem; color:var(--clients-text); background:transparent;
+        }
+        .clients-table thead th{
+            background:#e5f9f3; font-weight:600; font-size:.78rem;
+            border-bottom:1px solid var(--clients-border-soft); white-space:nowrap;
+            text-transform:uppercase; letter-spacing:.03em; color:var(--clients-muted);
+            padding:.7rem .9rem;
+        }
+        .clients-table tbody td{
+            padding:.7rem .9rem; border-bottom:1px solid var(--clients-border-soft);
+            vertical-align:middle; color:var(--clients-text);
+        }
+        .clients-table tbody tr:nth-child(even){ background:#f9fafb; }
+        .clients-table tbody tr:hover{ background:#ecfdf5; }
+
+        /* Chips / badges */
+        .badge-soft{
+            padding:.22rem .7rem; border-radius:999px; font-size:.72rem; font-weight:600;
+            border:1px solid var(--clients-secondary); background:#ecfdf5; color:var(--clients-primary);
+        }
+        .badge.bg-accent-soft{ background:#ecfdf5; color:var(--clients-primary); border:1px solid var(--clients-secondary); }
+
+        /* ⬇️ Dropdown de sugerencias: ahora anclado al wrapper (debajo del input) */
+        .sugerencias-dropdown{
+            position:absolute;
+            top: calc(100% + 6px);     /* pequeño espacio bajo el input */
+            left:0;
+            right:0;                   /* ocupa el ancho del wrapper */
+            width:auto;                /* evita desbordes por padding */
+            max-height:260px;
+            overflow-y:auto;
+            z-index:2000;
+            background:#fff;
+            border:1px solid var(--clients-border-soft);
+            border-radius:.65rem;
+        }
+        .sugerencia-item{ background:#fff; color:var(--clients-text); }
+        .sugerencia-item:hover, .sugerencia-item.active{ background:#ecfdf5; }
+
+        /* Botón +/- reutiliza estilo compacto de acciones clientes */
+        .clients-action-btn{
+            width:2.2rem; height:2.2rem; border-radius:.7rem; border:1px solid var(--clients-border-soft);
+            background:#f3f4f6; color:var(--clients-muted);
+            display:inline-flex; align-items:center; justify-content:center; transition:.2s;
+        }
+        .clients-action-btn:hover{ background:#ecfdf5; color:#0f766e; transform:translateY(-1px); }
+
+        /* Toast transición */
+        .toast{ animation: slideInDown .3s ease-out; }
+        @@keyframes slideInDown{
+            from{ transform: translate3d(0,-100%,0); opacity:0; }
+            to{ transform: translate3d(0,0,0); opacity:1; }
+        }
+
+        @@media (max-width:768px){
+            .clients-header{ flex-direction:column; align-items:flex-start; padding:.9rem 1rem; }
+            .clients-header h2{ font-size:1.1rem; }
+            .clients-header p{ font-size:.8rem; }
+            .clients-header-actions{ width:100%; display:flex; flex-wrap:wrap; gap:.45rem; }
+            .clients-header-actions .btn{ flex:1 1 auto; justify-content:center; }
+            .clients-search-card{ padding:.8rem .9rem; }
+            .clients-search-input{ width:100%; min-width:0; }
+            .clients-card-header{ padding:.75rem .9rem; }
+        }
+
+
+        /* --- Override específico para el botón "Limpiar" del formulario --- */
+        #btnLimpiar {
+            background: #ecfdf5; /* fondo menta suave */
+            color: var(--clients-primary); /* texto oscuro menta */
+            border: 1px solid var(--clients-secondary); /* borde acorde a la paleta */
+        }
+
+            #btnLimpiar:hover {
+                background: var(--clients-secondary); /* menta vibrante al hover */
+                color: #020814; /* contraste de texto */
+                border-color: var(--clients-secondary);
+                box-shadow: 0 4px 10px rgba(18,198,161,.30);
             }
 
-        .btn-success-custom {
-            background: #23d19c;
-            border-color: #23d19c;
-            color: #fff;
-            font-weight: 500;
-        }
-
-            .btn-success-custom:hover {
-                background: #1aae7f;
-                border-color: #1aae7f;
-            }
-
-        .btn-outline-soft {
-            border-color: rgba(143, 156, 255, 0.55);
-            color: var(--muted-text);
-            background: transparent;
-        }
-
-            .btn-outline-soft:hover {
-                background: rgba(95, 106, 245, 0.16);
-                color: var(--light-text);
-            }
-
-        .badge.bg-accent-soft {
-            background: rgba(95, 106, 245, 0.18);
-            color: var(--accent-blue);
-            font-size: 0.7rem;
-        }
-
-        .sugerencias-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            max-height: 260px;
-            overflow-y: auto;
-            border-radius: 0.65rem;
-            background-color: #181E40;
-            border: 1px solid rgba(143, 156, 255, 0.35);
-            z-index: 1050;
-        }
-
-        .sugerencia-item {
-            background-color: transparent;
-            border: none;
-            padding: 0.55rem 0.8rem;
-            color: var(--light-text);
-        }
-
-            .sugerencia-item:hover,
-            .sugerencia-item.active {
-                background: radial-gradient(circle at 0 0, rgba(95, 106, 245, 0.18), transparent);
-            }
-
-        .ajustes-table thead tr {
-            background-color: #202856;
-        }
-
-        .ajustes-table thead th {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--muted-text);
-            border-bottom-color: rgba(143, 156, 255, 0.35);
-        }
-
-        .ajustes-table tbody tr {
-            transition: all 0.15s ease-in-out;
-        }
-
-            .ajustes-table tbody tr:hover {
-                background: radial-gradient(circle at 0 0, rgba(95, 106, 245, 0.18), transparent);
-                transform: translateY(-1px);
-            }
-
-        .badge.bg-dark-soft {
-            background-color: #1E2546;
-            border-radius: 999px;
-        }
-
-        .toast {
-            animation: slideInDown 0.3s ease-out;
-        }
-
-        @@keyframes slideInDown {
-            from {
-                transform: translate3d(0, -100%, 0);
-                opacity: 0;
-            }
-
-            to {
-                transform: translate3d(0, 0, 0);
-                opacity: 1;
-            }
-        }
     </style>
-
-
 }

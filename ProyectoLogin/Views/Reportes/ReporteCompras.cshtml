@@ -16,344 +16,297 @@
         .Count();
 }
 
-<div class="container-fluid py-4 reportes-compras-page">
-    <!-- HEADER PRINCIPAL -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div class="d-flex align-items-center">
-            <div class="icon-wrapper-main me-3">
-                <i class="bi bi-basket2-fill fs-3"></i>
+<div class="container-fluid clients-theme">
+
+    <!-- HEADER (estilo clientes/menta) -->
+    <div class="clients-header">
+        <div class="clients-header-title">
+            <div class="clients-header-icon">
+                <i class="bi bi-basket2-fill"></i>
             </div>
             <div>
-                <h1 class="h3 mb-1 fw-bold text-white">@ViewData["Title"]</h1>
-                <p class="mb-0 text-muted-small">
-                    Consulta, filtra y analiza las compras realizadas a tus proveedores.
-                </p>
+                <h2>@ViewData["Title"]</h2>
+                <p>Consulta, filtra y analiza las compras realizadas a tus proveedores</p>
             </div>
         </div>
 
-        <a asp-action="Index"
-           class="btn btn-outline-light btn-sm rounded-pill d-flex align-items-center gap-2 shadow-sm">
-            <i class="bi bi-arrow-left-circle"></i>
-            Volver a Reportes
-        </a>
+        <div class="clients-header-actions d-flex gap-2">
+            <a asp-action="Index" class="btn btn-clients-outline">
+                <i class="bi bi-arrow-left"></i> Volver a Reportes
+            </a>
+        </div>
     </div>
 
-    <div class="card main-card shadow-sm border-0">
-        <div class="card-header d-flex align-items-center gap-2 border-0">
-            <div class="icon-wrapper-soft">
-                <i class="bi bi-funnel fs-6"></i>
+    <!-- TARJETA DE FILTROS (calcada a clientes, con overrides de visibilidad de botones) -->
+    <div class="clients-search-card">
+        <form id="filtroForm" method="get" asp-action="Compras" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="clients-search-label fw-semibold">
+                    <i class="bi bi-calendar-date me-1"></i>Fecha desde
+                </label>
+                <input type="date" class="clients-search-input" id="desde" name="desde"
+                       value="@Context.Request.Query["desde"]" />
             </div>
-            <div>
-                <h5 class="mb-0 fw-semibold text-white">Filtros y resultados de compras</h5>
-                <small class="text-muted-small">Refina tu búsqueda por fecha y proveedor.</small>
+
+            <div class="col-md-4">
+                <label class="clients-search-label fw-semibold">
+                    <i class="bi bi-calendar-date me-1"></i>Fecha hasta
+                </label>
+                <input type="date" class="clients-search-input" id="hasta" name="hasta"
+                       value="@Context.Request.Query["hasta"]" />
             </div>
-        </div>
 
-        <div class="card-body p-4">
-            <!-- FORMULARIO DE FILTROS -->
-            <form id="filtroForm" method="get" asp-action="Compras" class="row g-3 mb-4 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-label">
-                        <i class="bi bi-calendar-date me-1"></i>Fecha desde
-                    </label>
-                    <input type="date"
-                           class="form-control input-dark"
-                           id="desde"
-                           name="desde"
-                           value="@Context.Request.Query["desde"]" />
-                </div>
+            <div class="col-md-4">
+                <label class="clients-search-label fw-semibold">
+                    <i class="bi bi-truck me-1"></i>Proveedor
+                </label>
+                <select class="clients-search-input" id="proveedorId" name="proveedorId">
+                    @{
+                        var proveedorIdQuery = Context.Request.Query["proveedorId"].ToString();
+                    }
 
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-label">
-                        <i class="bi bi-calendar-date me-1"></i>Fecha hasta
-                    </label>
-                    <input type="date"
-                           class="form-control input-dark"
-                           id="hasta"
-                           name="hasta"
-                           value="@Context.Request.Query["hasta"]" />
-                </div>
+                    @if (string.IsNullOrEmpty(proveedorIdQuery))
+                    {
+                        <option value="" selected>-- Todos los proveedores --</option>
+                    }
+                    else
+                    {
+                        <option value="">-- Todos los proveedores --</option>
+                    }
 
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold text-label">
-                        <i class="bi bi-truck me-1"></i>Proveedor
-                    </label>
-                    <select class="form-select input-dark" id="proveedorId" name="proveedorId">
-                        @{
-                            var proveedorIdQuery = Context.Request.Query["proveedorId"].ToString();
-                        }
-
-                        @if (string.IsNullOrEmpty(proveedorIdQuery))
+                    @if (proveedores != null)
+                    {
+                        foreach (var proveedor in proveedores)
                         {
-                            <option value="" selected>-- Todos los proveedores --</option>
-                        }
-                        else
-                        {
-                            <option value="">-- Todos los proveedores --</option>
-                        }
-
-                        @if (proveedores != null)
-                        {
-                            foreach (var proveedor in proveedores)
+                            var isSelected = proveedorIdQuery == proveedor.IdProveedor.ToString();
+                            if (isSelected)
                             {
-                                var isSelected = proveedorIdQuery == proveedor.IdProveedor.ToString();
-                                if (isSelected)
-                                {
-                                    <option value="@proveedor.IdProveedor" selected>@proveedor.Nombre</option>
-                                }
-                                else
-                                {
-                                    <option value="@proveedor.IdProveedor">@proveedor.Nombre</option>
-                                }
+                                <option value="@proveedor.IdProveedor" selected>@proveedor.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@proveedor.IdProveedor">@proveedor.Nombre</option>
                             }
                         }
-                    </select>
-                </div>
-
-                <!-- BOTONES -->
-                <div class="col-12">
-                    <div class="d-flex flex-wrap gap-2 justify-content-end border-top border-soft pt-3">
-                        <button type="submit"
-                                class="btn btn-primary-custom rounded-pill d-flex align-items-center gap-2">
-                            <i class="bi bi-search"></i>
-                            Filtrar
-                        </button>
-
-                        <button type="button"
-                                id="btnDescargarPDF"
-                                class="btn btn-success-custom rounded-pill d-flex align-items-center gap-2">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                            Descargar PDF
-                        </button>
-
-                        <button type="button"
-                                id="btnLimpiar"
-                                class="btn btn-outline-warning-custom rounded-pill d-flex align-items-center gap-2">
-                            <i class="bi bi-eraser"></i>
-                            Limpiar filtros
-                        </button>
-                    </div>
-                </div>
-            </form>
-
-            @if (comprasList.Any())
-            {
-            <!-- ESTADÍSTICAS RÁPIDAS -->
-            <div class="row g-3 mb-4">
-                <div class="col-xl-4 col-md-6">
-                    <div class="stat-card border-left-primary-soft">
-                        <div>
-                            <div class="stat-label">Total general compras</div>
-                            <div class="stat-value">Q @totalGeneral.ToString("N2")</div>
-                        </div>
-                        <i class="bi bi-currency-dollar stat-icon"></i>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="stat-card border-left-info-soft">
-                        <div>
-                            <div class="stat-label">Compras encontradas</div>
-                            <div class="stat-value">@totalCompras</div>
-                        </div>
-                        <i class="bi bi-receipt stat-icon"></i>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-md-6">
-                    <div class="stat-card border-left-success-soft">
-                        <div>
-                            <div class="stat-label">Proveedores involucrados</div>
-                            <div class="stat-value">@proveedoresConCompra</div>
-                        </div>
-                        <i class="bi bi-truck-front stat-icon"></i>
-                    </div>
-                </div>
+                    }
+                </select>
             </div>
 
-                <!-- FUNCIÓN AUXILIAR PARA PRODUCTOS -->
-            @functions {
-                string GetProductos(dynamic detalles)
-                {
-                    var lista = new List<string>();
-                    foreach (var d in detalles)
-                        lista.Add((string)d.Producto);
-                    return string.Join(", ", lista);
-                }
-            }
+            <!-- BOTONES -->
+            <div class="col-12">
+                <div class="d-flex flex-wrap gap-2 justify-content-end" style="border-top:1px solid var(--clients-border-soft); padding-top:.8rem;">
+                    <button type="submit" class="btn btn-clients-search d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
 
-            <!-- TABLA DE RESULTADOS -->
-            <div class="card table-card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 d-flex align-items-center gap-2 pb-2">
-                    <i class="bi bi-table text-accent"></i>
-                    <h6 class="mb-0 fw-semibold text-white">Resultados de compras</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0 report-table" id="tablaCompras">
-                            <thead>
-                                <tr>
-                                    <th>No. Compra</th>
-                                    <th>Fecha</th>
-                                    <th>Proveedor</th>
-                                    <th>Productos comprados</th>
-                                    <th style="width: 130px;">Detalles</th>
-                                    <th class="text-end">Total compra</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var compra in comprasList)
-                                {
-                                    var detalleId = $"detalles-{compra.GetHashCode()}";
-                                    <tr>
-                                        <td>
-                                            <span class="fw-bold text-accent">@compra.Numero</span>
-                                        </td>
-                                        <td>
-                                            <small class="text-muted-small">
-                                                @compra.Fecha.ToString("dd/MM/yyyy")
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <strong class="text-light">@compra.Proveedor</strong>
-                                        </td>
-                                        <td class="text-muted-small text-start">
-                                            @GetProductos(compra.Detalles)
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-xs-detail btn-outline-info rounded-pill"
-                                                    type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#@detalleId"
-                                                    aria-expanded="false"
-                                                    aria-controls="@detalleId">
-                                                <i class="bi bi-list-ul me-1"></i>Detalles
-                                            </button>
-                                        </td>
-                                        <td class="fw-bold text-success text-end">
-                                            Q @compra.TotalCompra.ToString("N2")
-                                        </td>
-                                    </tr>
+                    <button type="button" id="btnDescargarPDF" class="btn btn-clients-primary d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+                    </button>
 
-                                    <tr class="fila-detalle">
-                                        <td colspan="6" class="p-0 border-0">
-                                            <div class="collapse" id="@detalleId">
-                                                <div class="p-3">
-                                                    <div class="card detalle-card border-0 shadow-sm">
-                                                        <div class="card-header bg-transparent border-0 d-flex align-items-center gap-2">
-                                                            <i class="bi bi-box-seam text-accent"></i>
-                                                            <h6 class="mb-0 fw-semibold text-white">
-                                                                Detalles de la compra — Compra:
-                                                                <span class="text-accent fw-bold">@compra.Numero</span>
-                                                            </h6>
-                                                        </div>
-                                                        <div class="card-body pt-2">
-                                                            <div class="table-responsive">
-                                                                <table class="table table-sm table-dark table-striped align-middle mb-0">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th class="text-start">Producto</th>
-                                                                            <th class="text-center">Cantidad</th>
-                                                                            <th>Unidad</th>
-                                                                            <th class="text-end">Precio compra</th>
-                                                                            <th class="text-end">Unidades base</th>
-                                                                            <th class="text-end">PV sin IVA</th>
-                                                                            <th class="text-end">PV con IVA</th>
-                                                                            <th class="text-end">PV Unidad</th>
-                                                                            <th class="text-end">PV Paquete</th>
-                                                                            <th class="text-end">PV Caja</th>
-                                                                            <th class="text-end">Subtotal</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @foreach (var detalle in compra.Detalles)
-                                                                        {
-                                                                            <tr>
-                                                                                <td class="text-start text-light">
-                                                                                    @detalle.Producto
-                                                                                </td>
-                                                                                <td class="text-center">
-                                                                                    <span class="badge bg-primary rounded-pill">
-                                                                                        @detalle.Cantidad
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td>@detalle.Unidad</td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioCompraUnit.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    @detalle.CantidadUnidadesBase.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioVentaSinIVA.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioVentaConIVA.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioVentaUnidad.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioVentaPaquete.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end text-muted-small">
-                                                                                    Q @detalle.PrecioVentaCaja.ToString("N2")
-                                                                                </td>
-                                                                                <td class="text-end fw-semibold text-success">
-                                                                                    Q @detalle.Subtotal.ToString("N2")
-                                                                                </td>
-                                                                            </tr>
-                                                                        }
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="5" class="text-end fw-bold text-muted-small">
-                                        TOTAL GENERAL:
-                                    </td>
-                                    <td class="text-end fw-bold text-warning">
-                                        Q @totalGeneral.ToString("N2")
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-                        }
-                        else
-            {
-                <div class="card main-card-empty border-0 shadow-sm text-center py-5">
-                    <div class="icon-empty mb-3">
-                        <i class="bi bi-search"></i>
-                    </div>
-                    <h4 class="text-white mb-2">No se encontraron compras</h4>
-                    <p class="text-muted-small mb-4">
-                        No hay registros que coincidan con los filtros aplicados. Ajusta las fechas o el proveedor.
-                    </p>
-                    <button type="button"
-                            id="btnLimpiarVacio"
-                            class="btn btn-primary-custom rounded-pill d-inline-flex align-items-center gap-2">
-                        <i class="bi bi-eraser"></i>
-                        Limpiar filtros
+                    <button type="button" id="btnLimpiar" class="btn btn-clients-outline d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-eraser"></i> Limpiar filtros
                     </button>
                 </div>
-            }
+            </div>
+        </form>
+    </div>
+
+    @if (comprasList.Any())
+    {
+    <!-- ESTADÍSTICAS RÁPIDAS (estilo clientes) -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-4 col-md-6">
+            <div class="clients-card statcard-mint border-left-mint">
+                <div>
+                    <div class="stat-label">Total general compras</div>
+                    <div class="stat-value">Q @totalGeneral.ToString("N2")</div>
+                </div>
+                <i class="bi bi-currency-dollar stat-icon-mint"></i>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="clients-card statcard-mint border-left-info">
+                <div>
+                    <div class="stat-label">Compras encontradas</div>
+                    <div class="stat-value">@totalCompras</div>
+                </div>
+                <i class="bi bi-receipt stat-icon-mint"></i>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="clients-card statcard-mint border-left-success">
+                <div>
+                    <div class="stat-label">Proveedores involucrados</div>
+                    <div class="stat-value">@proveedoresConCompra</div>
+                </div>
+                <i class="bi bi-truck-front stat-icon-mint"></i>
+            </div>
         </div>
     </div>
+
+        <!-- FUNCIÓN AUXILIAR PARA PRODUCTOS (sin cambios) -->
+    @functions {
+        string GetProductos(dynamic detalles)
+        {
+            var lista = new List<string>();
+            foreach (var d in detalles)
+                lista.Add((string)d.Producto);
+            return string.Join(", ", lista);
+        }
+    }
+
+    <!-- TABLA DE RESULTADOS (estética clientes) -->
+    <div class="clients-card">
+        <div class="clients-card-header active">
+            <i class="bi bi-table fs-5"></i>
+            <h5>Resultados de compras</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="clients-table-wrap">
+                <table class="clients-table" id="tablaCompras">
+                    <thead>
+                        <tr>
+                            <th>No. Compra</th>
+                            <th>Fecha</th>
+                            <th>Proveedor</th>
+                            <th>Productos comprados</th>
+                            <th style="width: 150px;">Detalles</th>
+                            <th class="text-end">Total compra</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var compra in comprasList)
+                        {
+                            var detalleId = $"detalles-{compra.GetHashCode()}";
+                            <tr>
+                                <td class="ps-3">
+                                    <span class="client-id">@compra.Numero</span>
+                                </td>
+                                <td>
+                                    <small class="client-email">@compra.Fecha.ToString("dd/MM/yyyy")</small>
+                                </td>
+                                <td>
+                                    <div class="client-name">
+                                        <i class="bi bi-box-seam"></i>
+                                        <span>@compra.Proveedor</span>
+                                    </div>
+                                </td>
+                                <td class="client-email text-start">
+                                    @GetProductos(compra.Detalles)
+                                </td>
+                                <td class="text-center">
+                                    <button class="clients-action-btn clients-detail-btn"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#@detalleId"
+                                            aria-expanded="false"
+                                            aria-controls="@detalleId">
+                                        <i class="bi bi-list-ul"></i> Detalles
+                                    </button>
+                                </td>
+                                <td class="text-end fw-semibold" style="color:var(--clients-success);">
+                                    Q @compra.TotalCompra.ToString("N2")
+                                </td>
+                            </tr>
+
+                            <!-- DETALLES -->
+                            <tr class="fila-detalle-light">
+                                <td colspan="6" class="p-0 border-0">
+                                    <div class="collapse" id="@detalleId">
+                                        <div class="p-3">
+                                            <div class="clients-card detalle-card-light">
+                                                <div class="clients-table-wrap">
+                                                    <table class="clients-table" style="font-size:.82rem;">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="text-start">Producto</th>
+                                                                <th class="text-center">Cantidad</th>
+                                                                <th>Unidad</th>
+                                                                <th class="text-end">Precio compra</th>
+                                                                <th class="text-end">Unidades base</th>
+                                                                <th class="text-end">PV sin IVA</th>
+                                                                <th class="text-end">PV con IVA</th>
+                                                                <th class="text-end">PV Unidad</th>
+                                                                <th class="text-end">PV Paquete</th>
+                                                                <th class="text-end">PV Caja</th>
+                                                                <th class="text-end">Subtotal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var detalle in compra.Detalles)
+                                                            {
+                                                                <tr>
+                                                                    <td class="text-start">@detalle.Producto</td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge-soft">@detalle.Cantidad</span>
+                                                                    </td>
+                                                                    <td>@detalle.Unidad</td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioCompraUnit.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        @detalle.CantidadUnidadesBase.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioVentaSinIVA.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioVentaConIVA.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioVentaUnidad.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioVentaPaquete.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end client-email">
+                                                                        Q @detalle.PrecioVentaCaja.ToString("N2")
+                                                                    </td>
+                                                                    <td class="text-end fw-semibold" style="color:var(--clients-primary);">
+                                                                        Q @detalle.Subtotal.ToString("N2")
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold client-email">TOTAL GENERAL:</td>
+                            <td class="text-end fw-bold" style="color:#b45309;">Q @totalGeneral.ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+        }
+        else
+    {
+        <!-- VACÍO (estilo clientes) -->
+        <div class="clients-card text-center p-5">
+            <div class="clients-header-icon" style="margin:0 auto 10px;">
+                <i class="bi bi-search"></i>
+            </div>
+            <h4 class="mb-2" style="color:var(--clients-text);">No se encontraron compras</h4>
+            <p class="client-email mb-3">Ajusta las fechas o el proveedor e intenta nuevamente.</p>
+            <button type="button" id="btnLimpiarVacio" class="btn btn-clients-search d-inline-flex align-items-center gap-2">
+                <i class="bi bi-eraser"></i> Limpiar filtros
+            </button>
+        </div>
+    }
 </div>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-
             function limpiarFiltros() {
                 $('#desde').val('');
                 $('#hasta').val('');
@@ -361,13 +314,8 @@
                 $('#filtroForm').submit();
             }
 
-            $('#btnLimpiar').click(function () {
-                limpiarFiltros();
-            });
-
-            $('#btnLimpiarVacio').click(function () {
-                limpiarFiltros();
-            });
+            $('#btnLimpiar').click(limpiarFiltros);
+            $('#btnLimpiarVacio').click(limpiarFiltros);
 
             // Descargar PDF (misma lógica existente)
             $('#btnDescargarPDF').click(function () {
@@ -396,7 +344,7 @@
                 }
             });
 
-            // Toggle texto del botón de detalles
+            // Toggle texto del botón de detalles (mantiene funcionalidad)
             $(document).on('click', '[data-bs-toggle="collapse"]', function () {
                 const $btn = $(this);
                 const target = $btn.data('bs-target');
@@ -404,14 +352,14 @@
 
                 setTimeout(function () {
                     if ($collapse.hasClass('show')) {
-                        $btn.html('<i class="bi bi-chevron-up me-1"></i>Ocultar');
+                        $btn.html('<i class="bi bi-chevron-up"></i> Ocultar');
                     } else {
-                        $btn.html('<i class="bi bi-list-ul me-1"></i>Detalles');
+                        $btn.html('<i class="bi bi-list-ul"></i> Detalles');
                     }
                 }, 200);
             });
 
-            // DataTable (se mantiene funcionalidad original)
+            // DataTable (sin cambios)
             @if (comprasList.Any())
             {
                     <text>
@@ -429,214 +377,439 @@
     </script>
 }
 
-@section styles{
+@section styles {
     <style>
         :root {
-            --primary-blue: #1C1973;
-            --secondary-blue: #514BF2;
-            --accent-blue: #8B88F2;
-            --dark-bg: #0D0E26;
-            --alt-bg: #081C59;
-            --light-text: #F0F0F7;
-            --muted-text: #9ba4c4;
-            --border-soft: rgba(139, 136, 242, 0.22);
-            --card-bg: #0F122F;
-            --card-bg-soft: #151838;
+            /* Paleta “usuarios/menta” aplicada a Reporte Compras */
+            --clients-primary: #062926; /* menta oscuro */
+            --clients-secondary: #12C6A1; /* menta vibrante */
+            --clients-accent: #5EF2C1; /* acento brillante */
+            --clients-bg: #f5f6fa; /* fondo claro */
+            --clients-card: #ffffff;
+            --clients-text: #111827;
+            --clients-muted: #6b7280;
+            --clients-radius: .75rem;
+            --clients-border-soft: #e5e7eb;
+            --clients-danger: #dc2626;
+            --clients-success: #16a34a;
         }
 
-        .reportes-compras-page {
-            color: var(--light-text);
+        /* CONTENEDOR GENERAL */
+        .clients-theme {
+            background: var(--clients-bg);
+            padding: 1.5rem 0 2rem;
         }
 
-        .icon-wrapper-main {
-            width: 52px;
-            height: 52px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 20% 0, var(--secondary-blue), transparent), rgba(12, 18, 58, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-blue);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
-        }
-
-        .icon-wrapper-soft {
-            width: 32px;
-            height: 32px;
-            border-radius: 999px;
-            background: rgba(81, 75, 242, 0.16);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-blue);
-        }
-
-        .main-card,
-        .main-card-empty {
-            background: linear-gradient(145deg, #0D0E26, #111433);
-            border-radius: 1rem;
-            border: 1px solid var(--border-soft);
-        }
-
-        .border-soft {
-            border-color: var(--border-soft) !important;
-        }
-
-        .text-label {
-            color: var(--muted-text);
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-        }
-
-        .text-muted-small {
-            color: var(--muted-text) !important;
-            font-size: 0.85rem;
-        }
-
-        .text-accent {
-            color: var(--accent-blue) !important;
-        }
-
-        .input-dark,
-        .input-dark:focus,
-        .input-dark:active {
-            background-color: #080a1c;
-            border: 1px solid rgba(139, 136, 242, 0.32);
-            color: var(--light-text);
-            box-shadow: none;
-        }
-
-            .input-dark::placeholder {
-                color: rgba(155, 164, 196, 0.7);
-            }
-
-        .btn-primary-custom {
-            background: var(--secondary-blue);
-            border-color: var(--secondary-blue);
-            color: #fff;
-        }
-
-            .btn-primary-custom:hover {
-                background: #3c36cc;
-                border-color: #3c36cc;
-            }
-
-        .btn-success-custom {
-            background: #27ae60;
-            border-color: #27ae60;
-            color: #fff;
-        }
-
-            .btn-success-custom:hover {
-                background: #1f8a4d;
-                border-color: #1f8a4d;
-            }
-
-        .btn-outline-warning-custom {
-            border-color: #f1c40f;
-            color: #f1c40f;
-        }
-
-            .btn-outline-warning-custom:hover {
-                background-color: #f1c40f;
-                color: #111433;
-            }
-
-        .btn-xs-detail {
-            padding: 0.25rem 0.7rem;
-            font-size: 0.75rem;
-        }
-
-        .table-card {
-            background-color: var(--card-bg);
-            border-radius: 0.9rem;
-            border: 1px solid rgba(139, 136, 242, 0.18);
-        }
-
-        .report-table thead tr {
-            background: rgba(8, 12, 40, 0.98);
-        }
-
-        .report-table thead th {
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--muted-text);
-            border-bottom-color: rgba(139, 136, 242, 0.35);
-        }
-
-        .report-table tbody tr {
-            transition: all 0.15s ease-in-out;
-        }
-
-            .report-table tbody tr:hover {
-                background: radial-gradient(circle at 0 0, rgba(81, 75, 242, 0.14), transparent);
-                transform: translateY(-1px);
-            }
-
-        .fila-detalle {
-            background: #080a1c;
-        }
-
-        .detalle-card {
-            background: var(--card-bg-soft);
-            border-radius: 0.8rem;
-            border: 1px solid rgba(139, 136, 242, 0.22);
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 0.8rem;
-            padding: 0.9rem 1rem;
+        /* HEADER */
+        .clients-header {
+            background: linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+            border-radius: var(--clients-radius);
+            border: 1px solid rgba(255,255,255,.16);
+            padding: 1.1rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px rgba(15,23,42,.18);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.75rem;
-            border: 1px solid rgba(139, 136, 242, 0.18);
+            gap: 1rem;
+            color: #fff;
+        }
+
+        .clients-header-title {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+        }
+
+        .clients-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--clients-accent);
+        }
+
+        .clients-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            color: #fff;
+        }
+
+        .clients-header p {
+            margin: .1rem 0 0;
+            font-size: .85rem;
+            color: rgba(241,245,249,.9);
+        }
+
+        .clients-header-actions .btn {
+            font-size: .86rem;
+            border-radius: var(--clients-radius);
+            padding: .5rem 1rem;
+        }
+
+        .btn-clients-outline {
+            border: 1px solid var(--clients-accent);
+            background: transparent;
+            color: #fff;
+            border-radius: var(--clients-radius);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            transition: all .25s ease;
+            text-decoration: none;
+        }
+
+            .btn-clients-outline:hover {
+                background: rgba(94,242,193,.16);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(15,23,42,.25);
+                transform: translateY(-1px);
+            }
+
+        .btn-clients-primary {
+            background: #fff;
+            color: var(--clients-primary);
+            border: 1px solid var(--clients-border-soft);
+            border-radius: var(--clients-radius);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            transition: all .25s ease;
+            text-decoration: none;
+            padding: .6rem 1.3rem;
+            font-size: .85rem;
+        }
+
+            .btn-clients-primary:hover {
+                background: #f9fafb;
+                color: var(--clients-secondary);
+                box-shadow: 0 4px 12px rgba(15,23,42,.25);
+                transform: translateY(-1px);
+            }
+
+        .btn-clients-search {
+            border-radius: var(--clients-radius);
+            padding: .6rem 1.3rem;
+            font-size: .85rem;
+            background: var(--clients-secondary);
+            border: 1px solid var(--clients-secondary);
+            color: #020814;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            transition: all .25s ease;
+        }
+
+            .btn-clients-search:hover {
+                background: var(--clients-primary);
+                border-color: var(--clients-primary);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(15,23,42,.18);
+                transform: translateY(-1px);
+            }
+
+        /* BUSCADOR */
+        .clients-search-card {
+            background: var(--clients-card);
+            border: 1px solid var(--clients-border-soft);
+            border-radius: var(--clients-radius);
+            padding: .9rem 1.1rem;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 2px 8px rgba(15,23,42,.04);
+        }
+
+        .clients-search-label {
+            font-size: .82rem;
+            color: var(--clients-muted);
+            margin-bottom: .15rem;
+        }
+
+        .clients-search-input {
+            background: #fff;
+            border-radius: var(--clients-radius);
+            border: 1px solid var(--clients-border-soft);
+            color: var(--clients-text);
+            padding: .6rem .85rem;
+            min-width: 220px;
+            font-size: .88rem;
+            transition: all .22s ease;
+            width: 100%;
+        }
+
+            .clients-search-input::placeholder {
+                color: #9ca3af;
+            }
+
+            .clients-search-input:focus {
+                outline: none;
+                border-color: var(--clients-secondary);
+                box-shadow: 0 0 0 .16rem rgba(18,198,161,.18);
+                background: #fff;
+            }
+
+        /* ===== Overrides de visibilidad dentro de la tarjeta de filtros ===== */
+        .clients-search-card .btn-clients-outline {
+            background: #fff !important;
+            color: var(--clients-primary) !important;
+            border-color: var(--clients-secondary) !important;
+        }
+
+            .clients-search-card .btn-clients-outline:hover {
+                background: var(--clients-secondary) !important;
+                color: #020814 !important;
+                box-shadow: 0 4px 10px rgba(15,23,42,.16);
+                transform: translateY(-1px);
+            }
+
+        .clients-search-card .btn-clients-primary { /* botón PDF con buena visibilidad */
+            background: #fff;
+            color: var(--clients-primary);
+            border: 1px solid var(--clients-border-soft);
+        }
+
+        /* TARJETAS / TABLAS */
+        .clients-card {
+            background: var(--clients-card);
+            border: 1px solid var(--clients-border-soft);
+            border-radius: var(--clients-radius);
+            overflow: hidden;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 4px 14px rgba(15,23,42,.06);
+            transition: all .22s ease;
+        }
+
+            .clients-card:hover {
+                box-shadow: 0 7px 20px rgba(15,23,42,.10);
+                transform: translateY(-1px);
+            }
+
+        .clients-card-header {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .85rem 1.15rem;
+            border-bottom: 1px solid rgba(15,23,42,.06);
+            color: #fff;
+            background: linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+        }
+
+            .clients-card-header h5 {
+                margin: 0;
+                font-size: .98rem;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .clients-card-header i {
+                font-size: 1.2rem;
+                color: #bbf7d0;
+            }
+
+        .clients-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .clients-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            font-size: .85rem;
+            color: var(--clients-text);
+            background: transparent;
+        }
+
+            .clients-table thead th {
+                background: #e5f9f3;
+                font-weight: 600;
+                font-size: .78rem;
+                border-bottom: 1px solid var(--clients-border-soft);
+                white-space: nowrap;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+                color: var(--clients-muted);
+                padding: .7rem .9rem;
+            }
+
+            .clients-table tbody td {
+                padding: .7rem .9rem;
+                border-bottom: 1px solid var(--clients-border-soft);
+                vertical-align: middle;
+                color: var(--clients-text);
+            }
+
+            .clients-table tbody tr:nth-child(even) {
+                background: #f9fafb;
+            }
+
+            .clients-table tbody tr:hover {
+                background: #ecfdf5;
+            }
+
+        .client-id {
+            font-weight: 600;
+            font-size: .78rem;
+            color: var(--clients-muted);
+        }
+
+        .client-name {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            font-weight: 600;
+            color: var(--clients-text);
+        }
+
+            .client-name i {
+                color: var(--clients-secondary);
+            }
+
+        .client-email {
+            color: var(--clients-muted);
+            font-size: .8rem;
+        }
+
+        .badge-soft {
+            padding: .22rem .7rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 600;
+            border: 1px solid var(--clients-secondary);
+            background: #ecfdf5;
+            color: var(--clients-primary);
+        }
+
+        /* Stats mint */
+        .statcard-mint {
+            border-radius: .8rem;
+            padding: .9rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-size: .7rem;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: var(--muted-text);
+            letter-spacing: .07em;
+            color: var(--clients-muted);
         }
 
         .stat-value {
             font-size: 1.05rem;
             font-weight: 700;
-            color: var(--light-text);
+            color: var(--clients-text);
         }
 
-        .stat-icon {
+        .stat-icon-mint {
             font-size: 1.5rem;
-            color: var(--accent-blue);
+            color: var(--clients-secondary);
         }
 
-        .border-left-primary-soft {
-            border-left: 3px solid var(--secondary-blue);
+        .border-left-mint {
+            border-left: 3px solid var(--clients-secondary);
+            background: #fff;
+            border: 1px solid var(--clients-border-soft);
         }
 
-        .border-left-success-soft {
-            border-left: 3px solid #27ae60;
+        .border-left-info {
+            border-left: 3px solid #0ea5e9;
+            background: #fff;
+            border: 1px solid var(--clients-border-soft);
         }
 
-        .border-left-info-soft {
-            border-left: 3px solid #3498db;
+        .border-left-success {
+            border-left: 3px solid #22c55e;
+            background: #fff;
+            border: 1px solid var(--clients-border-soft);
         }
 
-        .icon-empty {
-            width: 90px;
-            height: 90px;
-            border-radius: 999px;
-            background: radial-gradient(circle at 30% 0, var(--accent-blue), transparent), rgba(8, 12, 40, 0.96);
-            display: flex;
+        /* Detalle light */
+        .fila-detalle-light {
+            background: #f8fafc;
+        }
+
+        .detalle-card-light {
+            background: #ffffff;
+            border-radius: .8rem;
+            border: 1px solid var(--clients-border-soft);
+            box-shadow: 0 2px 10px rgba(15,23,42,.06);
+        }
+
+        /* Botón detalle */
+        .clients-action-btn {
+            border: none;
+            border-radius: .7rem;
+            padding: .4rem .9rem;
+            font-size: .82rem;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            color: var(--muted-text);
-            font-size: 2.4rem;
-            margin: 0 auto;
+            gap: .35rem;
+            background: #f3f4f6;
+            color: var(--clients-muted);
+            transition: all .2s ease;
+        }
+
+        .clients-detail-btn {
+            background: #ecfdf5;
+            color: var(--clients-primary);
+            border: 1px solid var(--clients-secondary);
+        }
+
+            .clients-detail-btn:hover {
+                background: var(--clients-secondary);
+                color: #020814;
+                transform: translateY(-1px);
+                box-shadow: 0 3px 8px rgba(18,198,161,.3);
+            }
+
+        /* Responsive */
+        @@media (max-width:768px) {
+            .clients-header
+
+        {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: .9rem 1rem;
+        }
+
+        .clients-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .clients-header p {
+            font-size: .8rem;
+        }
+
+        .clients-header-actions {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+        }
+
+            .clients-header-actions .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+        .clients-search-card {
+            padding: .8rem .9rem;
+        }
+
+        .clients-search-input {
+            min-width: 0;
+        }
+
         }
     </style>
 }

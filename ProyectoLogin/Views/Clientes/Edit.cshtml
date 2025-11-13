@@ -14,231 +14,213 @@
 
 @if (isAuth && isAdmin)
 {
-    <div class="container-fluid cliente-edit-theme py-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-8 col-xl-6">
-
-                <!-- CARD PRINCIPAL -->
-                <div class="card cliente-edit-card">
-                    <div class="card-header cliente-edit-header d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="cliente-edit-icon">
-                                <i class="bi bi-person-gear"></i>
-                            </div>
-                            <div>
-                                <h4 class="mb-0 text-white">Editar Cliente</h4>
-                                <small class="cliente-edit-subtitle">
-                                    Actualiza la información manteniendo los datos consistentes para facturación y ventas.
-                                </small>
-                            </div>
-                        </div>
-                        <div class="cliente-edit-status text-end">
-                            <span class="label-estado">Estado</span>
-                            <div>
-                                @if (Model.Activo)
-                                {
-                                    <span class="badge badge-estado badge-estado-activo">
-                                        <i class="bi bi-check-circle me-1"></i>Activo
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-estado badge-estado-inactivo">
-                                        <i class="bi bi-x-circle me-1"></i>Inactivo
-                                    </span>
-                                }
-                            </div>
-                        </div>
+    <div class="clients-edit-theme">
+        <div class="clients-edit-wrapper">
+            <div class="clients-edit-card">
+                <!-- HEADER (estilo menta como usuarios) -->
+                <div class="clients-edit-header">
+                    <div class="clients-edit-header-icon">
+                        <i class="bi bi-person-gear"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4>Editar Cliente</h4>
+                        <p class="clients-edit-subtitle">
+                            Actualiza la información manteniendo los datos consistentes para facturación y ventas.
+                        </p>
                     </div>
 
-                    <div class="card-body p-4">
+                    <!-- Estado (con pastilla) -->
+                    <div class="clients-status">
+                        <span class="clients-status-label">Estado</span>
+                        <div>
+                            @if (Model.Activo)
+                            {
+                                <span class="clients-status-badge clients-status-active">
+                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="clients-status-badge clients-status-inactive">
+                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
 
-                        <!-- ERRORES DE VALIDACIÓN GENERALES -->
-                        @if (!ViewData.ModelState.IsValid)
-                        {
-                            <div class="alert alert-danger alert-smart-danger alert-dismissible fade show" role="alert">
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                                    <div>
-                                        <strong>Hay errores en el formulario.</strong>
-                                        <ul class="mb-0 mt-1 small">
-                                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                                            {
-                                                <li>@error.ErrorMessage</li>
-                                            }
-                                        </ul>
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white ms-2"
-                                            data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                                </div>
-                            </div>
-                        }
+                <!-- BODY / FORM -->
+                <div class="clients-edit-body">
+                    <!-- Errores generales -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Hay errores en el formulario.</strong>
+                            <ul class="mb-0 mt-1 small">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
 
-                        <form asp-action="Edit" method="post" id="clienteForm" novalidate>
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" asp-for="IdCliente" />
+                    <form asp-action="Edit" method="post" id="clienteForm" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="IdCliente" />
 
-                            <!-- INFORMACIÓN BÁSICA -->
-                            <div class="seccion-form mb-4">
-                                <div class="seccion-titulo">
-                                    <i class="bi bi-card-checklist me-2"></i>Información Básica
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Nit" class="form-label form-label-client">
-                                            <i class="bi bi-credit-card me-1"></i>NIT
-                                        </label>
-                                        <input asp-for="Nit"
-                                               class="form-control form-control-client"
-                                               placeholder="Ej: 12345678-9"
-                                               required
-                                               pattern="[0-9]+(-[0-9kK])?"
-                                               title="Formato: 12345678-9"
-                                               id="nitInput" />
-                                        <span asp-validation-for="Nit" class="text-danger small d-block mt-1"></span>
-                                        <div class="form-text form-text-client">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            El guion se ajusta automáticamente al validar el formato.
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label form-label-client">
-                                            <i class="bi bi-fingerprint me-1"></i>ID Interno
-                                        </label>
-                                        <div class="form-control form-control-client form-control-readonly">
-                                            @Model.IdCliente
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- Información básica -->
+                        <div class="clients-info-block">
+                            <div class="clients-info-label">
+                                <i class="bi bi-card-checklist"></i> Información Básica
                             </div>
 
-                            <!-- INFORMACIÓN PERSONAL -->
-                            <div class="seccion-form mb-4">
-                                <div class="seccion-titulo">
-                                    <i class="bi bi-person-lines-fill me-2"></i>Información Personal
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Nombres" class="form-label form-label-client">
-                                            <i class="bi bi-person me-1"></i>Nombres
-                                        </label>
-                                        <input asp-for="Nombres"
-                                               class="form-control form-control-client"
-                                               placeholder="Nombres del cliente"
-                                               required
-                                               minlength="2"
-                                               maxlength="100"
-                                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
-                                               title="Solo letras y espacios" />
-                                        <span asp-validation-for="Nombres" class="text-danger small d-block mt-1"></span>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Apellidos" class="form-label form-label-client">
-                                            <i class="bi bi-person me-1"></i>Apellidos
-                                        </label>
-                                        <input asp-for="Apellidos"
-                                               class="form-control form-control-client"
-                                               placeholder="Apellidos del cliente"
-                                               required
-                                               minlength="2"
-                                               maxlength="100"
-                                               pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
-                                               title="Solo letras y espacios" />
-                                        <span asp-validation-for="Apellidos" class="text-danger small d-block mt-1"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- CONTACTO -->
-                            <div class="seccion-form mb-4">
-                                <div class="seccion-titulo">
-                                    <i class="bi bi-telephone me-2"></i>Información de Contacto
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <label asp-for="Correo" class="form-label form-label-client">
-                                            <i class="bi bi-envelope me-1"></i>Correo Electrónico
-                                        </label>
-                                        <input asp-for="Correo"
-                                               class="form-control form-control-client"
-                                               type="email"
-                                               placeholder="cliente@correo.com"
-                                               maxlength="150" />
-                                        <span asp-validation-for="Correo" class="text-danger small d-block mt-1"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- DIRECCIÓN -->
-                            <div class="seccion-form mb-4">
-                                <div class="seccion-titulo">
-                                    <i class="bi bi-geo-alt me-2"></i>Dirección
-                                </div>
-
-                                <div class="mb-3">
-                                    <label asp-for="Direccion" class="form-label form-label-client">
-                                        <i class="bi bi-house me-1"></i>Dirección Completa
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Nit" class="clients-form-label">
+                                        <i class="bi bi-credit-card"></i> NIT
                                     </label>
-                                    <textarea asp-for="Direccion"
-                                              class="form-control form-control-client"
-                                              rows="3"
-                                              maxlength="250"
-                                              placeholder="Dirección completa del cliente"
-                                              id="Direccion"></textarea>
-                                    <span asp-validation-for="Direccion" class="text-danger small d-block mt-1"></span>
-                                    <div class="form-text form-text-client">
-                                        <span id="direccionContador">0</span>/250 caracteres
+                                    <input asp-for="Nit"
+                                           class="clients-input"
+                                           placeholder="Ej: 12345678-9"
+                                           required
+                                           pattern="[0-9]+(-[0-9kK])?"
+                                           title="Formato: 12345678-9"
+                                           id="nitInput" />
+                                    <span asp-validation-for="Nit" class="text-danger small d-block mt-1"></span>
+                                    <div class="clients-help-text">
+                                        <i class="bi bi-info-circle"></i>
+                                        El guion se ajusta automáticamente al validar el formato.
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="clients-form-label">
+                                        <i class="bi bi-fingerprint"></i> ID Interno
+                                    </label>
+                                    <div class="clients-input clients-input-readonly">
+                                        @Model.IdCliente
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- BOTONES -->
-                            <div class="d-flex justify-content-between align-items-center pt-3 cliente-edit-footer">
-                                <a asp-action="Index"
-                                   class="btn btn-outline-clientes cliente-btn-cancel"
-                                   title="Volver al listado de clientes">
-                                    <i class="bi bi-arrow-left me-1"></i>Cancelar
-                                </a>
-
-                                <button type="submit"
-                                        class="btn btn-clientes-primary cliente-btn-submit"
-                                        id="btnSubmit"
-                                        title="Guardar cambios del cliente">
-                                    <i class="bi bi-check2-circle me-1"></i>Guardar Cambios
-                                </button>
+                        <!-- Información personal -->
+                        <div class="clients-info-block">
+                            <div class="clients-info-label">
+                                <i class="bi bi-person-lines-fill"></i> Información Personal
                             </div>
-                        </form>
-                    </div>
-                </div>
 
-                <!-- TARJETA INFORMATIVA -->
-                <div class="card cliente-info-card mt-4">
-                    <div class="card-body">
-                        <h6 class="mb-3 text-accent">
-                            <i class="bi bi-lightbulb me-2"></i>Información Importante
-                        </h6>
-                        <ul class="list-unstyled text-muted small mb-0">
-                            <li class="mb-2">
-                                <i class="bi bi-info-circle text-accent me-1"></i>
-                                <strong>NIT:</strong> Mantener el NIT correcto asegura una facturación válida.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-telephone text-success me-1"></i>
-                                <strong>Contacto:</strong> Un correo actualizado facilita la comunicación con el cliente.
-                            </li>
-                            <li>
-                                <i class="bi bi-shield-check text-success me-1"></i>
-                                <strong>Estado:</strong> Clientes inactivos no se mostrarán en el flujo de ventas.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Nombres" class="clients-form-label">
+                                        <i class="bi bi-person"></i> Nombres
+                                    </label>
+                                    <input asp-for="Nombres"
+                                           class="clients-input"
+                                           placeholder="Nombres del cliente"
+                                           required
+                                           minlength="2"
+                                           maxlength="100"
+                                           pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                                           title="Solo letras y espacios" />
+                                    <span asp-validation-for="Nombres" class="text-danger small d-block mt-1"></span>
+                                </div>
 
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Apellidos" class="clients-form-label">
+                                        <i class="bi bi-person"></i> Apellidos
+                                    </label>
+                                    <input asp-for="Apellidos"
+                                           class="clients-input"
+                                           placeholder="Apellidos del cliente"
+                                           required
+                                           minlength="2"
+                                           maxlength="100"
+                                           pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                                           title="Solo letras y espacios" />
+                                    <span asp-validation-for="Apellidos" class="text-danger small d-block mt-1"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contacto -->
+                        <div class="clients-info-block">
+                            <div class="clients-info-label">
+                                <i class="bi bi-telephone"></i> Información de Contacto
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label asp-for="Correo" class="clients-form-label">
+                                        <i class="bi bi-envelope"></i> Correo Electrónico
+                                    </label>
+                                    <input asp-for="Correo"
+                                           class="clients-input"
+                                           type="email"
+                                           placeholder="cliente@correo.com"
+                                           maxlength="150" />
+                                    <span asp-validation-for="Correo" class="text-danger small d-block mt-1"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="clients-info-block">
+                            <div class="clients-info-label">
+                                <i class="bi bi-geo-alt"></i> Dirección
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Direccion" class="clients-form-label">
+                                    <i class="bi bi-house"></i> Dirección Completa
+                                </label>
+                                <textarea asp-for="Direccion"
+                                          class="clients-input"
+                                          rows="3"
+                                          maxlength="250"
+                                          placeholder="Dirección completa del cliente"
+                                          id="Direccion"></textarea>
+                                <span asp-validation-for="Direccion" class="text-danger small d-block mt-1"></span>
+                                <div class="clients-help-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span id="direccionContador">0</span>/250 caracteres
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="clients-actions">
+                            <a asp-action="Index"
+                               class="btn-clients-cancel"
+                               title="Volver al listado de clientes">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+
+                            <button type="submit"
+                                    class="btn-clients-save"
+                                    id="btnSubmit"
+                                    title="Guardar cambios del cliente">
+                                <i class="bi bi-check2-circle"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tarjeta informativa (blanco, como usuarios) -->
+            <div class="clients-info-card">
+                <h6>
+                    <i class="bi bi-lightbulb"></i>
+                    Información rápida
+                </h6>
+                <ul class="mb-0">
+                    <li><strong>NIT:</strong> Mantener el NIT correcto asegura una facturación válida.</li>
+                    <li><strong>Contacto:</strong> Un correo actualizado facilita la comunicación con el cliente.</li>
+                    <li><strong>Estado:</strong> Clientes inactivos no se mostrarán en el flujo de ventas.</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -370,7 +352,7 @@
             if (firstInput) firstInput.focus();
         });
 
-        // Función global para restaurar botón (si la usas en otro JS)
+        // Función global para restaurar botón
         function restaurarBotonSubmit() {
             const submitBtn = document.getElementById('btnSubmit');
             if (submitBtn && submitBtn.disabled) {
@@ -383,241 +365,352 @@
 
 <style>
     :root {
-        --primary-blue: #1C1973;
-        --secondary-blue: #514BF2;
-        --accent-blue: #8B88F2;
-        --dark-bg: #0D0E26;
-        --alt-bg: #081C59;
-        --light-text: #F0F0F7;
-        --muted-text: #A4A5D4;
-        --radius: 0.75rem;
+        /* Paleta menta (igual a usuarios) */
+        --clients-primary: #062926;
+        --clients-secondary: #12C6A1;
+        --clients-accent: #5EF2C1;
+        --clients-bg: #f5f6fa;
+        --clients-card: #ffffff;
+        --clients-text: #111827;
+        --clients-muted: #6b7280;
+        --clients-radius: .75rem;
+        --clients-border-soft: #e5e7eb;
+        --clients-danger: #b91c1c;
+        --clients-success: #16a34a;
     }
 
-    .cliente-edit-theme {
+    .clients-edit-theme {
         min-height: 100vh;
-        background: radial-gradient(circle at top left, rgba(81,75,242,0.14), transparent), radial-gradient(circle at top right, rgba(139,136,242,0.08), transparent), linear-gradient(180deg, #0D0E26, #040611);
-        color: var(--light-text);
+        padding: 1.5rem 0 2rem;
+        background: var(--clients-bg);
+        display: flex;
+        justify-content: center;
     }
 
-    .cliente-edit-card {
-        background: rgba(5, 10, 35, 0.98);
-        border-radius: var(--radius);
-        border: 1px solid rgba(81,75,242,0.35);
-        box-shadow: 0 14px 32px rgba(0,0,0,0.7);
+    .clients-edit-wrapper {
+        width: 100%;
+        max-width: 780px;
+    }
+
+    .clients-edit-card {
+        background: var(--clients-card);
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-border-soft);
+        box-shadow: 0 6px 20px rgba(15,23,42,.08);
         overflow: hidden;
-        backdrop-filter: blur(4px);
+        transition: all .25s ease;
     }
 
-    .cliente-edit-header {
-        background: linear-gradient(135deg, var(--alt-bg), var(--primary-blue));
-        padding: 1.1rem 1.4rem;
-        border-bottom: 1px solid rgba(139,136,242,0.35);
+        .clients-edit-card:hover {
+            box-shadow: 0 10px 28px rgba(15,23,42,.12);
+            transform: translateY(-1px);
+        }
+
+    .clients-edit-header {
+        padding: 1.25rem 1.75rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        background: linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+        border-bottom: 1px solid rgba(255,255,255,.16);
+        color: #fff;
     }
 
-    .cliente-edit-icon {
-        width: 40px;
-        height: 40px;
+    .clients-edit-header-icon {
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
-        background: radial-gradient(circle at 30% 0, var(--accent-blue), var(--primary-blue));
+        background: rgba(0,0,0,.18);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
-        font-size: 1.3rem;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+        font-size: 1.5rem;
+        color: var(--clients-accent);
     }
 
-    .cliente-edit-subtitle {
-        color: var(--muted-text);
-        font-size: 0.8rem;
+    .clients-edit-header h4 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: .4px;
     }
 
-    .cliente-edit-status .label-estado {
-        font-size: 0.7rem;
-        color: var(--muted-text);
+    .clients-edit-subtitle {
+        margin: 0;
+        font-size: .8rem;
+        color: rgba(241,245,249,.9);
     }
 
-    .badge-estado {
-        padding: 0.15rem 0.6rem;
-        font-size: 0.72rem;
+    .clients-status {
+        text-align: right;
+        margin-left: auto;
+    }
+
+    .clients-status-label {
+        font-size: .72rem;
+        color: #e5fff8;
+        opacity: .85;
+        display: block;
+    }
+
+    .clients-status-badge {
+        padding: .18rem .6rem;
+        font-size: .72rem;
         border-radius: 999px;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        font-weight: 600;
+        background: #ecfdf5;
+        color: #064e3b;
+        border-color: #bbf7d0;
     }
 
-    .badge-estado-activo {
-        background-color: rgba(46, 204, 113, 0.18);
-        color: #2ECC71;
-        border: 1px solid rgba(46, 204, 113, 0.6);
+    .clients-status-inactive {
+        background: #fef2f2;
+        color: #7f1d1d;
+        border-color: #fecaca;
     }
 
-    .badge-estado-inactivo {
-        background-color: rgba(255, 107, 107, 0.18);
-        color: #FF6B6B;
-        border: 1px solid rgba(255, 107, 107, 0.6);
+    .clients-edit-body {
+        padding: 1.5rem 1.75rem 1.6rem;
+        color: var(--clients-text);
     }
 
-    .seccion-form {
-        padding: 1rem 0.2rem 0.2rem;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
+    .clients-info-block {
+        background: #fff;
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-border-soft);
+        padding: 1.25rem 1.25rem 1rem;
+        margin-bottom: 1.1rem;
+        transition: all .25s ease;
     }
 
-    .seccion-titulo {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--accent-blue);
+        .clients-info-block:hover {
+            box-shadow: 0 4px 14px rgba(15,23,42,.06);
+            border-color: var(--clients-accent);
+        }
+
+    .clients-info-label {
+        font-size: .9rem;
+        font-weight: 700;
+        color: var(--clients-text);
         display: flex;
         align-items: center;
-        margin-bottom: 0.55rem;
+        gap: .35rem;
+        margin-bottom: .7rem;
+        padding-bottom: .5rem;
+        border-bottom: 2px solid rgba(18,198,161,.16);
     }
 
-    .form-label-client {
-        font-size: 0.8rem;
-        color: var(--accent-blue);
+        .clients-info-label i {
+            background: var(--clients-secondary);
+            color: #fff;
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .95rem;
+        }
+
+    .clients-form-label {
+        font-size: .88rem;
         font-weight: 600;
+        color: #374151;
+        margin-bottom: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
     }
 
-    .form-control-client {
-        background-color: #030618;
-        border-radius: 0.55rem;
-        border: 1px solid rgba(81,75,242,0.4);
-        color: var(--light-text);
-        font-size: 0.86rem;
-        padding: 0.45rem 0.75rem;
-    }
-
-        .form-control-client:focus {
-            background-color: #030618;
-            color: var(--light-text);
-            border-color: var(--secondary-blue);
-            box-shadow: 0 0 0 0.16rem rgba(81,75,242,0.32);
+        .clients-form-label i {
+            color: var(--clients-secondary);
+            font-size: 1rem;
         }
 
-    .form-control-readonly {
-        opacity: 0.7;
-        border-style: dashed;
+    .clients-input {
+        background: #fff;
+        border-radius: var(--clients-radius);
+        border: 1px solid #d1d5db;
+        padding: .6rem .85rem;
+        font-size: .9rem;
+        color: var(--clients-text);
+        transition: all .25s ease;
+        width: 100%;
     }
 
-    .form-text-client {
-        color: var(--muted-text);
-        font-size: 0.75rem;
+        .clients-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .clients-input:focus {
+            outline: none;
+            border-color: var(--clients-secondary);
+            box-shadow: 0 0 0 .16rem rgba(18,198,161,.15);
+            background: #fff;
+            color: var(--clients-text);
+        }
+
+    .clients-input-readonly {
+        background: #f9fafb;
+        border: 1px dashed #e5e7eb;
+        color: var(--clients-muted);
     }
 
-    textarea.form-control-client {
-        resize: vertical;
+    .clients-help-text {
+        font-size: .78rem;
+        color: var(--clients-muted);
+        margin-top: .25rem;
+        display: flex;
+        gap: .3rem;
+        align-items: center;
     }
 
-    .cliente-edit-footer {
-        border-top: 1px solid rgba(255,255,255,0.04);
-        margin-top: 0.3rem;
+        .clients-help-text i {
+            color: var(--clients-secondary);
+            font-size: .9rem;
+        }
+
+    .alert {
+        border-radius: var(--clients-radius);
+        padding: .7rem .9rem;
+        font-size: .86rem;
+        margin-top: .4rem;
+        border-width: 1px;
+        box-shadow: 0 6px 16px rgba(15,23,42,.08);
     }
 
-    /* ✅ BOTONES VISIBLES */
+    .alert-danger {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: var(--clients-danger);
+    }
 
-    /* Botón primario "Guardar cambios" */
-    .btn-clientes-primary {
-        background: var(--secondary-blue);
-        color: #fff !important;
-        border: 1px solid var(--secondary-blue);
-        border-radius: var(--radius);
-        padding: 0.45rem 1.3rem;
+    .alert .btn-close {
+        filter: none;
+    }
+
+    .clients-actions {
+        padding-top: 1rem;
+        margin-top: .75rem;
+        border-top: 1px solid var(--clients-border-soft);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-clients-cancel {
+        border-radius: var(--clients-radius);
+        padding: .6rem 1.4rem;
+        font-size: .88rem;
+        border: 1px solid var(--clients-secondary);
+        color: var(--clients-secondary);
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        transition: all .25s ease;
+        text-decoration: none;
+    }
+
+        .btn-clients-cancel:hover {
+            background: var(--clients-secondary);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(15,23,42,.16);
+        }
+
+    .btn-clients-save {
+        border-radius: var(--clients-radius);
+        padding: .6rem 1.6rem;
+        font-size: .9rem;
         font-weight: 600;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.55);
-        transition: all 0.25s ease;
+        border: none;
+        background: var(--clients-secondary);
+        color: #020814;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        box-shadow: 0 6px 18px rgba(15,23,42,.18);
+        transition: all .25s ease;
     }
 
-        .btn-clientes-primary:hover {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
-            color: #fff !important;
+        .btn-clients-save:hover {
+            background: var(--clients-primary);
+            color: #fff;
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+            box-shadow: 0 8px 22px rgba(15,23,42,.22);
         }
 
-    /* Botón "Cancelar" */
-    .btn-outline-clientes {
-        border-radius: var(--radius);
-        border: 1px solid var(--accent-blue);
-        color: var(--accent-blue) !important;
-        padding: 0.4rem 1rem;
-        font-weight: 500;
-        background-color: transparent;
-        font-size: 0.8rem;
-        transition: all 0.25s ease;
+    .btn:disabled {
+        cursor: not-allowed;
+        opacity: .6;
     }
 
-        .btn-outline-clientes:hover {
-            background-color: rgba(139,136,242,0.18);
-            color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transform: translateY(-1px);
-        }
-
-    .cliente-btn-cancel {
-        /* solo ajusta tamaño, usa colores de btn-outline-clientes */
-        padding: 0.4rem 1rem;
+    .clients-info-card {
+        margin-top: 1.4rem;
+        background: #fff;
+        color: var(--clients-text);
+        border-radius: var(--clients-radius);
+        border: 1px solid var(--clients-border-soft);
+        padding: 1rem 1.2rem .9rem;
+        box-shadow: 0 8px 20px rgba(15,23,42,.08);
     }
 
-    .cliente-btn-submit {
-        /* ya usa btn-clientes-primary */
-        padding: 0.45rem 1.3rem;
-    }
-
-    /* ✅ TARJETA INFORMACIÓN IMPORTANTE LEGIBLE */
-
-    .cliente-info-card {
-        background: rgba(5, 10, 35, 0.98);
-        border-radius: var(--radius);
-        border: 1px solid rgba(81,75,242,0.22);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.7);
-        color: var(--light-text);
-    }
-
-        .cliente-info-card h6 {
-            color: var(--accent-blue);
+        .clients-info-card h6 {
+            font-size: .9rem;
             font-weight: 600;
+            margin-bottom: .5rem;
+            display: flex;
+            align-items: center;
+            gap: .3rem;
+            color: var(--clients-primary);
         }
 
-        .cliente-info-card ul li {
-            color: var(--muted-text);
+            .clients-info-card h6 i {
+                font-size: 1rem;
+                color: var(--clients-secondary);
+            }
+
+        .clients-info-card ul {
+            margin: 0;
+            padding-left: 1rem;
         }
 
-        .cliente-info-card i {
-            color: var(--accent-blue);
+        .clients-info-card li {
+            font-size: .82rem;
+            color: var(--clients-muted);
+            margin-bottom: .25rem;
         }
 
-        .cliente-info-card strong {
-            color: var(--light-text);
-            font-weight: 600;
+        .clients-info-card strong {
+            color: var(--clients-text);
         }
 
-    /* Alertas */
-    .alert-smart-danger {
-        background: radial-gradient(circle at 0 0, rgba(255,107,107,0.18), rgba(5,10,35,0.98));
-        border-left: 4px solid #FF6B6B;
-        color: var(--light-text);
-        font-size: 0.8rem;
-    }
-
-    .text-accent {
-        color: var(--accent-blue) !important;
-    }
-
-    @@media (max-width: 768px) {
-        .cliente-edit-card
+    @@media (max-width:576px) {
+        .clients-edit-body
 
     {
-        margin-top: 0.5rem;
+        padding: 1.3rem 1.1rem 1.2rem;
     }
 
-    .cliente-edit-header {
+    .clients-edit-header {
+        padding: 1rem 1.25rem;
+        gap: .6rem;
+    }
+
+    .clients-actions {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+        align-items: stretch;
     }
 
-    .cliente-edit-status {
-        align-self: flex-end;
+    .btn-clients-cancel, .btn-clients-save {
+        width: 100%;
+        justify-content: center;
     }
 
     }

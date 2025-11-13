@@ -8,11 +8,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SmartCell POS</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProyectoLogin.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
     @RenderSection("Styles", required: false)
+
     <style>
         :root {
             --primary-blue: #1C1973;
@@ -22,11 +25,14 @@
             --alt-bg: #081C59;
             --light-text: #F0F0F7;
             --border-radius: 0.5rem;
+            --body-bg: #ffffff;
+            --body-text: #212529;
+            --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
 
         body {
-            background-color: var(--dark-bg);
-            color: var(--light-text);
+            background-color: var(--body-bg);
+            color: var(--body-text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
         }
@@ -35,66 +41,109 @@
             background-color: var(--alt-bg) !important;
             border-bottom: 1px solid var(--secondary-blue);
             padding: 0.75rem 0;
+            box-shadow: var(--shadow-soft);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
 
         .navbar-brand {
             color: var(--light-text) !important;
             font-weight: 700;
             font-size: 1.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.9rem;
             border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
             transition: all 0.3s ease;
         }
 
+            .navbar-brand i {
+                font-size: 1.4rem;
+                color: var(--accent-blue);
+            }
+
             .navbar-brand:hover {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: rgba(255, 255, 255, 0.08);
             }
 
         .nav-link {
             color: var(--light-text) !important;
-            padding: 0.5rem 1rem !important;
+            padding: 0.45rem 0.9rem !important;
             border-radius: var(--border-radius);
             margin: 0 0.15rem;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             display: flex;
             align-items: center;
+            gap: 0.35rem;
+            font-size: 0.93rem;
         }
 
             .nav-link i {
-                margin-right: 0.5rem;
-                font-size: 1.1rem;
+                font-size: 1.05rem;
             }
 
-            .nav-link:hover, .nav-link:focus {
+            .nav-link:hover,
+            .nav-link:focus {
                 background-color: var(--secondary-blue);
-                color: white !important;
+                color: #ffffff !important;
             }
 
-        .dropdown-menu {
+        /* 🔽 Dropdown con animación suave (Gestión, Movimientos, Reportes, Usuario) */
+        .navbar .dropdown-menu {
             background-color: var(--alt-bg);
             border: 1px solid var(--accent-blue);
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            padding: 0.35rem 0;
+            display: block;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(8px);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out, visibility 0.22s ease-out;
+            will-change: opacity, transform;
+        }
+
+            .navbar .dropdown-menu.show {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0);
+            }
+
+        .nav-link.dropdown-toggle[aria-expanded="true"] {
+            background-color: var(--secondary-blue);
+            color: #ffffff !important;
         }
 
         .dropdown-item {
             color: var(--light-text);
-            padding: 0.75rem 1rem;
+            padding: 0.5rem 1rem;
             display: flex;
             align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
             transition: all 0.2s ease;
         }
 
             .dropdown-item i {
-                margin-right: 0.75rem;
-                width: 1.25rem;
+                width: 1.1rem;
                 text-align: center;
+                font-size: 1rem;
             }
 
-            .dropdown-item:hover, .dropdown-item:focus {
+            .dropdown-item:hover,
+            .dropdown-item:focus {
                 background-color: var(--secondary-blue);
-                color: white;
+                color: #ffffff;
             }
+
+        .dropdown-divider {
+            border-color: var(--accent-blue);
+            opacity: 0.25;
+        }
 
         .navbar-toggler {
             border: 1px solid var(--accent-blue);
@@ -106,26 +155,16 @@
             }
 
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
-        .container {
+        .layout-container {
             max-width: 100%;
-            padding: 0 1rem;
+            padding: 1.5rem 1.5rem 2rem 1.5rem;
         }
 
         main {
-            padding: 1.5rem 0;
-            min-height: calc(100vh - 120px);
-        }
-
-        .dropdown-divider {
-            border-color: var(--accent-blue);
-            opacity: 0.3;
-        }
-
-        .text-danger {
-            color: #ff6b6b !important;
+            min-height: calc(100vh - 90px);
         }
 
         .btn-logout {
@@ -133,46 +172,68 @@
         }
 
             .btn-logout:hover {
-                background-color: rgba(255, 107, 107, 0.1) !important;
+                background-color: rgba(255, 107, 107, 0.12) !important;
             }
 
-        /* Estilos para el menú activo */
-        .nav-item.active .nav-link {
-            background-color: var(--secondary-blue);
+        .nav-item.active .nav-link,
+        .nav-link.active {
+            background-color: var(--secondary-blue) !important;
+            color: #ffffff !important;
             font-weight: 600;
         }
 
-        /* Responsive adjustments */
+        /* 📱 Ajustes para móvil: menú del layout como panel flotante y dropdowns sobrepuestos */
         @@media (max-width: 991.98px) {
-            .navbar-collapse
+            .navbar {
+                position: relative;
+                top: 0;
+            }
 
-        {
-            padding-top: 1rem;
-        }
+            .navbar-collapse {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: var(--alt-bg);
+                box-shadow: var(--shadow-soft);
+                padding: 0.75rem 1rem 1rem;
+                z-index: 1090;
+            }
 
-        .nav-link {
-            margin: 0.25rem 0;
-        }
+            .navbar-nav {
+                flex-direction: column;
+            }
 
-        .dropdown-menu {
-            border: none;
-            box-shadow: none;
-            background-color: rgba(8, 28, 89, 0.7);
-            margin-left: 1rem;
-        }
+            .nav-link {
+                margin: 0.25rem 0;
+            }
 
+            .navbar-nav .nav-item.dropdown {
+                position: relative;
+            }
+
+            .navbar .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                border: none;
+                box-shadow: none;
+                background-color: rgba(8, 28, 89, 0.96);
+                margin: 0;
+                margin-top: 0.35rem;
+                z-index: 1100;
+            }
         }
 
         @@media (min-width: 992px) {
-            .dropdown-menu
-
-        {
-            margin-top: 0.5rem;
-        }
-
+            .navbar .dropdown-menu {
+                margin-top: 0.45rem;
+            }
         }
     </style>
 </head>
+
 <body>
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
@@ -183,7 +244,6 @@
         bool isAdmin = user?.IsInRole("Administrador") ?? false;
         bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 
-        // ✅ Ocultar navbar en Login y en las vistas de recuperación
         bool hideNav =
         (currentController == "Inicio" && currentAction == "IniciarSesion") ||
         (currentController == "Access" && (currentAction == "StartRecovery" || currentAction == "Recovery"));
@@ -192,24 +252,29 @@
     <header>
         @if (!hideNav)
         {
-            <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+            <nav class="navbar navbar-expand-lg navbar-dark">
                 <div class="container-fluid">
-                    <!-- Logo / nombre del sistema -->
-                    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-phone me-2"></i> <strong>SmartCell Company</strong>
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-phone"></i>
+                        <span>SmartCell Company</span>
                     </a>
 
-                    <!-- Botón responsive -->
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSmartcell">
+                    <button class="navbar-toggler" type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#navbarSmartcell"
+                            aria-controls="navbarSmartcell"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
 
                     <div class="collapse navbar-collapse" id="navbarSmartcell">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                            <!-- Menú GESTIÓN -->
+                            <!-- Gestión -->
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="gestionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle" href="#"
+                                   id="gestionDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-gear-fill"></i> Gestión
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="gestionDropdown">
@@ -220,9 +285,6 @@
                                     @if (isAuth && isAdmin)
                                     {
                                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="Usuarios"><i class="bi bi-people-fill"></i> Usuarios</a></li>
-                                    }
-                                    @if (isAuth && isAdmin)
-                                    {
                                         <li><a class="dropdown-item" asp-controller="Proveedores" asp-action="Index"><i class="bi bi-truck"></i> Proveedores</a></li>
                                     }
                                     @if (isAuth && (isAdmin || isEmpleado))
@@ -232,9 +294,11 @@
                                 </ul>
                             </li>
 
-                            <!-- Menú MOVIMIENTOS -->
+                            <!-- Movimientos -->
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="movimientosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle" href="#"
+                                   id="movimientosDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-arrow-left-right"></i> Movimientos
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="movimientosDropdown">
@@ -245,23 +309,19 @@
                                     @if (isAuth && (isAdmin || isEmpleado))
                                     {
                                         <li><a class="dropdown-item" asp-controller="Ventas" asp-action="Index"><i class="bi bi-cart-fill"></i> Ventas</a></li>
-                                    }
-                                    @if (isAuth && (isAdmin || isEmpleado))
-                                    {
                                         <li><a class="dropdown-item" asp-controller="Kits" asp-action="Index"><i class="bi bi-gift-fill"></i> Promociones</a></li>
-                                    }
-                                    @if (isAuth && (isAdmin || isEmpleado))
-                                    {
                                         <li><a class="dropdown-item" asp-controller="Utilidades" asp-action="AjustesInventario"><i class="bi bi-tools"></i> Ajustes de Inventario</a></li>
                                     }
                                 </ul>
                             </li>
 
-                            <!-- Menú REPORTES -->
+                            <!-- Reportes -->
                             @if (isAuth && isAdmin)
                             {
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="reportesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <a class="nav-link dropdown-toggle" href="#"
+                                       id="reportesDropdown" role="button"
+                                       data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-bar-chart-fill"></i> Reportes
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="reportesDropdown">
@@ -275,11 +335,15 @@
                             }
                         </ul>
 
-                        <!-- Cerrar sesión -->
+                        <!-- Usuario / Cerrar sesión -->
                         <ul class="navbar-nav ms-auto">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-circle me-2"></i> @ViewData["nombreUsuario"]
+                                <a class="nav-link dropdown-toggle d-flex align-items-center"
+                                   href="#" id="userDropdown"
+                                   role="button" data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    @ViewData["nombreUsuario"]
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
@@ -292,13 +356,14 @@
                                 </ul>
                             </li>
                         </ul>
+
                     </div>
                 </div>
             </nav>
         }
     </header>
 
-    <div class="container">
+    <div class="layout-container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -311,34 +376,43 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Resaltar el elemento de menú activo
-        document.addEventListener('DOMContentLoaded', function() {
+        // Resaltar el elemento de menú activo + evitar "latigazo" al abrir dropdown
+        document.addEventListener('DOMContentLoaded', function () {
             const currentController = '@currentController';
             const currentAction = '@currentAction';
 
-            // Buscar y resaltar el enlace activo
             const navLinks = document.querySelectorAll('.nav-link, .dropdown-item');
             navLinks.forEach(link => {
                 const href = link.getAttribute('href');
-                if (href) {
-                    const url = new URL(href, window.location.origin);
-                    const path = url.pathname;
-                    const linkController = path.split('/')[1];
-                    const linkAction = path.split('/')[2] || 'Index';
+                if (!href || href === '#') return;
 
-                    if (linkController === currentController &&
-                        (linkAction === currentAction || (linkAction === 'Index' && currentAction === 'Index'))) {
-                        link.classList.add('active');
+                const url = new URL(href, window.location.origin);
+                const path = url.pathname;
+                const parts = path.split('/').filter(p => p);
+                const linkController = parts[0] || 'Home';
+                const linkAction = parts[1] || 'Index';
 
-                        // Si es un dropdown-item, también resaltar el dropdown padre
-                        if (link.classList.contains('dropdown-item')) {
-                            const dropdownToggle = link.closest('.dropdown-menu').previousElementSibling;
-                            if (dropdownToggle) {
-                                dropdownToggle.classList.add('active');
-                            }
-                        }
+                if (linkController === currentController &&
+                    (linkAction === currentAction ||
+                        (linkAction === 'Index' && currentAction === 'Index'))) {
+
+                    link.classList.add('active');
+
+                    if (link.classList.contains('dropdown-item')) {
+                        const dropdownToggle = link.closest('.dropdown-menu')?.previousElementSibling;
+                        if (dropdownToggle) dropdownToggle.classList.add('active');
                     }
                 }
+            });
+
+            // 🔧 Evitar que los dropdown-toggle con href="#" hagan scroll a la parte superior
+            const dropdownToggles = document.querySelectorAll('.nav-link.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function (e) {
+                    // Bootstrap seguirá manejando el dropdown por data-bs-toggle,
+                    // solo evitamos la navegación al "#"
+                    e.preventDefault();
+                });
             });
         });
     </script>

@@ -3,24 +3,24 @@
 
 <style>
     :root {
-        /* Reutilizamos la paleta global del layout / usuarios */
-        --users-primary: var(--primary-blue, #1C1973);
-        --users-secondary: var(--secondary-blue, #514BF2);
-        --users-accent: var(--accent-blue, #8B88F2);
-        --users-bg: var(--dark-bg, #0D0E26);
-        --users-alt-bg: var(--alt-bg, #081C59);
-        --users-text: var(--light-text, #F0F0F7);
-        --users-muted: #A0A0CC;
-        --users-radius: 0.9rem;
-        --users-border: rgba(139, 136, 242, 0.35);
-        --users-danger: #ff6b6b;
-        --users-success: #35D399;
+        --users-primary: #062926;
+        --users-secondary: #12C6A1;
+        --users-accent: #5EF2C1;
+        --users-bg: #f5f6fa;
+        --users-card: #ffffff;
+        --users-text-main: #111827;
+        --users-muted: #6b7280;
+        --users-radius: 0.75rem;
+        --users-border-soft: #e5e7eb;
+        --users-danger: #b91c1c;
+        --users-success: #16a34a;
     }
 
+    /* Contenedor general (alineado con creación) */
     .users-edit-theme {
         min-height: 100vh;
-        padding: 2.2rem 0.5rem 2.5rem;
-        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.10), transparent), radial-gradient(circle at bottom right, rgba(8, 28, 89, 0.22), transparent), linear-gradient(135deg, var(--users-bg) 0%, #050814 100%);
+        padding: 1.5rem 0 2rem;
+        background: var(--users-bg);
         display: flex;
         justify-content: center;
     }
@@ -30,30 +30,37 @@
         max-width: 780px;
     }
 
-    /* CARD PRINCIPAL */
+    /* CARD PRINCIPAL (similar a create-card / edit-card) */
     .users-edit-card {
-        background: #11152F;
+        background: var(--users-card);
         border-radius: var(--users-radius);
-        border: 1px solid var(--users-border);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+        border: 1px solid var(--users-border-soft);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
         overflow: hidden;
+        transition: all 0.25s ease;
     }
 
+        .users-edit-card:hover {
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+            transform: translateY(-1px);
+        }
+
+    /* HEADER (gradiente verde al estilo productos) */
     .users-edit-header {
-        padding: 1.3rem 1.8rem;
+        padding: 1.25rem 1.75rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        background: linear-gradient( 135deg, var(--users-primary) 0%, var(--users-secondary) 55%, #0D0E26 100% );
-        border-bottom: 1px solid rgba(139, 136, 242, 0.5);
-        color: var(--users-text);
+        background: linear-gradient(90deg, var(--users-primary), var(--users-secondary));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        color: #ffffff;
     }
 
     .users-edit-header-icon {
         width: 42px;
         height: 42px;
-        border-radius: 14px;
-        background: rgba(5, 10, 28, 0.55);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.18);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -70,108 +77,126 @@
     .users-edit-subtitle {
         margin: 0;
         font-size: 0.8rem;
-        color: rgba(240, 240, 247, 0.85);
+        color: rgba(241, 245, 249, 0.9);
     }
 
     .users-edit-body {
-        padding: 1.8rem 1.7rem 1.5rem;
-        color: var(--users-text);
+        padding: 1.5rem 1.75rem 1.6rem;
+        color: var(--users-text-main);
     }
 
-    /* BLOQUE INFO USUARIO */
+    /* BLOQUE INFO USUARIO (sección tipo section-container) */
     .users-info-block {
-        background: #15183A;
+        background: #ffffff;
         border-radius: var(--users-radius);
-        border: 1px solid rgba(139, 136, 242, 0.35);
-        padding: 1.1rem 1.1rem 0.7rem;
-        margin-bottom: 1.6rem;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+        border: 1px solid var(--users-border-soft);
+        padding: 1.25rem 1.25rem 1rem;
+        margin-bottom: 1.4rem;
+        box-shadow: none;
+        transition: all 0.25s ease;
     }
+
+        .users-info-block:hover {
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            border-color: var(--users-accent);
+        }
 
     .users-info-label {
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--users-muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--users-text-main);
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.7rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(18, 198, 161, 0.16);
+        text-transform: none;
+        letter-spacing: 0;
     }
 
         .users-info-label i {
-            color: var(--users-accent);
+            background: var(--users-secondary);
+            color: #ffffff;
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.95rem;
         }
 
+    /* LABELS */
     .users-form-label {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         font-weight: 600;
-        color: var(--users-text);
-        margin-bottom: 0.25rem;
+        color: #374151;
+        margin-bottom: 0.3rem;
         display: flex;
         align-items: center;
         gap: 0.35rem;
     }
 
         .users-form-label i {
-            color: var(--users-accent);
+            color: var(--users-secondary);
+            font-size: 1rem;
         }
 
+    /* INPUTS / SELECTS (estilo similar a form-control-create) */
     .users-input {
-        background: rgba(7, 9, 25, 0.98);
-        border-radius: 0.7rem;
-        border: 1px solid rgba(139, 136, 242, 0.32);
-        padding: 0.65rem 0.9rem;
+        background: #ffffff;
+        border-radius: var(--users-radius);
+        border: 1px solid #d1d5db;
+        padding: 0.6rem 0.85rem;
         font-size: 0.9rem;
-        color: var(--users-text);
-        transition: all 0.22s ease;
+        color: var(--users-text-main);
+        transition: all 0.25s ease;
         width: 100%;
     }
 
         .users-input::placeholder {
-            color: rgba(160, 160, 204, 0.6);
+            color: #9ca3af;
         }
 
         .users-input:focus {
             outline: none;
             border-color: var(--users-secondary);
-            box-shadow: 0 0 0 0.13rem rgba(81, 75, 242, 0.35);
-            background: #0D0E26;
-            color: var(--users-text);
+            box-shadow: 0 0 0 0.16rem rgba(18, 198, 161, 0.15);
+            background: #ffffff;
+            color: var(--users-text-main);
         }
 
     .users-select {
         appearance: none;
-        background: rgba(7, 9, 25, 0.98);
-        border-radius: 0.7rem;
-        border: 1px solid rgba(139, 136, 242, 0.32);
-        padding: 0.7rem 0.9rem;
+        background: #ffffff;
+        border-radius: var(--users-radius);
+        border: 1px solid #d1d5db;
+        padding: 0.6rem 0.85rem;
         font-size: 0.9rem;
-        color: var(--users-text);
-        transition: all 0.22s ease;
+        color: var(--users-text-main);
+        transition: all 0.25s ease;
         width: 100%;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%238B88F2' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%2312C6A1' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
         background-repeat: no-repeat;
-        background-position: right 0.9rem center;
+        background-position: right 0.75rem center;
         background-size: 14px 10px;
     }
 
         .users-select:focus {
             outline: none;
             border-color: var(--users-secondary);
-            box-shadow: 0 0 0 0.13rem rgba(81, 75, 242, 0.32);
-            background: #0D0E26;
+            box-shadow: 0 0 0 0.16rem rgba(18, 198, 161, 0.15);
+            background: #ffffff;
         }
 
         .users-select option {
-            background: #050814;
-            color: var(--users-text);
+            background: #ffffff;
+            color: var(--users-text-main);
         }
 
     .text-danger.small {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
         margin-top: 0.18rem;
     }
 
@@ -185,41 +210,41 @@
     }
 
         .users-help-text i {
-            color: var(--users-accent);
-            font-size: 0.85rem;
+            color: var(--users-secondary);
+            font-size: 0.9rem;
         }
 
-    /* ALERTAS (coherentes con el tema, sin "alertas feas") */
+    /* ALERTAS */
     .alert {
-        border-radius: 0.75rem;
-        padding: 0.6rem 0.9rem;
-        font-size: 0.82rem;
-        margin-top: 0.3rem;
+        border-radius: var(--users-radius);
+        padding: 0.7rem 0.9rem;
+        font-size: 0.86rem;
+        margin-top: 0.4rem;
         border-width: 1px;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
     }
 
     .alert-danger {
-        background: rgba(255, 107, 107, 0.06);
-        border-color: rgba(255, 107, 107, 0.75);
+        background: #fef2f2;
+        border-color: #fecaca;
         color: var(--users-danger);
     }
 
     .alert-success {
-        background: rgba(53, 211, 153, 0.06);
-        border-color: rgba(53, 211, 153, 0.75);
+        background: #ecfdf5;
+        border-color: #bbf7d0;
         color: var(--users-success);
     }
 
     .alert .btn-close {
-        filter: invert(1);
+        filter: none;
     }
 
-    /* BOTONES */
+    /* BOTONES (alineados a create/edit productos) */
     .users-actions {
         padding-top: 1rem;
-        margin-top: 0.9rem;
-        border-top: 1px solid rgba(139, 136, 242, 0.28);
+        margin-top: 0.75rem;
+        border-top: 1px solid var(--users-border-soft);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -228,39 +253,39 @@
     }
 
     .btn-users-cancel {
-        border-radius: 999px;
-        padding: 0.5rem 1.3rem;
-        font-size: 0.82rem;
-        border: 1px solid var(--users-muted);
-        color: var(--users-muted);
+        border-radius: var(--users-radius);
+        padding: 0.6rem 1.4rem;
+        font-size: 0.88rem;
+        border: 1px solid var(--users-secondary);
+        color: var(--users-secondary);
         background: transparent;
         display: inline-flex;
         align-items: center;
         gap: 0.3rem;
-        transition: all 0.22s ease;
+        transition: all 0.25s ease;
         text-decoration: none;
     }
 
         .btn-users-cancel:hover {
-            background: #0D0E26;
-            color: var(--users-text);
+            background: var(--users-secondary);
+            color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
         }
 
     .btn-users-save {
-        border-radius: 999px;
-        padding: 0.55rem 1.6rem;
-        font-size: 0.88rem;
+        border-radius: var(--users-radius);
+        padding: 0.6rem 1.6rem;
+        font-size: 0.9rem;
         font-weight: 600;
         border: none;
         background: var(--users-secondary);
-        color: #ffffff;
+        color: #020814;
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
-        transition: all 0.22s ease;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+        transition: all 0.25s ease;
     }
 
         .btn-users-save i {
@@ -271,7 +296,7 @@
             background: var(--users-primary);
             color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.75);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
         }
 
     .btn:disabled {
@@ -279,15 +304,23 @@
         opacity: 0.6;
     }
 
-    /* TARJETA INFORMATIVA */
+    /* CAMPOS SOLO LECTURA */
+    .users-input[readonly] {
+        background-color: #f9fafb !important;
+        border-color: #e5e7eb;
+        color: var(--users-muted);
+        cursor: not-allowed;
+    }
+
+    /* TARJETA INFORMATIVA (debajo, similar a roles card de creación) */
     .users-info-card {
         margin-top: 1.4rem;
-        background: radial-gradient(circle at top left, rgba(81, 75, 242, 0.16), transparent), #050814;
+        background: #ffffff;
         border-radius: var(--users-radius);
-        border: 1px solid rgba(139, 136, 242, 0.35);
+        border: 1px solid var(--users-border-soft);
         padding: 1rem 1.2rem 0.9rem;
-        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.7);
-        color: var(--users-text);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        color: var(--users-text-main);
     }
 
         .users-info-card h6 {
@@ -297,11 +330,12 @@
             display: flex;
             align-items: center;
             gap: 0.3rem;
-            color: var(--users-accent);
+            color: var(--users-primary);
         }
 
             .users-info-card h6 i {
                 font-size: 1rem;
+                color: var(--users-secondary);
             }
 
         .users-info-card p {
@@ -310,25 +344,28 @@
             margin-bottom: 0.25rem;
         }
 
-    .users-input[readonly] {
-        background-color: #080b1a !important;
-        border-color: rgba(139, 136, 242, 0.25);
-        color: var(--users-muted);
-        cursor: not-allowed;
+    @@media (max-width: 576px) {
+        .users-edit-body
+
+    {
+        padding: 1.3rem 1.1rem 1.2rem;
     }
 
-    @@media (max-width: 576px) {
-        .users-edit-card {
-            border-radius: 0.75rem;
-        }
+    .users-edit-header {
+        padding: 1rem 1.25rem;
+    }
 
-        .users-edit-body {
-            padding: 1.4rem 1.1rem 1.2rem;
-        }
+    .users-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-        .users-edit-header {
-            padding: 1.1rem 1.2rem;
-        }
+    .btn-users-cancel,
+    .btn-users-save {
+        width: 100%;
+        justify-content: center;
+    }
+
     }
 </style>
 
@@ -464,7 +501,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Auto-ocultar alertas después de 5 segundos
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {

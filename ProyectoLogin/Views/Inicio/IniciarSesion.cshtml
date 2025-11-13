@@ -54,7 +54,7 @@
         .login-container {
             width: 100%;
             max-width: 420px;
-            animation: fadeIn 0.6s ease-out;
+            /* Quitamos la animación de aquí para evitar conflicto con el centrado */
         }
 
         .login-card {
@@ -63,6 +63,8 @@
             border-radius: var(--border-radius);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            /* Animación suave desde abajo, como en la vista de restablecimiento */
+            animation: fadeIn 0.6s ease-out;
         }
 
         .login-header {
@@ -253,7 +255,8 @@
 </head>
 <body>
     <div class="login-wrapper">
-        <div class="login-container">
+        <!-- Mantenemos el centrado -->
+        <div class="login-container center-absolute">
             <div class="login-card">
                 <!-- Header con logo y título -->
                 <div class="login-header">
@@ -346,22 +349,6 @@
             }).on('blur', function() {
                 $(this).css('border-color', 'var(--accent-blue)');
             });
-
-            // Forzar centrado en caso de que persista el problema
-            function centerLogin() {
-                const loginContainer = document.querySelector('.login-container');
-                const windowHeight = window.innerHeight;
-                const containerHeight = loginContainer.offsetHeight;
-                const topMargin = (windowHeight - containerHeight) / 2;
-
-                if (topMargin > 0) {
-                    loginContainer.style.marginTop = topMargin + 'px';
-                }
-            }
-
-            // Centrar al cargar y al redimensionar
-            centerLogin();
-            window.addEventListener('resize', centerLogin);
         });
     </script>
 </body>

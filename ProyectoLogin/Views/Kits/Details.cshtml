@@ -1,6 +1,5 @@
 ﻿@model ProyectoLogin.Models.Promociones.Kit
 @using System.Security.Claims
-
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 
 @{
@@ -13,690 +12,490 @@
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
-<div class="container-fluid kits-details-theme py-4">
-    <!-- HEADER PRINCIPAL -->
-    <div class="kits-header mb-4">
-        <div class="kits-header-left">
-            <div class="kits-header-icon">
-                <i class="bi bi-gift"></i>
-            </div>
-            <div>
-                <h1>Detalles del Kit / Promoción</h1>
-                <p>Información completa sobre la promoción seleccionada y sus productos asociados.</p>
-            </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            @if (isAuth && isAdmin)
-            {
-                <a asp-action="Edit"
-                   asp-route-id="@Model.IdKit"
-                   class="btn-kits-outline-alt"
-                   title="Editar kit">
-                    <i class="bi bi-pencil-square me-1"></i> Editar
-                </a>
-            }
-            <a asp-action="Index"
-               class="btn-kits-outline"
-               title="Volver al listado de kits">
-                <i class="bi bi-arrow-left me-1"></i> Volver a la Lista
-            </a>
-        </div>
-    </div>
+@section Styles {
+    <style>
+        :root {
+            /* MISMA PALETA QUE DETALLES DE PRODUCTO */
+            --inventory-primary: #1C1973;
+            --inventory-secondary: #514BF2;
+            --inventory-accent: #8B88F2;
+            --inventory-bg: #f5f6fa;
+            --inventory-card: #ffffff;
+            --inventory-text: #212529;
+            --inventory-radius: .75rem;
+        }
 
-    <!-- INFORMACIÓN PRINCIPAL DEL KIT -->
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="kits-card mb-4">
-                <div class="kits-card-header-gradient">
-                    <i class="bi bi-tags fs-5"></i>
-                    <h4 class="mb-0">@Model.Nombre</h4>
-                    @if (Model.DescuentoPct > 0)
-                    {
-                        <span class="kits-badge ms-auto">
-                            <i class="bi bi-percent me-1"></i>
-                            Descuento @((Model.DescuentoPct * 100).ToString("0"))%
-                        </span>
-                    }
-                </div>
-                <div class="kits-card-body">
-                    @* Descripción *@
+        /* Fondo del módulo (igual a productos) */
+        .inventory-theme {
+            background: var(--inventory-bg);
+            padding: 1.5rem 0 2rem;
+        }
+
+        /* Card principal (igual que create-card de productos) */
+        .create-card {
+            background: var(--inventory-card);
+            border: 1px solid #e5e7eb;
+            border-radius: var(--inventory-radius);
+            box-shadow: 0 6px 20px rgba(15,23,42,.08);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            transition: all .25s ease;
+        }
+
+            .create-card:hover {
+                box-shadow: 0 10px 28px rgba(15,23,42,.12);
+                transform: translateY(-1px);
+            }
+
+        /* Header con gradiente */
+        .create-card-header {
+            background: linear-gradient(90deg, var(--inventory-primary), var(--inventory-secondary));
+            color: #fff;
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid rgba(255,255,255,.18);
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+
+            .create-card-header h2 {
+                font-size: 1.25rem;
+                margin-bottom: .1rem
+            }
+
+            .create-card-header small {
+                font-size: .85rem;
+                opacity: .9
+            }
+
+        .create-card-body {
+            padding: 1.5rem 1.75rem 1.75rem;
+        }
+
+        /* Secciones internas (mismo estilo que productos) */
+        .section-container {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--inventory-radius);
+            padding: 1.25rem 1.25rem 1.15rem;
+            margin-bottom: 1.25rem;
+            transition: all .25s ease;
+        }
+
+            .section-container:hover {
+                box-shadow: 0 4px 14px rgba(15,23,42,.06);
+                border-color: var(--inventory-accent);
+            }
+
+        .section-title {
+            color: #111827;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: .85rem;
+            padding-bottom: .6rem;
+            border-bottom: 2px solid rgba(81,75,242,.18);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+            .section-title i {
+                background: var(--inventory-secondary);
+                color: #fff;
+                width: 1.9rem;
+                height: 1.9rem;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: .95rem;
+            }
+
+        /* Texto / badges */
+        .info-label {
+            color: #6b7280;
+            font-size: .8rem;
+            margin-bottom: .2rem
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #111827
+        }
+
+        .description-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: .5rem;
+            padding: .85rem 1rem;
+            font-size: .9rem;
+            color: #111827;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border-radius: 2rem;
+            padding: .25rem .65rem;
+            font-weight: 600;
+            font-size: .78rem;
+        }
+
+        .st-ok {
+            background: #ecfdf5;
+            color: #166534;
+            border: 1px solid #bbf7d0
+        }
+
+        .st-bad {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca
+        }
+
+        .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            padding: .25rem .6rem;
+            border-radius: 999px;
+            background: #e5e7eb;
+            color: #111827;
+            font-size: .78rem;
+            font-weight: 500;
+        }
+
+        /* Mini resumen financiero en “cards” suaves */
+        .mini-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: .6rem;
+            padding: .75rem .9rem;
+            height: 100%;
+        }
+
+        .mini-label {
+            font-size: .78rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .04em
+        }
+
+        .mini-value {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #111827
+        }
+
+        .mini-value-success {
+            color: #16a34a;
+            font-weight: 800
+        }
+
+        /* Tabla (idéntica a productos) */
+        .table-responsive {
+            border-radius: var(--inventory-radius);
+            border: 1px solid #e5e7eb;
+            background: #fff
+        }
+
+        .table thead th {
+            background: #f3f4ff;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #111827;
+        }
+
+        .table tbody td {
+            font-size: .82rem;
+            color: #111827;
+            border-color: #e5e7eb
+        }
+
+        .table tbody tr:hover {
+            background: #eef2ff
+        }
+
+        .price-sell, .price-unit {
+            color: #16a34a;
+            font-weight: 700
+        }
+
+        .price-date {
+            color: #6b7280;
+            font-size: .8rem
+        }
+
+        .tfoot-soft td {
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb !important;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        /* Barra de acciones inferior (igual a productos) */
+        .details-actions-bar {
+            border-top: 1px solid #e5e7eb !important;
+            padding-top: 1rem;
+            margin-top: .5rem
+        }
+
+        .btn-create-outline {
+            border: 1px solid var(--inventory-accent);
+            background: transparent;
+            color: var(--inventory-secondary);
+            border-radius: var(--inventory-radius);
+            font-weight: 500;
+            padding: .6rem 1.4rem;
+            font-size: .88rem;
+            transition: all .25s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .btn-create-outline:hover {
+                background: var(--inventory-accent);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(15,23,42,.16);
+                transform: translateY(-1px)
+            }
+
+        .btn-create-primary {
+            background: var(--inventory-secondary);
+            border: none;
+            border-radius: var(--inventory-radius);
+            color: #fff;
+            font-weight: 600;
+            padding: .6rem 1.4rem;
+            font-size: .9rem;
+            transition: all .25s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+            .btn-create-primary:hover {
+                background: var(--inventory-primary);
+                box-shadow: 0 4px 12px rgba(15,23,42,.18);
+                transform: translateY(-1px)
+            }
+
+        @@media (max-width:768px) {
+            .create-card-body
+
+        {
+            padding: 1.1rem 1.1rem 1.3rem
+        }
+
+        .section-container {
+            padding: .9rem .85rem
+        }
+
+        .section-title {
+            font-size: .95rem;
+            padding-bottom: .4rem
+        }
+
+        .details-actions-bar .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: .6rem
+        }
+
+        .btn-create-outline, .btn-create-primary {
+            width: 100%;
+            justify-content: center
+        }
+
+        }
+    </style>
+}
+
+<div class="container inventory-theme">
+    <div class="create-card">
+        <!-- Encabezado: igual estilo que “Detalles de producto” -->
+        <div class="create-card-header">
+            <i class="bi bi-gift fs-3"></i>
+            <div>
+                <h2 class="mb-0">Detalles del Kit / Promoción</h2>
+                <small>Información general y productos incluidos</small>
+            </div>
+        </div>
+
+        <div class="create-card-body">
+            <div class="row g-3">
+                <!-- Columna izquierda -->
+                <div class="col-lg-6">
+                    <!-- Información básica del kit -->
+                    <div class="section-container">
+                        <h3 class="section-title">
+                            <i class="bi bi-card-text"></i>
+                            <span>Información básica</span>
+                        </h3>
+
+                        <div class="mb-3">
+                            <div class="info-label">Nombre del kit</div>
+                            <div class="info-value fs-5">@Model.Nombre</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-label">Descuento</div>
+                                <div class="info-value">
+                                    @if (Model.DescuentoPct > 0)
+                                    {
+                                        <span class="badge-soft"><i class="bi bi-percent me-1"></i>@((Model.DescuentoPct * 100).ToString("0"))%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin descuento</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-label">Estado</div>
+                                <div class="info-value">
+                                    @if (Model.Activo)
+                                    {
+                                        <span class="status-pill st-ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill st-bad"><i class="bi bi-x-circle-fill"></i> Inactivo</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-label">Fecha de creación</div>
+                                <div class="info-value">
+                                    @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen financiero (alineado al look claro) -->
+                    <div class="section-container">
+                        <h3 class="section-title">
+                            <i class="bi bi-cash-coin"></i>
+                            <span>Resumen financiero</span>
+                        </h3>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mini-card">
+                                    <div class="mini-label">Subtotal</div>
+                                    <div class="mini-value">@Model.Subtotal.ToString("C2", gt)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mini-card">
+                                    <div class="mini-label">Descuento</div>
+                                    <div class="mini-value">@((Model.DescuentoPct * 100).ToString("0"))%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mini-card">
+                                    <div class="mini-label">Total</div>
+                                    <div class="mini-value mini-value-success">@Model.Total.ToString("C2", gt)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
                     @if (!string.IsNullOrEmpty(Model.Descripcion))
                     {
-                        <div class="kits-description mb-4">
-                            <div class="d-flex">
-                                <div class="kits-pill-icon me-2">
-                                    <i class="bi bi-chat-text"></i>
-                                </div>
-                                <div>
-                                    <div class="kits-label mb-1">Descripción del kit</div>
-                                    <p class="mb-0 kits-description-text">@Model.Descripcion</p>
-                                </div>
+                        <div class="section-container">
+                            <h3 class="section-title">
+                                <i class="bi bi-file-text"></i>
+                                <span>Descripción</span>
+                            </h3>
+                            <div class="description-box">
+                                @Model.Descripcion
                             </div>
                         </div>
                     }
-
-                    <!-- RESUMEN FINANCIERO -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <div class="kits-mini-card">
-                                <div class="kits-mini-icon">
-                                    <i class="bi bi-receipt"></i>
-                                </div>
-                                <div class="kits-mini-label">Subtotal</div>
-                                <div class="kits-mini-value">
-                                    @Model.Subtotal.ToString("C2", gt)
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="kits-mini-card">
-                                <div class="kits-mini-icon warning">
-                                    <i class="bi bi-percent"></i>
-                                </div>
-                                <div class="kits-mini-label">Descuento</div>
-                                <div class="kits-mini-value kits-text-warning">
-                                    @((Model.DescuentoPct * 100).ToString("0"))%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="kits-mini-card total">
-                                <div class="kits-mini-icon">
-                                    <i class="bi bi-currency-dollar"></i>
-                                </div>
-                                <div class="kits-mini-label">Total final</div>
-                                <div class="kits-mini-value">
-                                    @Model.Total.ToString("C2", gt)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- INFORMACIÓN ADICIONAL -->
-                    <div class="kits-meta">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-calendar3"></i>
-                            <span>
-                                Creado el
-                                <strong>@Model.FechaCreacion.ToString("dd/MM/yyyy")</strong>
-                                a las
-                                <strong>@Model.FechaCreacion.ToString("HH:mm")</strong>
-                            </span>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-toggle-on"></i>
-                            <span>
-                                Estado:
-                                @if (Model.Activo)
-                                {
-                                    <span class="badge bg-success rounded-pill px-3">Activo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary rounded-pill px-3">Inactivo</span>
-                                }
-                            </span>
-                        </div>
-                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- PANEL DE RESUMEN -->
-        <div class="col-lg-4">
-            <div class="kits-card mb-4">
-                <div class="kits-card-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-info-circle text-kits-accent"></i>
-                        <h5 class="mb-0">Resumen del kit</h5>
-                    </div>
-                </div>
-                <div class="kits-card-body">
-                    <div class="kits-resumen-row">
-                        <span>Productos incluidos</span>
-                        <span class="badge kits-badge">
-                            @(Model.Detalles?.Count() ?? 0)
-                        </span>
-                    </div>
-                    <div class="kits-resumen-row">
-                        <span>Subtotal</span>
-                        <span class="kits-resumen-value">
-                            @Model.Subtotal.ToString("C2", gt)
-                        </span>
-                    </div>
-                    <div class="kits-resumen-row">
-                        <span>Descuento aplicado</span>
-                        <span class="kits-resumen-value">
-                            @((Model.DescuentoPct * 100).ToString("0"))%
-                        </span>
-                    </div>
-                    <div class="kits-resumen-row kits-resumen-total">
-                        <span>Total final</span>
-                        <span class="kits-resumen-total-value">
-                            @Model.Total.ToString("C2", gt)
-                        </span>
+                <!-- Columna derecha: Productos incluidos -->
+                <div class="col-lg-6">
+                    <div class="section-container h-100">
+                        <h3 class="section-title">
+                            <i class="bi bi-list-check"></i>
+                            <span>Productos incluidos (@(Model.Detalles?.Count() ?? 0))</span>
+                        </h3>
+
+                        @if (Model.Detalles != null && Model.Detalles.Any())
+                        {
+                            <div class="table-responsive" style="max-height: 460px;">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th class="text-center">Cantidad</th>
+                                            <th class="text-center">Precio unitario</th>
+                                            <th class="text-center">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var d in Model.Detalles)
+                                        {
+                                            var nombreProducto = d.Producto?.Nombre ?? "(Sin nombre)";
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold">@nombreProducto</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge-soft">@d.Cantidad</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="price-unit">@d.PrecioUnitarioSnapshot.ToString("C2", gt)</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="price-sell">@((d.PrecioUnitarioSnapshot * d.Cantidad).ToString("C2", gt))</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot class="tfoot-soft">
+                                        <tr>
+                                            <td colspan="3" class="text-end">Total del kit:</td>
+                                            <td class="text-center">@Model.Total.ToString("C2", gt)</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inboxes fs-2 d-block mb-2"></i>
+                                No hay productos registrados en este kit.
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
 
-            @if (isAuth && isAdmin)
-            {
-                <!-- ACCIONES RÁPIDAS -->
-                <div class="kits-card">
-                    <div class="kits-card-header">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-lightning-charge text-kits-accent"></i>
-                            <h5 class="mb-0">Acciones rápidas</h5>
-                        </div>
-                    </div>
-                    <div class="kits-card-body">
-                        <div class="d-grid gap-2">
-                            <a asp-action="Edit"
-                               asp-route-id="@Model.IdKit"
-                               class="btn-kits-primary d-flex align-items-center justify-content-center">
-                                <i class="bi bi-pencil-square me-2"></i>Editar Kit
-                            </a>
-                            <a asp-action="Index"
-                               class="btn-kits-outline-alt d-flex align-items-center justify-content-center">
-                                <i class="bi bi-arrow-left me-2"></i>Volver al listado
-                            </a>
-                        </div>
-                        <p class="kits-hint mt-3 mb-0">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Desde aquí solo se visualiza el kit. Para modificar productos o precios ingresa a la edición.
-                        </p>
-                    </div>
+            <!-- Acciones (idéntico patrón que productos) -->
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-2 details-actions-bar">
+                <a asp-action="Index" class="btn-create-outline">
+                    <i class="bi bi-arrow-left me-1"></i> Volver
+                </a>
+                <div>
+                    @if (isAuth && isAdmin)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.IdKit" class="btn-create-primary">
+                            <i class="bi bi-pencil-square me-1"></i> Editar
+                        </a>
+                    }
                 </div>
-            }
+            </div>
         </div>
     </div>
-
-    <!-- PRODUCTOS INCLUIDOS EN EL KIT -->
-    @if (Model.Detalles != null && Model.Detalles.Any())
-    {
-        <div class="kits-card mt-4">
-            <div class="kits-card-header">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-list-check text-kits-accent fs-5"></i>
-                    <h5 class="mb-0">Productos incluidos en el kit</h5>
-                    <span class="badge kits-badge ms-1">@Model.Detalles.Count()</span>
-                </div>
-            </div>
-            <div class="kits-card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover kits-table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Producto</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-center">Precio unitario</th>
-                                <th class="text-center">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var d in Model.Detalles)
-                            {
-                                var nombreProducto = d.Producto?.Nombre ?? "(Sin nombre)";
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="kits-pill-icon">
-                                                <i class="bi bi-box"></i>
-                                            </div>
-                                            <div class="kits-product-name">
-                                                @nombreProducto
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge kits-badge">@d.Cantidad</span>
-                                    </td>
-                                    <td class="text-center kits-price-cell">
-                                        @d.PrecioUnitarioSnapshot.ToString("C2", gt)
-                                    </td>
-                                    <td class="text-center kits-subtotal-cell">
-                                        @((d.PrecioUnitarioSnapshot * d.Cantidad).ToString("C2", gt))
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                        <tfoot class="kits-tfoot">
-                            <tr class="kits-total-row">
-                                <td colspan="3" class="text-end">Total del kit:</td>
-                                <td class="text-center">
-                                    @Model.Total.ToString("C2", gt)
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="kits-card mt-4">
-            <div class="kits-card-body text-center py-5">
-                <div class="kits-empty-icon mb-4">
-                    <i class="bi bi-inboxes"></i>
-                </div>
-                <h4 class="mb-2">No hay productos en este kit</h4>
-                <p class="kits-muted mb-4">
-                    Este kit aún no contiene productos asociados. Puedes editarlo para agregar elementos.
-                </p>
-                @if (isAuth && isAdmin)
-                {
-                    <a asp-action="Edit"
-                       asp-route-id="@Model.IdKit"
-                       class="btn-kits-primary d-inline-flex align-items-center justify-content-center">
-                        <i class="bi bi-pencil-square me-2"></i>Editar Kit
-                    </a>
-                }
-            </div>
-        </div>
-    }
 </div>
-
-<style>
-    :root {
-        --kits-primary: #3036A6;
-        --kits-secondary: #5F6AF5;
-        --kits-accent: #8F9CFF;
-        --kits-bg: #161B3A;
-        --kits-alt-bg: #1F2650;
-        --kits-card: #1E2546;
-        --kits-card-soft: #242C54;
-        --kits-text: #F7F8FF;
-        --kits-muted: #C3C7F5;
-        --kits-border: #3C4AA5;
-        --kits-success: #23d19c;
-        --kits-warning: #f6c23e;
-        --kits-danger: #ff6b6b;
-        --kits-radius: 0.85rem;
-    }
-
-    .kits-details-theme {
-        background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.16), transparent), radial-gradient(circle at top right, rgba(143, 156, 255, 0.10), transparent), var(--kits-bg);
-        min-height: 100vh;
-        color: var(--kits-text);
-    }
-
-    .kits-header {
-        background: linear-gradient(135deg, var(--kits-primary), var(--kits-alt-bg));
-        border-radius: var(--kits-radius);
-        padding: 1.4rem 1.9rem;
-        border: 1px solid rgba(143, 156, 255, 0.45);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.4rem;
-        color: var(--kits-text);
-    }
-
-    .kits-header-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .kits-header-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        background: radial-gradient(circle, var(--kits-secondary), var(--kits-primary));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.9rem;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    }
-
-    .kits-header h1 {
-        margin: 0;
-        font-size: 1.6rem;
-        font-weight: 700;
-    }
-
-    .kits-header p {
-        margin: 0;
-        font-size: 0.9rem;
-        color: var(--kits-muted);
-    }
-
-    /* Botones */
-    .btn-kits-primary,
-    .btn-kits-outline,
-    .btn-kits-outline-alt {
-        border-radius: 999px;
-        padding: 0.5rem 1.2rem;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border-width: 1px;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        text-decoration: none;
-    }
-
-    .btn-kits-primary {
-        background: var(--kits-secondary);
-        border-color: var(--kits-accent);
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    }
-
-        .btn-kits-primary:hover {
-            background: var(--kits-primary);
-            transform: translateY(-1px);
-            color: #fff;
-        }
-
-    .btn-kits-outline {
-        background: transparent;
-        border-color: var(--kits-accent);
-        color: var(--kits-accent);
-    }
-
-        .btn-kits-outline:hover {
-            background: var(--kits-accent);
-            color: var(--kits-bg);
-            transform: translateY(-1px);
-        }
-
-    .btn-kits-outline-alt {
-        background: transparent;
-        border-color: rgba(255, 255, 255, 0.22);
-        color: var(--kits-muted);
-    }
-
-        .btn-kits-outline-alt:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--kits-text);
-            transform: translateY(-1px);
-        }
-
-    /* Card base */
-    .kits-card {
-        background: var(--kits-card);
-        border-radius: var(--kits-radius);
-        border: 1px solid rgba(60, 74, 165, 0.9);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-        overflow: hidden;
-    }
-
-    .kits-card-header-gradient {
-        padding: 0.85rem 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        background: linear-gradient(135deg, rgba(95, 106, 245, 0.98), rgba(48, 54, 166, 0.98));
-        color: var(--kits-text);
-        border-bottom: 1px solid rgba(143, 156, 255, 0.5);
-    }
-
-    .kits-card-header {
-        padding: 0.85rem 1.3rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        background: rgba(25, 31, 77, 0.98);
-        color: var(--kits-text);
-        border-bottom: 1px solid rgba(60, 74, 165, 0.9);
-    }
-
-    .kits-card-body {
-        padding: 1rem 1.3rem 1.2rem;
-        color: var(--kits-text);
-        font-size: 0.9rem;
-        background: var(--kits-card-soft);
-    }
-
-    .kits-label {
-        color: var(--kits-muted);
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-    }
-
-    .kits-description {
-        background: #20264A;
-        border-radius: 0.7rem;
-        padding: 0.85rem 0.9rem;
-        border: 1px solid rgba(143, 156, 255, 0.45);
-    }
-
-    .kits-description-text {
-        color: var(--kits-text);
-        line-height: 1.5;
-    }
-
-    /* Mini cards resumen */
-    .kits-mini-card {
-        background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.10), transparent), #20264A;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(143, 156, 255, 0.28);
-        padding: 0.75rem 0.9rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-    }
-
-        .kits-mini-card.total {
-            background: linear-gradient(135deg, rgba(35, 209, 156, 0.16), rgba(16, 122, 82, 0.9));
-            border-color: rgba(35, 209, 156, 0.5);
-        }
-
-    .kits-mini-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 0.75rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(95, 106, 245, 0.22);
-        color: var(--kits-accent);
-        font-size: 0.95rem;
-    }
-
-        .kits-mini-icon.warning {
-            background: rgba(246, 194, 62, 0.12);
-            color: var(--kits-warning);
-        }
-
-    .kits-mini-label {
-        font-size: 0.72rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--kits-muted);
-    }
-
-    .kits-mini-value {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--kits-text);
-    }
-
-    .kits-text-warning {
-        color: var(--kits-warning);
-    }
-
-    /* Meta info */
-    .kits-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.9rem 1.5rem;
-        padding: 0.6rem 0.75rem;
-        margin-top: 0.3rem;
-        border-radius: 0.6rem;
-        background: #1A2145;
-        border: 1px solid rgba(60, 74, 165, 0.9);
-        font-size: 0.8rem;
-        color: var(--kits-muted);
-    }
-
-        .kits-meta i {
-            color: var(--kits-accent);
-        }
-
-    /* ===== TABLA PRODUCTOS KIT ===== */
-
-    .kits-card-body.p-0 {
-        background: var(--kits-card-soft);
-    }
-
-    .kits-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background-color: var(--kits-card-soft) !important;
-        color: var(--kits-text) !important;
-    }
-
-        .kits-table > :not(caption) > * > * {
-            background-color: transparent !important;
-            color: var(--kits-text) !important;
-            border-color: #28315F !important;
-        }
-
-        .kits-table thead {
-            background-color: #202856 !important;
-        }
-
-            .kits-table thead th {
-                border-bottom: 1px solid rgba(60, 74, 165, 0.98) !important;
-                color: var(--kits-muted) !important;
-                font-size: 0.72rem;
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                padding: 0.6rem 0.75rem;
-                white-space: nowrap;
-            }
-
-        .kits-table tbody tr {
-            background-color: #1E2546 !important;
-            transition: all 0.18s ease;
-        }
-
-            .kits-table tbody tr:nth-child(even) {
-                background-color: #242C54 !important;
-            }
-
-            .kits-table tbody tr:hover {
-                background-color: rgba(95, 106, 245, 0.22) !important;
-            }
-
-        .kits-table td {
-            padding: 0.65rem 0.75rem;
-            font-size: 0.86rem;
-        }
-
-    .kits-product-name {
-        font-weight: 500;
-        color: var(--kits-text) !important;
-    }
-
-    .kits-price-cell {
-        color: var(--kits-muted) !important;
-        font-weight: 500;
-    }
-
-    .kits-subtotal-cell {
-        color: var(--kits-success) !important;
-        font-weight: 600;
-    }
-
-    .kits-tfoot td {
-        border-top: 1px solid rgba(60, 74, 165, 0.98) !important;
-        font-size: 0.82rem;
-        color: var(--kits-muted) !important;
-        background-color: #1E2546 !important;
-    }
-
-    .kits-total-row td {
-        background-color: rgba(95, 106, 245, 0.18) !important;
-        color: var(--kits-success) !important;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-    /* Pills / badges */
-    .kits-pill-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 0.7rem;
-        background: radial-gradient(circle, rgba(95, 106, 245, 0.35), transparent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        color: var(--kits-accent);
-    }
-
-    .kits-badge {
-        background: rgba(95, 106, 245, 0.24);
-        color: var(--kits-accent);
-        border-radius: 999px;
-        padding: 0.2rem 0.7rem;
-        font-size: 0.75rem;
-    }
-
-    .kits-resumen-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.35rem 0;
-        border-bottom: 1px solid rgba(44, 54, 104, 0.95);
-        font-size: 0.86rem;
-        color: var(--kits-muted);
-    }
-
-        .kits-resumen-row:last-child {
-            border-bottom: none;
-        }
-
-    .kits-resumen-value {
-        color: var(--kits-text);
-        font-weight: 500;
-    }
-
-    .kits-resumen-total {
-        margin-top: 0.2rem;
-        padding-top: 0.35rem;
-        border-top: 1px solid rgba(60, 74, 165, 0.98);
-    }
-
-    .kits-resumen-total-value {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--kits-success);
-    }
-
-    .kits-hint {
-        font-size: 0.75rem;
-        color: var(--kits-muted);
-    }
-
-    /* Empty state */
-    .kits-empty-icon {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(95, 106, 245, 0.18), transparent);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--kits-muted);
-        font-size: 2.2rem;
-    }
-
-    @@media (max-width: 767.98px) {
-        .kits-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-</style>
-

@@ -23,647 +23,399 @@
     var totalValor = Model?.Sum(k => k.Total) ?? 0m;
 }
 
-<style>
-    :root {
-        --kits-primary: #3036A6;
-        --kits-secondary: #5F6AF5;
-        --kits-accent: #8F9CFF;
-        --kits-bg: #161B3A;
-        --kits-alt-bg: #1F2650;
-        --kits-card: #1E2546;
-        --kits-card-soft: #242C54;
-        --kits-text: #F7F8FF;
-        --kits-muted: #C3C7F5;
-        --kits-radius: 0.85rem;
-        --kits-border: #3C4AA5;
-        --kits-success: #23d19c;
-        --kits-warning: #f6c23e;
-        --kits-danger: #ff6b6b;
-    }
-
-    .kits-theme {
-        background: radial-gradient(circle at top left, rgba(95, 106, 245, 0.16), transparent), radial-gradient(circle at top right, rgba(143, 156, 255, 0.12), transparent), var(--kits-bg);
-        min-height: 100vh;
-    }
-
-    .kits-header {
-        background: linear-gradient(135deg, var(--kits-primary), var(--kits-alt-bg));
-        border-radius: var(--kits-radius);
-        padding: 1.5rem 2rem;
-        border: 1px solid rgba(143, 156, 255, 0.45);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.5rem;
-    }
-
-    .kits-header-title {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        color: var(--kits-text);
-    }
-
-    .kits-header-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: radial-gradient(circle, var(--kits-secondary), var(--kits-primary));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-        font-size: 1.6rem;
-    }
-
-    .kits-header h1 {
-        font-size: 1.6rem;
-        margin: 0;
-        font-weight: 700;
-    }
-
-    .kits-header p {
-        margin: 0;
-        font-size: 0.9rem;
-        color: var(--kits-muted);
-    }
-
-    .kits-header-actions .btn-kits-primary,
-    .kits-header-actions .btn-kits-outline {
-        border-radius: 2rem;
-        padding: 0.55rem 1.25rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        font-size: 0.9rem;
-        transition: all 0.25s ease;
-        border-width: 1px;
-    }
-
-    .btn-kits-primary {
-        background: var(--kits-secondary);
-        border-color: var(--kits-accent);
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    }
-
-        .btn-kits-primary:hover {
-            background: var(--kits-primary);
-            color: #ffffff;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+@section Styles {
+    <style>
+        :root {
+            --inventory-primary: #1C1973;
+            --inventory-secondary: #514BF2;
+            --inventory-accent: #8B88F2;
+            --inventory-bg: #f5f6fa;
+            --inventory-card: #ffffff;
+            --inventory-text: #212529;
+            --inventory-radius: .75rem;
+            --muted: #6b7280;
+            --border-soft: #e5e7eb;
         }
 
-    .btn-kits-outline {
-        background: transparent;
-        border-color: var(--kits-accent);
-        color: var(--kits-accent);
-    }
-
-        .btn-kits-outline:hover {
-            background: var(--kits-accent);
-            color: var(--kits-bg);
-            transform: translateY(-1px);
+        /* Fondo general */
+        .inventory-theme {
+            background: var(--inventory-bg);
+            padding: 1.5rem 0 2rem;
         }
 
-    /* Tarjetas de stats */
-    .kits-stats-card {
-        background: var(--kits-card);
-        border-radius: var(--kits-radius);
-        padding: 1rem 1.1rem;
-        border: 1px solid rgba(143, 156, 255, 0.24);
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-    }
-
-    .kits-stats-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        color: var(--kits-muted);
-        letter-spacing: 0.06em;
-        margin-bottom: 0.25rem;
-    }
-
-    .kits-stats-value {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--kits-text);
-        margin: 0;
-    }
-
-    .kits-stats-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
-        background: rgba(95, 106, 245, 0.16);
-        color: var(--kits-accent);
-    }
-
-    .kits-stats-card.success .kits-stats-icon {
-        background: rgba(35, 209, 156, 0.16);
-        color: var(--kits-success);
-    }
-
-    .kits-stats-card.warning .kits-stats-icon {
-        background: rgba(246, 194, 62, 0.16);
-        color: var(--kits-warning);
-    }
-
-    .kits-stats-card.info .kits-stats-icon {
-        background: rgba(143, 156, 255, 0.16);
-        color: var(--kits-accent);
-    }
-
-    /* Contenedor principal tabla */
-    .kits-card-wrapper {
-        background: var(--kits-card-soft);
-        border-radius: var(--kits-radius);
-        border: 1px solid var(--kits-border);
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
-        overflow: hidden;
-    }
-
-    .kits-card-header {
-        padding: 1rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        background: linear-gradient(135deg, rgba(48, 54, 166, 0.98), rgba(31, 38, 112, 0.98));
-        border-bottom: 1px solid rgba(143, 156, 255, 0.3);
-        color: var(--kits-text);
-    }
-
-        .kits-card-header h5 {
-            margin: 0;
-            font-weight: 600;
-            font-size: 1rem;
+        /* Header con mismo estilo que Productos */
+        .page-header {
+            background: linear-gradient(90deg,var(--inventory-primary),var(--inventory-secondary));
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: var(--inventory-radius);
+            padding: 1.1rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px rgba(15,23,42,.18);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            color: #fff;
         }
 
-        .kits-card-header .badge-count {
-            background: rgba(255, 255, 255, 0.14);
-            border-radius: 999px;
-            padding: 0.25rem 0.7rem;
-            font-size: 0.75rem;
-            margin-left: 0.35rem;
-            color: var(--kits-accent);
-        }
-
-        .kits-card-header select {
-            background: rgba(12, 18, 48, 0.9);
-            color: var(--kits-text);
-            border-radius: 999px;
-            border: 1px solid rgba(143, 156, 255, 0.6);
-            padding: 0.25rem 0.8rem;
-            font-size: 0.78rem;
-            outline: none;
-        }
-
-            .kits-card-header select:focus {
-                border-color: var(--kits-secondary);
-                box-shadow: 0 0 0 0.15rem rgba(95, 106, 245, 0.35);
+            .page-header h1 {
+                font-size: 1.3rem;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: .4rem;
+                font-weight: 700;
+                color: #fff
             }
 
-    /* Tabla */
-    .kits-table-container {
-        width: 100%;
-        overflow-x: auto;
-        background: var(--kits-card-soft);
-    }
+                .page-header h1 i {
+                    font-size: 1.4rem
+                }
 
-    .kits-table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-        color: var(--kits-text);
-        font-size: 0.86rem;
-    }
-
-        .kits-table thead {
-            background: #202856;
-        }
-
-        .kits-table th {
-            padding: 0.85rem 0.9rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--kits-muted);
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 0.06em;
-            border-bottom: 1px solid rgba(143, 156, 255, 0.35);
-            white-space: nowrap;
-        }
-
-            .kits-table th.text-center {
-                text-align: center;
+            .page-header .subtitle {
+                color: rgba(249,250,251,.9);
+                font-size: .85rem;
+                margin-top: .15rem
             }
 
-        .kits-table td {
-            padding: 0.85rem 0.9rem;
-            border-bottom: 1px solid rgba(40, 49, 95, 0.95);
-            vertical-align: middle;
-            color: var(--kits-text);
-        }
+            .page-header .btn {
+                font-size: .86rem;
+                border-radius: var(--inventory-radius);
+                padding: .5rem 1rem
+            }
 
-        .kits-table tbody tr {
-            transition: all 0.2s ease;
+        .btn-create-outline {
+            border: 1px solid var(--inventory-accent);
             background: transparent;
+            color: #fff;
+            border-radius: var(--inventory-radius);
+            font-weight: 500;
+            padding: .5rem 1.4rem;
+            font-size: .86rem;
+            transition: .25s;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            text-decoration: none
         }
 
-            .kits-table tbody tr:nth-child(even) {
-                background: rgba(30, 37, 70, 0.96);
+            .btn-create-outline:hover {
+                background: rgba(139,136,242,.16);
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(15,23,42,.25);
+                transform: translateY(-1px)
             }
 
-            .kits-table tbody tr:hover {
-                background: rgba(95, 106, 245, 0.16);
+        .btn-create-primary {
+            background: #fff;
+            color: var(--inventory-primary);
+            border: none;
+            border-radius: var(--inventory-radius);
+            font-weight: 600;
+            padding: .5rem 1.4rem;
+            font-size: .86rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            transition: .25s;
+            text-decoration: none
+        }
+
+            .btn-create-primary:hover {
+                background: #f9fafb;
+                color: var(--inventory-secondary);
+                box-shadow: 0 4px 12px rgba(15,23,42,.25);
+                transform: translateY(-1px)
             }
 
-    .kits-kit-id {
-        color: var(--kits-muted);
-        font-weight: 600;
-    }
+        /* Card genérica (igual Productos) */
+        .inventory-card {
+            background: var(--inventory-card);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--inventory-radius);
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 14px rgba(15,23,42,.06);
+            transition: .22s;
+        }
 
-    .kits-kit-name {
-        font-weight: 600;
-        font-size: 0.92rem;
-        color: var(--kits-text);
-        margin-bottom: 0.1rem;
-    }
+            .inventory-card:hover {
+                box-shadow: 0 7px 20px rgba(15,23,42,.10);
+                transform: translateY(-1px)
+            }
 
-    .kits-kit-products {
-        font-size: 0.75rem;
-        color: var(--kits-muted);
-    }
+            .inventory-card .card-head {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+                padding: .85rem 1.15rem;
+                border-bottom: 1px solid rgba(0,0,0,.04);
+                background: linear-gradient(90deg,var(--inventory-primary),var(--inventory-secondary));
+                color: #fff;
+            }
 
-    .kits-icon-pill {
-        width: 32px;
-        height: 32px;
-        border-radius: 0.75rem;
-        background: radial-gradient(circle, rgba(95, 106, 245, 0.3), transparent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--kits-accent);
-        margin-right: 0.5rem;
-    }
+                .inventory-card .card-head .title {
+                    margin: 0;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    color: #fff
+                }
 
-    .badge-kits {
-        border-radius: 999px;
-        padding: 0.15rem 0.65rem;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-
-    .badge-kits-success {
-        background: rgba(35, 209, 156, 0.18);
-        color: var(--kits-success);
-        border: 1px solid rgba(35, 209, 156, 0.5);
-    }
-
-    .badge-kits-danger {
-        background: rgba(255, 107, 107, 0.16);
-        color: var(--kits-danger);
-        border: 1px solid rgba(255, 107, 107, 0.5);
-    }
-
-    .badge-kits-secondary {
-        background: rgba(143, 156, 255, 0.10);
-        color: var(--kits-muted);
-        border: 1px solid rgba(143, 156, 255, 0.4);
-    }
-
-    .kits-total {
-        font-weight: 700;
-        color: var(--kits-success);
-        font-size: 0.95rem;
-    }
-
-    .kits-actions {
-        display: flex;
-        justify-content: center;
-        gap: 0.25rem;
-    }
-
-        .kits-actions .btn {
-            width: 30px;
-            height: 30px;
+        .stats-badge {
+            margin-left: auto;
+            background: rgba(15,23,42,.06);
+            border: 1px solid rgba(226,232,240,.45);
             border-radius: 999px;
+            padding: .25rem .8rem;
+            font-size: .78rem;
+            color: #e5e7eb;
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem
+        }
+
+        /* Tabla (igual Productos) */
+        .table {
+            margin-bottom: 0;
+            font-size: .85rem;
+            color: #111827
+        }
+
+            .table thead th {
+                background: #f3f4ff;
+                font-weight: 600;
+                font-size: .78rem;
+                border-bottom: 1px solid var(--border-soft);
+                white-space: nowrap;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+                color: #6b7280
+            }
+
+            .table tbody td {
+                vertical-align: middle;
+                border-color: var(--border-soft)
+            }
+
+        .table-hover tbody tr:hover {
+            background: #f9fafb
+        }
+
+        /* Botones de acción (igual Productos) */
+        .action-btn {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: .7rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            margin: 0 .12rem;
             padding: 0;
-            font-size: 0.9rem;
-            transition: all 0.18s ease;
-            border-width: 1px;
-            background: transparent;
+            font-size: .9rem;
+            transition: .2s;
+            border: none
         }
 
-            .kits-actions .btn:hover {
-                transform: translateY(-1px) scale(1.05);
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        .btn-info.action-btn {
+            background: #eff6ff;
+            color: #2563eb
+        }
+
+            .btn-info.action-btn i {
+                color: #2563eb !important
             }
 
-    .btn-outline-info {
-        border-color: #17a2b8;
-        color: #17a2b8;
-    }
+            .btn-info.action-btn:hover {
+                background: #2563eb;
+                color: #fff;
+                transform: translateY(-1px)
+            }
 
-        .btn-outline-info:hover {
-            background-color: #17a2b8;
-            color: #ffffff;
+        .btn-warning.action-btn {
+            background: #fef3c7;
+            color: #92400e
         }
 
-    .btn-outline-warning {
-        border-color: #f6c23e;
-        color: #f6c23e;
-    }
+            .btn-warning.action-btn:hover {
+                background: #fbbf24;
+                color: #111827;
+                transform: translateY(-1px)
+            }
 
-        .btn-outline-warning:hover {
-            background-color: #f6c23e;
-            color: #1E2546;
+        .btn-danger.action-btn {
+            background: #fee2e2;
+            color: #b91c1c
         }
 
-    .btn-outline-danger {
-        border-color: #ff6b6b;
-        color: #ff6b6b;
-    }
+            .btn-danger.action-btn:hover {
+                background: #dc2626;
+                color: #fff;
+                transform: translateY(-1px)
+            }
 
-        .btn-outline-danger:hover {
-            background-color: #ff6b6b;
-            color: #161B3A;
+        .btn-success.action-btn {
+            background: #dcfce7;
+            color: #166534
         }
 
-    /* Paginación */
-    .kits-pagination-wrapper {
-        padding: 0.85rem 1.2rem 1.1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        align-items: center;
-        justify-content: center;
-        background: #181E40;
-        border-top: 1px solid rgba(60, 74, 165, 0.9);
-    }
+            .btn-success.action-btn:hover {
+                background: #22c55e;
+                color: #fff;
+                transform: translateY(-1px)
+            }
 
-    .pagination-kits .page-link {
-        background: transparent;
-        border-radius: 0.55rem;
-        border: 1px solid rgba(143, 156, 255, 0.5);
-        color: var(--kits-accent);
-        padding: 0.25rem 0.55rem;
-        font-size: 0.78rem;
-        margin: 0 0.08rem;
-        transition: all 0.2s ease;
-    }
-
-        .pagination-kits .page-link:hover {
-            background: var(--kits-secondary);
-            color: #ffffff;
-            border-color: var(--kits-secondary);
+        /* Paginación */
+        .pagination .page-link {
+            border-radius: 999px !important;
+            font-size: .78rem;
+            padding: .25rem .6rem
         }
 
-    .pagination-kits .page-item.active .page-link {
-        background: var(--kits-secondary);
-        color: #ffffff;
-        border-color: var(--kits-secondary);
-        font-weight: 700;
-    }
-
-    .pagination-kits .page-item.disabled .page-link {
-        opacity: 0.28;
-        cursor: default;
-    }
-
-    .kits-pagination-info {
-        font-size: 0.7rem;
-        color: var(--kits-muted);
-    }
-
-    /* Estado vacío */
-    .kits-empty {
-        background: var(--kits-card-soft);
-        border-radius: var(--kits-radius);
-        padding: 3rem 1.5rem;
-        text-align: center;
-        border: 1px solid rgba(143, 156, 255, 0.25);
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
-    }
-
-    .kits-empty-icon {
-        width: 88px;
-        height: 88px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(143, 156, 255, 0.2), transparent);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.2rem;
-        color: var(--kits-accent);
-        font-size: 2.3rem;
-    }
-
-    .kits-empty h4 {
-        color: var(--kits-text);
-        margin-bottom: 0.5rem;
-    }
-
-    .kits-empty p {
-        color: var(--kits-muted);
-        margin-bottom: 1.5rem;
-        font-size: 0.9rem;
-    }
-
-    .kits-empty .btn-kits-primary {
-        padding-inline: 1.5rem;
-    }
-
-    /* Toast */
-    .toast-dark {
-        background-color: #1E2546;
-        color: var(--kits-text);
-        border-radius: 0.75rem;
-        border: 1px solid rgba(143, 156, 255, 0.5);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
-        font-size: 0.85rem;
-    }
-
-        .toast-dark .btn-close-white {
-            filter: invert(1);
+        .pagination .page-item.active .page-link {
+            background-color: var(--inventory-secondary);
+            border-color: var(--inventory-secondary)
         }
 
-    .kits-table td.kits-date small {
-        color: var(--kits-text);
-        font-weight: 500;
-    }
-
-
-    @@media (max-width: 767.98px) {
-        .kits-header {
-            flex-direction: column;
-            align-items: flex-start;
+        /* Toast claro */
+        .toast-light {
+            background: #fff;
+            color: #111827;
+            border-radius: .75rem;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 8px 22px rgba(0,0,0,.08);
+            font-size: .85rem
         }
 
-        .kits-header-actions {
-            width: 100%;
-            display: flex;
-            justify-content: flex-start;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+        /* Responsive */
+        @@media (max-width:768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: .9rem 1rem
+            }
+
+                .page-header h1 {
+                    font-size: 1.1rem
+                }
+
+                .page-header .subtitle {
+                    font-size: .8rem
+                }
+
+                .page-header .d-flex.gap-2 {
+                    width: 100%;
+                    justify-content: flex-start;
+                    flex-wrap: wrap
+                }
         }
-    }
-</style>
+    </style>
+}
 
+<div class="container-fluid py-2 inventory-theme">
 
-<div class="container-fluid kits-theme py-4">
-    <!-- HEADER PRINCIPAL -->
-    <div class="kits-header">
-        <div class="kits-header-title">
-            <div class="kits-header-icon">
+    <!-- Encabezado (mismo componente que Productos) -->
+    <div class="page-header">
+        <div>
+            <h1>
                 <i class="bi bi-gift"></i>
-            </div>
-            <div>
-                <h1>Kits / Promociones</h1>
-                <p>Configura combos inteligentes, promociones especiales y ofertas dinámicas para tus productos.</p>
-            </div>
+                Kits / Promociones
+            </h1>
+            <div class="subtitle">Crea y administra combos y ofertas de tu catálogo</div>
         </div>
-
-        <div class="kits-header-actions">
-            <a href="@Url.Action("Index", "Home")" class="btn-kits-outline">
-                <i class="bi bi-arrow-left"></i>
-                Inicio
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-create-outline">
+                <i class="bi bi-arrow-left me-1"></i> Inicio
             </a>
             @if (isAuth && isAdmin)
             {
-                <a asp-action="Create" class="btn-kits-primary" title="Crear nuevo kit o promoción">
-                    <i class="bi bi-plus-circle"></i>
-                    Nuevo Kit / Promoción
+                <a asp-action="Create" class="btn btn-create-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Nuevo
                 </a>
             }
         </div>
     </div>
 
-    <!-- TOAST PARA NOTIFICACIONES (oscuro, sin alertas feas) -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-        <div id="toastNotificacion" class="toast toast-dark align-items-center border-0" role="alert">
+    <!-- Toast (con look & feel claro) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100;">
+        <div id="toastNotificacion" class="toast toast-light align-items-center border-0" role="alert">
             <div class="d-flex">
                 <div class="toast-body">
                     <i class="bi me-2"></i>
                     <span id="toast-message">Operación completada</span>
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
 
-    @if (isAuth && isAdmin)
-    {
-        <!-- MODAL CONFIRMACIÓN ELIMINAR / ACTIVAR KIT -->
-        <div class="modal fade" id="modalEliminarKit" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0" style="background-color:#11152F; color:var(--kits-text);">
-                    <div class="modal-header" style="background:linear-gradient(135deg,#8B0000,#FF6B6B); color:white;">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-exclamation-triangle fs-4 me-2"></i>
-                            <h5 class="modal-title mb-0">Confirmar acción</h5>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body py-4">
-                        <div class="text-center mb-3">
-                            <i class="bi bi-trash display-5 text-danger mb-3"></i>
-                            <h4 class="mb-2" id="modal-eliminar-titulo">¿Modificar estado del kit?</h4>
-                            <p class="text-muted mb-0" id="modal-eliminar-descripcion">
-                                Esta acción actualizará la disponibilidad del kit en ventas.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>Cancelar
-                        </button>
-                        <button type="button" class="btn btn-danger rounded-pill px-4" id="btn-confirmar-eliminar">
-                            <i class="bi bi-check-circle me-2"></i>Confirmar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
     @if (Model != null && Model.Any())
     {
-        <!-- STATS -->
-        <div class="row g-3 mb-4">
+        <!-- Stats en tarjetas blancas (consistente con Productos) -->
+        <div class="row g-3 mb-3">
             <div class="col-xl-3 col-md-6">
-                <div class="kits-stats-card">
-                    <div>
-                        <div class="kits-stats-label">Total kits</div>
-                        <p class="kits-stats-value">@totalItems</p>
-                    </div>
-                    <div class="kits-stats-icon">
-                        <i class="bi bi-box-seam"></i>
+                <div class="inventory-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-uppercase small text-muted">Total kits</div>
+                            <div class="fs-5 fw-bold">@totalItems</div>
+                        </div>
+                        <div class="rounded-3 px-3 py-2" style="background:#f3f4ff;">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-xl-3 col-md-6">
-                <div class="kits-stats-card success">
-                    <div>
-                        <div class="kits-stats-label">Kits activos</div>
-                        <p class="kits-stats-value">@totalActivos</p>
-                    </div>
-                    <div class="kits-stats-icon">
-                        <i class="bi bi-check-circle"></i>
+                <div class="inventory-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-uppercase small text-muted">Kits activos</div>
+                            <div class="fs-5 fw-bold">@totalActivos</div>
+                        </div>
+                        <div class="rounded-3 px-3 py-2" style="background:#dcfce7;">
+                            <i class="bi bi-check-circle text-success"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-xl-3 col-md-6">
-                <div class="kits-stats-card warning">
-                    <div>
-                        <div class="kits-stats-label">Con descuento</div>
-                        <p class="kits-stats-value">@totalConDescuento</p>
-                    </div>
-                    <div class="kits-stats-icon">
-                        <i class="bi bi-percent"></i>
+                <div class="inventory-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-uppercase small text-muted">Con descuento</div>
+                            <div class="fs-5 fw-bold">@totalConDescuento</div>
+                        </div>
+                        <div class="rounded-3 px-3 py-2" style="background:#fff7ed;">
+                            <i class="bi bi-percent text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-xl-3 col-md-6">
-                <div class="kits-stats-card info">
-                    <div>
-                        <div class="kits-stats-label">Valor total</div>
-                        <p class="kits-stats-value">@totalValor.ToString("C2", gt)</p>
-                    </div>
-                    <div class="kits-stats-icon">
-                        <i class="bi bi-currency-dollar"></i>
+                <div class="inventory-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-uppercase small text-muted">Valor total</div>
+                            <div class="fs-5 fw-bold">@(totalValor.ToString("C2", gt))</div>
+                        </div>
+                        <div class="rounded-3 px-3 py-2" style="background:#e5f9f3;">
+                            <i class="bi bi-currency-dollar" style="color:#0f766e;"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA KITS -->
-        <div class="kits-card-wrapper">
-            <div class="kits-card-header">
+        <!-- Tabla principal en tarjeta tipo Productos -->
+        <div class="inventory-card">
+            <div class="card-head">
                 <i class="bi bi-list-check fs-5"></i>
-                <h5 class="mb-0">Kits / Promociones Creados</h5>
-                <span class="badge-count">@Model.Count()</span>
+                <h3 class="title mb-0">Kits / Promociones creados</h3>
+                <span class="stats-badge"><i class="bi bi-archive"></i>@Model.Count()</span>
 
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <small class="text-white-50 me-1">Ordenar por:</small>
-                    <select id="filtroOrden">
+                    <select id="filtroOrden" class="form-select form-select-sm" style="width:auto;">
                         <option value="fecha-desc">Más recientes</option>
                         <option value="fecha-asc">Más antiguos</option>
                         <option value="nombre-asc">Nombre A-Z</option>
@@ -674,13 +426,13 @@
                 </div>
             </div>
 
-            <div class="kits-table-container">
-                <table class="kits-table">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th class="ps-4">ID</th>
+                            <th>ID</th>
                             <th>Nombre</th>
-                            <th>Descripción</th>
+                            <th class="col-hide-sm">Descripción</th>
                             <th class="text-center">Descuento</th>
                             <th class="text-center">Total</th>
                             <th class="text-center">Estado</th>
@@ -692,30 +444,19 @@
                         @foreach (var kit in Model)
                         {
                             <tr>
-                                <td class="ps-4 kits-kit-id">#@kit.IdKit</td>
+                                <td class="text-muted fw-semibold">#@kit.IdKit</td>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="kits-icon-pill">
-                                            <i class="bi bi-tags"></i>
-                                        </div>
-                                        <div>
-                                            <div class="kits-kit-name">@kit.Nombre</div>
-                                            <div class="kits-kit-products">
-                                                @(kit.Detalles?.Count() ?? 0) productos
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div class="fw-semibold">@kit.Nombre</div>
+                                    <small class="text-muted">@(kit.Detalles?.Count() ?? 0) productos</small>
                                 </td>
-                                <td>
+                                <td class="col-hide-sm">
                                     @if (string.IsNullOrEmpty(kit.Descripcion))
                                     {
                                         <span class="text-muted">-</span>
                                     }
                                     else
                                     {
-                                        <span class="text-truncate d-inline-block"
-                                              style="max-width: 220px;"
-                                              title="@kit.Descripcion">
+                                        <span class="text-truncate d-inline-block" style="max-width: 260px;" title="@kit.Descripcion">
                                             @kit.Descripcion
                                         </span>
                                     }
@@ -723,56 +464,47 @@
                                 <td class="text-center">
                                     @if (kit.DescuentoPct > 0)
                                     {
-                                        <span class="badge-kits badge-kits-success">
+                                        <span class="badge text-bg-success">
                                             @((kit.DescuentoPct * 100).ToString("0.##"))%
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge-kits badge-kits-secondary">0%</span>
+                                        <span class="badge text-bg-light text-muted">0%</span>
                                     }
                                 </td>
                                 <td class="text-center">
-                                    <span class="kits-total">@kit.Total.ToString("C2", gt)</span>
+                                    <span class="fw-bold text-success">@kit.Total.ToString("C2", gt)</span>
                                 </td>
                                 <td class="text-center">
                                     @if (kit.Activo)
                                     {
-                                        <span class="badge-kits badge-kits-success">
-                                            <i class="bi bi-check-circle me-1"></i>Activo
-                                        </span>
+                                        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Activo</span>
                                     }
                                     else
                                     {
-                                        <span class="badge-kits badge-kits-danger">
-                                            <i class="bi bi-x-circle me-1"></i>Inactivo
-                                        </span>
+                                        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>Inactivo</span>
                                     }
                                 </td>
-                                <td class="text-center kits-date">
-                                    <small>@kit.FechaCreacion.ToString("dd/MM/yyyy")</small><br />
-                                    <small>@kit.FechaCreacion.ToString("HH:mm")</small>
-                                </td>
-
                                 <td class="text-center">
-                                    <div class="kits-actions">
+                                    <small>@kit.FechaCreacion.ToString("dd/MM/yyyy")</small><br />
+                                    <small class="text-muted">@kit.FechaCreacion.ToString("HH:mm")</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-inline-flex">
                                         <!-- Detalles -->
-                                        <a asp-action="Details" asp-route-id="@kit.IdKit"
-                                           class="btn btn-outline-info"
-                                           title="Ver detalles del kit">
+                                        <a asp-action="Details" asp-route-id="@kit.IdKit" class="btn btn-info action-btn" title="Ver detalles">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         @if (isAuth && isAdmin)
                                         {
                                             <!-- Editar -->
-                                            <a asp-action="Edit" asp-route-id="@kit.IdKit"
-                                               class="btn btn-outline-warning"
-                                               title="Editar kit">
-                                                <i class="bi bi-pencil-square"></i>
+                                            <a asp-action="Edit" asp-route-id="@kit.IdKit" class="btn btn-warning action-btn" title="Editar">
+                                                <i class="bi bi-pencil"></i>
                                             </a>
 
-                                            <!-- Cambiar estado (activar/desactivar) -->
-                                            <button class="btn btn-outline-danger btn-eliminar-kit"
+                                            <!-- Activar / Desactivar -->
+                                            <button class="btn @(kit.Activo ? "btn-danger" : "btn-success") action-btn btn-eliminar-kit"
                                                     data-id="@kit.IdKit"
                                                     data-nombre="@kit.Nombre"
                                                     data-activo="@kit.Activo"
@@ -788,51 +520,44 @@
                 </table>
             </div>
 
-            <!-- PAGINACIÓN -->
             @if (totalPages > 1)
             {
-                <div class="kits-pagination-wrapper">
-                    <nav aria-label="Paginación de kits">
-                        <ul class="pagination pagination-kits justify-content-center mb-1">
-                            <!-- Anterior -->
-                            <li class="page-item @(pageNumber == 1 ? "disabled" : "")">
-                                <a class="page-link"
-                                   href="@Url.Action("Index", new { page = pageNumber - 1, pageSize = pageSize })"
-                                   aria-label="Anterior">
-                                    <i class="bi bi-chevron-left"></i>
-                                </a>
-                            </li>
+                <div class="p-3 border-top" style="border-color:#e5e7eb!important">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        <div class="text-muted small">
+                            Mostrando @((pageNumber - 1) * pageSize + 1)-@Math.Min(pageNumber * pageSize, totalItems) de @totalItems kits
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item @(pageNumber == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = pageNumber - 1, pageSize = pageSize })">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
 
-                            @for (int i = 1; i <= totalPages; i++)
-                            {
-                                if (i == 1 || i == totalPages || (i >= pageNumber - 2 && i <= pageNumber + 2))
-                                {
-                                    <li class="page-item @(i == pageNumber ? "active" : "")">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new { page = i, pageSize = pageSize })">@i</a>
-                                    </li>
+                                @{
+                                    for (int i = 1; i <= totalPages; i++)
+                                    {
+                                        if (i == 1 || i == totalPages || (i >= pageNumber - 2 && i <= pageNumber + 2))
+                                        {
+                                            <li class="page-item @(i == pageNumber ? "active" : "")">
+                                                <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize = pageSize })">@i</a>
+                                            </li>
+                                        }
+                                        else if (i == pageNumber - 3 || i == pageNumber + 3)
+                                        {
+                                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                                        }
+                                    }
                                 }
-                                else if (i == pageNumber - 3 || i == pageNumber + 3)
-                                {
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                }
-                            }
 
-                            <!-- Siguiente -->
-                            <li class="page-item @(pageNumber == totalPages ? "disabled" : "")">
-                                <a class="page-link"
-                                   href="@Url.Action("Index", new { page = pageNumber + 1, pageSize = pageSize })"
-                                   aria-label="Siguiente">
-                                    <i class="bi bi-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <div class="kits-pagination-info">
-                        Mostrando @((pageNumber - 1) * pageSize + 1)-@Math.Min(pageNumber * pageSize, totalItems)
-                        de @totalItems kits
+                                <li class="page-item @(pageNumber == totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = pageNumber + 1, pageSize = pageSize })">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             }
@@ -840,21 +565,53 @@
     }
     else
     {
-        <div class="kits-empty">
-            <div class="kits-empty-icon">
-                <i class="bi bi-box-seam"></i>
+        <!-- Estado vacío con estilo claro -->
+        <div class="inventory-card p-5 text-center">
+            <div class="mb-3">
+                <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                      style="width:88px;height:88px;background:#f3f4ff;">
+                    <i class="bi bi-box-seam fs-2" style="color:var(--inventory-secondary)"></i>
+                </span>
             </div>
-            <h4>No hay kits registrados</h4>
-            <p>Crea tu primer kit o promoción para ofrecer paquetes atractivos a tus clientes.</p>
+            <h4 class="mb-2">No hay kits registrados</h4>
+            <p class="text-muted mb-3">Crea tu primer kit o promoción para ofrecer paquetes atractivos a tus clientes.</p>
             @if (isAuth && isAdmin)
             {
-                <a asp-action="Create" class="btn-kits-primary d-inline-flex align-items-center">
-                    <i class="bi bi-plus-circle me-2"></i>Crear Primer Kit
+                <a asp-action="Create" class="btn btn-create-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Crear Primer Kit
                 </a>
             }
         </div>
     }
 </div>
+
+@if (isAuth && isAdmin)
+{
+    <!-- Modal Confirmación (mantiene funcionalidad, look de Productos) -->
+    <div class="modal fade" id="modalEliminarKit" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(90deg,var(--inventory-primary),var(--inventory-secondary));color:#fff;border-bottom:1px solid rgba(255,255,255,.16);border-radius:var(--inventory-radius) var(--inventory-radius) 0 0;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle fs-5 me-2"></i>
+                        <h5 class="modal-title mb-0">Confirmar acción</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5 id="modal-eliminar-titulo" class="mb-2">¿Modificar estado del kit?</h5>
+                    <p id="modal-eliminar-descripcion" class="text-muted mb-0">Esta acción actualizará la disponibilidad del kit en ventas.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">
+                        <i class="bi bi-check-circle me-1"></i>Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     @Html.AntiForgeryToken()
@@ -869,10 +626,10 @@
                 const toastIcon = toast.querySelector('.bi');
 
                 const config = {
-                    success: { icon: 'bi-check-circle', color: '#1cc88a' },
-                    warning: { icon: 'bi-exclamation-triangle', color: '#f6c23e' },
-                    danger: { icon: 'bi-x-circle', color: '#ff6b6b' },
-                    info: { icon: 'bi-info-circle', color: '#8B88F2' }
+                    success: { icon: 'bi-check-circle', color: '#16a34a' },
+                    warning: { icon: 'bi-exclamation-triangle', color: '#eab308' },
+                    danger: { icon: 'bi-x-circle', color: '#dc2626' },
+                    info: { icon: 'bi-info-circle', color: '#514BF2' }
                 };
 
                 const { icon, color } = config[tipo] || config.success;
@@ -978,10 +735,9 @@
                 modal.hide();
             });
 
-            // FiltroOrden (placeholder para que conectes lógica server-side si quieres)
+            // Mantener placeholder del selector de orden (sin cambiar funcionalidad)
             document.getElementById('filtroOrden')?.addEventListener('change', function () {
                 console.log('Ordenar por:', this.value);
-                // Aquí puedes implementar redirección con querystring para ordenar desde el servidor.
             });
         })();
     </script>

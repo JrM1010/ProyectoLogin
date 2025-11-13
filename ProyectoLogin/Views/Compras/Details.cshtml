@@ -137,8 +137,7 @@
                 transform: translateY(-1px);
             }
 
-        .table-detalle td,
-        .table-detalle th {
+        .table-detalle td, .table-detalle th {
             border-color: rgba(60, 74, 165, 0.25) !important;
             vertical-align: middle;
         }
@@ -190,18 +189,163 @@
         }
 
     @@media (max-width: 768px) {
-        .compras-header
+        .compras-header {
+            padding: 1.25rem 1.25rem 1rem;
+        }
 
-    {
-        padding: 1.25rem 1.25rem 1rem;
+        .table-detalle th, .table-detalle td {
+            font-size: 0.72rem;
+            padding: 0.3rem 0.35rem;
+        }
+    }
+</style>
+
+<!-- ======= OVERRIDES “MENTA” (misma estética clara que en Compras Index / Clientes) ======= -->
+<style>
+    :root {
+        --c-primary: #062926; /* menta oscuro */
+        --c-primary-light: #12C6A1; /* menta vibrante */
+        --c-primary-soft: #5EF2C1; /* acento brillante */
+        --c-dark-1: #ffffff; /* fondos claros */
+        --c-dark-2: #0A3A34; /* header grad inicio */
+        --c-dark-3: #12C6A1; /* header grad fin */
+        --c-dark-4: #ecfdf5; /* hover suave */
+        --c-bg-soft: #f5f6fa;
+        --c-border-soft: #e5e7eb;
+        --c-accent-success: #16a34a;
+        --c-accent-warning: #eab308;
+        --c-accent-info: #06b6d4;
+        --c-accent-danger: #ef4444;
+        --c-text-main: #111827;
+        --c-text-muted: #6b7280;
     }
 
-    .table-detalle th,
-    .table-detalle td {
-        font-size: 0.72rem;
-        padding: 0.3rem 0.35rem;
+    .text-primary-soft {
+        color: var(--c-primary-light) !important;
     }
 
+    /* HEADER */
+    .compras-header {
+        background: linear-gradient(90deg,var(--c-primary),var(--c-primary-light)) !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,.18) !important;
+        box-shadow: 0 6px 18px rgba(15,23,42,.18) !important;
+    }
+
+        .compras-header h2, .compras-header p {
+            color: #fff !important;
+        }
+
+        .compras-header .bi-receipt-cutoff {
+            color: var(--c-primary-soft) !important;
+        }
+
+    /* CARD DETALLE */
+    .card-detalle {
+        background: #ffffff !important;
+        border: 1px solid var(--c-border-soft) !important;
+        color: var(--c-text-main) !important;
+        box-shadow: 0 4px 14px rgba(15,23,42,.06) !important;
+    }
+
+        .card-detalle .card-header {
+            background: linear-gradient(90deg,var(--c-primary),var(--c-primary-light)) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(255,255,255,.2) !important;
+        }
+
+    /* TIPOGRAFÍA DETALLES */
+    .detalle-label {
+        color: var(--c-text-muted) !important;
+    }
+
+    .detalle-valor {
+        color: var(--c-text-main) !important;
+    }
+
+    /* BADGES */
+    .estado-pendiente {
+        background: #fff7ed !important;
+        color: #b45309 !important;
+        border-color: #fcd34d !important;
+    }
+
+    .estado-confirmada {
+        background: #e0f2fe !important;
+        color: #0369a1 !important;
+        border-color: #93c5fd !important;
+    }
+
+    .estado-completada {
+        background: #dcfce7 !important;
+        color: #166534 !important;
+        border-color: #86efac !important;
+    }
+
+    /* TABLA */
+    .table-detalle {
+        color: var(--c-text-main) !important;
+    }
+
+        .table-detalle thead {
+            background: #e5f9f3 !important;
+            color: var(--c-text-muted) !important;
+            border-bottom: 1px solid var(--c-border-soft) !important;
+        }
+
+            .table-detalle thead th {
+                color: var(--c-text-muted) !important;
+            }
+
+        .table-detalle tbody tr {
+            background: #ffffff !important;
+        }
+
+            .table-detalle tbody tr:nth-child(even) {
+                background: #f9fafb !important;
+            }
+
+            .table-detalle tbody tr:hover {
+                background: #ecfdf5 !important;
+            }
+
+        .table-detalle td, .table-detalle th {
+            border-color: var(--c-border-soft) !important;
+        }
+
+    /* TOTALES */
+    .totales-box {
+        background: #ffffff !important;
+        color: var(--c-text-main) !important;
+        border: 1px solid var(--c-border-soft) !important;
+        box-shadow: 0 4px 14px rgba(15,23,42,.06) !important;
+    }
+
+        .totales-box strong {
+            color: var(--c-primary-light) !important;
+        }
+
+        .totales-box .total-valor {
+            color: var(--c-accent-success) !important;
+        }
+
+    /* BOTÓN VOLVER */
+    .btn-outline-light-soft {
+        background: #fff !important;
+        color: var(--c-primary) !important;
+        border: 1px solid var(--c-border-soft) !important;
+    }
+
+        .btn-outline-light-soft:hover {
+            background: #ecfdf5 !important;
+            color: var(--c-primary-light) !important;
+            border-color: var(--c-primary-light) !important;
+            box-shadow: 0 3px 8px rgba(18,198,161,.25) !important;
+        }
+
+    /* HR */
+    .border-secondary {
+        border-color: var(--c-border-soft) !important;
     }
 </style>
 
@@ -210,15 +354,13 @@
     <div class="compras-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <h2 class="fw-bold mb-1">
-                <i class="bi bi-receipt-cutoff me-2 text-primary"></i> Detalle de Compra
+                <i class="bi bi-receipt-cutoff me-2"></i> Detalle de Compra
             </h2>
-            <p class="mb-0">
-                Visualice la información completa de la compra, su proveedor y productos asociados.
-            </p>
+            <p class="mb-0">Visualice la información completa de la compra, su proveedor y productos asociados.</p>
         </div>
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <a class="btn btn-outline-light-soft"
-               href="@Url.Action("Index", "Compras", new { estado = Model.Estado })">
+               href='@Url.Action("Index", "Compras", new { estado = Model.Estado })'>
                 <i class="bi bi-arrow-left-circle me-1"></i> Volver al listado
             </a>
 
@@ -230,7 +372,7 @@
                 : "estado-completada";
             }
             <span class="badge-estado @estadoClass">
-                <i class="bi bi-circle-fill me-1" style="font-size: 0.55rem;"></i>
+                <i class="bi bi-circle-fill me-1" style="font-size: .55rem;"></i>
                 @Model.Estado
             </span>
         </div>
@@ -257,47 +399,29 @@
             <div class="row g-4 mb-3">
                 <div class="col-md-6">
                     <div class="mb-2">
-                        <div class="detalle-label">
-                            <i class="bi bi-building me-1"></i>Proveedor
-                        </div>
-                        <div class="detalle-valor">
-                            @Model.Proveedor?.Nombre
-                        </div>
+                        <div class="detalle-label"><i class="bi bi-building me-1"></i>Proveedor</div>
+                        <div class="detalle-valor">@Model.Proveedor?.Nombre</div>
                     </div>
                     <div class="mb-2">
-                        <div class="detalle-label">
-                            <i class="bi bi-telephone me-1"></i>Teléfono
-                        </div>
-                        <div class="detalle-valor">
-                            @(string.IsNullOrWhiteSpace(Model.Proveedor?.Telefono) ? "—" : Model.Proveedor.Telefono)
-                        </div>
+                        <div class="detalle-label"><i class="bi bi-telephone me-1"></i>Teléfono</div>
+                        <div class="detalle-valor">@(string.IsNullOrWhiteSpace(Model.Proveedor?.Telefono) ? "—" : Model.Proveedor.Telefono)</div>
                     </div>
                     <div class="mb-2">
-                        <div class="detalle-label">
-                            <i class="bi bi-envelope me-1"></i>Correo
-                        </div>
-                        <div class="detalle-valor">
-                            @(string.IsNullOrWhiteSpace(Model.Proveedor?.Email) ? "—" : Model.Proveedor.Email)
-                        </div>
+                        <div class="detalle-label"><i class="bi bi-envelope me-1"></i>Correo</div>
+                        <div class="detalle-valor">@(string.IsNullOrWhiteSpace(Model.Proveedor?.Email) ? "—" : Model.Proveedor.Email)</div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div class="mb-2">
-                        <div class="detalle-label">
-                            <i class="bi bi-receipt me-1"></i>Número de Documento
-                        </div>
-                        <div class="detalle-valor">
-                            @Model.NumeroDocumento
-                        </div>
+                        <div class="detalle-label"><i class="bi bi-receipt me-1"></i>Número de Documento</div>
+                        <div class="detalle-valor">@Model.NumeroDocumento</div>
                     </div>
                     <div class="mb-2">
-                        <div class="detalle-label">
-                            <i class="bi bi-flag me-1"></i>Estado
-                        </div>
+                        <div class="detalle-label"><i class="bi bi-flag me-1"></i>Estado</div>
                         <div>
                             <span class="badge-estado @estadoClass">
-                                <i class="bi bi-circle-fill me-1" style="font-size: 0.55rem;"></i>
+                                <i class="bi bi-circle-fill me-1" style="font-size: .55rem;"></i>
                                 @Model.Estado
                             </span>
                         </div>
@@ -306,12 +430,8 @@
                     @if (!string.IsNullOrEmpty(Model.Observaciones))
                     {
                         <div class="mt-2">
-                            <div class="detalle-label">
-                                <i class="bi bi-chat-text me-1"></i>Observaciones
-                            </div>
-                            <div class="detalle-valor">
-                                @Model.Observaciones
-                            </div>
+                            <div class="detalle-label"><i class="bi bi-chat-text me-1"></i>Observaciones</div>
+                            <div class="detalle-valor">@Model.Observaciones</div>
                         </div>
                     }
                 </div>
@@ -321,14 +441,12 @@
 
             <!-- Productos -->
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0" style="color: var(--c-primary-soft);">
+                <h6 class="mb-0" style="color: var(--c-primary-light);">
                     <i class="bi bi-bag-check me-2"></i>Productos Comprados
                 </h6>
                 @if (Model.Detalles != null && Model.Detalles.Any())
                 {
-                    <span class="text-muted-soft small">
-                        @Model.Detalles.Count() ítem(s)
-                    </span>
+                    <span class="text-muted-soft small">@Model.Detalles.Count() ítem(s)</span>
                 }
             </div>
 
@@ -352,21 +470,17 @@
                             {
                                 <tr>
                                     <td class="text-muted-soft">
-                                        @(!string.IsNullOrWhiteSpace(item.Producto?.CodigoBarras)
-                                                                        ? item.Producto.CodigoBarras
-                                                                        : "—")
-                                                                          </td>
-                                                                          <td>@item.Producto?.Nombre</td>
-                                                                          <td>@item.UnidadMedida?.Nombre</td>
-                                                                          <td class="text-end">@("Q" + @item.Cantidad.ToString("N2"))</td>
-                                                                          <td class="text-end">@("Q" + @item.PrecioUnitario.ToString("N2"))</td>
-                                                                          <td class="text-end">
-                                        @(item.Descuento > 0
-                                                                        ? (item.Descuento * 100).ToString("N0") + "%"
-                                                                        : "-")
-                            </td>
-                            <td class="text-end">@("Q" + @item.Subtotal.ToString("N2"))</td>
-                        </tr>
+                                        @(!string.IsNullOrWhiteSpace(item.Producto?.CodigoBarras) ? item.Producto.CodigoBarras : "—")
+                                    </td>
+                                    <td>@item.Producto?.Nombre</td>
+                                    <td>@item.UnidadMedida?.Nombre</td>
+                                    <td class="text-end">@("Q" + item.Cantidad.ToString("N2"))</td>
+                                    <td class="text-end">@("Q" + item.PrecioUnitario.ToString("N2"))</td>
+                                    <td class="text-end">
+                                        @(item.Descuento > 0 ? (item.Descuento * 100).ToString("N0") + "%" : "-")
+                                    </td>
+                                    <td class="text-end">@("Q" + item.Subtotal.ToString("N2"))</td>
+                                </tr>
                             }
                         }
                         else
@@ -387,15 +501,15 @@
                 <div class="totales-box">
                     <p class="mb-1">
                         <strong>Subtotal:</strong>
-                        <span class="ms-1">@("Q" + @Model.Subtotal.ToString("#,##0.00"))</span>
+                        <span class="ms-1">@("Q" + Model.Subtotal.ToString("#,##0.00"))</span>
                     </p>
                     <p class="mb-1">
                         <strong>IVA (12%):</strong>
-                        <span class="ms-1">@("Q" + @Model.IVA.ToString("#,##0.00"))</span>
+                        <span class="ms-1">@("Q" + Model.IVA.ToString("#,##0.00"))</span>
                     </p>
                     <div class="mt-1">
                         <span class="total-label me-1"><strong>Total:</strong></span>
-                        <span class="total-valor">@("Q" + @Model.Total.ToString("#,##0.00"))</span>
+                        <span class="total-valor">@("Q" + Model.Total.ToString("#,##0.00"))</span>
                     </div>
                 </div>
             </div>

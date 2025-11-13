@@ -23,39 +23,247 @@
     bool isEmpleado = user?.IsInRole("Vendedor") ?? false;
 }
 
-<div class="container-fluid clientes-theme py-4">
+@section Styles{
+<style>
+    :root{
+        /* Paleta “usuarios” (menta) aplicada a clientes */
+        --clients-primary:#062926;         /* menta oscuro */
+        --clients-secondary:#12C6A1;       /* menta vibrante */
+        --clients-accent:#5EF2C1;          /* acento brillante */
+        --clients-bg:#f5f6fa;              /* fondo claro */
+        --clients-card:#ffffff;
+        --clients-text:#111827;
+        --clients-muted:#6b7280;
+        --clients-radius:.75rem;
+        --clients-border-soft:#e5e7eb;
+        --clients-danger:#dc2626;
+        --clients-success:#16a34a;
+    }
 
-    <!-- HEADER PRINCIPAL -->
-    <div class="clientes-header mb-4">
-        <div class="row align-items-center g-3">
-            <div class="col-md-8 d-flex align-items-center gap-3 flex-wrap">
-                <div class="clientes-icon-wrapper">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-                <div>
-                    <h1 class="h3 mb-1 text-white">
-                        Gestión de Clientes
-                    </h1>
-                    <p class="mb-0 clientes-header-subtitle">
-                        Administra clientes activos e inactivos con una vista clara y consistente.
-                    </p>
-                </div>
+    /* CONTENEDOR GENERAL (igual a usuarios) */
+    .clients-theme{ background:var(--clients-bg); padding:1.5rem 0 2rem; }
+
+    /* HEADER */
+    .clients-header{
+        background:linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+        border-radius:var(--clients-radius);
+        border:1px solid rgba(255,255,255,.16);
+        padding:1.1rem 1.4rem;
+        margin-bottom:1rem;
+        box-shadow:0 6px 18px rgba(15,23,42,.18);
+        display:flex; align-items:center; justify-content:space-between; gap:1rem; color:#fff;
+    }
+    .clients-header-title{ display:flex; align-items:center; gap:.7rem; }
+    .clients-header-icon{
+        width:40px;height:40px;border-radius:50%;
+        background:rgba(0,0,0,.22);
+        display:inline-flex;align-items:center;justify-content:center;
+        font-size:1.4rem;color:var(--clients-accent);
+    }
+    .clients-header h2{ margin:0; font-size:1.25rem; font-weight:700; letter-spacing:.02em; color:#fff; }
+    .clients-header p{ margin:.1rem 0 0; font-size:.85rem; color:rgba(241,245,249,.9); }
+    .clients-header-actions .btn{ font-size:.86rem;border-radius:var(--clients-radius);padding:.5rem 1rem; }
+
+    .btn-clients-outline{
+        border:1px solid var(--clients-accent);
+        background:transparent;color:#fff;border-radius:var(--clients-radius);
+        font-weight:500;display:inline-flex;align-items:center;gap:.35rem;
+        transition:all .25s ease;text-decoration:none;
+    }
+    .btn-clients-outline:hover{
+        background:rgba(94,242,193,.16); color:#fff;
+        box-shadow:0 4px 10px rgba(15,23,42,.25); transform:translateY(-1px);
+    }
+    .btn-clients-primary{
+        background:#fff; color:var(--clients-primary); border:none;border-radius:var(--clients-radius);
+        font-weight:600; display:inline-flex; align-items:center; gap:.35rem;
+        transition:all .25s ease; text-decoration:none;
+    }
+    .btn-clients-primary:hover{
+        background:#f9fafb; color:var(--clients-secondary);
+        box-shadow:0 4px 12px rgba(15,23,42,.25); transform:translateY(-1px);
+    }
+
+    /* BUSCADOR (tarjeta como usuarios) */
+    .clients-search-card{
+        background:var(--clients-card);
+        border:1px solid var(--clients-border-soft);
+        border-radius:var(--clients-radius);
+        padding:.9rem 1.1rem; margin-bottom:1.1rem;
+        box-shadow:0 2px 8px rgba(15,23,42,.04);
+    }
+    .clients-search-label{ font-size:.82rem; color:var(--clients-muted); margin-bottom:.15rem; }
+    .clients-search-input{
+        background:#fff;border-radius:var(--clients-radius);
+        border:1px solid var(--clients-border-soft);
+        color:var(--clients-text); padding:.6rem .85rem; min-width:240px; font-size:.88rem;
+        transition:all .22s ease;
+    }
+    .clients-search-input::placeholder{ color:#9ca3af; }
+    .clients-search-input:focus{
+        outline:none;border-color:var(--clients-secondary);
+        box-shadow:0 0 0 .16rem rgba(18,198,161,.18); background:#fff;
+    }
+    .btn-clients-search{
+        border-radius:var(--clients-radius); padding:.6rem 1.3rem; font-size:.85rem;
+        background:var(--clients-secondary); border:1px solid var(--clients-secondary);
+        color:#020814; display:inline-flex; align-items:center; gap:.35rem; transition:all .25s ease;
+    }
+    .btn-clients-search:hover{
+        background:var(--clients-primary); border-color:var(--clients-primary); color:#fff;
+        box-shadow:0 4px 10px rgba(15,23,42,.18); transform:translateY(-1px);
+    }
+
+    /* TARJETAS LISTA (Activos / Inactivos) */
+    .clients-card{
+        background:var(--clients-card);
+        border:1px solid var(--clients-border-soft);
+        border-radius:var(--clients-radius);
+        overflow:hidden; margin-bottom:1.25rem;
+        box-shadow:0 4px 14px rgba(15,23,42,.06);
+        transition:all .22s ease;
+    }
+    .clients-card:hover{ box-shadow:0 7px 20px rgba(15,23,42,.10); transform:translateY(-1px); }
+
+    .clients-card-header{
+        display:flex; align-items:center; gap:.65rem;
+        padding:.85rem 1.15rem; border-bottom:1px solid rgba(15,23,42,.06); color:#fff;
+    }
+    .clients-card-header.active{
+        background:linear-gradient(90deg,var(--clients-primary),var(--clients-secondary));
+    }
+    .clients-card-header.inactive{
+        background:linear-gradient(90deg,#6b7280,#9ca3af);
+    }
+    .clients-card-header h5{ margin:0; font-size:.98rem; font-weight:700; color:#fff; }
+    .clients-card-header i{ font-size:1.2rem; color:#bbf7d0; }
+    .clients-card-header.inactive i{ color:#e5e7eb; }
+
+    .clients-header-badge{
+        margin-left:auto; padding:.22rem .75rem; border-radius:999px; font-size:.72rem; font-weight:600;
+        display:inline-flex; align-items:center; gap:.25rem;
+        background:rgba(15,23,42,.12); border:1px solid rgba(226,232,240,.5); color:#f9fafb;
+    }
+
+    /* TABLAS (igual a usuarios) */
+    .clients-table-wrap{ width:100%; overflow-x:auto; }
+    .clients-table{ width:100%; border-collapse:collapse; margin-bottom:0;
+        font-size:.85rem; color:var(--clients-text); background:transparent; }
+    .clients-table thead th{
+        background:#e5f9f3; font-weight:600; font-size:.78rem;
+        border-bottom:1px solid var(--clients-border-soft); white-space:nowrap;
+        text-transform:uppercase; letter-spacing:.03em; color:var(--clients-muted);
+        padding:.7rem .9rem;
+    }
+    .clients-table tbody td{
+        padding:.7rem .9rem; border-bottom:1px solid var(--clients-border-soft);
+        vertical-align:middle; color:var(--clients-text);
+    }
+    .clients-table tbody tr:nth-child(even){ background:#f9fafb; }
+    .clients-table tbody tr:hover{ background:#ecfdf5; }
+
+    .client-id{ font-weight:600; font-size:.78rem; color:var(--clients-muted); }
+    .client-name{ display:flex; align-items:center; gap:.35rem; font-weight:600; color:var(--clients-text); }
+    .client-name i{ color:var(--clients-secondary); }
+    .client-email{ color:var(--clients-muted); font-size:.8rem; }
+
+    .badge-soft{
+        padding:.22rem .7rem; border-radius:999px; font-size:.72rem; font-weight:600;
+        border:1px solid var(--clients-secondary); background:#ecfdf5; color:var(--clients-primary);
+    }
+    .badge-soft-muted{ border-color:#d1d5db; background:#f3f4f6; color:var(--clients-muted); }
+
+    /* ACCIONES */
+    .clients-actions{ display:flex; justify-content:center; gap:.25rem; }
+    .clients-action-btn{
+        width:2.2rem; height:2.2rem; border-radius:.7rem; border:none;
+        display:inline-flex; align-items:center; justify-content:center;
+        font-size:.9rem; transition:all .2s ease; background:#f3f4f6; color:var(--clients-muted);
+    }
+    .clients-edit{ background:#fef3c7; color:#92400e; }
+    .clients-edit:hover{ background:#fbbf24; color:#111827; transform:translateY(-1px); box-shadow:0 3px 8px rgba(251,191,36,.4); }
+    .clients-disable{ background:#fee2e2; color:#b91c1c; }
+    .clients-disable:hover{ background:#dc2626; color:#fff; transform:translateY(-1px); box-shadow:0 3px 8px rgba(220,38,38,.4); }
+    .clients-enable{ background:#dcfce7; color:#166534; }
+    .clients-enable:hover{ background:#22c55e; color:#fff; transform:translateY(-1px); box-shadow:0 3px 8px rgba(34,197,94,.4); }
+
+    /* PAGINACIÓN */
+    .clients-pagination-bar{
+        padding:.85rem 1.15rem; border-top:1px solid var(--clients-border-soft);
+        display:flex; justify-content:space-between; align-items:center; gap:1rem;
+        font-size:.78rem; color:var(--clients-muted); background:#fff;
+    }
+    .clients-pagination .page-link{
+        border-radius:999px!important; font-size:.75rem; padding:.24rem .6rem;
+        border:1px solid var(--clients-border-soft); color:var(--clients-muted);
+        background:#fff; transition:all .2s ease;
+    }
+    .clients-pagination .page-link:hover{
+        background:#ecfdf5; color:var(--clients-secondary); border-color:var(--clients-secondary);
+    }
+    .clients-pagination .page-item.active .page-link{
+        background:var(--clients-secondary); border-color:var(--clients-secondary);
+        color:#020814; box-shadow:0 3px 8px rgba(18,198,161,.4);
+    }
+    .clients-pagination .page-item.disabled .page-link{ opacity:.4; background:#f9fafb; }
+
+    /* ALERTAS (manteniendo TempData) */
+    .alert-smart{
+        border-radius:var(--clients-radius);
+        border-left:4px solid var(--clients-accent);
+        background:#ecfdf5; color:#064e3b; font-size:.83rem; margin-bottom:1rem;
+    }
+    .alert-danger.alert-smart{ background:#fef2f2; color:#7f1d1d; border-left-color:#ff6b6b; }
+    .alert-warning.alert-smart{ background:#fff7ed; color:#7c2d12; border-left-color:#f59e0b; }
+
+    /* CONFIRM PERSONALIZADO (solo estilos, misma lógica) */
+    .clientes-confirm{ position:fixed; inset:0; background:rgba(0,0,0,.6);
+        display:flex; align-items:center; justify-content:center; z-index:9999; }
+    .clientes-confirm.d-none{ display:none!important; }
+    .clientes-confirm-box{
+        background:#ffffff; color:var(--clients-text); border-radius:var(--clients-radius);
+        padding:1rem 1.25rem; border:1px solid var(--clients-border-soft);
+        box-shadow:0 10px 32px rgba(15,23,42,.18); max-width:340px; width:100%;
+    }
+    .text-accent{ color:var(--clients-secondary); }
+
+    @@media (max-width:768px){
+        .clients-header{ flex-direction:column; align-items:flex-start; padding:.9rem 1rem; }
+        .clients-header h2{ font-size:1.1rem; }
+        .clients-header p{ font-size:.8rem; }
+        .clients-header-actions{ width:100%; display:flex; flex-wrap:wrap; gap:.45rem; }
+        .clients-header-actions .btn{ flex:1 1 auto; justify-content:center; }
+        .clients-search-card{ padding:.8rem .9rem; }
+        .clients-search-input{ width:100%; min-width:0; }
+        .clients-card-header{ padding:.75rem .9rem; }
+        .clients-pagination-bar{ flex-direction:column; align-items:flex-start; }
+    }
+</style>
+}
+
+<div class="container-fluid clients-theme">
+
+    <!-- HEADER (igual a Usuarios) -->
+    <div class="clients-header">
+        <div class="clients-header-title">
+            <div class="clients-header-icon">
+                <i class="bi bi-people-fill"></i>
             </div>
-            <div class="col-md-4 d-flex justify-content-md-end justify-content-start gap-2 flex-wrap">
-                <a href="@Url.Action("Index", "Home")"
-                   class="btn btn-outline-clientes">
-                    <i class="bi bi-arrow-left me-2"></i> Volver al Inicio
+            <div>
+                <h2>Gestión de Clientes</h2>
+                <p>Administra clientes activos e inactivos con una vista clara y consistente</p>
+            </div>
+        </div>
+        <div class="clients-header-actions d-flex gap-2">
+            <a href="@Url.Action("Index", "Home")" class="btn btn-clients-outline">
+                <i class="bi bi-arrow-left"></i> Inicio
+            </a>
+            @if (isAuth && (isAdmin || isEmpleado))
+            {
+                <a asp-action="Create" class="btn btn-clients-primary" title="Agregar nuevo cliente">
+                    <i class="bi bi-person-plus"></i> Nuevo Cliente
                 </a>
-
-                @if (isAuth && (isAdmin || isEmpleado))
-                {
-                    <a asp-action="Create"
-                       class="btn btn-clientes-primary"
-                       title="Agregar nuevo cliente">
-                        <i class="bi bi-person-plus me-2"></i> Nuevo Cliente
-                    </a>
-                }
-            </div>
+            }
         </div>
     </div>
 
@@ -65,94 +273,72 @@
         <div class="alert alert-success alert-smart shadow-sm" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-check-circle-fill fs-5"></i>
-                <div class="flex-grow-1">
-                    <strong>¡Éxito!</strong> @TempData["Mensaje"]
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-2"
-                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                <div class="flex-grow-1"><strong>¡Éxito!</strong> @TempData["Mensaje"]</div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
-
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-smart shadow-sm" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-                <div class="flex-grow-1">
-                    <strong>¡Error!</strong> @TempData["Error"]
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-2"
-                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                <div class="flex-grow-1"><strong>¡Error!</strong> @TempData["Error"]</div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
-
     @if (TempData["Advertencia"] != null)
     {
         <div class="alert alert-warning alert-smart shadow-sm" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-info-circle-fill fs-5"></i>
-                <div class="flex-grow-1">
-                    <strong>Advertencia:</strong> @TempData["Advertencia"]
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-2"
-                        data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                <div class="flex-grow-1"><strong>Advertencia:</strong> @TempData["Advertencia"]</div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         </div>
     }
 
-    <!-- BARRA DE BÚSQUEDA -->
-    <div class="clientes-card mb-4">
-        <div class="card-body py-3">
-            <form method="get" asp-action="Index" class="row g-3 align-items-center">
-                <div class="col-auto">
-                    <label class="col-form-label fw-semibold text-accent">Buscar cliente</label>
-                </div>
-                <div class="col-md-6 col-sm-8">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text clientes-input-addon">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text"
-                               name="q"
-                               value="@(ViewData["q"] ?? "")"
-                               class="form-control clientes-input"
-                               placeholder="NIT, nombre, correo..." />
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <input type="hidden" name="pageActivos" value="1" />
-                    <input type="hidden" name="pageInactivos" value="1" />
-                    <button class="btn btn-clientes-primary btn-sm clientes-btn-pill" type="submit">
-                        <i class="bi bi-search me-1"></i> Buscar
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- BARRA DE BÚSQUEDA (calcada a usuarios) -->
+    <div class="clients-search-card">
+        <form method="get" asp-action="Index" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <div class="clients-search-label">Buscar cliente</div>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="q" value="@(ViewData["q"] ?? "")"
+                       class="clients-search-input"
+                       placeholder="NIT, nombre o correo del cliente..." />
+            </div>
+            <div class="col-auto">
+                <input type="hidden" name="pageActivos" value="1" />
+                <input type="hidden" name="pageInactivos" value="1" />
+                <button class="btn btn-clients-search" type="submit">
+                    <i class="bi bi-search"></i><span>Buscar</span>
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- CLIENTES ACTIVOS -->
-    <div class="clientes-card mb-4">
-        <div class="clientes-card-header d-flex align-items-center">
-            <i class="bi bi-person-check fs-5 me-2 text-success"></i>
-            <h5 class="mb-0 me-2 text-white">Clientes Activos</h5>
-            <span class="badge clientes-badge">@totalActivos</span>
+    <div class="clients-card">
+        <div class="clients-card-header active">
+            <i class="bi bi-person-check fs-5"></i>
+            <h5>Clientes Activos</h5>
+            <span class="clients-header-badge"><i class="bi bi-people"></i>@totalActivos</span>
         </div>
-
         <div class="card-body p-0">
             @if (!activos.Any())
             {
-                <div class="empty-state">
-                    <i class="bi bi-people"></i>
-                    <h5 class="mb-1">No hay clientes activos registrados</h5>
-                    <p class="mb-0">Agrega nuevos clientes para comenzar a registrar ventas.</p>
+                <div class="text-center py-4" style="color:var(--clients-muted);">
+                    <i class="bi bi-people" style="font-size:2.2rem;color:var(--clients-secondary);opacity:.5;"></i>
+                    <p class="mb-0">No hay clientes activos registrados.</p>
                 </div>
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table clientes-table mb-0 align-middle clientes-table-activos">
+                <div class="clients-table-wrap">
+                    <table class="clients-table">
                         <thead>
                             <tr>
                                 <th class="ps-3">NIT</th>
@@ -169,55 +355,43 @@
                             @foreach (var c in activos)
                             {
                                 <tr>
-                                    <td class="ps-3 fw-semibold">
-                                        <span class="badge clientes-badge-soft">@c.Nit</span>
+                                    <td class="ps-3">
+                                        <span class="client-id">#@c.Nit</span>
                                     </td>
                                     <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-person-circle text-accent"></i>
-                                            <span class="text-white">
-                                                @c.Nombres @c.Apellidos
-                                            </span>
+                                        <div class="client-name">
+                                            <i class="bi bi-person-circle"></i>
+                                            <span>@c.Nombres @c.Apellidos</span>
                                         </div>
                                     </td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(c.Correo))
                                         {
-                                            <div class="d-flex align-items-center gap-2">
-                                                <i class="bi bi-envelope text-muted"></i>
-                                                <a href="mailto:@c.Correo" class="clientes-link">@c.Correo</a>
-                                            </div>
+                                            <span class="client-email">@c.Correo</span>
                                         }
                                         else
                                         {
-                                            <span class="text-muted-small">-</span>
+                                            <span class="client-email">-</span>
                                         }
                                     </td>
-                                    <td>
-                                        @(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)
-                                    </td>
+                                    <td>@(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)</td>
 
                                     @if (isAuth && isAdmin)
                                     {
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-1">
+                                            <div class="clients-actions">
                                                 <!-- Editar -->
-                                                <a asp-action="Edit"
-                                                   asp-route-id="@c.IdCliente"
-                                                   class="btn btn-outline-warning btn-sm rounded-circle clientes-action-btn"
-                                                   title="Editar cliente">
+                                                <a asp-action="Edit" asp-route-id="@c.IdCliente"
+                                                   class="clients-action-btn clients-edit" title="Editar cliente">
                                                     <i class="bi bi-pencil-square"></i>
                                                 </a>
-
                                                 <!-- Desactivar (confirm personalizado) -->
-                                                <form asp-action="ToggleActivo"
-                                                      asp-route-id="@c.IdCliente"
-                                                      method="post"
+                                                <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post"
                                                       class="d-inline clientes-confirm-form"
                                                       data-mensaje="¿Desactivar a @c.Nombres @c.Apellidos?">
                                                     @Html.AntiForgeryToken()
                                                     <button type="button"
-                                                            class="btn btn-outline-danger btn-sm rounded-circle clientes-action-btn clientes-confirm-trigger"
+                                                            class="clients-action-btn clients-disable clientes-confirm-trigger"
                                                             title="Desactivar cliente">
                                                         <i class="bi bi-person-dash"></i>
                                                     </button>
@@ -231,35 +405,26 @@
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN ACTIVOS -->
                 @if (totalPagesActivos > 1)
                 {
-                    <div class="clientes-pagination-bar">
-                        <div class="text-muted-small">
+                    <div class="clients-pagination-bar">
+                        <div>
                             Página @pageActivos de @totalPagesActivos •
                             Mostrando @activos.Count() de @totalActivos clientes
                         </div>
-                        <ul class="pagination pagination-sm mb-0 clientes-pagination">
+                        <ul class="pagination clients-pagination mb-0">
                             @if (pageActivos > 1)
                             {
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="@Url.Action("Index", new {
-                                            q = ViewData["q"],
-                                            pageActivos = pageActivos - 1,
-                                            pageInactivos = pageInactivos,
-                                            pageSize = pageSize
-                                       })">
+                                    <a class="page-link" href="@Url.Action("Index", new {
+                                            q = ViewData["q"], pageActivos = pageActivos - 1,
+                                            pageInactivos = pageInactivos, pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
                             }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                </li>
-                            }
+                            else { <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li> }
 
                             @{
                                 int startPage = Math.Max(1, pageActivos - 2);
@@ -268,51 +433,32 @@
                                 if (startPage > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = 1,
-                                                pageInactivos = pageInactivos,
-                                                pageSize = pageSize
-                                           })">1</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = 1,
+                                                pageInactivos = pageInactivos, pageSize = pageSize
+                                            })">1</a>
                                     </li>
-                                    if (startPage > 2)
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    }
+                                    if (startPage > 2){ <li class="page-item disabled"><span class="page-link">...</span></li>; }
                                 }
 
                                 for (int i = startPage; i <= endPage; i++)
                                 {
                                     <li class="page-item @(i == pageActivos ? "active" : "")">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = i,
-                                                pageInactivos = pageInactivos,
-                                                pageSize = pageSize
-                                           })">@i</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = i,
+                                                pageInactivos = pageInactivos, pageSize = pageSize
+                                            })">@i</a>
                                     </li>
                                 }
 
                                 if (endPage < totalPagesActivos)
                                 {
-                                    if (endPage < totalPagesActivos - 1)
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    }
+                                    if (endPage < totalPagesActivos - 1){ <li class="page-item disabled"><span class="page-link">...</span></li>; }
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = totalPagesActivos,
-                                                pageInactivos = pageInactivos,
-                                                pageSize = pageSize
-                                           })">@totalPagesActivos</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = totalPagesActivos,
+                                                pageInactivos = pageInactivos, pageSize = pageSize
+                                            })">@totalPagesActivos</a>
                                     </li>
                                 }
                             }
@@ -320,23 +466,15 @@
                             @if (pageActivos < totalPagesActivos)
                             {
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="@Url.Action("Index", new {
-                                            q = ViewData["q"],
-                                            pageActivos = pageActivos + 1,
-                                            pageInactivos = pageInactivos,
-                                            pageSize = pageSize
-                                       })">
+                                    <a class="page-link" href="@Url.Action("Index", new {
+                                            q = ViewData["q"], pageActivos = pageActivos + 1,
+                                            pageInactivos = pageInactivos, pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
                             }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                </li>
-                            }
+                            else { <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li> }
                         </ul>
                     </div>
                 }
@@ -347,16 +485,15 @@
     <!-- CLIENTES INACTIVOS -->
     @if (totalInactivos > 0 && isAuth && isAdmin)
     {
-        <div class="clientes-card">
-            <div class="clientes-card-header-secondary d-flex align-items-center">
-                <i class="bi bi-person-x fs-5 me-2 text-warning"></i>
-                <h5 class="mb-0 me-2 text-white">Clientes Inactivos</h5>
-                <span class="badge clientes-badge">@totalInactivos</span>
+        <div class="clients-card">
+            <div class="clients-card-header inactive">
+                <i class="bi bi-person-x fs-5"></i>
+                <h5>Clientes Inactivos</h5>
+                <span class="clients-header-badge"><i class="bi bi-archive"></i>@totalInactivos</span>
             </div>
-
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table clientes-table mb-0 align-middle clientes-table-inactivos">
+                <div class="clients-table-wrap">
+                    <table class="clients-table">
                         <thead>
                             <tr>
                                 <th class="ps-3">NIT</th>
@@ -369,44 +506,24 @@
                         <tbody>
                             @foreach (var c in inactivos)
                             {
-                                <tr>
-                                    <td class="ps-3 fw-semibold">
-                                        <span class="badge clientes-badge-muted">@c.Nit</span>
-                                    </td>
+                                <tr class="text-muted">
+                                    <td class="ps-3"><span class="client-id">#@c.Nit</span></td>
                                     <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="bi bi-person-circle text-muted"></i>
-                                            <span class="text-muted-small">
-                                                @c.Nombres @c.Apellidos
-                                            </span>
+                                        <div class="client-name" style="color:var(--clients-muted);">
+                                            <i class="bi bi-person-circle" style="color:#9ca3af;"></i>
+                                            <span>@c.Nombres @c.Apellidos</span>
                                         </div>
                                     </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(c.Correo))
-                                        {
-                                            <div class="d-flex align-items-center gap-2">
-                                                <i class="bi bi-envelope text-muted"></i>
-                                                <span class="text-muted-small">@c.Correo</span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted-small">-</span>
-                                        }
-                                    </td>
-                                    <td class="text-muted-small">
-                                        @(string.IsNullOrEmpty(c.Direccion) ? "-" : c.Direccion)
-                                    </td>
+                                    <td><span class="client-email">@(!string.IsNullOrEmpty(c.Correo) ? c.Correo : "-")</span></td>
+                                    <td class="client-email">@((string.IsNullOrEmpty(c.Direccion)) ? "-" : c.Direccion)</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <form asp-action="ToggleActivo"
-                                                  asp-route-id="@c.IdCliente"
-                                                  method="post"
+                                        <div class="clients-actions">
+                                            <form asp-action="ToggleActivo" asp-route-id="@c.IdCliente" method="post"
                                                   class="d-inline clientes-confirm-form"
                                                   data-mensaje="¿Activar a @c.Nombres @c.Apellidos?">
                                                 @Html.AntiForgeryToken()
                                                 <button type="button"
-                                                        class="btn btn-outline-success btn-sm rounded-circle clientes-action-btn clientes-confirm-trigger"
+                                                        class="clients-action-btn clients-enable clientes-confirm-trigger"
                                                         title="Activar cliente">
                                                     <i class="bi bi-person-check"></i>
                                                 </button>
@@ -419,88 +536,57 @@
                     </table>
                 </div>
 
-                <!-- PAGINACIÓN INACTIVOS -->
                 @if (totalPagesInactivos > 1)
                 {
-                    <div class="clientes-pagination-bar">
-                        <div class="text-muted-small">
-                            Página @pageInactivos de @totalPagesInactivos •
-                            Mostrando @inactivos.Count() de @totalInactivos clientes
-                        </div>
-                        <ul class="pagination pagination-sm mb-0 clientes-pagination">
+                    <div class="clients-pagination-bar">
+                        <div>Página @pageInactivos de @totalPagesInactivos • Mostrando @inactivos.Count() de @totalInactivos clientes</div>
+                        <ul class="pagination clients-pagination mb-0">
                             @if (pageInactivos > 1)
                             {
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="@Url.Action("Index", new {
-                                            q = ViewData["q"],
-                                            pageActivos = pageActivos,
-                                            pageInactivos = pageInactivos - 1,
-                                            pageSize = pageSize
-                                       })">
+                                    <a class="page-link" href="@Url.Action("Index", new {
+                                            q = ViewData["q"], pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos - 1, pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
                             }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                </li>
-                            }
+                            else { <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li> }
 
                             @{
-                                int startPageInactivos = Math.Max(1, pageInactivos - 2);
-                                int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
+                                int startPageI = Math.Max(1, pageInactivos - 2);
+                                int endPageI = Math.Min(totalPagesInactivos, pageInactivos + 2);
 
-                                if (startPageInactivos > 1)
+                                if (startPageI > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = pageActivos,
-                                                pageInactivos = 1,
-                                                pageSize = pageSize
-                                           })">1</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = pageActivos,
+                                                pageInactivos = 1, pageSize = pageSize
+                                            })">1</a>
                                     </li>
-                                    if (startPageInactivos > 2)
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    }
+                                    if (startPageI > 2){ <li class="page-item disabled"><span class="page-link">...</span></li>; }
                                 }
 
-                                for (int i = startPageInactivos; i <= endPageInactivos; i++)
+                                for (int i = startPageI; i <= endPageI; i++)
                                 {
                                     <li class="page-item @(i == pageInactivos ? "active" : "")">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = pageActivos,
-                                                pageInactivos = i,
-                                                pageSize = pageSize
-                                           })">@i</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = pageActivos,
+                                                pageInactivos = i, pageSize = pageSize
+                                            })">@i</a>
                                     </li>
                                 }
 
-                                if (endPageInactivos < totalPagesInactivos)
+                                if (endPageI < totalPagesInactivos)
                                 {
-                                    if (endPageInactivos < totalPagesInactivos - 1)
-                                    {
-                                        <li class="page-item disabled">
-                                            <span class="page-link">...</span>
-                                        </li>
-                                    }
+                                    if (endPageI < totalPagesInactivos - 1){ <li class="page-item disabled"><span class="page-link">...</span></li>; }
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                                q = ViewData["q"],
-                                                pageActivos = pageActivos,
-                                                pageInactivos = totalPagesInactivos,
-                                                pageSize = pageSize
-                                           })">@totalPagesInactivos</a>
+                                        <a class="page-link" href="@Url.Action("Index", new {
+                                                q = ViewData["q"], pageActivos = pageActivos,
+                                                pageInactivos = totalPagesInactivos, pageSize = pageSize
+                                            })">@totalPagesInactivos</a>
                                     </li>
                                 }
                             }
@@ -508,23 +594,15 @@
                             @if (pageInactivos < totalPagesInactivos)
                             {
                                 <li class="page-item">
-                                    <a class="page-link"
-                                       href="@Url.Action("Index", new {
-                                            q = ViewData["q"],
-                                            pageActivos = pageActivos,
-                                            pageInactivos = pageInactivos + 1,
-                                            pageSize = pageSize
-                                       })">
+                                    <a class="page-link" href="@Url.Action("Index", new {
+                                            q = ViewData["q"], pageActivos = pageActivos,
+                                            pageInactivos = pageInactivos + 1, pageSize = pageSize
+                                        })">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
                             }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                </li>
-                            }
+                            else { <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li> }
                         </ul>
                     </div>
                 }
@@ -533,387 +611,25 @@
     }
 </div>
 
-<!-- MODAL CONFIRM CUSTOM -->
+<!-- CONFIRM PERSONALIZADO (se mantiene funcionalidad) -->
 <div id="clientesConfirm" class="clientes-confirm d-none">
     <div class="clientes-confirm-box">
-        <h6 class="mb-2 text-white">
+        <h6 class="mb-2">
             <i class="bi bi-question-circle me-1"></i> Confirmar acción
         </h6>
-        <p id="clientesConfirmMessage" class="mb-3 text-muted-small"></p>
+        <p id="clientesConfirmMessage" class="mb-3" style="color:var(--clients-muted)"></p>
         <div class="d-flex justify-content-end gap-2">
-            <button type="button"
-                    class="btn btn-sm clientes-btn-soft"
-                    id="clientesConfirmCancel">Cancelar</button>
-            <button type="button"
-                    class="btn btn-sm btn-clientes-primary clientes-btn-pill"
-                    id="clientesConfirmOk">Confirmar</button>
+            <button type="button" class="btn btn-sm" id="clientesConfirmCancel"
+                    style="border-radius:999px;border:1px solid var(--clients-border-soft);color:var(--clients-muted);background:#fff;">
+                Cancelar
+            </button>
+            <button type="button" class="btn btn-sm" id="clientesConfirmOk"
+                    style="border-radius:999px;background:var(--clients-secondary);color:#020814;border:none;">
+                Confirmar
+            </button>
         </div>
     </div>
 </div>
-
-<style>
-    :root {
-        --primary-blue: #1C1973;
-        --secondary-blue: #514BF2;
-        --accent-blue: #8B88F2;
-        --dark-bg: #0D0E26;
-        --alt-bg: #081C59;
-        --light-text: #F0F0F7;
-        --muted-text: #A4A5D4;
-        --radius: 0.75rem;
-    }
-
-    .clientes-theme {
-        min-height: 100vh;
-        background:
-            radial-gradient(circle at top left, rgba(81,75,242,0.14), transparent),
-            radial-gradient(circle at top right, rgba(139,136,242,0.08), transparent),
-            linear-gradient(180deg, #0D0E26, #040611);
-        color: var(--light-text);
-    }
-
-    .clientes-header {
-        background: linear-gradient(135deg, var(--alt-bg), var(--primary-blue));
-        border-radius: var(--radius);
-        padding: 1.5rem 1.75rem;
-        border: 1px solid rgba(139,136,242,0.35);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.55);
-    }
-
-    .clientes-header-subtitle {
-        color: var(--muted-text);
-        font-size: 0.85rem;
-    }
-
-    .clientes-icon-wrapper {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 30% 0, var(--accent-blue), var(--primary-blue));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        box-shadow: 0 5px 16px rgba(0,0,0,0.55);
-        font-size: 1.4rem;
-    }
-
-    .clientes-card {
-        background: rgba(8, 28, 89, 0.97);
-        border-radius: var(--radius);
-        border: 1px solid rgba(81,75,242,0.24);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.6);
-        backdrop-filter: blur(4px);
-        overflow: hidden;
-    }
-
-    .clientes-card-header {
-        background: linear-gradient(90deg, rgba(28,25,115,0.98), rgba(81,75,242,0.92));
-        padding: 0.75rem 1.25rem;
-        border-bottom: 1px solid rgba(139,136,242,0.35);
-    }
-
-    .clientes-card-header-secondary {
-        background: linear-gradient(90deg, rgba(24,24,48,0.98), rgba(8,28,89,0.98));
-        padding: 0.75rem 1.25rem;
-        border-bottom: 1px solid rgba(139,136,242,0.25);
-    }
-
-    .clientes-badge,
-    .clientes-badge-soft,
-    .clientes-badge-muted {
-        border-radius: 999px;
-        font-size: 0.72rem;
-        padding: 0.18rem 0.6rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.15rem;
-    }
-
-    .clientes-badge {
-        background-color: #F0F0F7;
-        color: var(--primary-blue);
-        font-weight: 600;
-    }
-
-    .clientes-badge-soft {
-        background-color: rgba(81,75,242,0.18);
-        color: var(--accent-blue);
-    }
-
-    .clientes-badge-muted {
-        background-color: rgba(255,255,255,0.06);
-        color: var(--muted-text);
-    }
-
-    .text-muted-small {
-        color: var(--muted-text);
-        font-size: 0.8rem;
-    }
-
-    /* Tablas (override completo para evitar fondo blanco) */
-    .clientes-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background-color: transparent !important;
-        color: var(--light-text);
-    }
-
-    .clientes-table thead {
-        background-color: #050A23;
-    }
-
-    .clientes-table thead th {
-        color: var(--muted-text);
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        border-bottom: 1px solid rgba(139,136,242,0.35) !important;
-        padding-top: 0.6rem;
-        padding-bottom: 0.45rem;
-        background-color: transparent;
-    }
-
-    .clientes-table tbody tr {
-        background-color: #090F2D !important;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        transition: all 0.2s ease;
-    }
-
-    .clientes-table tbody tr:nth-child(even) {
-        background-color: #060A22 !important;
-    }
-
-    .clientes-table-activos tbody tr:hover {
-        background:
-            radial-gradient(circle at 0 0, rgba(81,75,242,0.25), transparent),
-            #050918;
-        transform: translateY(-1px);
-    }
-
-    .clientes-table-inactivos tbody tr {
-        opacity: 0.9;
-    }
-
-    .clientes-table-inactivos tbody tr:hover {
-        background:
-            radial-gradient(circle at 0 0, rgba(255,193,7,0.18), transparent),
-            #050918;
-        transform: translateY(-1px);
-    }
-
-    .clientes-table td {
-        color: var(--light-text);
-        vertical-align: middle;
-        font-size: 0.86rem;
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-        background-color: transparent;
-    }
-
-    .clientes-link {
-        color: var(--accent-blue);
-        text-decoration: none;
-        font-size: 0.82rem;
-    }
-
-    .clientes-link:hover {
-        color: #ffffff;
-        text-decoration: underline;
-    }
-
-    /* Botones */
-    .btn-clientes-primary {
-        background: var(--secondary-blue);
-        color: #fff;
-        border: none;
-        border-radius: var(--radius);
-        padding: 0.55rem 1.3rem;
-        font-weight: 600;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.45);
-        transition: all 0.25s ease;
-    }
-
-    .btn-clientes-primary:hover {
-        background: var(--primary-blue);
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-        color: #fff;
-    }
-
-    .btn-outline-clientes {
-        border-radius: var(--radius);
-        border: 1px solid rgba(139,136,242,0.6);
-        color: var(--accent-blue);
-        padding: 0.55rem 1.2rem;
-        font-weight: 500;
-        background-color: transparent;
-        transition: all 0.25s ease;
-    }
-
-    .btn-outline-clientes:hover {
-        background-color: rgba(139,136,242,0.16);
-        color: #fff;
-    }
-
-    .clientes-btn-pill {
-        border-radius: 999px;
-    }
-
-    .clientes-btn-soft {
-        border-radius: 999px;
-        border: 1px solid rgba(240,240,247,0.35);
-        color: var(--light-text);
-        background-color: transparent;
-        padding-inline: 0.9rem;
-    }
-
-    .clientes-btn-soft:hover {
-        background-color: rgba(240,240,247,0.08);
-    }
-
-    .clientes-action-btn {
-        width: 26px;
-        height: 26px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border-width: 1px;
-        font-size: 0.75rem;
-    }
-
-    .clientes-input-addon {
-        background: #050A23;
-        border: 1px solid rgba(81,75,242,0.5);
-        color: var(--accent-blue);
-    }
-
-    .clientes-input {
-        background: #030618;
-        border: 1px solid rgba(81,75,242,0.5);
-        color: var(--light-text);
-        font-size: 0.85rem;
-    }
-
-    .clientes-input::placeholder {
-        color: var(--muted-text);
-    }
-
-    .clientes-input:focus {
-        box-shadow: 0 0 0 0.15rem rgba(81,75,242,0.35);
-        border-color: var(--secondary-blue);
-        background-color: #030618;
-    }
-
-    /* Alertas */
-    .alert-smart {
-        border-radius: var(--radius);
-        border-left: 4px solid var(--accent-blue);
-        background: radial-gradient(circle at 0 0,
-                    rgba(81,75,242,0.18),
-                    rgba(3,6,24,0.98));
-        color: var(--light-text);
-        font-size: 0.83rem;
-        margin-bottom: 1rem;
-    }
-
-    .alert-success.alert-smart { border-left-color: #2ECC71; }
-    .alert-danger.alert-smart { border-left-color: #FF6B6B; }
-    .alert-warning.alert-smart { border-left-color: #FFC107; }
-
-    /* Paginación */
-    .clientes-pagination-bar {
-        padding: 0.6rem 1rem;
-        border-top: 1px solid rgba(139,136,242,0.22);
-        background: #020410;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-    }
-
-    .clientes-pagination .page-link {
-        background-color: transparent;
-        border-radius: 999px !important;
-        border: 1px solid rgba(139,136,242,0.35);
-        color: var(--muted-text);
-        padding: 0.15rem 0.55rem;
-        font-size: 0.72rem;
-        transition: all 0.2s ease;
-    }
-
-    .clientes-pagination .page-item.active .page-link {
-        background-color: var(--secondary-blue);
-        color: #fff;
-        border-color: var(--secondary-blue);
-    }
-
-    .clientes-pagination .page-link:hover {
-        background-color: rgba(81,75,242,0.24);
-        color: #fff;
-    }
-
-    .clientes-pagination .page-item.disabled .page-link {
-        opacity: 0.35;
-        border-color: rgba(139,136,242,0.16);
-    }
-
-    /* Estado vacío */
-    .empty-state {
-        text-align: center;
-        padding: 2.5rem 1.5rem;
-        color: var(--muted-text);
-    }
-
-    .empty-state i {
-        font-size: 2.4rem;
-        margin-bottom: 0.5rem;
-        color: var(--accent-blue);
-        opacity: 0.9;
-    }
-
-    /* Confirm personalizado */
-    .clientes-confirm {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-
-    .clientes-confirm-box {
-        background: rgba(5, 10, 35, 0.98);
-        border-radius: var(--radius);
-        padding: 1rem 1.25rem;
-        border: 1px solid rgba(81,75,242,0.6);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.7);
-        max-width: 320px;
-        width: 100%;
-    }
-
-    .clientes-confirm.d-none {
-        display: none !important;
-    }
-
-    .text-accent {
-        color: var(--accent-blue);
-    }
-
-    @@media (max-width: 768px) {
-        .clientes-pagination-bar {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .clientes-header {
-            padding: 1.1rem 1.1rem;
-        }
-    }
-</style>
 
 @section Scripts {
     <script>
@@ -921,16 +637,14 @@
             // Auto-ocultar alertas
             document.querySelectorAll('.alert-smart').forEach(alert => {
                 const bsAlert = new bootstrap.Alert(alert);
-                setTimeout(() => {
-                    if (alert.parentNode) bsAlert.close();
-                }, 5000);
+                setTimeout(() => { if (alert.parentNode) bsAlert.close(); }, 5000);
             });
 
             // Focus en búsqueda
             const input = document.querySelector('input[name="q"]');
             if (input) input.focus();
 
-            // Confirm personalizado
+            // Confirm personalizado (se mantiene)
             const overlay = document.getElementById('clientesConfirm');
             const msgEl = document.getElementById('clientesConfirmMessage');
             const btnCancel = document.getElementById('clientesConfirmCancel');
@@ -941,7 +655,6 @@
                 btn.addEventListener('click', function () {
                     const form = this.closest('.clientes-confirm-form');
                     if (!form) return;
-
                     formToSubmit = form;
                     const mensaje = form.getAttribute('data-mensaje') || '¿Confirmar la acción seleccionada?';
                     msgEl.textContent = mensaje;
@@ -955,14 +668,11 @@
             });
 
             btnOk.addEventListener('click', function () {
-                if (formToSubmit) {
-                    formToSubmit.submit();
-                }
+                if (formToSubmit) { formToSubmit.submit(); }
                 overlay.classList.add('d-none');
                 formToSubmit = null;
             });
 
-            // Cerrar al hacer clic fuera
             overlay.addEventListener('click', function (e) {
                 if (e.target === overlay) {
                     overlay.classList.add('d-none');

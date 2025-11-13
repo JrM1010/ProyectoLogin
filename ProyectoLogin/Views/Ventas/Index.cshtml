@@ -226,6 +226,21 @@
 </div>
 
 <style>
+    :root {
+        /* Paleta sincronizada con el panel de Ventas (primary Bootstrap) */
+        --venta-primary: #0d6efd;
+        --venta-primary-600: #0b5ed7;
+        --venta-surface: #ffffff;
+        --venta-surface-soft: #f8faff;
+        --venta-border: #e5e7eb;
+        --venta-text: #1f2937;
+        --venta-muted: #6b7280;
+        --venta-success: #198754;
+        --venta-danger: #dc3545;
+        --venta-warning: #ffc107;
+        --venta-info: #0dcaf0;
+    }
+
     /* Mantengo la estética base que ya tenías aquí */
     body {
         background-color: #f8f9fa;
@@ -269,7 +284,7 @@
         overflow-y: auto;
         margin-top: 2px;
         border-radius: 0.5rem;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
     }
 
         .suggestions-box button {
@@ -310,13 +325,13 @@
 
         .unidad-option:hover {
             background-color: #eef3ff;
-            border-color: #514BF2;
+            border-color: var(--venta-primary);
         }
 
         .unidad-option.selected {
-            background-color: #514BF2;
+            background-color: var(--venta-primary);
             color: #fff;
-            border-color: #514BF2;
+            border-color: var(--venta-primary);
         }
 
     .precio-unidad {
@@ -324,7 +339,7 @@
         color: #28a745;
     }
 
-    /* ALERTAS ESTÉTICAS SIN GRADIENTE */
+    /* === ALERTAS (claras y con acento por tipo) === */
     #centroAlertas {
         position: fixed;
         right: 1.75rem;
@@ -344,17 +359,17 @@
         display: flex;
         align-items: flex-start;
         gap: 0.5rem;
-        background-color: #0D0E26; /* Fondo sólido */
-        color: #F0F0F7;
-        border: 1px solid rgba(139, 136, 242, 0.28);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        background-color: var(--venta-surface);
+        color: var(--venta-text);
+        border: 1px solid var(--venta-border);
+        box-shadow: 0 6px 18px rgba(13,110,253,0.12);
         transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
         cursor: pointer;
     }
 
         .venta-alert:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 26px rgba(13,110,253,0.18);
         }
 
         .venta-alert i {
@@ -363,78 +378,100 @@
         }
 
     .venta-alert-success {
-        border-left: 4px solid #23d19c;
+        border-left: 4px solid var(--venta-success);
     }
 
     .venta-alert-danger {
-        border-left: 4px solid #ff6b6b;
+        border-left: 4px solid var(--venta-danger);
     }
 
     .venta-alert-warning {
-        border-left: 4px solid #f6c23e;
+        border-left: 4px solid var(--venta-warning);
     }
 
     .venta-alert-info {
-        border-left: 4px solid #8B88F2;
+        border-left: 4px solid var(--venta-primary);
     }
 
-    /* MODALES: buen contraste con el layout */
+    .venta-alert-success i {
+        color: var(--venta-success);
+    }
+
+    .venta-alert-danger i {
+        color: var(--venta-danger);
+    }
+
+    .venta-alert-warning i {
+        color: #b08900;
+    }
+
+    .venta-alert-info i {
+        color: var(--venta-primary);
+    }
+
+    /* === MODALES (superficie clara, header con gradiente primary) === */
     .venta-modal,
     .venta-modal-unidad {
         border-radius: 0.9rem;
-        border: 1px solid rgba(139, 136, 242, 0.35);
-        background-color: #0D0E26;
-        color: #F0F0F7;
+        border: 1px solid var(--venta-border);
+        background-color: var(--venta-surface);
+        color: var(--venta-text);
+        box-shadow: 0 16px 40px rgba(13,110,253,0.12);
     }
 
         .venta-modal .modal-header,
         .venta-modal-unidad .modal-header {
-            border-bottom-color: rgba(139, 136, 242, 0.2);
+            background: linear-gradient(90deg, var(--venta-primary), var(--venta-primary-600)) !important;
+            color: #fff !important;
+            border-bottom: 0;
         }
 
         .venta-modal .modal-footer {
-            border-top-color: rgba(139, 136, 242, 0.15);
+            border-top: 1px solid var(--venta-border);
         }
 
+        /* Controles de formulario claros dentro de los modales */
         .venta-modal .form-control,
-        .venta-modal .form-select {
-            background-color: #11133F;
-            color: #F0F0F7;
-            border-color: rgba(139, 136, 242, 0.5);
+        .venta-modal .form-select,
+        .venta-modal-unidad .form-control,
+        .venta-modal-unidad .form-select {
+            background-color: #fff;
+            color: var(--venta-text);
+            border: 1px solid #ced4da;
         }
 
-            .venta-modal .form-control::placeholder {
-                color: #9ba4c4;
+            .venta-modal .form-control::placeholder,
+            .venta-modal-unidad .form-control::placeholder {
+                color: #9aa3ae;
             }
 
-        .venta-modal label,
-        .venta-modal h5,
-        .venta-modal p,
-        .venta-modal small {
-            color: #F0F0F7;
+            .venta-modal .form-control:focus,
+            .venta-modal .form-select:focus,
+            .venta-modal-unidad .form-control:focus,
+            .venta-modal-unidad .form-select:focus {
+                border-color: var(--venta-primary);
+                box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+            }
+
+        .venta-modal .text-muted,
+        .venta-modal-unidad .text-muted {
+            color: #6c757d !important;
         }
 
-        .venta-modal .text-muted {
-            color: #9ba4c4 !important;
-        }
-
-        .venta-modal-unidad .modal-body {
-            color: #F0F0F7;
-        }
-
+        /* Opciones de unidad coherentes con superficie clara */
         .venta-modal-unidad .unidad-option {
-            background-color: #11133F;
-            border-color: rgba(139, 136, 242, 0.45);
-            color: #F0F0F7;
+            background-color: var(--venta-surface-soft);
+            border-color: var(--venta-border);
+            color: var(--venta-text);
         }
 
             .venta-modal-unidad .unidad-option:hover {
-                background-color: #1E2546;
-                border-color: #514BF2;
+                background-color: #eef3ff;
+                border-color: var(--venta-primary);
             }
 
         .venta-modal-unidad .precio-unidad {
-            color: #23d19c;
+            color: var(--venta-success);
         }
 </style>
 
@@ -489,9 +526,7 @@
 
         function parseFactorUnidad(unidad) {
             let raw = unidad?.FactorConversion ?? unidad?.factorConversion ?? unidad?.factor ?? unidad?.Factor ?? unidad?.factor_default ?? unidad?.FactorDefault ?? unidad?.cantidadPorPresentacion;
-            if (raw === undefined || raw === null) {
-                return 1;
-            }
+            if (raw === undefined || raw === null) { return 1; }
             if (typeof raw === 'string') raw = raw.replace(',', '.').trim();
             const n = parseFloat(raw);
             if (!isFinite(n) || n <= 0) return 1;
@@ -630,16 +665,12 @@
             });
         }
 
-        function formatearMonedaGuatemala(monto) {
-            return `Q${formatearNumeroGuatemala(monto)}`;
-        }
+        function formatearMonedaGuatemala(monto) { return `Q${formatearNumeroGuatemala(monto)}`; }
 
         function limpiarFormatoMoneda(valor) {
             if (!valor) return 0;
             return parseFloat(
-                valor.toString()
-                    .replace(/[Q,\s]/g, '')
-                    .replace(/[^\d.-]/g, '')
+                valor.toString().replace(/[Q,\s]/g, '').replace(/[^\d.-]/g, '')
             ) || 0;
         }
 
@@ -679,11 +710,7 @@
                         <div>
                             <strong>${p.text}</strong> ${esKit ? '<span class="badge bg-info text-dark ms-2">KIT</span>' : ""}
                             <br>
-                            ${
-                                !esKit
-                                    ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>`
-                                    : '<small class="text-primary">Promoción especial</small>'
-                            }
+                            ${!esKit ? `<small class="${colorStock}">${estado} — Stock: ${stock}</small>` : '<small class="text-primary">Promoción especial</small>'}
                         </div>
                         <span>${precioTexto}</span>
                     </div>`;
@@ -717,18 +744,11 @@
                     existente.cantidad++;
                 } else {
                     productosSeleccionados.push({
-                        idKit: prod.id,
-                        id: null,
-                        nombre: prod.text,
-                        precio: parseFloat(prod.precio),
-                        cantidad: 1,
-                        descuento: 0,
-                        stock: 9999,
-                        esKit: true
+                        idKit: prod.id, id: null, nombre: prod.text, precio: parseFloat(prod.precio),
+                        cantidad: 1, descuento: 0, stock: 9999, esKit: true
                     });
                 }
                 mostrarMensaje(`✅ Kit "${prod.text}" añadido a la venta.`, "success");
-
             } else {
                 const stockBase = prod.stock ?? 0;
                 if (stockBase <= 0) {
@@ -766,17 +786,9 @@
                     }
 
                     productosSeleccionados.push({
-                        id: prod.id,
-                        nombre: prod.text,
-                        precio: parseFloat(defaultPrecio) || 0,
-                        cantidad: 1,
-                        descuento: 0,
-                        stock: stockBase,
-                        stockBase: stockBase,
-                        esKit: false,
-                        unidades: unidades,
-                        idUnidadSeleccionada: defaultIdUnidad,
-                        unidadNombre: defaultUnidad.Nombre || defaultUnidad.nombre || "Unidad",
+                        id: prod.id, nombre: prod.text, precio: parseFloat(defaultPrecio) || 0, cantidad: 1,
+                        descuento: 0, stock: stockBase, stockBase: stockBase, esKit: false, unidades: unidades,
+                        idUnidadSeleccionada: defaultIdUnidad, unidadNombre: defaultUnidad.Nombre || defaultUnidad.nombre || "Unidad",
                         factorConversion: defaultFactor
                     });
                 }
@@ -806,23 +818,14 @@
                         <td><span class="text-muted fst-italic">N/A</span></td>
                         <td>
                             <div class="input-group input-group-sm justify-content-center">
-                                <button class="btn btn-outline-secondary btn-sm"
-                                        onclick="cambiarCantidadProducto(${i}, -1)">-</button>
-                                <input type="number"
-                                       min="1"
-                                       class="form-control text-center"
-                                       style="max-width:60px;"
-                                       value="${p.cantidad}"
-                                       onchange="actualizarCantidadProducto(${i}, this.value)">
-                                <button class="btn btn-outline-secondary btn-sm"
-                                        onclick="cambiarCantidadProducto(${i}, 1)">+</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidadProducto(${i}, -1)">-</button>
+                                <input type="number" min="1" class="form-control text-center" style="max-width:60px;"
+                                       value="${p.cantidad}" onchange="actualizarCantidadProducto(${i}, this.value)">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="cambiarCantidadProducto(${i}, 1)">+</button>
                             </div>
                         </td>
                         <td>
-                            <input type="text"
-                                   class="form-control form-control-sm text-center bg-light"
-                                   value="0%"
-                                   readonly>
+                            <input type="text" class="form-control form-control-sm text-center bg-light" value="0%" readonly>
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(${i})">
@@ -959,8 +962,6 @@
 
             if (!unidadSeleccionada) {
                 restaurarSelectUnidad(index, unidadAnterior);
-
-
                 return;
             }
 
@@ -993,9 +994,7 @@
         function restaurarSelectUnidad(index, valorAnterior) {
             setTimeout(() => {
                 const select = document.querySelector(`.unidadSelect[data-index="${index}"]`);
-                if (select) {
-                    select.value = valorAnterior;
-                }
+                if (select) { select.value = valorAnterior; }
             }, 0);
         }
 
@@ -1183,14 +1182,10 @@
                 try {
                     const nitLimpio = (nitRaw || "").replace(/[^0-9a-zA-Z]/g, "");
                     const resp = await fetch(`/Ventas/BuscarClientePorNit?nit=${encodeURIComponent(nitLimpio)}`);
-                    if (!resp.ok) {
-                        return { encontrado: false };
-                    }
+                    if (!resp.ok) { return { encontrado: false }; }
                     const data = await resp.json();
                     return data || { encontrado: false };
-                } catch (err) {
-                    return { encontrado: false };
-                }
+                } catch (err) { return { encontrado: false }; }
             }
 
             if (opcionNit?.checked) {
@@ -1297,15 +1292,10 @@
         ["#montoRecibido", "#montoTarjeta", "#montoTransferencia", "#montoMixtoEfectivo", "#montoMixtoTarjeta", "#montoMixtoTransferencia"].forEach(selector => {
             document.querySelector(selector)?.addEventListener("input", validarMontoEnTiempoReal);
         });
-
         document.getElementById("metodoPago")?.addEventListener("change", validarMontoEnTiempoReal);
 
         function limpiarFormularioVenta(limpiarProductos = false) {
-            if (limpiarProductos) {
-                productosSeleccionados = [];
-                renderTabla();
-            }
-
+            if (limpiarProductos) { productosSeleccionados = []; renderTabla(); }
             clienteSeleccionado = null;
 
             const nitInput = document.querySelector("#nitCliente");
@@ -1357,7 +1347,6 @@
         btnCancelar.addEventListener("click", () => {
             productosSeleccionados = [];
             renderTabla();
-
             limpiarFormularioVenta(false);
 
             const busquedaInput = document.querySelector("#busqueda");
@@ -1539,4 +1528,3 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 }
-

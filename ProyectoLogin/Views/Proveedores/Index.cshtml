@@ -14,484 +14,604 @@
     var totalPagesActivos = ViewBag.TotalPagesActivos ?? 1;
     var totalPagesInactivos = ViewBag.TotalPagesInactivos ?? 1;
 
+    // --- Capturar y eliminar TempData para evitar duplicados en Layout/partials ---
+    var msgError = TempData["Error"] as string;
+    var msgSuccess = TempData["Success"] as string;
+    var msgWarning = TempData["Warning"] as string;
+    TempData.Remove("Error");
+    TempData.Remove("Success");
+    TempData.Remove("Warning");
+
     ViewData["Title"] = "Gestión de Proveedores";
 }
 
 <style>
     :root {
-        --prov-primary: #1C1973;
-        --prov-secondary: #514BF2;
-        --prov-accent: #8B88F2;
-        --prov-bg: #0D0E26;
-        --prov-card: #11133F;
-        --prov-card-alt: #15184B;
-        --prov-text: #F0F0F7;
-        --prov-muted: #A4A5D4;
-        --prov-border: #2E2C7A;
-        --prov-radius: 0.9rem;
-        --prov-danger: #FF6B6B;
-        --prov-success: #2ECC71;
-        --prov-warning: #F1C40F;
+        /* Paleta AZUL (igual a Productos) */
+        --sup-primary: #1C1973; /* primario */
+        --sup-secondary: #514BF2; /* secundario */
+        --sup-accent: #8B88F2; /* acento */
+        --sup-bg: #f5f6fa; /* fondo */
+        --sup-card: #FFFFFF;
+        --sup-text: #212529;
+        --sup-radius: 0.75rem;
+        --muted: #6b7280;
+        --border-soft: #e5e7eb;
+        /* Dejo estos igual (estado) */
+        --sup-success: #22C55E;
+        --sup-danger: #E54848;
+        --sup-warning: #F1C40F;
     }
 
+    /* Fondo general */
     .prov-theme {
+        background: var(--sup-bg);
+        padding: 1.5rem 0 2rem;
+        color: var(--sup-text);
         min-height: 100vh;
-        padding: 1.5rem 0 2.5rem;
-        background:
-            radial-gradient(circle at top left, rgba(81, 75, 242, 0.06), transparent),
-            radial-gradient(circle at bottom right, rgba(28, 25, 115, 0.14), transparent),
-            linear-gradient(135deg, var(--prov-bg) 0%, #080A2E 100%);
-        color: var(--prov-text);
     }
 
-    /* HEADER PRINCIPAL */
+    /* HEADER */
     .prov-header-card {
-        background:
-            radial-gradient(circle at top left, rgba(139, 136, 242, 0.16), transparent),
-            linear-gradient(135deg, var(--prov-primary), #3230A0, #15184B);
-        border-radius: var(--prov-radius);
-        padding: 1.4rem 1.6rem;
-        margin-bottom: 1.8rem;
+        background: linear-gradient(90deg,var(--sup-primary),var(--sup-secondary));
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: var(--sup-radius);
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 6px 18px rgba(15,23,42,0.18);
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        border: 1px solid rgba(139, 136, 242, 0.55);
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.85);
+        justify-content: space-between;
+        gap: 1rem;
+        color: #fff;
     }
 
     .prov-header-title {
         display: flex;
-        align-items: flex-start;
-        gap: 0.8rem;
-        color: var(--prov-text);
+        align-items: center;
+        gap: .7rem;
+        color: #fff;
     }
 
     .prov-header-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 18px;
-        background: rgba(0, 0, 0, 0.35);
-        border: 1px solid rgba(139, 136, 242, 0.6);
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(0,0,0,.18);
+        border: 1px solid rgba(255,255,255,.25);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
-        color: var(--prov-accent);
+        font-size: 1.3rem;
+        color: #fff;
     }
 
     .prov-header-title h2 {
         margin: 0;
+        font-size: 1.25rem;
         font-weight: 700;
-        letter-spacing: 0.03em;
-        font-size: 1.4rem;
     }
 
     .prov-header-subtitle {
-        margin: 0.2rem 0 0;
-        font-size: 0.8rem;
-        color: rgba(240, 240, 247, 0.86);
+        color: rgba(249,250,251,.9);
+        font-size: .85rem;
+        margin-top: .15rem;
     }
 
-    .prov-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 0.55rem;
-        flex-wrap: wrap;
-    }
-
+    /* Botones */
     .prov-btn-outline {
-        border-radius: 999px;
-        padding: 0.45rem 1.2rem;
-        font-size: 0.8rem;
-        border: 1px solid rgba(240, 240, 247, 0.45);
-        color: var(--prov-text);
+        border: 1px solid var(--sup-accent);
         background: transparent;
+        color: #fff;
+        border-radius: var(--sup-radius);
+        font-weight: 500;
+        padding: .5rem 1.4rem;
+        font-size: .86rem;
+        transition: all .25s ease;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: .35rem;
         text-decoration: none;
-        transition: all 0.22s ease;
     }
 
-    .prov-btn-outline:hover {
-        background: rgba(8, 10, 40, 0.96);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.9);
-        transform: translateY(-1px);
-        color: var(--prov-accent);
-        border-color: var(--prov-accent);
-    }
+        .prov-btn-outline:hover {
+            background: rgba(139,136,242,.16); /* acento azul suave */
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(15,23,42,.25);
+            transform: translateY(-1px);
+        }
 
     .prov-btn-primary {
-        border-radius: 999px;
-        padding: 0.48rem 1.5rem;
-        font-size: 0.82rem;
-        font-weight: 600;
+        background: #fff;
+        color: var(--sup-primary);
         border: none;
-        background: linear-gradient(135deg, var(--prov-accent), var(--prov-secondary));
-        color: #0D0E26;
+        border-radius: var(--sup-radius);
+        font-weight: 600;
+        padding: .5rem 1.4rem;
+        font-size: .86rem;
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
-        box-shadow: 0 14px 30px rgba(81, 75, 242, 0.55);
-        transition: all 0.22s ease;
+        gap: .35rem;
+        transition: all .25s ease;
         text-decoration: none;
     }
 
-    .prov-btn-primary:hover {
-        background: linear-gradient(135deg, var(--prov-secondary), var(--prov-accent));
-        color: #F0F0F7;
-        transform: translateY(-1px);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.95);
-    }
+        .prov-btn-primary:hover {
+            background: #f9fafb; /* igual productos */
+            color: var(--sup-secondary);
+            box-shadow: 0 4px 12px rgba(15,23,42,.25);
+            transform: translateY(-1px);
+        }
 
-    /* BARRA DE BÚSQUEDA */
+    /* Búsqueda */
     .prov-search-card {
-        background: var(--prov-card);
-        border-radius: var(--prov-radius);
-        border: 1px solid rgba(139, 136, 242, 0.32);
-        margin-bottom: 1.8rem;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.9);
-    }
-
-    .prov-search-card .card-body {
-        padding: 1.1rem 1.4rem;
+        background: var(--sup-card);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--sup-radius);
+        padding: .9rem 1.1rem;
+        margin-bottom: 1.1rem;
+        box-shadow: 0 2px 8px rgba(15,23,42,.04);
     }
 
     .prov-search-label {
-        font-size: 0.8rem;
+        font-size: .8rem;
         font-weight: 600;
-        color: var(--prov-accent);
-        margin-bottom: 0.2rem;
-    }
-
-    .prov-search-input-group {
-        display: flex;
-        align-items: stretch;
+        color: var(--muted);
+        margin-bottom: .25rem;
     }
 
     .prov-input-icon {
-        background: #0A0C30;
-        border: 1px solid rgba(139, 136, 242, 0.6);
-        border-right: none;
-        border-radius: 0.7rem 0 0 0.7rem;
-        display: inline-flex;
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-right: 0;
+        border-radius: .6rem 0 0 .6rem;
+        width: 42px;
+        display: flex;
         align-items: center;
         justify-content: center;
-        width: 42px;
-        color: var(--prov-accent);
-        font-size: 0.9rem;
+        color: var(--sup-primary);
     }
 
     .prov-input-search {
-        background: #050821;
-        border-radius: 0 0.7rem 0.7rem 0;
-        border: 1px solid rgba(139, 136, 242, 0.6);
-        padding: 0.55rem 0.85rem;
-        min-width: 260px;
-        font-size: 0.86rem;
-        color: var(--prov-text);
-        transition: all 0.2s ease;
+        background: #fff;
+        border: 1px solid var(--border-soft);
+        border-left: 0;
+        border-radius: 0 .6rem .6rem 0;
+        padding: .55rem .85rem;
+        font-size: .9rem;
+        color: var(--sup-text);
     }
 
-    .prov-input-search::placeholder {
-        color: rgba(164, 165, 212, 0.75);
+        .prov-input-search::placeholder {
+            color: #9ca3af;
+        }
+
+        .prov-input-search:focus {
+            outline: none;
+            border-color: var(--sup-secondary);
+            box-shadow: 0 0 0 .16rem rgba(81,75,242,.15); /* azul */
+        }
+
+    .prov-btn-search {
+        border-radius: var(--sup-radius);
+        margin-left: .4rem;
+        padding: .5rem 1.3rem;
+        font-size: .86rem;
+        border: 1px solid var(--sup-accent);
+        background: transparent;
+        color: var(--sup-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        transition: all .25s ease;
     }
 
-    .prov-input-search:focus {
-        outline: none;
-        border-color: var(--prov-accent);
-        box-shadow: 0 0 0 0.12rem rgba(139, 136, 242, 0.28);
-        background: #080B30;
+        .prov-btn-search:hover {
+            background: var(--sup-accent);
+            color: #101232; /* azul oscuro legible */
+            box-shadow: 0 4px 10px rgba(15,23,42,.16);
+            transform: translateY(-1px);
+        }
+
+    /* Grupo buscador */
+    .prov-search-inline {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        flex-wrap: wrap;
+    }
+
+    .prov-input-group {
+        display: flex;
+        align-items: stretch;
+        flex: 1 1 380px;
+        min-width: 280px;
+    }
+
+    .prov-input-search {
+        border-right: 0;
+        border-radius: 0;
     }
 
     .prov-btn-search {
-        border-radius: 0.7rem;
-        margin-left: 0.4rem;
-        padding: 0.5rem 1.3rem;
-        font-size: 0.8rem;
-        border: 1px solid var(--prov-accent);
-        background: transparent;
-        color: var(--prov-accent);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        transition: all 0.2s ease;
+        margin-left: 0;
+        border-left: 0;
     }
 
-    .prov-btn-search:hover {
-        background: var(--prov-accent);
-        color: #0D0E26;
-        box-shadow: 0 8px 22px rgba(81, 75, 242, 0.45);
-        transform: translateY(-1px);
-    }
+        .prov-btn-search.prov-join {
+            border-radius: 0 .6rem .6rem 0;
+        }
 
-    /* TARJETAS LISTAS */
+    /* Tarjetas */
     .prov-card {
-        background: var(--prov-card);
-        border-radius: var(--prov-radius);
-        border: 1px solid rgba(139, 136, 242, 0.4);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.95);
-        margin-bottom: 1.6rem;
+        background: var(--sup-card);
+        border: 1px solid var(--border-soft);
+        border-radius: var(--sup-radius);
         overflow: hidden;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 14px rgba(15,23,42,.06);
+        transition: all .22s ease;
     }
+
+        .prov-card:hover {
+            box-shadow: 0 7px 20px rgba(15,23,42,.10);
+            transform: translateY(-1px);
+        }
 
     .prov-card-header {
-        padding: 0.9rem 1.3rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        background: linear-gradient(90deg, #11133F, #15184B);
-    }
-
-    .prov-card-header-left {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: .75rem;
+        padding: .85rem 1.15rem;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        background: linear-gradient(90deg,var(--sup-primary),var(--sup-secondary));
+        color: #fff;
     }
 
     .prov-card-title {
         margin: 0;
-        font-size: 0.98rem;
-        font-weight: 600;
-        color: var(--prov-text);
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
     }
 
     .prov-badge-count {
-        padding: 0.15rem 0.7rem;
+        margin-left: auto;
+        background: rgba(15,23,42,.16);
+        border: 1px solid rgba(226,232,240,.45);
         border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        background: #0D0E26;
-        color: var(--prov-accent);
-        border: 1px solid rgba(139, 136, 242, 0.85);
+        padding: .25rem .8rem;
+        font-size: .78rem;
+        color: #f8fafc;
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
     }
 
     .prov-btn-sort {
         border-radius: 999px;
-        padding: 0.25rem 0.9rem;
-        font-size: 0.72rem;
-        border: 1px solid rgba(164, 165, 212, 0.6);
+        padding: .25rem .9rem;
+        font-size: .72rem;
+        border: 1px solid rgba(255,255,255,.6);
+        color: #fff;
         background: transparent;
-        color: var(--prov-muted);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        transition: all 0.2s ease;
         text-decoration: none;
+        transition: all .22s ease;
     }
 
-    .prov-btn-sort:hover {
-        background: rgba(8, 10, 40, 0.96);
-        color: var(--prov-accent);
-        border-color: var(--prov-accent);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
-    }
+        .prov-btn-sort:hover {
+            background: rgba(255,255,255,.16);
+            color: #fff;
+        }
 
-    /* TABLA */
-    .prov-table-wrap {
-        width: 100%;
-    }
-
+    /* Tabla */
     .prov-table {
         width: 100%;
         margin: 0;
         border-collapse: collapse;
-        font-size: 0.82rem;
-        color: var(--prov-text);
-        table-layout: fixed;
+        font-size: .85rem;
+        color: var(--sup-text);
     }
 
-    .prov-table thead {
-        background: linear-gradient(90deg, #080B30, #11133F);
-    }
+        .prov-table thead th {
+            background: #f3f4ff; /* azul claro como Productos */
+            font-weight: 600;
+            font-size: .78rem;
+            border-bottom: 1px solid var(--border-soft);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            color: #6b7280;
+            padding: .65rem .9rem;
+        }
 
-    .prov-table thead th {
-        padding: 0.7rem 0.9rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        letter-spacing: 0.09em;
-        color: var(--prov-muted);
-        border-bottom: 1px solid rgba(139, 136, 242, 0.35);
-        white-space: nowrap;
-    }
+        .prov-table td {
+            padding: .6rem .9rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-soft);
+        }
 
-    .prov-table tbody tr {
-        transition: all 0.22s ease;
-        background: transparent;
+    .table-hover tbody tr:hover {
+        background-color: #f9fafb;
     }
-
-    .prov-table tbody tr:nth-child(even) {
-        background: rgba(8, 10, 40, 0.96);
-    }
-
-    .prov-table tbody tr:hover {
-        background: rgba(139, 136, 242, 0.08);
-        transform: translateX(2px);
-    }
-
-    .prov-table td {
-        padding: 0.6rem 0.9rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        vertical-align: middle;
-        color: var(--prov-text);
-    }
+    /* neutro */
 
     .prov-name {
         font-weight: 600;
-        color: var(--prov-text);
+        color: var(--sup-text);
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-    }
-
-    .prov-name i {
-        color: var(--prov-accent);
+        gap: .4rem;
     }
 
     .prov-contact-muted {
-        color: var(--prov-muted);
-        font-size: 0.78rem;
+        color: var(--muted);
+        font-size: .78rem;
     }
 
     .prov-link-mail {
-        color: var(--prov-accent);
+        color: var(--sup-primary);
         text-decoration: none;
-        font-size: 0.8rem;
+        font-size: .8rem;
     }
 
-    .prov-link-mail:hover {
-        text-decoration: underline;
-    }
+        .prov-link-mail:hover {
+            text-decoration: underline;
+        }
 
     .prov-empty {
         text-align: center;
-        padding: 2.4rem 1rem;
-        color: var(--prov-muted);
-        font-size: 0.86rem;
+        padding: 2.2rem 1rem;
+        color: var(--muted);
+        font-size: .86rem;
     }
 
-    .prov-empty i {
-        font-size: 2rem;
-        margin-bottom: 0.4rem;
-        color: var(--prov-accent);
-        opacity: 0.85;
-    }
+        .prov-empty i {
+            font-size: 2rem;
+            margin-bottom: .35rem;
+            color: var(--sup-secondary);
+            opacity: .9;
+        }
 
-    /* ACCIONES */
+    /* Botones de acción */
     .prov-action-btn {
-        width: 30px;
-        height: 30px;
-        border-radius: 999px;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: .7rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.85rem;
-        border: 1px solid transparent;
-        background: transparent;
-        color: var(--prov-muted);
-        transition: all 0.2s ease;
-        margin: 0 1px;
+        margin: 0 .12rem;
+        padding: 0;
+        font-size: .9rem;
+        transition: all .2s ease;
+        border: none;
     }
 
-    .prov-action-btn.edit {
-        border-color: rgba(241, 196, 15, 0.65);
-        color: var(--prov-warning);
-    }
+        .prov-action-btn.edit {
+            background: #fff7e6;
+            color: #92400e;
+            border: 1px solid #fcd77b;
+        }
 
-    .prov-action-btn.edit:hover {
-        background: rgba(241, 196, 15, 0.14);
-        box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3);
-        transform: translateY(-1px);
-    }
+            .prov-action-btn.edit:hover {
+                background: #fbbf24;
+                color: #111827;
+                transform: translateY(-1px);
+            }
 
-    .prov-action-btn.off {
-        border-color: rgba(255, 107, 107, 0.7);
-        color: var(--prov-danger);
-    }
+        .prov-action-btn.off {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
 
-    .prov-action-btn.off:hover {
-        background: rgba(255, 107, 107, 0.16);
-        box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
-        transform: translateY(-1px);
-    }
+            .prov-action-btn.off:hover {
+                background: #dc2626;
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
-    .prov-action-btn.on {
-        border-color: rgba(46, 204, 113, 0.7);
-        color: var(--prov-success);
-    }
+        .prov-action-btn.on {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
 
-    .prov-action-btn.on:hover {
-        background: rgba(46, 204, 113, 0.14);
-        box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
-        transform: translateY(-1px);
-    }
+            .prov-action-btn.on:hover {
+                background: #22c55e;
+                color: #fff;
+                transform: translateY(-1px);
+            }
 
-    /* PAGINACIÓN */
+    /* Paginación */
     .prov-paging-bar {
-        padding: 0.7rem 1rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
-        background: #080A24;
+        padding: .9rem 1rem;
+        border-top: 1px solid var(--border-soft);
+        background: #fff;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
-        font-size: 0.74rem;
-        color: var(--prov-muted);
+        font-size: .78rem;
+        color: var(--muted);
     }
 
     .prov-pagination .page-link {
-        padding: 0.28rem 0.55rem;
-        font-size: 0.72rem;
-        border-radius: 0.45rem;
-        border: 1px solid rgba(164, 165, 212, 0.8);
-        background: transparent;
-        color: var(--prov-muted);
-        transition: all 0.18s ease;
+        border-radius: 999px !important;
+        font-size: .78rem;
+        padding: .25rem .6rem;
+        border: 1px solid var(--border-soft);
+        color: var(--sup-primary);
     }
 
     .prov-pagination .page-item.active .page-link {
-        background: linear-gradient(135deg, var(--prov-accent), var(--prov-secondary));
-        color: #0D0E26;
-        border-color: transparent;
-        box-shadow: 0 4px 12px rgba(81, 75, 242, 0.5);
+        background-color: var(--sup-secondary);
+        border-color: var(--sup-secondary);
+        color: #fff;
     }
 
     .prov-pagination .page-link:hover {
-        background: rgba(139, 136, 242, 0.14);
-        color: var(--prov-accent);
-        border-color: var(--prov-accent);
+        background: #f3f4ff;
+        border-color: var(--sup-secondary);
+        color: var(--sup-secondary);
     }
 
-    .prov-pagination .page-item.disabled .page-link {
-        opacity: 0.35;
-        cursor: default;
-        background: transparent;
-    }
-
+    /* Scroll */
     .table-responsive::-webkit-scrollbar {
-        height: 6px;
+        height: 7px;
     }
 
     .table-responsive::-webkit-scrollbar-track {
-        background: #080A24;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb {
-        background: rgba(46, 44, 122, 0.9);
+        background: #f3f4f6;
         border-radius: 4px;
     }
 
-    .table-responsive::-webkit-scrollbar-thumb:hover {
-        background: var(--prov-accent);
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #c9cbff;
+        border-radius: 4px;
     }
 
-    @@media (max-width: 768px) {
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #a3a6ff;
+        }
+
+    /* Modal */
+    .modal-prov .modal-content {
+        background: #fff;
+        color: var(--sup-text);
+        border-radius: var(--sup-radius);
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 10px 40px rgba(15,23,42,.18);
+    }
+
+    .modal-prov .modal-header {
+        background: linear-gradient(90deg,var(--sup-primary),var(--sup-secondary));
+        border-bottom: 1px solid rgba(255,255,255,.16);
+        color: #fff;
+        border-radius: var(--sup-radius) var(--sup-radius) 0 0;
+    }
+
+    .modal-prov .btn-cancel {
+        border-radius: var(--sup-radius);
+        font-size: .82rem;
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        color: var(--muted);
+        padding: .45rem 1rem;
+    }
+
+        .modal-prov .btn-cancel:hover {
+            background: #eef2ff;
+            color: var(--sup-primary);
+            border-color: var(--sup-secondary);
+        }
+
+    .modal-prov .btn-confirm {
+        background: var(--sup-secondary);
+        border-radius: var(--sup-radius);
+        font-size: .82rem;
+        border: none;
+        padding: .45rem 1rem;
+        color: #fff;
+    }
+
+        .modal-prov .btn-confirm:hover {
+            background: var(--sup-primary);
+        }
+
+    /* --- Alertas inline --- */
+    .prov-alert {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        padding: .75rem 1rem;
+        border-radius: var(--sup-radius);
+        border: 1px solid var(--border-soft);
+        background: #fff;
+        color: var(--sup-text);
+        box-shadow: 0 4px 12px rgba(15,23,42,.06);
+        transition: opacity .25s ease, transform .25s ease;
+        margin-bottom: 1rem;
+    }
+
+        .prov-alert::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            border-radius: var(--sup-radius) 0 0 var(--sup-radius);
+        }
+
+        .prov-alert .prov-alert-icon {
+            font-size: 1.1rem;
+            margin-top: .1rem;
+        }
+
+        .prov-alert .prov-alert-title {
+            font-weight: 700;
+            margin-right: .25rem;
+        }
+
+        .prov-alert .prov-alert-close {
+            position: absolute;
+            right: .5rem;
+            top: .45rem;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            opacity: .75;
+        }
+
+            .prov-alert .prov-alert-close:hover {
+                opacity: 1;
+            }
+
+    .prov-alert--error {
+        border-color: rgba(229,72,72,.35);
+    }
+
+        .prov-alert--error::before {
+            background: var(--sup-danger);
+        }
+
+    .prov-alert--success {
+        border-color: rgba(34,197,94,.35);
+    }
+
+        .prov-alert--success::before {
+            background: var(--sup-success);
+        }
+
+    .prov-alert--warning {
+        border-color: rgba(241,196,15,.45);
+    }
+
+        .prov-alert--warning::before {
+            background: var(--sup-warning);
+        }
+
+    .prov-alert-hide {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    @@media (max-width:768px) {
         .prov-header-card {
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.9rem;
+            padding: .9rem 1rem;
+        }
+
+        .prov-header-title h2 {
+            font-size: 1.1rem;
+        }
+
+        .prov-header-subtitle {
+            font-size: .8rem;
         }
 
         .prov-header-actions {
@@ -504,56 +624,21 @@
             flex-direction: column;
             align-items: flex-start;
         }
-    }
 
-    /* MODAL CONFIRMACIÓN PROVEEDORES */
-    .modal-prov .modal-content {
-        background: #0B0E26;
-        color: var(--prov-text);
-        border-radius: 1rem;
-        border: 1px solid var(--prov-accent);
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.85);
-    }
+        .prov-action-btn {
+            width: 2rem;
+            height: 2rem;
+            border-radius: .6rem;
+        }
 
-    .modal-prov .modal-header {
-        border-bottom-color: rgba(139, 136, 242, 0.25);
-    }
-
-    .modal-prov .modal-footer {
-        border-top-color: rgba(139, 136, 242, 0.18);
-    }
-
-    .modal-prov .btn-cancel {
-        border-radius: 0.7rem;
-        padding: 0.4rem 1.1rem;
-        background: transparent;
-        color: var(--prov-muted);
-        border: 1px solid rgba(139, 136, 242, 0.4);
-        transition: all 0.2s ease;
-    }
-
-    .modal-prov .btn-cancel:hover {
-        background: rgba(139, 136, 242, 0.18);
-        color: var(--prov-text);
-    }
-
-    .modal-prov .btn-confirm {
-        border-radius: 0.7rem;
-        padding: 0.4rem 1.4rem;
-        background: var(--prov-secondary);
-        color: #fff;
-        border: 1px solid var(--prov-accent);
-        transition: all 0.2s ease;
-    }
-
-    .modal-prov .btn-confirm:hover {
-        background: var(--prov-primary);
-        box-shadow: 0 6px 18px rgba(81, 75, 242, 0.55);
+        .prov-input-group {
+            flex: 1 1 100%;
+        }
     }
 </style>
 
 <div class="container-fluid prov-theme">
-    <!-- HEADER PRINCIPAL -->
+    <!-- HEADER -->
     <div class="prov-header-card">
         <div class="prov-header-title">
             <div class="prov-header-icon">
@@ -561,12 +646,10 @@
             </div>
             <div>
                 <h2>Gestión de Proveedores</h2>
-                <p class="prov-header-subtitle">
-                    Administra tus aliados comerciales, contactos y fuentes de abastecimiento.
-                </p>
+                <div class="prov-header-subtitle">Administra tus aliados comerciales, contactos y fuentes de abastecimiento.</div>
             </div>
         </div>
-        <div class="prov-header-actions">
+        <div class="d-flex gap-2 prov-header-actions">
             <a href="@Url.Action("Index", "Home")" class="prov-btn-outline">
                 <i class="bi bi-arrow-left"></i> Volver al Inicio
             </a>
@@ -576,54 +659,75 @@
         </div>
     </div>
 
-    <!-- BARRA DE BÚSQUEDA -->
-    <div class="card prov-search-card">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3 align-items-center">
-                <div class="col-auto">
-                    <label class="prov-search-label">Buscar proveedor</label>
-                    <div class="prov-search-input-group">
-                        <span class="prov-input-icon">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text"
-                               name="q"
-                               value="@(ViewData["q"] ?? "")"
-                               class="prov-input-search"
-                               placeholder="Nombre, contacto, teléfono o email del proveedor..." />
-                    </div>
-                </div>
-                <div class="col-auto d-flex align-items-end">
-                    <input type="hidden" name="pageActivos" value="1" />
-                    <input type="hidden" name="pageInactivos" value="1" />
-                    <button class="prov-btn-search" type="submit">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- MENSAJES (TempData, con eliminación para evitar duplicados) -->
+    <div id="prov-message-area">
+        @if (!string.IsNullOrWhiteSpace(msgError))
+        {
+            <div class="prov-alert prov-alert--error" role="alert">
+                <i class="bi bi-exclamation-octagon-fill prov-alert-icon"></i>
+                <div><span class="prov-alert-title">No se pudo completar la acción.</span>@msgError</div>
+                <button type="button" class="prov-alert-close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(msgSuccess))
+        {
+            <div class="prov-alert prov-alert--success" role="status">
+                <i class="bi bi-check-circle-fill prov-alert-icon"></i>
+                <div><span class="prov-alert-title">Operación exitosa.</span>@msgSuccess</div>
+                <button type="button" class="prov-alert-close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(msgWarning))
+        {
+            <div class="prov-alert prov-alert--warning" role="alert">
+                <i class="bi bi-exclamation-triangle-fill prov-alert-icon"></i>
+                <div><span class="prov-alert-title">Atención.</span>@msgWarning</div>
+                <button type="button" class="prov-alert-close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+            </div>
+        }
     </div>
 
-    <!-- PROVEEDORES ACTIVOS -->
+    <!-- BÚSQUEDA (BOTÓN JUNTO AL INPUT) -->
+    <div class="prov-search-card">
+        <form method="get" asp-action="Index" class="prov-search-inline">
+            <div class="prov-search-label mb-0">Buscar proveedor</div>
+
+            <div class="prov-input-group">
+                <span class="prov-input-icon"><i class="bi bi-search"></i></span>
+
+                <input type="text"
+                       name="q"
+                       value="@(ViewData["q"] ?? "")"
+                       class="prov-input-search"
+                       placeholder="Nombre, contacto, teléfono o email del proveedor..." />
+
+                <input type="hidden" name="pageActivos" value="1" />
+                <input type="hidden" name="pageInactivos" value="1" />
+
+                <button class="prov-btn-search prov-join" type="submit">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ACTIVOS -->
     <div class="prov-card">
         <div class="prov-card-header">
-            <div class="prov-card-header-left">
-                <i class="bi bi-check-circle text-success"></i>
-                <h5 class="prov-card-title mb-0">Proveedores Activos</h5>
-                <span class="prov-badge-count">@totalActivos</span>
-            </div>
-            <a asp-action="Index" asp-route-ordenar="true"
-               class="prov-btn-sort"
-               title="Ordenar alfabéticamente">
+            <i class="bi bi-check2-circle fs-5"></i>
+            <h3 class="prov-card-title mb-0">Proveedores activos</h3>
+            <span class="prov-badge-count"><i class="bi bi-people"></i> @totalActivos</span>
+            <a asp-action="Index" asp-route-ordenar="true" class="prov-btn-sort ms-3" title="Ordenar alfabéticamente">
                 <i class="bi bi-sort-alpha-down"></i> A-Z
             </a>
         </div>
-        <div class="card-body p-0 prov-table-wrap">
+
+        <div class="card-body p-0">
             @if (!activos.Any())
             {
                 <div class="prov-empty">
                     <i class="bi bi-truck"></i>
-                    <div>No hay proveedores activos registrados.</div>
+                    <div>No hay proveedores activos registrados</div>
                     @if (!string.IsNullOrEmpty(ViewData["q"] as string))
                     {
                         <div class="small mt-2">Intenta con otros términos de búsqueda.</div>
@@ -633,7 +737,7 @@
             else
             {
                 <div class="table-responsive">
-                    <table class="prov-table">
+                    <table class="table table-hover align-middle mb-0 prov-table">
                         <thead>
                             <tr>
                                 <th class="ps-3">Nombre</th>
@@ -649,24 +753,21 @@
                             {
                                 <tr>
                                     <td class="ps-3">
-                                        <div class="prov-name">
-                                            <i class="bi bi-building"></i>
-                                            @p.Nombre
-                                        </div>
+                                        <div class="prov-name"><i class="bi bi-building"></i>@p.Nombre</div>
                                     </td>
                                     <td>
                                         @(string.IsNullOrEmpty(p.Contacto)
-                                            ? Html.Raw("<span class='prov-contact-muted'>Sin contacto</span>")
-                                            : p.Contacto)
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-1">
-                                            <i class="bi bi-telephone text-secondary"></i>
-                                            <span>@(string.IsNullOrEmpty(p.Telefono) ? "-" : p.Telefono)</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(p.Email))
+                                                                        ? Html.Raw("<span class='prov-contact-muted'>Sin contacto</span>")
+                                                                        : p.Contacto)
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-telephone text-secondary"></i>
+                                    <span>@(string.IsNullOrEmpty(p.Telefono) ? "-" : p.Telefono)</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(p.Email))
                                         {
                                             <div class="d-flex align-items-center gap-1">
                                                 <i class="bi bi-envelope text-secondary"></i>
@@ -677,33 +778,32 @@
                                         {
                                             <span class="prov-contact-muted">-</span>
                                         }
-                                    </td>
-                                    <td>
-                                        @(string.IsNullOrEmpty(p.Direccion)
-                                            ? Html.Raw("<span class='prov-contact-muted'>Sin dirección registrada</span>")
-                                            : p.Direccion)
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center">
-                                            <a asp-action="Edit" asp-route-id="@p.IdProveedor"
-                                               class="prov-action-btn edit"
-                                               title="Editar proveedor">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-                                            <form asp-action="Delete" asp-route-id="@p.IdProveedor" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="button"
-                                                        class="prov-action-btn off prov-prov-confirm"
-                                                        data-prov-name="@p.Nombre"
-                                                        data-action="desactivar"
-                                                        title="Desactivar proveedor">
-                                                    <i class="bi bi-person-dash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
+                                </td>
+                                <td>
+                                    @(string.IsNullOrEmpty(p.Direccion)
+                                                                    ? Html.Raw("<span class='prov-contact-muted'>Sin dirección registrada</span>")
+                                                                    : p.Direccion)
+                            </td>
+                            <td class="text-center">
+                                <div class="d-inline-flex">
+                                    <a asp-action="Edit" asp-route-id="@p.IdProveedor"
+                                       class="prov-action-btn edit" title="Editar proveedor">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@p.IdProveedor" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="button"
+                                                class="prov-action-btn off prov-prov-confirm"
+                                                data-prov-name="@p.Nombre"
+                                                data-action="desactivar"
+                                                title="Desactivar proveedor">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                                                }
                         </tbody>
                     </table>
                 </div>
@@ -712,30 +812,21 @@
                 {
                     <div class="prov-paging-bar">
                         <div>
-                            Página @pageActivos de @totalPagesActivos •
-                            Mostrando @activos.Count() de @totalActivos proveedores
+                            Página @pageActivos de @totalPagesActivos • Mostrando @activos.Count() de @totalActivos
                         </div>
                         <nav class="prov-pagination">
-                            <ul class="pagination pagination-sm mb-0">
+                            <ul class="pagination mb-0">
                                 @if (pageActivos > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                               q = ViewData["q"],
-                                               ordenar = ViewBag.Ordenar,
-                                               pageActivos = pageActivos - 1,
-                                               pageInactivos = pageInactivos
-                                           })">
+                                        <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos - 1, pageInactivos = pageInactivos, pageSize = pageSize })">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
                                 }
 
                                 @{
@@ -745,51 +836,27 @@
                                     if (startPage > 1)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = 1,
-                                                   pageInactivos = pageInactivos
-                                               })">1</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = 1, pageInactivos = pageInactivos, pageSize = pageSize })">1</a>
                                         </li>
                                         if (startPage > 2)
                                         {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
+                                            <li class="page-item disabled"><span class="page-link">…</span></li>
                                         }
                                     }
-
                                     for (int i = startPage; i <= endPage; i++)
                                     {
                                         <li class="page-item @(i == pageActivos ? "active" : "")">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = i,
-                                                   pageInactivos = pageInactivos
-                                               })">@i</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = i, pageInactivos = pageInactivos, pageSize = pageSize })">@i</a>
                                         </li>
                                     }
-
                                     if (endPage < totalPagesActivos)
                                     {
                                         if (endPage < totalPagesActivos - 1)
                                         {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
+                                            <li class="page-item disabled"><span class="page-link">…</span></li>
                                         }
                                         <li class="page-item">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = totalPagesActivos,
-                                                   pageInactivos = pageInactivos
-                                               })">@totalPagesActivos</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = totalPagesActivos, pageInactivos = pageInactivos, pageSize = pageSize })">@totalPagesActivos</a>
                                         </li>
                                     }
                                 }
@@ -797,22 +864,14 @@
                                 @if (pageActivos < totalPagesActivos)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                               q = ViewData["q"],
-                                               ordenar = ViewBag.Ordenar,
-                                               pageActivos = pageActivos + 1,
-                                               pageInactivos = pageInactivos
-                                           })">
+                                        <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos + 1, pageInactivos = pageInactivos, pageSize = pageSize })">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
                                 }
                             </ul>
                         </nav>
@@ -822,25 +881,22 @@
         </div>
     </div>
 
-    <!-- PROVEEDORES INACTIVOS -->
+    <!-- INACTIVOS -->
     @if (totalInactivos > 0)
     {
         <div class="prov-card">
             <div class="prov-card-header">
-                <div class="prov-card-header-left">
-                    <i class="bi bi-x-circle text-danger"></i>
-                    <h5 class="prov-card-title mb-0">Proveedores Inactivos</h5>
-                    <span class="prov-badge-count">@totalInactivos</span>
-                </div>
-                <a asp-action="Index" asp-route-ordenar="true"
-                   class="prov-btn-sort"
-                   title="Ordenar alfabéticamente">
+                <i class="bi bi-archive fs-5"></i>
+                <h3 class="prov-card-title mb-0">Proveedores inactivos</h3>
+                <span class="prov-badge-count"><i class="bi bi-archive"></i> @totalInactivos</span>
+                <a asp-action="Index" asp-route-ordenar="true" class="prov-btn-sort ms-3" title="Ordenar alfabéticamente">
                     <i class="bi bi-sort-alpha-down"></i> A-Z
                 </a>
             </div>
-            <div class="card-body p-0 prov-table-wrap">
+
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="prov-table">
+                    <table class="table table-hover align-middle mb-0 prov-table">
                         <thead>
                             <tr>
                                 <th class="ps-3">Nombre</th>
@@ -856,9 +912,8 @@
                             {
                                 <tr class="text-muted">
                                     <td class="ps-3">
-                                        <div class="prov-name" style="color: var(--prov-muted);">
-                                            <i class="bi bi-building"></i>
-                                            @p.Nombre
+                                        <div class="prov-name" style="color:#6b7280;">
+                                            <i class="bi bi-building"></i>@p.Nombre
                                         </div>
                                     </td>
                                     <td>@(string.IsNullOrEmpty(p.Contacto) ? "-" : p.Contacto)</td>
@@ -883,7 +938,7 @@
                                     </td>
                                     <td>@(string.IsNullOrEmpty(p.Direccion) ? "-" : p.Direccion)</td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center">
+                                        <div class="d-inline-flex">
                                             <form asp-action="Activar" asp-route-id="@p.IdProveedor" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
                                                 <button type="button"
@@ -891,7 +946,7 @@
                                                         data-prov-name="@p.Nombre"
                                                         data-action="activar"
                                                         title="Activar proveedor">
-                                                    <i class="bi bi-person-check"></i>
+                                                    <i class="bi bi-check2-circle"></i>
                                                 </button>
                                             </form>
                                         </div>
@@ -906,84 +961,51 @@
                 {
                     <div class="prov-paging-bar">
                         <div>
-                            Página @pageInactivos de @totalPagesInactivos •
-                            Mostrando @inactivos.Count() de @totalInactivos proveedores
+                            Página @pageInactivos de @totalPagesInactivos • Mostrando @inactivos.Count() de @totalInactivos
                         </div>
                         <nav class="prov-pagination">
-                            <ul class="pagination pagination-sm mb-0">
+                            <ul class="pagination mb-0">
                                 @if (pageInactivos > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                               q = ViewData["q"],
-                                               ordenar = ViewBag.Ordenar,
-                                               pageActivos = pageActivos,
-                                               pageInactivos = pageInactivos - 1
-                                           })">
+                                        <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos, pageInactivos = pageInactivos - 1 })">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
                                 }
 
                                 @{
-                                    int startPageInactivos = Math.Max(1, pageInactivos - 2);
-                                    int endPageInactivos = Math.Min(totalPagesInactivos, pageInactivos + 2);
+                                    int startPageI = Math.Max(1, pageInactivos - 2);
+                                    int endPageI = Math.Min(totalPagesInactivos, pageInactivos + 2);
 
-                                    if (startPageInactivos > 1)
+                                    if (startPageI > 1)
                                     {
                                         <li class="page-item">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos,
-                                                   pageInactivos = 1
-                                               })">1</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos, pageInactivos = 1 })">1</a>
                                         </li>
-                                        if (startPageInactivos > 2)
+                                        if (startPageI > 2)
                                         {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
+                                            <li class="page-item disabled"><span class="page-link">…</span></li>
                                         }
                                     }
-
-                                    for (int i = startPageInactivos; i <= endPageInactivos; i++)
+                                    for (int i = startPageI; i <= endPageI; i++)
                                     {
                                         <li class="page-item @(i == pageInactivos ? "active" : "")">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos,
-                                                   pageInactivos = i
-                                               })">@i</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos, pageInactivos = i })">@i</a>
                                         </li>
                                     }
-
-                                    if (endPageInactivos < totalPagesInactivos)
+                                    if (endPageI < totalPagesInactivos)
                                     {
-                                        if (endPageInactivos < totalPagesInactivos - 1)
+                                        if (endPageI < totalPagesInactivos - 1)
                                         {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
+                                            <li class="page-item disabled"><span class="page-link">…</span></li>
                                         }
                                         <li class="page-item">
-                                            <a class="page-link"
-                                               href="@Url.Action("Index", new {
-                                                   q = ViewData["q"],
-                                                   ordenar = ViewBag.Ordenar,
-                                                   pageActivos = pageActivos,
-                                                   pageInactivos = totalPagesInactivos
-                                               })">@totalPagesInactivos</a>
+                                            <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos, pageInactivos = totalPagesInactivos })">@totalPagesInactivos</a>
                                         </li>
                                     }
                                 }
@@ -991,22 +1013,14 @@
                                 @if (pageInactivos < totalPagesInactivos)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link"
-                                           href="@Url.Action("Index", new {
-                                               q = ViewData["q"],
-                                               ordenar = ViewBag.Ordenar,
-                                               pageActivos = pageActivos,
-                                               pageInactivos = pageInactivos + 1
-                                           })">
+                                        <a class="page-link" href="@Url.Action("Index", new { q = ViewData["q"], ordenar = ViewBag.Ordenar, pageActivos = pageActivos, pageInactivos = pageInactivos + 1 })">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
                                 }
                                 else
                                 {
-                                    <li class="page-item disabled">
-                                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                                    </li>
+                                    <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
                                 }
                             </ul>
                         </nav>
@@ -1023,7 +1037,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmProvTitle">Confirmar acción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <p id="confirmProvText" class="mb-0">¿Deseas continuar?</p>
@@ -1044,9 +1058,7 @@
 
             const modalEl = document.getElementById('confirmProvModal');
             let confirmModal = null;
-            if (modalEl && window.bootstrap) {
-                confirmModal = new bootstrap.Modal(modalEl);
-            }
+            if (modalEl && window.bootstrap) { confirmModal = new bootstrap.Modal(modalEl); }
 
             const titleEl = document.getElementById('confirmProvTitle');
             const textEl = document.getElementById('confirmProvText');
@@ -1056,22 +1068,18 @@
             document.querySelectorAll('.prov-prov-confirm').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
-
-                    const form = btn.closest('form');
-                    if (!form) return;
+                    const form = btn.closest('form'); if (!form) return;
 
                     const provName = btn.getAttribute('data-prov-name') || 'este proveedor';
                     const action = (btn.getAttribute('data-action') || '').toLowerCase();
 
-                    let title = 'Confirmar acción';
-                    let message = '';
-
+                    let title = 'Confirmar acción', message = '';
                     if (action === 'desactivar') {
                         title = 'Desactivar proveedor';
-                        message = `<strong>${provName}</strong><br>El proveedor pasará a la lista de inactivos y no se eliminará del sistema.`;
+                        message = `<strong>${provName}</strong><br>Pasará a la lista de inactivos (no se elimina).`;
                     } else if (action === 'activar') {
                         title = 'Activar proveedor';
-                        message = `<strong>${provName}</strong><br>El proveedor volverá a estar disponible para operaciones.`;
+                        message = `<strong>${provName}</strong><br>Volverá a estar disponible para operaciones.`;
                     } else {
                         message = `¿Deseas continuar con la operación para <strong>${provName}</strong>?`;
                     }
@@ -1081,26 +1089,25 @@
 
                     formToSubmit = form;
 
-                    if (confirmModal) {
-                        confirmModal.show();
-                    } else {
-                        // Fallback solo si no está disponible Bootstrap JS
-                        if (confirm(`${title} - ${provName}`)) {
-                            form.submit();
-                        }
-                    }
+                    if (confirmModal) { confirmModal.show(); }
+                    else { if (confirm(`${title} - ${provName}`)) form.submit(); }
                 });
             });
 
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', () => {
-                    if (formToSubmit) {
-                        formToSubmit.submit();
-                        formToSubmit = null;
-                    }
-                    if (confirmModal) {
-                        confirmModal.hide();
-                    }
+                    if (formToSubmit) { formToSubmit.submit(); formToSubmit = null; }
+                    if (confirmModal) confirmModal.hide();
+                });
+            }
+
+            /* Alertas: autocierre y botón cerrar */
+            const area = document.getElementById('prov-message-area');
+            if (area){
+                area.querySelectorAll('.prov-alert').forEach(el=>{
+                    const kill = ()=>{ el.classList.add('prov-alert-hide'); el.addEventListener('transitionend', ()=> el.remove(), {once:true}); };
+                    setTimeout(kill, 4500);
+                    el.querySelector('.prov-alert-close')?.addEventListener('click', kill);
                 });
             }
         });
